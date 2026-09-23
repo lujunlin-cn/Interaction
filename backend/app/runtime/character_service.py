@@ -111,7 +111,9 @@ class CharacterAssetService:
                 if row is None:
                     raise KeyError(asset_id)
                 row.status = status.value
-                row.data["status"] = status.value
+                data = dict(row.data)
+                data["status"] = status.value
+                row.data = data          # JSON 列：重赋值保证 flag_modified
                 return CharacterAsset(**row.data)
 
     async def approve_canonical(self, asset_id: str) -> CharacterAsset:
@@ -395,8 +397,10 @@ class CharacterAssetService:
                 row = await db.get(ScenarioCharacterSnapshotRow, snapshot_id)
                 if row is None:
                     raise KeyError(snapshot_id)
-                row.data["local_overrides"] = {
-                    **row.data.get("local_overrides", {}), **overrides}
+                data = dict(row.data)
+                data["local_overrides"] = {
+                    **data.get("local_overrides", {}), **overrides}
+                row.data = data          # 重赋值触发 flag_modified（JSON 列就地改不可见）
                 return ScenarioCharacterSnapshot(**row.data)
 
     async def promote_override_to_global(self, snapshot_id: str) -> CharacterVersion:

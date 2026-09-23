@@ -566,9 +566,13 @@ def build_provider_registry(mode: str) -> dict:
     }
     if mode in ("mock", "hybrid"):
         from .mock_decision import MockDecisionProvider
+        from .mock_image import MockImageProvider
         from .mock_text import MockTextProvider
         from .mock_video import MockVideoProvider
         registry["mock_text"] = MockTextProvider()
         registry["mock_decision"] = MockDecisionProvider()
         registry["mock_video"] = MockVideoProvider()
+        # mock 模式（或 hybrid 缺 FAL_KEY 时）用确定性生图桩，保证角色链路可测
+        if mode == "mock" or not settings.fal_key:
+            registry["nano_banana_2"] = MockImageProvider()
     return registry

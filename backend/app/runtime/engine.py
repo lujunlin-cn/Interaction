@@ -197,8 +197,17 @@ class RuntimeEngine:
             scenario_id = vrow.scenario_id
             arows = (await db.execute(
                 select(AssetRow).where(AssetRow.scenario_id == scenario_id))).scalars().all()
-            # G12：在场角色绑定的全局角色（快照版本）ref 素材并入 manifest
-            from ..db_models import GlobalCharacterRow
+            # G12：在场角色绑定的全局角色 ref 素材并入 manifest。
+            # v0.6（FR-091/Q86）：优先消费 publish 时冻结的 ScenarioCharacterSnapshot
+            # （frozen_asset_refs → CharacterAssetRow.url，URL 直进 manifest，不依赖 AssetRow）；
+            # 无快照的角色回落到 GlobalCharacterRow 的 ref_* 槽位（向后兼容）。
+            from ..db_models import (CharacterAssetRow, GlobalCharacterRow,
+                                     ScenarioCharacterSnapshotRow)
+            snap_rows = (await db.execute(
+                select(ScenarioCharacterSnapshotRow).where(
+                    ScenarioCharacterSnapshotRow.scenario_version_id ==
+                    scenario_version_id))).scalars().all()
+            snap_by_gcid = {r.global_character_id: r for r in snap_rows}
             char_global: dict[str, dict] = {}
             for ch in snapshot.get("characters", []):
                 gcid = ch.get("global_character_id")
@@ -206,8 +215,39 @@ class RuntimeEngine:
                     grow = await db.get(GlobalCharacterRow, gcid)
                     if grow is not None:
                         char_global[ch.get("id", "")] = dict(grow.data)
-            ref_asset_ids: list[tuple[str, str]] = []   # (scenario_char_id, asset_id)
-            for cid, gdata in char_global.items():
+            g_assets: dict[str, dict] = {}
+            # v0.6：快照冻结的 Canonical 资产（URL 直引，角色粒度 entity）
+            for ch in snapshot.get("characters", []):
+                cid = ch.get("id", "")
+                gcid = ch.get("global_character_id")
+                srow = snap_by_gcid.get(gcid) if gcid else None
+                if srow is None:
+                    continue
+                for role, ca_id in (srow.data.get("frozen_asset_refs") or {}).items():
+                    if not ca_id or ca_id in g_assets:
+                        continue
+                    crow = await db.get(CharacterAssetRow, ca_id)
+                    if crow is None:
+                        continue
+                    ca = crow.data
+                    g_assets[ca_id] = {
+                        "id": ca_id, "version": srow.data.get("character_version", 1),
+                        "role": role or ca.get("role", "identity"),
+                        "entity": cid, "binding": cid,
+                        "name": f"{ca.get('role', role)}·v{srow.data.get('character_version',1)}",
+                        "type": "image" if ca.get("url", "").startswith(("data:", "http", "/")) else "",
+                        "path": ca.get("url", "")}
+                # voice / motion 同样冻结进快照（frozen_asset_refs 里 role=voice/motion）
+            # 兼容路径：没有 v0.6 快照的角色仍走 ref_* 槽位
+            ref_asset_ids: list[tuple[str, str]] = []
+            for ch in snapshot.get("characters", []):
+                cid = ch.get("id", "")
+                gcid = ch.get("global_character_id")
+                if gcid and gcid in snap_by_gcid:
+                    continue                # 已走 v0.6 快照
+                gdata = char_global.get(cid)
+                if not gdata:
+                    continue
                 for key, role in (("ref_front_asset", "identity"),
                                   ("ref_side_asset", "identity"),
                                   ("ref_back_asset", "identity"),
@@ -218,7 +258,6 @@ class RuntimeEngine:
                         ref_asset_ids.append((cid, aid))
                 for aid in gdata.get("ref_other_assets", []) or []:
                     ref_asset_ids.append((cid, aid))
-            g_assets: dict[str, dict] = {}
             for cid, aid in ref_asset_ids:
                 if aid in g_assets:
                     continue
@@ -1021,19 +1060,34 @@ class RuntimeEngine:
                 pass
             return []
         chars = {c.get("id") for c in state.scenario_snapshot.get("characters", [])}
-        refs: list[dict] = []
+        # v0.6 FR-093：按标准视图优先级挑图像参考（front > 3⁄4 > side > full_*），
+        # 每角色 ≤4 张；voice/motion 不占用图像名额。
+        _IMG_ORDER = {"front": 0, "three_quarter": 1, "side": 2,
+                      "full_front": 3, "full_side": 4}
+        picked: dict[str, list[dict]] = {}      # entity → image refs
+        extras: list[dict] = []                 # voice / motion / 其他
         for a in state.asset_manifest:
             entity = a.get("entity") or ""
             binding = a.get("binding") or ""
             role = a.get("role") or ""
-            if entity in chars or binding in chars or role in (
-                    "identity", "wardrobe", "voice", "motion"):
-                refs.append({"asset_id": a.get("id"), "name": a.get("name", ""),
-                             "role": role or "reference", "entity": entity,
-                             "path": a.get("path", ""), "version": a.get("version", 1)})
-            if len(refs) >= 6:
-                break
-        return refs
+            if not (entity in chars or binding in chars or
+                    role in ("identity", "wardrobe", "voice", "motion",
+                             *list(_IMG_ORDER))):
+                continue
+            ref = {"asset_id": a.get("id"), "name": a.get("name", ""),
+                   "role": role or "reference", "entity": entity,
+                   "path": a.get("path", ""), "version": a.get("version", 1)}
+            if role in _IMG_ORDER:
+                bucket = picked.setdefault(entity or binding or "_", [])
+                bucket.append(ref)
+            else:
+                extras.append(ref)
+        refs: list[dict] = []
+        for entity, bucket in picked.items():
+            bucket.sort(key=lambda r: _IMG_ORDER.get(r["role"], 9))
+            refs.extend(bucket[:4])             # 每角色 ≤4 张（FR-093 上限）
+        refs.extend(extras[:6 - min(len(refs), 6)])
+        return refs[:6]
 
     async def _shoot_branch(self, state: SessionState, branch: Branch) -> None:
         _, rec, resp = await self.router.call_text(

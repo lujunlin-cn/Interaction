@@ -88,6 +88,9 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
     api = APIRouter(prefix="/api")
     scenarios = ScenarioService(router)
     characters = CharacterService()
+    from ..runtime.character_service import CharacterAssetService
+    from ..domain.schemas import CharacterAssetStatus
+    char_assets = CharacterAssetService(router)
 
     # ---------------- 基础 ----------------
     @api.get("/health")
@@ -178,6 +181,21 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
             result = await scenarios.publish(sid, reviewed=bool(req and req.reviewed))
         except KeyError:
             raise HTTPException(404, "scenario not found")
+        # FR-091/Q86：为绑定全局角色的 ScenarioCharacter 冻结版本快照
+        draft = await scenarios.get(sid)
+        snapshot_ids: list[str] = []
+        if draft:
+            for sc in draft.characters:
+                if not getattr(sc, "global_character_id", None):
+                    continue
+                try:
+                    snap = await char_assets.snapshot_for_scenario(
+                        result["version_id"], sc.global_character_id)
+                    snapshot_ids.append(snap.id)
+                except KeyError:
+                    continue  # 绑定的全局角色已被删 → 跳过不阻塞发布
+        if snapshot_ids:
+            result["character_snapshots"] = snapshot_ids
         if req and req.play:
             state = await engine.create_session(result["version_id"])
             result["session_id"] = state.id
@@ -285,6 +303,149 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
                                 data=asset.model_dump(mode="json"), created_at=now_ms()))
         await engine.refresh_assets(sid)
         return asset.model_dump(mode="json")
+
+    # ---------------- v0.6 Character Asset System ----------------
+    @api.post("/characters/{cid}/ai-describe")
+    async def character_ai_describe(cid: str):
+        """FR-096：AI 补全外观描述草案（用户确认后才写入，不自动落库/不生图）。"""
+        ch = await char_assets.get_character(cid)
+        if ch is None:
+            raise HTTPException(404, "character not found")
+        prompt = (f"为互动剧角色写一段外观描述（中文、120 字内、只写外貌服饰气质，"
+                  f"供图像生成模型参考）。角色名：{ch.get('name','')}；"
+                  f"简介：{ch.get('bio','')[:200]}；人格：{ch.get('personality','')[:120]}。"
+                  f"直接输出描述文本，不要解释。")
+        try:
+            _, rec, resp = await router.call_text(
+                "authoring", messages=[{"role": "user", "content": prompt}])
+            text = (resp.content or "").strip().strip('"').strip()
+            return {"appearance": text, "provider": rec.selected or ""}
+        except Exception as e:
+            raise HTTPException(502, f"describe failed: {e}")
+
+    @api.post("/characters/{cid}/ai-generate")
+    async def character_ai_generate(cid: str, data: dict | None = None):
+        """AI 建角色生图：nano-banana-2 → 2 张 Candidate（FR-085）。"""
+        try:
+            prompt = (data or {}).get("prompt", "")
+            n = int((data or {}).get("num_images", 2))
+            out = await char_assets.ai_generate_candidates(cid, prompt, n)
+            return {"items": [a.model_dump(mode="json") for a in out]}
+        except KeyError:
+            raise HTTPException(404, "character not found")
+        except Exception as e:
+            raise HTTPException(502, f"image generation failed: {e}")
+
+    @api.post("/characters/{cid}/standard-views")
+    async def character_standard_views(cid: str, data: dict):
+        """选定主图后二次确认的标准多视图批量生成（FR-087，前端必须显式确认）。"""
+        try:
+            out = await char_assets.generate_standard_views(cid, data["front_asset_id"])
+            return {"items": [a.model_dump(mode="json") for a in out]}
+        except KeyError as e:
+            raise HTTPException(404, str(e))
+        except Exception as e:
+            raise HTTPException(502, f"standard views failed: {e}")
+
+    @api.post("/characters/{cid}/edit-image")
+    async def character_edit_image(cid: str, data: dict):
+        """非破坏式 Edit：换装/背景/表情/姿势/视角/自由编辑 → 新 Candidate（FR-086/088）。"""
+        try:
+            out = await char_assets.edit_image(
+                cid, data["source_asset_id"], data["instruction"],
+                role=data.get("role", "derived"),
+                outfit_id=data.get("outfit_id"))
+            return {"items": [a.model_dump(mode="json") for a in out]}
+        except KeyError as e:
+            raise HTTPException(404, str(e))
+        except Exception as e:
+            raise HTTPException(502, f"image edit failed: {e}")
+
+    @api.get("/characters/{cid}/character-assets")
+    async def character_asset_list(cid: str, status: str = ""):
+        items = await char_assets.list_assets(cid, status or None)
+        return {"items": [a.model_dump(mode="json") for a in items]}
+
+    @api.patch("/character-assets/{aid}")
+    async def character_asset_status(aid: str, data: dict):
+        """资产状态流转（ARCHIVED 归档等；CANONICAL 提升请走 approve 保证同 role 唯一）。"""
+        try:
+            st = CharacterAssetStatus(data["status"])
+        except (KeyError, ValueError):
+            raise HTTPException(400, "bad status")
+        try:
+            a = await char_assets.set_asset_status(aid, st)
+            return a.model_dump(mode="json")
+        except KeyError:
+            raise HTTPException(404, "asset not found")
+
+    @api.post("/characters/{cid}/assets/{aid}/approve")
+    async def character_asset_approve(cid: str, aid: str):
+        """提升为 Canonical（同 role 旧的归档）；front 提升属 IDENTITY 变更。"""
+        try:
+            a = await char_assets.approve_canonical(aid)
+            return a.model_dump(mode="json")
+        except KeyError:
+            raise HTTPException(404, "asset not found")
+
+    @api.get("/characters/{cid}/versions")
+    async def character_versions(cid: str):
+        items = await char_assets.list_versions(cid)
+        return {"items": [v.model_dump(mode="json") for v in items]}
+
+    @api.get("/characters/{cid}/versions/diff")
+    async def character_version_diff(cid: str, from_v: int, to_v: int):
+        try:
+            d = await char_assets.diff_versions(cid, from_v, to_v)
+            return d.model_dump(mode="json")
+        except KeyError as e:
+            raise HTTPException(404, str(e))
+
+    @api.post("/scenarios/{sver}/character-snapshots/{cid}")
+    async def scenario_char_snapshot(sver: str, cid: str):
+        """Scenario 绑定角色版本快照（FR-091/Q86）。"""
+        try:
+            s = await char_assets.snapshot_for_scenario(sver, cid)
+            return s.model_dump(mode="json")
+        except KeyError:
+            raise HTTPException(404, "character not found")
+
+    @api.get("/scenarios/{sver}/character-snapshots")
+    async def scenario_char_snapshots(sver: str):
+        items = await char_assets.list_snapshots(sver)
+        return {"items": [s.model_dump(mode="json") for s in items]}
+
+    @api.post("/character-snapshots/{snap}/override")
+    async def snapshot_override(snap: str, data: dict):
+        """仅本故事修改（Q103 Local Override）。"""
+        try:
+            s = await char_assets.apply_local_override(snap, data)
+            return s.model_dump(mode="json")
+        except KeyError:
+            raise HTTPException(404, "snapshot not found")
+
+    @api.post("/character-snapshots/{snap}/promote")
+    async def snapshot_promote(snap: str):
+        """Local Override 人工升为新全局版本（Q104）。"""
+        try:
+            v = await char_assets.promote_override_to_global(snap)
+            return v.model_dump(mode="json")
+        except KeyError:
+            raise HTTPException(404, "snapshot not found")
+        except RuntimeError as e:
+            raise HTTPException(400, str(e))
+
+    @api.post("/character-snapshots/{snap}/resolve-references")
+    async def snapshot_resolve(snap: str, data: dict):
+        """Production Reference Resolver：选 2-4 张角色图（FR-093，可审计）。"""
+        try:
+            sel = await char_assets.resolve_references(
+                snap, data.get("scene_or_shot_id", "scene"),
+                provider_limits=data.get("provider_limits"),
+                developer_override=data.get("developer_override"))
+            return sel.model_dump(mode="json")
+        except KeyError:
+            raise HTTPException(404, "snapshot not found")
 
     @api.put("/scenarios/{sid}/assets/{aid}")
     async def replace_asset(sid: str, aid: str, file: UploadFile):

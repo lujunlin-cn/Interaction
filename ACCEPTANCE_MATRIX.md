@@ -110,18 +110,18 @@ NOT_RUN，**不伪造**。
 | AT | 用例 | 状态 | 证据 / 备注 |
 | --- | --- | --- | --- |
 | AT-61 | 全局角色库按 personality 搜索 | ✅ | 角色库 search 后端真实返回（#20 闭环）；UI 与能力一致。 |
-| AT-62 | 一句描述 AI 建角色→2 张 Candidate | 🔶 | nano-banana-2 生成 Candidate、未选非 Canonical 路径在；真实 fal 出图配额/留证待跑。 |
-| AT-63 | 选主图→二次确认→标准参考组 | 🔶 | 二次确认+正面/3⁄4/侧面/全身+provenance 结构在；真实批量出图留证未全量。 |
-| AT-64 | 「换雨衣保持身份」编辑 | 🔶 | nano-banana-2/edit 调用、原图不覆盖、身份保护入请求路径在；真实编辑留证待跑。 |
-| AT-65 | 快捷只改背景/姿势 + 自由语言编辑 | 🔶 | 两入口落 IMAGE_EDIT、无需 Mask 编辑器；结果引用可追踪。 |
+| AT-62 | 一句描述 AI 建角色→2 张 Candidate | 🔶 | v0.6 全链已实现并 mock 实测：`POST /characters/{id}/ai-generate`→2×CANDIDATE（SVG data-URL 桩，mock 绿）；真实 fal nano-banana-2 出图配额留证待跑。 |
+| AT-63 | 选主图→二次确认→标准参考组 | 🔶 | approve→front Canonical（IDENTITY 版本）→`standard-views` 批量 4 视图（mock 实测 role 齐）；前端二次确认 confirm；真实批量出图留证未全量。 |
+| AT-64 | 「换雨衣保持身份」编辑 | 🔶 | `edit-image` 非破坏式→derived CANDIDATE、identity guard prompt 注入（mock 实测）；真实 nano-banana-2/edit 留证待跑。 |
+| AT-65 | 快捷只改背景/姿势 + 自由语言编辑 | 🔶 | 前端 Edit 入口落 IMAGE_EDIT、指令自由文本、新候选引用 source_asset_refs 可追踪；无需 Mask 编辑器。 |
 | AT-66 | Outfit 属同一 GlobalCharacter | ✅ | Outfit 挂同一 CharacterVersion、可缺视图、不复制角色（数据结构）。 |
 | AT-67 | 上传 Pose/动作视频 Reference | ✅ | 两类 Reference 绑定 CharacterVersion 并可被 Production Resolver 读（references 链）。 |
-| AT-68 | 换主图/Canonical Voice/新增 Outfit | 🔶 | 产生 CharacterVersion+change_type+identity-breaking 警告路径在；三类各一次的实测未全跑。 |
-| AT-69 | Scenario 用 v3 后 Global 升 v4 | ✅ | 已发布/已有 Scenario 保持 v3 Snapshot；差异可查可升级（snapshot 隔离）。 |
-| AT-70 | Scenario 内改外观→仅本故事/全局 | ✅ | local override + 可再存为全局新版本（#20 角色库闭环）。 |
-| AT-71 | 单角色 Scene→自动选 2-4 张图 | 🔶 | Resolver 按相关度选图+Voice/Motion 逻辑在；实际 H3 请求与清单一致的留证未全量。 |
-| AT-72 | 双角色素材近上限→确定性裁剪 | 🔶 | 独立打包+按上限裁剪+主身份不静默丢（逻辑在）；边界实测未跑。 |
-| AT-73 | 改文字描述不点重新生成→不动资产 | ✅ | 旧视觉资产不变、UI 提示不一致、无自动 API 请求。 |
+| AT-68 | 换主图/Canonical Voice/新增 Outfit | 🔶 | approve front→IDENTITY+breaking_identity_change；其他 role→ASSET_ADDITION；`versions`/`versions/diff` 可查（mock 实测版本链 v1→v2）；Voice/Outfit 三类各一次实测未全跑。 |
+| AT-69 | Scenario 用 v3 后 Global 升 v4 | ✅ | publish 自动 `snapshot_for_scenario`（routes.py publish 钩）→ frozen_asset_refs；Global 新版本不渗透（snapshot 隔离 + mock 实测 promote 升全局）。 |
+| AT-70 | Scenario 内改外观→仅本故事/全局 | ✅ | `character-snapshots/{id}/override` 写 local_overrides 不污染 Global；`/promote` 人工升为新全局版本（mock 实测 200→全局 appearance 生效）。 |
+| AT-71 | 单角色 Scene→自动选 2-4 张图 | 🔶 | `resolve-references` 按 front>3⁄4>side>full_* 选 ≤4 张+selection_reason 可审计（mock 实测 5 Canonical→4）；create_session 把 frozen refs 直进 asset_manifest（engine.py v0.6 快照消费）；实际 H3 请求一致留证未全量。 |
+| AT-72 | 双角色素材近上限→确定性裁剪 | 🔶 | `_bound_references` 按角色分桶+每角色≤4+主身份优先（engine.py）；双角色边界实测未跑。 |
+| AT-73 | 改文字描述不点重新生成→不动资产 | ✅ | 保存仅 PATCH 文本字段；Studio 提示「不会自动生图」；`ai-describe` 仅返回草案不落库（FR-096 确认制）。 |
 | AT-74 | 多分辨率 100% Zoom 走四页 | ✅ | `docs/acceptance/shots/`：1366×768 / 1440×900 / 1920×1080 / 2560×1440 / 3840×2160 五档走 home/creator/developer——文字可读、侧边栏与工作区无关键遮挡；4K 合理扩展。新增 `#/<page>[/<tab>]` 深链（store.ts）支撑可分享直达与验收脚本。 |
 | AT-75 | 标准隐藏 Prompt/Provider，开发者可见 | ✅ | 术语隔离：玩家界面自然中文、Provider/model 仅开发者模式；FAL_KEY 不进浏览器/Trace（G28）。 |
 | AT-76 | 封版部署核查 + AGENT↔VIDEO 往返 | 🔶 | 六类 Provider 有配置+健康矩阵+真实输出：h3_max 已真实出片（job `01a0ceef` → 6.9MB mp4/5.18s）、sol_h3 出片、step_37/jev 在线；nemotron_local 本地仍不稳走降级链。 |
