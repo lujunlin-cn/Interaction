@@ -87,6 +87,27 @@ export default function Home() {
               <button onClick={() => setState({ editId: sc.id, page: "creator", creatorTab: "overview" })}>
                 编辑
               </button>
+              <button onClick={async () => {
+                try {
+                  await api.duplicateScenario(sc.id);
+                  toast("已创建副本。");
+                  reload();
+                } catch (e: any) {
+                  toast(`复制失败：${e.message}`);
+                }
+              }}>复制</button>
+              {sc.owner !== "official" && (
+                <button className="danger" onClick={async () => {
+                  if (!window.confirm(`确定删除「${sc.title}」？此操作不可撤销。`)) return;
+                  try {
+                    await api.deleteScenario(sc.id);
+                    toast("已删除。");
+                    reload();
+                  } catch (e: any) {
+                    toast(`删除失败：${e.message}`);
+                  }
+                }}>删除</button>
+              )}
             </div>
           </article>
         ))}

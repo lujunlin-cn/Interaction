@@ -10,18 +10,14 @@ from typing import Any, Optional
 
 from .schemas import PatchOperation, StatePatchProposal, WorldState
 
-# 允许写入的世界路径白名单（不含 truth —— 核心真相不可由行动改写）
+# 允许写入的世界路径白名单（不含 truth —— 核心真相不可由行动改写）。
+# namespace 白名单（PRD Q13）：Scenario 泛化，不绑定任何具体故事的字段名。
 ALLOWED_PATCH_PATHS = {
-    "location",
+    "location",          # 值域另行校验：须 ∈ Scenario 声明的 locations
     "fiction_minutes",
     "health",
-    "objects.back_door",
-    "objects.recording",
-    "objects.alice_alive",
-    "objects.alice_visual",
-    "objects.alice_departure",
 }
-ALLOWED_PREFIXES = ("relationships.", "clues.")
+ALLOWED_PREFIXES = ("objects.", "relationships.", "clues.")
 
 
 class ProposalRejected(Exception):
@@ -71,8 +67,12 @@ def apply_operations(
     ops: list[PatchOperation],
     *,
     inventory_capacity: int = 8,
+    locations: Optional[list[str]] = None,
 ) -> WorldState:
-    """在副本上应用操作，返回新世界；任何非法操作抛 ProposalRejected，原世界不被修改。"""
+    """在副本上应用操作，返回新世界；任何非法操作抛 ProposalRejected，原世界不被修改。
+
+    locations：Scenario 声明的地点值域；非空时 location 的 set 值必须命中。
+    """
     w = world.model_copy(deep=True)
     for op in ops:
         if op.op == "addItem":
@@ -101,6 +101,10 @@ def apply_operations(
                     val = _clamp(val, 0, 100)
                 _set_path(w, op.path, val)
             else:
+                if op.path == "location" and locations is not None \
+                        and op.value not in locations:
+                    raise ProposalRejected(
+                        f"location out of scenario domain: {op.value}")
                 _set_path(w, op.path, op.value)
         else:
             raise ProposalRejected(f"unknown operation: {op.op}")
@@ -119,6 +123,7 @@ class StateManager:
         proposal: StatePatchProposal,
         committed_keys: list[str],
         drama_revision: Optional[int] = None,
+        locations: Optional[list[str]] = None,
     ) -> WorldState:
         """校验通过返回应用后的新世界（不落库）；失败抛 ProposalRejected。"""
         if proposal.idempotency_key and proposal.idempotency_key in committed_keys:
@@ -135,6 +140,8 @@ class StateManager:
             if "equals" in pre and actual != pre["equals"]:
                 raise ProposalRejected(
                     f"precondition failed: {pre.get('path')} expected {pre['equals']} got {actual}")
-        new_world = apply_operations(world, proposal.operations, inventory_capacity=self.inventory_capacity)
+        new_world = apply_operations(world, proposal.operations,
+                                     inventory_capacity=self.inventory_capacity,
+                                     locations=locations)
         new_world.version = world.version + 1
         return new_world

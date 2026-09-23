@@ -1,5 +1,5 @@
 /** App 外壳：左侧 Sidebar + 主工作区 +（Player 页）Inspector 抽屉。 */
-import React from "react";
+import React, { useEffect } from "react";
 import { setState, useUi } from "./store";
 import Sidebar from "./components/Sidebar";
 import Home from "./pages/Home";
@@ -25,6 +25,16 @@ const TITLES: Record<string, string> = {
 export default function App() {
   const ui = useUi();
   const isPlayer = ui.page === "player";
+
+  // G13：全局显示设置 → body data-* 属性（CSS 变量档位生效）
+  useEffect(() => {
+    const b = document.body;
+    b.dataset.appearance = ui.display.appearance;
+    b.dataset.density = ui.display.density;
+    b.dataset.fontsize = ui.display.fontSize;
+    b.dataset.subtitleSize = ui.display.subtitleSize;
+    b.dataset.subtitlePos = ui.display.subtitlePos;
+  }, [ui.display]);
   const inspector = isPlayer && ui.inspectorOpen;
 
   let content: React.ReactNode;

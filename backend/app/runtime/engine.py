@@ -35,6 +35,7 @@ from ..domain.schemas import (
 from ..domain.state_manager import ProposalRejected, StateManager
 from ..providers.router import ProviderBlocked, ProviderError, ProviderRouter
 from ..skills.registry import is_enabled as skill_enabled
+from ..skills import mechanic as mechanic_skill
 from .session_state import Arc, BudgetLedger, SessionState, TimedState
 from .tracer import tracer
 
@@ -47,9 +48,6 @@ PHASE_LABELS = {
     BranchStatus.RETRYING: "正在重试生成",
 }
 
-ENDING_FAMILIES = ("voluntary_departure", "truth_or_farewell", "truth_and_trust",
-                   "quiet_farewell")
-
 state_manager = StateManager()
 drama_manager = DramaStateManager()
 
@@ -58,20 +56,53 @@ class EngineError(Exception):
     pass
 
 
-# 线索/物品的中文显示名（玩法机制对用户显示自然中文，不暴露技术词）
-CLUE_LABELS = {
-    "key_scratches": "钥匙上的划痕",
-    "train_ticket": "午夜车票",
-    "recording_found": "关键录音",
-    "truth_revealed": "真相的轮廓",
-}
+def _parse_declared_lines(raw: str) -> dict[str, str]:
+    """解析 Scenario 声明文本的「id｜描述」行 → {id: 描述}。"""
+    out: dict[str, str] = {}
+    for line in (raw or "").splitlines():
+        parts = [p.strip() for p in line.split("｜")]
+        if parts and parts[0]:
+            out[parts[0]] = parts[1] if len(parts) > 1 and parts[1] else parts[0]
+    return out
 
-ENDING_TITLES = {
-    "voluntary_departure": "雨中离去",
-    "truth_or_farewell": "真相与告别",
-    "truth_and_trust": "真相与信任",
-    "quiet_farewell": "安静的告别",
-}
+
+def _clue_labels(state: "SessionState") -> dict[str, str]:
+    """线索/事实的中文显示名：从 Scenario 声明解析（foreshadows + truth_model）。
+
+    玩法机制对用户显示自然中文，不暴露技术词；未声明的 id 回退裸 id。
+    """
+    drama = state.scenario_snapshot.get("drama", {})
+    labels = _parse_declared_lines(drama.get("foreshadows", ""))
+    for line in (drama.get("truth_model") or "").splitlines():
+        if "：" in line:
+            key, desc = line.split("：", 1)
+            labels.setdefault(key.strip(), desc.strip()[:24])
+    return labels
+
+
+def _ending_families(state: "SessionState") -> dict[str, str]:
+    """{family_id: 显示名} —— Scenario drama.ending_families 的「id｜描述」声明。"""
+    drama = state.scenario_snapshot.get("drama", {})
+    return _parse_declared_lines(drama.get("ending_families", ""))
+
+
+def _scenario_locations(state: "SessionState") -> list[str]:
+    """Scenario 声明的地点 id 列表（world.locations 的「id｜名称」行）。"""
+    raw = state.scenario_snapshot.get("world", {}).get("locations", "")
+    return [line.split("｜")[0].strip()
+            for line in raw.splitlines() if line.strip()]
+
+
+def _scenario_location_names(state: "SessionState") -> dict[str, str]:
+    return _parse_declared_lines(
+        state.scenario_snapshot.get("world", {}).get("locations", ""))
+
+
+def _npc_ids(state: "SessionState") -> list[str]:
+    """在场非玩家角色 id（按 Scenario characters 声明顺序）。"""
+    player_id = state.scenario_snapshot.get("player_character", "player")
+    return [c.get("id") for c in state.scenario_snapshot.get("characters", [])
+            if c.get("id") and c.get("id") != player_id]
 
 
 def _to_patch_ops(raw_ops: list[dict]) -> list[PatchOperation]:
@@ -94,6 +125,28 @@ class RuntimeEngine:
         if session_id not in self.locks:
             self.locks[session_id] = asyncio.Lock()
         return self.locks[session_id]
+
+    def _scenario_brief(self, state: SessionState) -> dict:
+        """Director/Narrative 调用的 Scenario+当前状态摘要（泛化，不含硬编码故事）。"""
+        snapshot = state.scenario_snapshot
+        drama = snapshot.get("drama", {})
+        chars = {c.get("id"): c for c in snapshot.get("characters", [])}
+        return {
+            "title": snapshot.get("title", ""),
+            "genre": snapshot.get("genre", ""),
+            "tone": snapshot.get("tone", ""),
+            "core_question": drama.get("core_question", ""),
+            "ending_families": _ending_families(state),
+            "truth_model": drama.get("truth_model", ""),
+            "locations": _scenario_location_names(state),
+            "location": state.world.location,
+            "inventory": state.world.inventory,
+            "clues": list(state.world.clues.keys()),
+            "relationships": state.world.relationships,
+            "phase": state.drama.phase.value,
+            "npcs": [{"id": cid, "identity": chars.get(cid, {}).get("identity", cid)}
+                     for cid in _npc_ids(state)],
+        }
 
     async def _persist(self, state: SessionState) -> None:
         state.touch()
@@ -144,13 +197,47 @@ class RuntimeEngine:
             scenario_id = vrow.scenario_id
             arows = (await db.execute(
                 select(AssetRow).where(AssetRow.scenario_id == scenario_id))).scalars().all()
+            # G12：在场角色绑定的全局角色（快照版本）ref 素材并入 manifest
+            from ..db_models import GlobalCharacterRow
+            char_global: dict[str, dict] = {}
+            for ch in snapshot.get("characters", []):
+                gcid = ch.get("global_character_id")
+                if gcid:
+                    grow = await db.get(GlobalCharacterRow, gcid)
+                    if grow is not None:
+                        char_global[ch.get("id", "")] = dict(grow.data)
+            ref_asset_ids: list[tuple[str, str]] = []   # (scenario_char_id, asset_id)
+            for cid, gdata in char_global.items():
+                for key, role in (("ref_front_asset", "identity"),
+                                  ("ref_side_asset", "identity"),
+                                  ("ref_back_asset", "identity"),
+                                  ("ref_voice_asset", "voice"),
+                                  ("ref_motion_asset", "motion")):
+                    aid = gdata.get(key)
+                    if aid:
+                        ref_asset_ids.append((cid, aid))
+                for aid in gdata.get("ref_other_assets", []) or []:
+                    ref_asset_ids.append((cid, aid))
+            g_assets: dict[str, dict] = {}
+            for cid, aid in ref_asset_ids:
+                if aid in g_assets:
+                    continue
+                arow = await db.get(AssetRow, aid)
+                if arow is not None:
+                    g_assets[aid] = {
+                        "id": arow.data.get("id"), "version": arow.data.get("version", 1),
+                        "role": arow.data.get("role", "") or "identity",
+                        "entity": cid, "binding": cid,
+                        "name": arow.data.get("name", ""),
+                        "type": arow.data.get("type", ""),
+                        "path": arow.data.get("storage_path", "")}
         state = self._bootstrap(scenario_version_id, scenario_id, snapshot)
         state.asset_manifest = [
             {"id": r.data.get("id"), "version": r.data.get("version", 1),
              "role": r.data.get("role", ""), "entity": r.data.get("entity", ""),
              "binding": r.data.get("binding", ""), "name": r.data.get("name", ""),
              "type": r.data.get("type", ""), "path": r.data.get("storage_path", "")}
-            for r in arows]
+            for r in arows] + list(g_assets.values())
         self.sessions[state.id] = state
         await self._persist(state)
         await tracer.emit("session.create", "success", output={"session_id": state.id},
@@ -287,38 +374,93 @@ class RuntimeEngine:
     # ==================================================================
     # 候选推荐（Director Agent 视角）
     # ==================================================================
-    async def candidate_actions(self, state: SessionState) -> list[dict]:
+    def _generic_candidates(self, state: SessionState) -> list[dict]:
+        """确定性通用候选：按 Scenario 声明的 locations/characters 参数化。
+
+        三类稳定模板（观察 / 对话 / 主动退出），不绑定任何具体故事语义。
+        """
         world = state.world
-        mechanics = state.scenario_snapshot.get("mechanics", {})
+        loc_names = _scenario_location_names(state)
+        loc_ids = _scenario_locations(state)
+        npcs = _npc_ids(state)
+        chars = {c.get("id"): c for c in state.scenario_snapshot.get("characters", [])}
+        here = loc_names.get(world.location, world.location)
+        candidates: list[dict] = [
+            dict(label=f"仔细观察{here}的细节", confidence=0.6,
+                 summary="不承诺立场，先收集眼前可观察的信息", kind="investigation"),
+        ]
+        for cid in npcs[:1]:
+            name = chars.get(cid, {}).get("identity", cid).split(" /")[0]
+            candidates.append(
+                dict(label=f"和{name}谈谈，听 TA 怎么说", confidence=0.6,
+                     summary="不推进调查，让关系自然流动", kind="social"))
+        other_locs = [l for l in loc_ids if l != world.location]
+        if other_locs:
+            dest = loc_names.get(other_locs[-1], other_locs[-1])
+            candidates.append(
+                dict(label=f"离开这里，去{dest}", confidence=0.55,
+                     summary="主动改变自己所处的位置", kind="withdrawal"))
+        else:
+            candidates.append(
+                dict(label="主动退出眼前的故事", confidence=0.55,
+                     summary="不再参与眼前的矛盾", kind="withdrawal"))
+        return candidates
+
+    async def candidate_actions(self, state: SessionState) -> list[dict]:
+        """推荐候选 = Director 按当前 World/Drama/Scenario 上下文生成 + Jev 排序
+        + 确定性通用兜底（Provider 全不可用时仍保证玩家有可选项）。"""
+        world = state.world
+        snapshot = state.scenario_snapshot
+        drama = snapshot.get("drama", {})
+        loc_names = _scenario_location_names(state)
+        npcs = _npc_ids(state)
+        chars = {c.get("id"): c for c in snapshot.get("characters", [])}
+        context = {
+            "title": snapshot.get("title", ""),
+            "tone": snapshot.get("tone", ""),
+            "core_question": drama.get("core_question", ""),
+            "location": world.location,
+            "location_name": loc_names.get(world.location, world.location),
+            "locations": loc_names,
+            "inventory": world.inventory,
+            "clues": list(world.clues.keys()),
+            "relationships": world.relationships,
+            "npcs": [{"id": cid, "identity": chars.get(cid, {}).get("identity", cid)}
+                     for cid in npcs],
+            "phase": state.drama.phase.value,
+            "wishes": [w.raw for w in state.wishes if w.status == WishStatus.ACTIVE],
+            "recent_events": [e.summary for e in state.events[-5:]],
+            "instruction": "生成 3-5 个玩家此刻可采取的行动候选，"
+                           "返回 JSON: {\"candidates\": [{\"label\",\"summary\",\"kind\"}]}，"
+                           "kind ∈ investigation/social/risk/withdrawal",
+        }
         candidates: list[dict] = []
-        has_key = any("Key" in item or "钥匙" in item for item in world.inventory)
-        ticket = world.clues.get("train_ticket")
-        recording = world.clues.get("recording_found")
+        try:
+            _, rec, resp = await self.router.call_text(
+                "director",
+                messages=[{"role": "user", "content":
+                           f"scenario_context: {json.dumps(context, ensure_ascii=False)}"}],
+                output_contract={"purpose": "candidate_actions"},
+                branch_id=None)
+            content = json.loads(resp.content)
+            for c in (content.get("candidates") or []):
+                label = str(c.get("label", "")).strip()
+                if label:
+                    candidates.append(dict(
+                        label=label[:40],
+                        summary=str(c.get("summary", ""))[:80],
+                        confidence=float(c.get("confidence", 0.6)),
+                        kind=str(c.get("kind", "investigation"))))
+            await tracer.emit("director.candidates", "success",
+                              output={"count": len(candidates)},
+                              provider=rec.selected or "", session_id=state.id)
+        except (ProviderBlocked, ProviderError, ValueError, KeyError) as e:
+            await tracer.emit("director.candidates", "degraded",
+                              output={"reason": str(e)[:200]}, session_id=state.id)
+        if not candidates:
+            candidates = self._generic_candidates(state)
 
-        if world.location == "foyer" and not world.clues.get("key_scratches"):
-            candidates.append(dict(label="检查门垫下的旧钥匙", confidence=0.78,
-                                   summary="钥匙柄上有反复使用留下的划痕", kind="investigation"))
-        if world.location == "foyer":
-            candidates.append(dict(label="敲门问 Alice 是否需要帮忙收拾行李", confidence=0.72,
-                                   summary="主动释放善意，观察她的反应", kind="social"))
-        if has_key and not ticket:
-            candidates.append(dict(label="用旧钥匙试着打开走廊尽头的储物柜", confidence=0.7,
-                                   summary="柜子里也许有她匆忙离开的原因", kind="investigation"))
-        if ticket and not recording:
-            candidates.append(dict(label="问 Alice 关于那张午夜车票", confidence=0.66,
-                                   summary="直接但可能触碰她的边界", kind="social"))
-        if recording and not world.truth.get("fact_recording"):
-            candidates.append(dict(label="播放那段录音", confidence=0.74,
-                                   summary="真相也许就在里面", kind="investigation"))
-        candidates.append(dict(label="保持沉默，观察 Alice 的反应", confidence=0.6,
-                               summary="不推进调查，但让关系自然流动", kind="social"))
-        candidates.append(dict(label="现在离开公寓", confidence=0.55,
-                               summary="主动退出今晚的故事", kind="withdrawal"))
-
-        if not mechanics.get("clue-system", {}).get("enabled", True):
-            candidates = [c for c in candidates
-                          if "钥匙" not in c["label"] and "储物柜" not in c["label"]]
-        # Jev/Decision 排序（Mock 决策或真实 API）；不可用则保持规则顺序
+        # Jev/Decision 排序（Mock 决策或真实 API）；不可用则保持现有顺序
         try:
             _, rec, answer = await self.router.call_decision(
                 state={"location": world.location, "inventory": world.inventory,
@@ -675,9 +817,28 @@ class RuntimeEngine:
                 idempotency_key=f"dcommit:{branch.id}")
             branch.packet = self._build_scene_packet(state, branch)
             return
+        # 期望输出 schema 注入 prompt（真实 LLM 需要显式契约才知道产 skill_triggers）
+        mech_ids = [k for k, v in (mechanics or {}).items()
+                    if isinstance(v, dict) and v.get("enabled", True)] or \
+                   ["relationship", "clue-system", "inventory"]
+        schema_hint = (
+            "返回 JSON：{\"outcome\": {\"title\": str, \"text\": str, "
+            "\"ops\": [{\"op\": \"set|increment|addItem|removeItem|inspect\", "
+            "\"path\": str, \"value\": any}], \"evidence\": [str], "
+            "\"ending\": str|null, \"kind\": str, "
+            "\"skill_triggers\": [{\"skill\": \"" + "|".join(mech_ids) + "\", "
+            "\"target\": str, \"action\": \"add|remove\", \"stage\": "
+            "\"DISCOVERED|VERIFIED|USED\", \"value\": int}]}, "
+            "\"directive\": {\"primary_function\": str, \"secondary_functions\": [str], "
+            "\"target_changes\": [str], \"hard_constraints\": [str], \"avoid\": [str]}}。"
+            "skill_triggers 仅在玩家行动明确触发玩法机制时给出（如获得物品→inventory、"
+            "发现线索→clue-system、关心角色→relationship）；不触发则为空数组。")
         _, rec, resp = await self.router.call_text(
             "director",
-            messages=[{"role": "user", "content": f"raw_player_input: {branch.label}"}],
+            messages=[{"role": "user", "content":
+                       f"raw_player_input: {branch.label}\n"
+                       f"scenario_context: {json.dumps(self._scenario_brief(state), ensure_ascii=False)}\n"
+                       f"{schema_hint}"}],
             output_contract={"purpose": "director_plan", "mechanics": mechanics},
             branch_id=branch.id)
         content = json.loads(resp.content)
@@ -699,6 +860,24 @@ class RuntimeEngine:
             ending=outcome.get("ending"),
             kind=outcome.get("kind", "investigation"))
         branch.summary = branch.summary or branch.outcome.title
+        # Mechanic Skill 闭环（G26）：director 产出的 skill_triggers 显式走
+        # skill 函数 → 带 skill_version/input 的 Proposal → 合并进 state patch ops。
+        # 禁用/不处理的 trigger 静默跳过；产出与普通 ops 走同一 validate→commit。
+        for trig in outcome.get("skill_triggers") or []:
+            sid = trig.get("skill", "")
+            result = mechanic_skill.invoke(
+                sid, trig, self._scenario_brief(state), mechanics,
+                branch.id, state.world.version, state.drama.revision)
+            if result is None:
+                continue
+            for op in result["proposal"]["operations"]:
+                branch.outcome.ops.append(PatchOperation(**op))
+            await tracer.emit(f"skill.{sid}", "success",
+                              input_=result["input"],
+                              output={"ops": len(result["proposal"]["operations"])},
+                              provider="runtime",
+                              session_id=state.id, branch_id=branch.id,
+                              skill_id=sid, skill_version=result["skill_version"])
         # 预构建双域 Proposal（提交时刷新 base_version 再校验）
         if branch.outcome.ops:
             branch.state_patch_proposal = StatePatchProposal(
@@ -762,7 +941,9 @@ class RuntimeEngine:
             value = values.get(key, "")
             for seg in _re.split(r"[，。；、,.;！？\s]+", value):
                 seg = seg.strip()
-                if len(seg) >= 4 and seg in text:
+                # ≥6 字才视为泄密特征片段：短片段（如角色名 "Alice"、地名）会出现在
+                # 任何正常叙事里，阈值过低会把合法文本误判为泄密（G07 泛化后暴露）。
+                if len(seg) >= 6 and seg in text:
                     hits.append(f"{key}→{seg}")
         return hits
 
@@ -801,7 +982,8 @@ class RuntimeEngine:
                 "narrative", messages=messages,
                 output_contract={"purpose": "narrative_beat", "context": branch.context,
                                  "packet": branch.packet.model_dump(mode="json")
-                                 if branch.packet else {}},
+                                 if branch.packet else {},
+                                 "scenario_brief": self._scenario_brief(state)},
                 branch_id=branch.id)
             content = json.loads(resp.content)
             text = content.get("text") or (outcome.text if outcome else branch.summary)
@@ -830,6 +1012,13 @@ class RuntimeEngine:
         identity/wardrobe/voice/motion 的全局参考。Skills 只产 Proposal，不直接改状态。
         """
         if not skill_enabled("visual-continuity"):
+            try:
+                asyncio.get_running_loop().create_task(tracer.emit(
+                    "visual-continuity.blocked", "blocked",
+                    output={"reason": "skill disabled"},
+                    skill_id="visual-continuity"))
+            except RuntimeError:
+                pass
             return []
         chars = {c.get("id") for c in state.scenario_snapshot.get("characters", [])}
         refs: list[dict] = []
@@ -875,10 +1064,15 @@ class RuntimeEngine:
         branch.routes.append(rec)
         await tracer.emit("production.shots", "success",
                           output={"shots": len(branch.shots)},
-                          provider=rec.selected or "", session_id=state.id, branch_id=branch.id)
+                          provider=rec.selected or "", session_id=state.id,
+                          branch_id=branch.id, skill_id="h3-production")
 
     async def _generate_branch_media(self, session_id: str, branch_id: str) -> None:
         if not skill_enabled("h3-production"):
+            await tracer.emit("h3-production.blocked", "blocked",
+                              output={"reason": "skill disabled"},
+                              session_id=session_id, branch_id=branch_id,
+                              skill_id="h3-production")
             raise EngineError("生成被阻塞：H3 Production Skill 已禁用（开发者模式可恢复）")
         async with self._lock(session_id):
             state = await self.load_session(session_id)
@@ -913,6 +1107,10 @@ class RuntimeEngine:
     async def _assemble_branch(self, state: SessionState, branch: Branch) -> None:
         """确定性装配：FFmpeg concat → 受控媒体目录（Assembly 不走生成模型）。"""
         if not skill_enabled("video-assembly"):
+            await tracer.emit("video-assembly.blocked", "blocked",
+                              output={"reason": "skill disabled"},
+                              session_id=state.id, branch_id=branch.id,
+                              skill_id="video-assembly")
             raise EngineError("装配被阻塞：Video Assembly Skill 已禁用（开发者模式可恢复）")
         scene_id = uid("scene")
         out_dir = settings.media_path / "scenes"
@@ -1034,16 +1232,21 @@ class RuntimeEngine:
     async def _commit_selected(self, state: SessionState, branch: Branch) -> None:
         """Two-Phase Canonicalization：SELECTED → PROVISIONAL → 媒体确认 → CANONICAL。
 
-        调用方必须持有 session 锁。失败回滚，不污染正式状态。
+        调用方必须持有 session 锁。PROVISIONAL 显式持久化+推送（可观察）；
+        任何一步失败 → FAILED + 回滚事件，不污染正式状态。
         """
         try:
             branch.status = BranchStatus.SELECTED
+            # Phase 1：PROVISIONAL —— 媒体可播放性确认前的可见中间态
+            branch.status = BranchStatus.PROVISIONAL
+            await self._persist(state)
+            await self._push(state)
             if not branch.artifact or not branch.artifact.assembled_path:
                 raise EngineError("media not confirmed playable")
             media_file = settings.media_path / branch.artifact.assembled_path
             if not media_file.exists():
                 raise EngineError("media file missing")
-            branch.status = BranchStatus.PROVISIONAL
+            # Phase 2：媒体确认 → 双域原子提交 → CANONICAL
             await self._commit_branch(state, branch)
             branch.status = BranchStatus.CANONICAL
             branch.commit_event = f"commit:{branch.id}"
@@ -1075,23 +1278,37 @@ class RuntimeEngine:
                 b.invalidated_reason = "not_selected"
 
     async def _commit_branch(self, state: SessionState, branch: Branch) -> None:
-        """双域联合提交：world + drama 一起成功才落版本；幂等键 = branch.id。"""
+        """双域原子提交：world + drama 全部 validate 通过后才一次性落版本（G03）。
+
+        任一域校验失败，两个域都不被修改；幂等键同事务追加。
+        """
+        new_world: Optional[WorldState] = None
+        new_drama: Optional[DramaState] = None
+        new_keys: list[str] = []
         if branch.state_patch_proposal:
             proposal = branch.state_patch_proposal.model_copy(
                 update={"base_version": state.world.version,
                         "base_drama_revision": state.drama.revision})
-            state.world = state_manager.validate(
+            new_world = state_manager.validate(
                 state.world, proposal, state.committed_keys,
-                drama_revision=state.drama.revision)
-            state.committed_keys.append(proposal.idempotency_key)
+                drama_revision=state.drama.revision,
+                locations=_scenario_locations(state) or None)
+            new_keys.append(proposal.idempotency_key)
         if branch.drama_patch_proposal:
             proposal = branch.drama_patch_proposal.model_copy(
                 update={"base_revision": state.drama.revision})
-            state.drama = drama_manager.validate_and_apply(
+            new_drama = drama_manager.validate_and_apply(
                 state.drama, proposal, state.committed_keys)
-            state.committed_keys.append(proposal.idempotency_key)
+            new_keys.append(proposal.idempotency_key)
+        # 双域均通过 → 一次性赋值（原子提交点）
+        if new_world is not None:
+            state.world = new_world
+        if new_drama is not None:
+            state.drama = new_drama
+        state.committed_keys.extend(k for k in new_keys if k)
         self._update_preferences(state, branch)
         self._advance_pressures(state, branch)
+        self._evaluate_wishes(state, branch)
 
     def _update_preferences(self, state: SessionState, branch: Branch) -> None:
         kind = branch.outcome.kind if branch.outcome else "investigation"
@@ -1136,7 +1353,7 @@ class RuntimeEngine:
         state.turns = state.turns[-100:]
         # 预生成下一批（预测式）：播放开始即可后台准备
         outcome = branch.outcome
-        if outcome and outcome.ending in ENDING_FAMILIES:
+        if outcome and outcome.ending and outcome.ending in _ending_families(state):
             self._close_arc(state, outcome.ending)
         else:
             asyncio.get_running_loop().create_task(self._safe_prepare(state.id))
@@ -1303,7 +1520,9 @@ class RuntimeEngine:
         mechanics = state.scenario_snapshot.get("mechanics", {})
         _, rec, resp = await self.router.call_text(
             "director",
-            messages=[{"role": "user", "content": f"raw_player_input: {text}"}],
+            messages=[{"role": "user", "content":
+                       f"raw_player_input: {text}\n"
+                       f"scenario_context: {json.dumps(self._scenario_brief(state), ensure_ascii=False)}"}],
             output_contract={"purpose": "director_plan", "mechanics": mechanics})
         content = json.loads(resp.content)
         outcome = content.get("outcome") or {}
@@ -1319,7 +1538,8 @@ class RuntimeEngine:
                 try:
                     state.world = state_manager.validate(
                         state.world, proposal, state.committed_keys,
-                        drama_revision=state.drama.revision)
+                        drama_revision=state.drama.revision,
+                        locations=_scenario_locations(state) or None)
                     state.committed_keys.append(proposal.idempotency_key)
                 except ProposalRejected:
                     pass
@@ -1411,7 +1631,9 @@ class RuntimeEngine:
             state = await self.load_session(session_id)
             if not state:
                 raise EngineError("session not found")
-            wish = Wish(id=uid("wish"), raw=text, version=state.wish_seq + 1)
+            wish = Wish(id=uid("wish"), raw=text,
+                        normalized_preference=self._normalize_wish(text),
+                        version=state.wish_seq + 1)
             state.wishes.append(wish)
             state.wish_seq += 1
             # 愿望影响 Drama 上下文：指纹变化 → 未就绪分支保守失效
@@ -1436,6 +1658,92 @@ class RuntimeEngine:
             self._invalidate_stale(state, fp)
             await self._persist(state)
             await self._push(state)
+
+    # ------------------------------------------------------------------
+    # Wish Ledger（G25 / PRD Q41 / FR-053）：八态生命周期按真实提交事件推进，
+    # 候选视频或模型一句"已考虑"不算达成。
+    # ------------------------------------------------------------------
+    @staticmethod
+    def _normalize_wish(text: str) -> str:
+        """把玩家原文归成可匹配的偏好关键词（规则化，不调 LLM）。"""
+        import re as _re
+        t = text.strip()
+        for pat, tag in ((r"离开|逃走|脱身|平安|活下去|活着", "leave_alive"),
+                         (r"真相|知道|明白|发现|找到", "learn_truth"),
+                         (r"救|保护|帮|照顾|安慰", "protect_npc"),
+                         (r"原谅|和解|信任|在一起|关系", "relationship"),
+                         (r"收集|找到所有|线索|证据", "collect_evidence")):
+            if _re.search(pat, t):
+                return tag
+        return "generic"
+
+    def _evaluate_wishes(self, state: SessionState, branch: Branch) -> None:
+        """分支 CANONICAL 前按真实 outcome 推进 ACTIVE wish 的状态（G25）。
+
+        判定依据：outcome.ending（结局族）、kind、evidence、ops 的实际落地内容。
+        只迁移 ACTIVE 愿望；每条 history 记 action/reason/evidence/branch/at。
+        """
+        if branch.outcome is None:
+            return
+        outcome = branch.outcome
+        ending = outcome.ending or ""
+        kind = outcome.kind or ""
+        evidence = set(outcome.evidence or [])
+        ops_text = json.dumps([o.model_dump() for o in outcome.ops], ensure_ascii=False)
+
+        def bump(w: Wish, status: WishStatus, reason: str, ev: list[str]) -> None:
+            w.status = status
+            w.version += 1
+            w.evidence.extend(ev)
+            w.history.append({"at": now_ms(), "action": status.value,
+                              "reason": reason, "branch": branch.id,
+                              "evidence": ev})
+            self._event(state, "wish_updated",
+                        f"愿望{self._wish_status_label(status)}：{w.raw}",
+                        wish=w.id, branch_id=branch.id)
+
+        for w in state.wishes:
+            if w.status != WishStatus.ACTIVE:
+                continue
+            pref = w.normalized_preference or self._normalize_wish(w.raw)
+            # 结局触发的达成/部分达成判定
+            if ending:
+                if pref == "leave_alive":
+                    if "departure" in ending or "exit" in ending or "leave" in ending \
+                            or "escape" in ending:
+                        bump(w, WishStatus.FULFILLED, "达成离开结局", [ending])
+                    else:
+                        bump(w, WishStatus.PARTIALLY_FULFILLED,
+                             f"走向了 {ending}，未真正离开", [ending])
+                elif pref == "learn_truth":
+                    if "truth" in ending or "reveal" in ending:
+                        bump(w, WishStatus.FULFILLED, "达成真相揭示结局", [ending])
+                    else:
+                        bump(w, WishStatus.PARTIALLY_FULFILLED,
+                             f"结局 {ending} 未完全揭示真相", [ending])
+                elif pref == "relationship":
+                    bump(w, WishStatus.PARTIALLY_FULFILLED,
+                         f"故事以 {ending} 收束", [ending])
+                continue
+            # 非结局分支：按 kind/evidence/ops 部分推进
+            if pref == "learn_truth" and (evidence & {"truth_revealed"} or evidence):
+                bump(w, WishStatus.PARTIALLY_FULFILLED, "获得了新线索", sorted(evidence))
+            elif pref == "collect_evidence" and (evidence or "clues." in ops_text):
+                bump(w, WishStatus.PARTIALLY_FULFILLED, "收集到线索",
+                     sorted(evidence) or ["clues"])
+            elif pref == "protect_npc" and kind == "social":
+                bump(w, WishStatus.PARTIALLY_FULFILLED, "关心了角色", ["social"])
+            elif pref == "relationship" and "relationships." in ops_text:
+                bump(w, WishStatus.PARTIALLY_FULFILLED, "关系发生变化", ["relationships"])
+            elif pref == "leave_alive" and kind == "withdrawal":
+                bump(w, WishStatus.PARTIALLY_FULFILLED, "尝试离开", ["withdrawal"])
+
+    @staticmethod
+    def _wish_status_label(status: WishStatus) -> str:
+        return {"FULFILLED": "已实现", "PARTIALLY_FULFILLED": "部分实现",
+                "CONFLICTED": "与规则冲突", "FAILED": "未能实现",
+                "SUPERSEDED": "被替换", "WITHDRAWN": "已撤回",
+                "DEFERRED": "已延期", "ACTIVE": "生效中"}.get(status.value, status.value)
 
     # ==================================================================
     # 结局后续杯（continue world）
@@ -1525,9 +1833,10 @@ class RuntimeEngine:
                             "status": b.status.value}
                 break
         # 已知状态（呈现回执后才进 knowledge；这里给工具栏展示）
-        clues = [{"id": k, "label": CLUE_LABELS.get(k, k)}
+        clue_labels = _clue_labels(state)
+        clues = [{"id": k, "label": clue_labels.get(k, k)}
                  for k, v in state.world.clues.items() if v]
-        knowledge = [{"id": k, "label": CLUE_LABELS.get(k, k)}
+        knowledge = [{"id": k, "label": clue_labels.get(k, k)}
                      for k in state.world.knowledge]
         relationships = [
             {"id": cid, "name": chars.get(cid, {}).get("identity", cid).split(" /")[0],
@@ -1568,6 +1877,15 @@ class RuntimeEngine:
                            for b in state.pipeline_branches()],
             "timed": timed_view,
             "pending_intent": state.pending_intent,
+            # G27：最近一次失败的自由输入，供玩家重试/修改/放弃
+            "last_failed_action": (
+                {"branch_id": b.id, "label": b.label,
+                 "raw_text": b.intent.raw_text, "error": b.last_error or "",
+                 "fail_stage": b.fail_stage or ""}
+                if (b := next(
+                    (x for x in reversed(state.branches[-10:])
+                     if x.status == BranchStatus.FAILED
+                     and x.source == BranchSource.FREE), None)) else None),
             "known": {"inventory": state.world.inventory, "relationships": relationships,
                       "clues": clues, "knowledge": knowledge},
             "messages": state.messages[-20:],
@@ -1590,7 +1908,7 @@ class RuntimeEngine:
         min_branch_cost = settings.shots_per_branch * settings.shot_unit_cost
         return {
             "family": family,
-            "title": ENDING_TITLES.get(family or "", "篇章收束"),
+            "title": _ending_families(state).get(family or "", "篇章收束"),
             "carried": {
                 "relationships": [
                     {"id": cid,
@@ -1598,7 +1916,7 @@ class RuntimeEngine:
                      "value": v}
                     for cid, v in state.world.relationships.items()],
                 "inventory": state.world.inventory,
-                "knowledge": [{"id": k, "label": CLUE_LABELS.get(k, k)}
+                "knowledge": [{"id": k, "label": _clue_labels(state).get(k, k)}
                               for k in state.world.knowledge],
                 "continue_note": "你的关系、物品与已知事实会带入下一篇章。",
             },

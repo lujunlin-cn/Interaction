@@ -200,6 +200,8 @@ class ScenarioDraft(BaseModel):
     reviewed: bool = False
     manual_edits: list[str] = Field(default_factory=list)
     locks: list[str] = Field(default_factory=list)
+    # G17：结构化变更日志 {path, before, after, source, at}
+    changes: list[dict[str, Any]] = Field(default_factory=list)
     updated_at: int = Field(default_factory=now_ms)
 
 
@@ -266,7 +268,7 @@ class Asset(BaseModel):
 class WorldState(BaseModel):
     """Hard State：只保存已确认事实。版本由 StateManager 单调递增。"""
     version: int = 1
-    location: str = "foyer"
+    location: str = "start"          # Scenario 未声明 locations 时的中性默认值
     inventory: list[str] = Field(default_factory=list)
     relationships: dict[str, int] = Field(default_factory=dict)
     knowledge: list[str] = Field(default_factory=list)

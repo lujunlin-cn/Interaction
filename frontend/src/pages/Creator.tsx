@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { api } from "../api";
 import { setState, toast, useUi } from "../store";
-import type { GlobalCharacter, ScenarioCharacter, ScenarioDraft } from "../types";
+import type { GlobalCharacter, PublishCheck, ScenarioCharacter, ScenarioDraft } from "../types";
 
 const MECHANIC_LABELS: Record<string, string> = {
   relationship: "关系变化", "clue-system": "线索调查", inventory: "道具系统", qte: "限时互动",
@@ -18,6 +18,7 @@ const DRAMA_FIELDS: Array<[keyof ScenarioDraft["drama"], string, string]> = [
   ["ending_families", "Ending Families / 结局族", "每行一条：id｜描述"],
   ["foreshadows", "Foreshadows / 伏笔", "每行一条：id｜说明"],
   ["forbidden_outcomes", "Forbidden Outcomes / 禁止结果", "世界规则之外、不允许发生的结果"],
+  ["timed_interactions", "Timed Interactions / 限时互动", "每行一条：id｜kind(qte|urgent_dialogue)｜超时秒｜超时确定性结果（需启用「限时互动」玩法）"],
 ];
 
 export default function Creator() {
@@ -97,6 +98,7 @@ export default function Creator() {
                 {draft.characters.map((c) => <option key={c.id} value={c.id}>{c.identity}</option>)}
               </select></label>
           </div>
+          <InstructCard draft={draft} onDraft={setDraft} />
         </>
       )}
 
@@ -166,61 +168,203 @@ export default function Creator() {
             <label><span>强调色</span>
               <input type="color" value={draft.theme.accent}
                 onChange={(e) => patch({ theme: { ...draft.theme, accent: e.target.value } })} /></label>
+            <label><span>字体</span>
+              <select value={draft.theme.font}
+                onChange={(e) => patch({ theme: { ...draft.theme, font: e.target.value } })}>
+                <option value="system">系统默认</option>
+                <option value="serif">衬线（宋体系）</option>
+                <option value="rounded">圆体（幼圆系）</option>
+              </select></label>
+            <label><span>界面密度</span>
+              <select value={draft.theme.density}
+                onChange={(e) => patch({ theme: { ...draft.theme, density: e.target.value } })}>
+                <option value="compact">紧凑</option>
+                <option value="comfortable">舒适</option>
+                <option value="roomy">宽松</option>
+              </select></label>
             <label><span>字幕</span>
               <select value={draft.theme.subtitles}
                 onChange={(e) => patch({ theme: { ...draft.theme, subtitles: e.target.value } })}>
                 <option value="normal">正常</option><option value="large">大字号</option>
                 <option value="off">关闭</option>
               </select></label>
+            <label><span>背景</span>
+              <select value={draft.theme.background}
+                onChange={(e) => patch({ theme: { ...draft.theme, background: e.target.value } })}>
+                <option value="plain">纯色</option>
+                <option value="gradient">渐变</option>
+                <option value="texture">纹理</option>
+              </select></label>
+          </div>
+          {/* 预览 */}
+          <h4>预览</h4>
+          <div className="display-preview">
+            <div className="preview-scene" style={{
+              background: draft.theme.background === "gradient"
+                ? `linear-gradient(160deg, ${draft.theme.accent}55, #0f151b)`
+                : draft.theme.background === "texture"
+                  ? `repeating-linear-gradient(45deg, #1d2833, #1d2833 8px, #18222b 8px, #18222b 16px)`
+                  : "#151c24",
+            }}>
+              <div className="preview-caption" style={{
+                bottom: 12, color: draft.theme.subtitles === "off" ? "transparent" : "#f0f2f4",
+                fontSize: draft.theme.subtitles === "large" ? 19 : 15,
+                fontFamily: draft.theme.font === "serif" ? "Songti SC, SimSun, serif"
+                  : draft.theme.font === "rounded" ? "Yuanti SC, YouYuan, sans-serif" : "inherit",
+              }}>
+                {draft.title} —— 场景字幕预览
+              </div>
+            </div>
           </div>
         </div>
       )}
 
       {ui.creatorTab === "publish" && (
-        <div className="card">
-          <h3>发布</h3>
-          <PublishChecklist draft={draft} />
-          <div className="toolbar">
-            <button className="primary" onClick={async () => {
-              try {
-                const r = await api.publishScenario(draft.id);
-                toast(`已发布 v${r.version}。已有游玩会话继续绑定原版本。`);
-                const v = await api.scenarioVersions(draft.id);
-                setVersions(v.items);
-              } catch (e: any) {
-                toast(`发布失败：${e.message}`);
-              }
-            }}>发布 v{nextVersion(versions)}</button>
-            <span className="muted">发布后形成不可变版本；已有会话不受影响。</span>
-          </div>
-          <div className="divider" />
-          <h4>版本历史</h4>
-          {versions.length === 0 ? <div className="empty">尚未发布。</div> : (
-            <table className="dev">
-              <thead><tr><th>版本</th><th>发布时间</th><th>版本 ID</th></tr></thead>
-              <tbody>
-                {versions.map((v) => (
-                  <tr key={v.version_id}>
-                    <td>v{v.version}</td>
-                    <td>{new Date(v.created_at).toLocaleString()}</td>
-                    <td className="mono">{v.version_id}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+        <PublishTab draft={draft} versions={versions} onPublished={async () => {
+          const v = await api.scenarioVersions(draft.id);
+          setVersions(v.items);
+        }} />
       )}
 
       {ui.creatorTab === "changes" && (
         <div className="card">
           <h3>变更记录</h3>
-          <p className="muted">人工编辑字段：{draft.manual_edits.length ? draft.manual_edits.join("、") : "无"}</p>
-          <p className="muted">锁定字段：{draft.locks.length ? draft.locks.join("、") : "无"}</p>
-          <p className="muted">AI 修改草案时，人工编辑与锁定字段会被保留。</p>
+          {(!draft.changes || draft.changes.length === 0) ? (
+            <div className="empty">还没有变更记录。人工保存或 AI 指令修改都会产生条目。</div>
+          ) : (
+            <table className="dev">
+              <thead><tr><th>字段</th><th>Before</th><th>After</th><th>来源</th><th>时间</th></tr></thead>
+              <tbody>
+                {[...draft.changes].reverse().map((c, i) => (
+                  <tr key={i}>
+                    <td className="mono">{c.path}</td>
+                    <td style={{ maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis" }}>
+                      {String(c.before ?? "—").slice(0, 80)}</td>
+                    <td style={{ maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis" }}>
+                      {String(c.after ?? "—").slice(0, 80)}</td>
+                    <td>{c.source === "instruct" ? "AI 指令" : "人工编辑"}{c.reason ? `：${c.reason}` : ""}</td>
+                    <td>{new Date(c.at).toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          <p className="muted" style={{ marginTop: 10 }}>
+            锁定字段：{draft.locks.length ? draft.locks.join("、") : "无"}；锁定字段 AI 指令不会改写。
+          </p>
         </div>
       )}
     </>
+  );
+}
+
+/** G16：自然语言修改指令 → 服务端 typed patch，结果写入 changes 日志 */
+function InstructCard({ draft, onDraft }: { draft: ScenarioDraft; onDraft: (d: ScenarioDraft) => void }) {
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+  return (
+    <div className="card">
+      <h3>AI 修改指令</h3>
+      <p className="muted">用自然语言要求 AI 修改草案（如「把核心问题改为：真相值不值得被揭开」）。命中白名单字段的修改会以 Before/After 记入「变更记录」；锁定字段不会被改写。</p>
+      <div className="row">
+        <input className="grow" value={text} placeholder="输入修改指令…"
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter" && text.trim() && !busy) (document.getElementById("instruct-btn") as HTMLButtonElement)?.click(); }} />
+        <button id="instruct-btn" className="primary" disabled={!text.trim() || busy} onClick={async () => {
+          setBusy(true);
+          try {
+            const next = await api.instructScenario(draft.id, text.trim());
+            onDraft(next);
+            const last = next.changes[next.changes.length - 1];
+            toast(last && last.source === "instruct" ? `已应用：${last.path} → ${String(last.after).slice(0, 40)}` : "指令已处理。");
+            setText("");
+          } catch (e: any) {
+            toast(`指令失败：${e.message}`);
+          } finally {
+            setBusy(false);
+          }
+        }}>发送</button>
+      </div>
+    </div>
+  );
+}
+
+/** G18/G19：发布 Gate（服务端 checklist）+「我已审阅」+ 发布并试玩 */
+function PublishTab({ draft, versions, onPublished }: {
+  draft: ScenarioDraft;
+  versions: { version_id: string; version: string; created_at: number }[];
+  onPublished: () => Promise<void>;
+}) {
+  const [checklist, setChecklist] = useState<PublishCheck[] | null>(null);
+  const [reviewed, setReviewed] = useState(false);
+  const [err, setErr] = useState("");
+
+  useEffect(() => {
+    api.publishCheck(draft.id).then((r) => setChecklist(r.checklist)).catch(() => {});
+  }, [draft.id, draft.updated_at]);
+
+  const publish = async (play: boolean) => {
+    setErr("");
+    try {
+      const r = await api.publishScenario(draft.id, { reviewed, play });
+      toast(`已发布 v${r.version}。`);
+      await onPublished();
+      if (play && r.session_id) {
+        setState({ sessionId: r.session_id, page: "player" });
+      }
+    } catch (e: any) {
+      // 422 detail 含 checklist
+      const detail = e?.detail || e?.message || String(e);
+      if (e?.detail?.checklist) setChecklist(e.detail.checklist);
+      setErr(typeof detail === "string" ? detail : (detail.message || "发布被 Gate 拦截"));
+    }
+  };
+
+  const allOk = (checklist ?? []).every((c) => c.ok);
+  return (
+    <div className="card">
+      <h3>发布</h3>
+      {checklist === null ? <p className="muted">正在检查…</p> : (
+        <div>
+          {checklist.map((c) => (
+            <div key={c.id} className="row" style={{ gap: 6 }}>
+              <span className={`badge ${c.ok ? "ok" : "err"}`}>{c.ok ? "PASS" : "FIX"}</span>
+              <span className="grow">{c.label}</span>
+              {c.detail && <span className="muted">{c.detail}</span>}
+            </div>
+          ))}
+        </div>
+      )}
+      <label style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 12 }}>
+        <input type="checkbox" style={{ width: "auto" }} checked={reviewed}
+          onChange={(e) => setReviewed(e.target.checked)} />
+        <b>我已审阅这个故事（世界规则、真相模型与结局族符合预期）</b>
+      </label>
+      {err && <div className="notice warn">{err}</div>}
+      <div className="toolbar">
+        <button className="primary" disabled={!reviewed || !allOk}
+          onClick={() => publish(false)}>发布 v{nextVersion(versions)}</button>
+        <button disabled={!reviewed || !allOk}
+          onClick={() => publish(true)}>发布并试玩</button>
+        <span className="muted">发布后形成不可变版本；已有会话不受影响。</span>
+      </div>
+      <div className="divider" />
+      <h4>版本历史</h4>
+      {versions.length === 0 ? <div className="empty">尚未发布。</div> : (
+        <table className="dev">
+          <thead><tr><th>版本</th><th>发布时间</th><th>版本 ID</th></tr></thead>
+          <tbody>
+            {versions.map((v) => (
+              <tr key={v.version_id}>
+                <td>v{v.version}</td>
+                <td>{new Date(v.created_at).toLocaleString()}</td>
+                <td className="mono">{v.version_id}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
   );
 }
 
@@ -228,27 +372,6 @@ function nextVersion(versions: { version: string }[]): string {
   const last = versions[0]?.version ?? "0.0.0";
   const [a, b] = last.split(".").map(Number);
   return last === "0.0.0" ? "1.0.0" : `${a || 1}.${(b || 0) + 1}.0`;
-}
-
-function PublishChecklist({ draft }: { draft: ScenarioDraft }) {
-  const checks: Array<[string, boolean]> = [
-    ["标题与简介已填写", Boolean(draft.title && draft.description)],
-    ["世界规则已填写", Boolean(draft.world.rules)],
-    ["至少一名角色", draft.characters.length > 0],
-    ["核心问题已填写", Boolean(draft.drama.core_question)],
-    ["真相模型已填写", Boolean(draft.drama.truth_model)],
-    ["结局族已定义", Boolean(draft.drama.ending_families)],
-  ];
-  return (
-    <div>
-      {checks.map(([label, ok]) => (
-        <div key={label} className="row" style={{ gap: 6 }}>
-          <span className={`badge ${ok ? "ok" : "err"}`}>{ok ? "PASS" : "FIX"}</span>
-          <span>{label}</span>
-        </div>
-      ))}
-    </div>
-  );
 }
 
 function CharactersTab({ draft, globals, onSave, selectedId, onSelect }: {

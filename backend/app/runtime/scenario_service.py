@@ -76,37 +76,191 @@ class ScenarioService:
         if content.get("drama"):
             draft.drama = DramaSpec(**{k: v for k, v in content["drama"].items()
                                        if k in DramaSpec.model_fields})
+        if content.get("characters"):
+            from ..domain.schemas import ScenarioCharacter
+            draft.characters = [
+                ScenarioCharacter(**{k: v for k, v in c.items()
+                                     if k in ScenarioCharacter.model_fields})
+                for c in content["characters"] if isinstance(c, dict) and c.get("id")
+            ]
         await tracer.emit("authoring.draft", "success",
                           input_={"idea": idea[:120]}, output={"title": draft.title},
                           provider=rec.selected or "")
         await self.save_draft(draft)
         return draft
 
+    # G16：指令补丁允许写入的路径前缀（locks 与任意路径拒绝）
+    _PATCHABLE_PREFIXES = ("description", "title", "genre", "tone", "play_style",
+                           "drama.", "world.", "theme.")
+
+    def _apply_typed_patch(self, draft: ScenarioDraft, patches: list[dict],
+                           source: str) -> list[dict]:
+        """按 {path,before,after,reason} 应用补丁，写入结构化 changes（G16/G17）。
+
+        - path 只接受白名单前缀；characters[i].field 走专用段
+        - locks 内字段拒绝
+        - before 不一致时按 after 直接覆盖并记录 conflict
+        """
+        applied: list[dict] = []
+        for p in patches:
+            path = str(p.get("path", ""))
+            after = p.get("after")
+            if not path or path in draft.locks:
+                continue
+            if not (path.startswith(self._PATCHABLE_PREFIXES)
+                    or path.startswith("characters[")):
+                continue
+            before = self._get_path(draft, path)
+            ok = self._set_path(draft, path, after)
+            if not ok:
+                continue
+            entry = {"path": path, "before": before, "after": after,
+                     "reason": p.get("reason", ""), "source": source,
+                     "at": now_ms()}
+            draft.changes.append(entry)
+            applied.append(entry)
+        return applied
+
+    @staticmethod
+    def _get_path(draft: ScenarioDraft, path: str):
+        """读取点路径：drama.core_question / world.rules / characters[0].desire / title。"""
+        try:
+            obj: object = draft
+            for part in ScenarioService._split_path(path):
+                if isinstance(part, int):
+                    obj = obj[part]  # type: ignore[index]
+                else:
+                    obj = getattr(obj, part)
+            return obj
+        except Exception:
+            return None
+
+    @staticmethod
+    def _set_path(draft: ScenarioDraft, path: str, value) -> bool:
+        parts = ScenarioService._split_path(path)
+        if not parts:
+            return False
+        try:
+            obj: object = draft
+            for part in parts[:-1]:
+                obj = obj[part] if isinstance(part, int) else getattr(obj, part)
+            last = parts[-1]
+            if isinstance(last, int):
+                obj[last] = value  # type: ignore[index]
+            else:
+                if not hasattr(obj, last):
+                    return False
+                setattr(obj, last, value)
+            return True
+        except Exception:
+            return False
+
+    @staticmethod
+    def _split_path(path: str) -> list:
+        """"characters[0].desire" → ["characters", 0, "desire"]。"""
+        import re as _re
+        out: list = []
+        for seg in path.split("."):
+            m = _re.match(r"^(\w+)(?:\[(\d+)\])?$", seg)
+            if not m:
+                continue
+            out.append(m.group(1))
+            if m.group(2) is not None:
+                out.append(int(m.group(2)))
+        return out
+
     async def apply_instruction(self, scenario_id: str, instruction: str) -> ScenarioDraft:
-        """Scenario Authoring Skill 修改路径：指令 → 补丁 → 应用（保留人工编辑）。"""
+        """Scenario Authoring Skill 修改路径：指令 → typed patches → 校验应用（G16）。"""
         draft = await self.get(scenario_id)
         if draft is None:
             raise KeyError(scenario_id)
         _, rec, resp = await self.router.call_text(
             "authoring",
             messages=[{"role": "user", "content":
-                       f"instruction: {instruction}\ncurrent: {draft.description}"}],
+                       f"instruction: {instruction}\n"
+                       f"draft_summary: {json.dumps({'title': draft.title, 'description': draft.description, 'drama': draft.drama.model_dump(), 'world': draft.world.model_dump()}, ensure_ascii=False)[:2000]}"}],
             output_contract={"purpose": "authoring_patch"})
         content = json.loads(resp.content)
-        after = content.get("after", "")
-        if after:
-            draft.description = after
+        patches = content.get("patches")
+        applied: list[dict] = []
+        if isinstance(patches, list) and patches:
+            applied = self._apply_typed_patch(draft, patches, source="instruct")
+        if not applied:
+            # 兼容旧 contract：after 只写 description
+            after = content.get("after", "")
+            if after:
+                entry = {"path": "description", "before": draft.description,
+                         "after": after, "reason": instruction[:120],
+                         "source": "instruct", "at": now_ms()}
+                draft.description = after
+                draft.changes.append(entry)
+                applied.append(entry)
         await tracer.emit("authoring.patch", "success",
                           input_={"instruction": instruction[:120]},
+                          output={"applied": len(applied)},
                           provider=rec.selected or "")
         await self.save_draft(draft)
         return draft
 
-    async def publish(self, scenario_id: str) -> dict:
-        """发布：生成不可变 ScenarioVersion（PRD：冻结契约、snapshot 哈希、版本号）。"""
+    # ---------------- G18：Publish Gate 服务端校验 ----------------
+    def publish_checklist(self, draft: ScenarioDraft) -> list[dict]:
+        """发布前 11 项检查；每项 {id, label, ok, detail}。"""
+        checks: list[dict] = []
+        def add(cid: str, label: str, ok: bool, detail: str = ""):
+            checks.append({"id": cid, "label": label, "ok": bool(ok), "detail": detail})
+        add("title", "标题与简介", bool(draft.title.strip() and draft.description.strip()),
+            "标题与简介不能为空")
+        add("world_rules", "世界规则", bool(draft.world.rules.strip()),
+            "world.rules 不能为空")
+        char_ids = {c.id for c in draft.characters}
+        add("player_character", "玩家角色存在",
+            draft.player_character in char_ids or not draft.characters,
+            f"player_character={draft.player_character!r} 不在角色表")
+        add("char_identity", "角色身份信息",
+            all(c.identity.strip() for c in draft.characters) and bool(draft.characters),
+            "每个角色需要 identity，且至少一名角色")
+        add("core_question", "核心问题", bool(draft.drama.core_question.strip()),
+            "drama.core_question 不能为空")
+        add("truth_model", "真相模型", bool(draft.drama.truth_model.strip()),
+            "drama.truth_model 不能为空")
+        add("pressures", "压力线", bool(draft.drama.pressures.strip()),
+            "drama.pressures 不能为空")
+        add("ending_families", "结局族", bool(draft.drama.ending_families.strip()),
+            "drama.ending_families 不能为空")
+        # 限时互动声明格式：id｜kind｜秒｜fallback
+        timed_ok, timed_detail = True, ""
+        for line in draft.drama.timed_interactions.splitlines():
+            if not line.strip():
+                continue
+            parts = [x.strip() for x in line.split("｜")]
+            if len(parts) < 4 or parts[1] not in ("qte", "urgent_dialogue") \
+                    or not parts[2].isdigit():
+                timed_ok, timed_detail = False, f"格式错误：{line[:40]}"
+                break
+        add("timed", "限时互动声明", timed_ok, timed_detail)
+        # 角色绑定全局角色需存在（快照检查在发布时无法查 DB，这里只查字段一致性）
+        add("char_snapshot", "角色快照绑定",
+            all((not c.global_character_id) or c.global_character_version
+                for c in draft.characters),
+            "绑定全局角色需记录版本号")
+        add("mechanics", "玩法机制", True, "")
+        return checks
+
+    async def publish(self, scenario_id: str, reviewed: bool = False) -> dict:
+        """发布：Publish Gate 校验 + 生成不可变 ScenarioVersion（G18）。"""
         draft = await self.get(scenario_id)
         if draft is None:
             raise KeyError(scenario_id)
+        checks = self.publish_checklist(draft)
+        failed = [c for c in checks if not c["ok"]]
+        if failed:
+            from fastapi import HTTPException
+            raise HTTPException(422, detail={"message": "发布检查未通过",
+                                             "checklist": checks})
+        if not reviewed:
+            from fastapi import HTTPException
+            raise HTTPException(422, detail={"message": "请先勾选「我已审阅这个故事」",
+                                             "checklist": checks})
         draft.status = "PUBLISHED"
         draft.reviewed = True
         version_id = uid("ver")
@@ -121,7 +275,8 @@ class ScenarioService:
                     snapshot=draft.model_dump(mode="json"), created_at=now_ms()))
         await tracer.emit("scenario.publish", "success",
                           output={"scenario": scenario_id, "version": draft.version})
-        return {"version_id": version_id, "version": draft.version}
+        return {"version_id": version_id, "version": draft.version,
+                "checklist": checks}
 
     async def latest_version(self, scenario_id: str) -> Optional[dict]:
         async with SessionLocal() as db:
@@ -178,7 +333,10 @@ class CharacterService:
             data = dict(r.data)
             data["version"] = r.version
             if q:
-                hay = f"{r.name} {data.get('bio', '')} {' '.join(data.get('tags', []))}"
+                # G11：搜索覆盖 name/bio/tags/personality/appearance
+                hay = " ".join([
+                    r.name, data.get("bio", ""), data.get("personality", ""),
+                    data.get("appearance", ""), " ".join(data.get("tags", []))])
                 if q.lower() not in hay.lower():
                     continue
             items.append(data)

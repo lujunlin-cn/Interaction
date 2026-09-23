@@ -132,4 +132,5 @@ const devTabs: Array<[DevTab, string, string]> = [
   ["trace", "Trace", "⌇"],
   ["metrics", "Metrics", "∿"],
   ["qa", "QA", "✓"],
+  ["prototype", "原型夹具", "⚗"],
 ];

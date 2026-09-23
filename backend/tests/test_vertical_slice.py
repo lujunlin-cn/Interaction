@@ -102,7 +102,8 @@ class TestVerticalSlice:
                             json={"idea": "一座灯塔里的失踪案"}).json()
         assert draft["title"]
         assert draft["drama"]["truth_model"]
-        r = client.post(f"/api/scenarios/{draft['id']}/publish").json()
+        r = client.post(f"/api/scenarios/{draft['id']}/publish",
+                        json={"reviewed": True}).json()
         assert r["version_id"]
         versions = client.get(f"/api/scenarios/{draft['id']}/versions").json()["items"]
         assert len(versions) == 1

@@ -57,3 +57,19 @@ DATABASE_URL=sqlite+aiosqlite:///./itest.db PROVIDER_MODE=mock \
   愿望/素材变更使未就绪分支 INVALIDATED。
 - **呈现回执**：玩家实际看完（PresentationReceipt）后，内容才进入 knowledge。
 - **术语隔离**：玩家界面只有自然中文；技术状态仅出现在开发者模式。
+
+## 安全与已知限制（G28）
+
+- **密钥**：所有外部凭据（StepFun / fal / Jev / Sol-H3 adapter token）只走
+  `backend/.env`（已 gitignore）或环境变量注入，**禁止**写进代码、Git、Trace span、
+  日志或界面。Provider 内部构造 `Authorization` 头，不落库不回显。
+- **CORS**：`CORSMiddleware` 收敛为 `settings.cors_origins`（默认同源 +
+  本地 dev 端口），不再 `*`。生产同源部署下跨域头实际不触发。
+- **媒体/素材目录无鉴权**：`/media`（生成产物）与 `/files`（上传素材）以
+  `StaticFiles` 直接挂载，任何人拿到 URL 即可访问。Sol-H3 adapter 拉取
+  `reference_*` 依赖该公开路径。**仅适合内网/演示部署**；公网开放需在前置
+  反代加鉴权或签名 URL（当前部署在 FRP 中转后暴露公网，属已知接受风险）。
+- **管理接口**：`/dev/*`（providers/inject、profile/switch、fixtures、jobs）
+  无鉴权，供开发者模式与验收脚本使用；公网部署应限制来源。
+- **会话**：无账号体系，`session_id` 即访问令牌——知道 sid 即可读状态/发 action。
+  单租户演示可接受，多用户需补鉴权层。

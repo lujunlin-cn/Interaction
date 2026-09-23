@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     env: str = "dev"
     host: str = "0.0.0.0"
     port: int = 9000
+    public_base_url: str = "http://139.199.69.46:9000"   # 素材对外可访问基址（fal 拉取 references）
 
     # --- 数据库 ---
     database_url: str = "postgresql+asyncpg://drama:drama@127.0.0.1:5433/interaction_drama"
@@ -34,8 +35,13 @@ class Settings(BaseSettings):
     jev_base_url: str = "https://api.typesafe.ai"   # Jev（TypeSafe SystemOne）API
     jev_model: str = "jev-latest"                   # 锁定版本时改为具体 ID（如 jev-1.13.0，PRD S06）
 
-    local_llm_base_url: str = "http://127.0.0.1:8001/v1"   # DGX Spark 上的 vLLM (Nemotron Lightning)
-    local_llm_model: str = "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4"
+    local_llm_base_url: str = "http://127.0.0.1:8001/v1"   # DGX Spark 本地 OpenAI 兼容端点
+    # 期望模型：Nemotron-3.5-Lightning（vLLM 8001）；DGX 实测 8001 无服务时
+    # 用 Ollama(11434/v1) 的 gemma3:27b 顶替同槽位（G29 实测降级，OpenAI 兼容）。
+    local_llm_model: str = "gemma3:27b"
+
+    sol_h3_base_url: str = ""               # 本地视频适配器（如 h3-adapter 8790）
+    sol_h3_api_key: str = ""                # 适配器鉴权（若启用）
 
     # --- Provider 运行模式 ---
     # mock     : 全部角色使用 Mock Provider（离线开发，零费用）
@@ -59,6 +65,13 @@ class Settings(BaseSettings):
     # --- Provider 容错 ---
     provider_timeout_seconds: float = 30.0
     provider_circuit_threshold: int = 3
+
+    # --- CORS（G28：收敛，不再 "*"）---
+    # 逗号分隔；默认同源 + 常见本地 dev（vite 5173/4173、preview）。
+    # 生产同源部署下 CORS 头实际上用不到，但仍收敛避免被任意站点跨域调用 API。
+    cors_origins: str = ("http://127.0.0.1:5173,http://localhost:5173,"
+                        "http://127.0.0.1:4173,http://localhost:4173,"
+                        "http://139.199.69.46:9000,http://127.0.0.1:9000")
 
     # --- 运行时节奏 ---
     branch_phase_delay_ms: int = 350      # 各管线阶段之间的最小间隔（让状态转换可观察）

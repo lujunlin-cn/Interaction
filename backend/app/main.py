@@ -90,8 +90,9 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Interactive Drama Runtime", lifespan=lifespan)
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"],
-                   allow_headers=["*"])
+_cors = [o.strip() for o in settings.cors_origins.split(",") if o.strip()]
+app.add_middleware(CORSMiddleware, allow_origins=_cors or ["http://127.0.0.1:9000"],
+                   allow_methods=["*"], allow_headers=["*"])
 
 from .api.routes import build_api, build_ws_router  # noqa: E402
 

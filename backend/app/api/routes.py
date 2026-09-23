@@ -1,8 +1,10 @@
 """REST + WebSocket API 层。薄路由：业务逻辑全部在 runtime / domain / providers。"""
 from __future__ import annotations
 
+import asyncio
+
 import aiofiles
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, Form, HTTPException, Request, UploadFile, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 from sqlalchemy import select
 
@@ -44,6 +46,11 @@ class InstructReq(BaseModel):
 
 class IdeaReq(BaseModel):
     idea: str
+
+
+class PublishReq(BaseModel):
+    reviewed: bool = False          # G18：发布需显式「我已审阅」
+    play: bool = False              # G19：发布并试玩
 
 
 class FeedbackReq(BaseModel):
@@ -111,9 +118,43 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
     @api.put("/scenarios/{sid}")
     async def save_scenario(sid: str, draft: dict):
         from ..domain.schemas import ScenarioDraft
-        d = ScenarioDraft(**{**draft, "id": sid})
-        await scenarios.save_draft(d)
-        return d.model_dump(mode="json")
+        incoming = ScenarioDraft(**{**draft, "id": sid})
+        # G17：对比旧草案，把人工编辑写入结构化 changes
+        old = await scenarios.get(sid)
+        if old is not None:
+            for path in ("title", "description", "genre", "tone", "play_style",
+                         "player_character",
+                         "world.rules", "world.lore", "world.locations", "world.constraints",
+                         "drama.core_question", "drama.central_conflict", "drama.truth_model",
+                         "drama.secrets", "drama.misbeliefs", "drama.pressures",
+                         "drama.anchors", "drama.ending_families", "drama.foreshadows",
+                         "drama.forbidden_outcomes", "drama.timed_interactions",
+                         "theme.accent", "theme.font", "theme.density",
+                         "theme.subtitles", "theme.background"):
+                before = ScenarioService._get_path(old, path)
+                after = ScenarioService._get_path(incoming, path)
+                if before != after:
+                    incoming.changes.append({
+                        "path": path, "before": before, "after": after,
+                        "reason": "", "source": "manual", "at": now_ms()})
+            # 角色级差异（按 id 对齐逐字段对比）
+            old_chars = {c.id: c for c in old.characters}
+            for c in incoming.characters:
+                oc = old_chars.get(c.id)
+                if oc is None:
+                    incoming.changes.append({"path": f"characters[{c.id}]",
+                        "before": None, "after": c.identity, "reason": "",
+                        "source": "manual", "at": now_ms()})
+                    continue
+                for f in ("identity", "personality", "desire", "fear", "secrets",
+                          "knowledge", "relationship", "visual_state"):
+                    bv, av = getattr(oc, f), getattr(c, f)
+                    if bv != av:
+                        incoming.changes.append({
+                            "path": f"characters[{c.id}].{f}", "before": bv, "after": av,
+                            "reason": "", "source": "manual", "at": now_ms()})
+        await scenarios.save_draft(incoming)
+        return incoming.model_dump(mode="json")
 
     @api.post("/scenarios/{sid}/instruct")
     async def instruct_scenario(sid: str, req: InstructReq):
@@ -123,12 +164,24 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
             raise HTTPException(404, "scenario not found")
         return draft.model_dump(mode="json")
 
+    @api.get("/scenarios/{sid}/publish-check")
+    async def publish_check(sid: str):
+        """发布前检查清单（不发布，仅预览 gate 结果）。"""
+        draft = await scenarios.get(sid)
+        if draft is None:
+            raise HTTPException(404, "scenario not found")
+        return {"checklist": scenarios.publish_checklist(draft)}
+
     @api.post("/scenarios/{sid}/publish")
-    async def publish_scenario(sid: str):
+    async def publish_scenario(sid: str, req: PublishReq | None = None):
         try:
-            return await scenarios.publish(sid)
+            result = await scenarios.publish(sid, reviewed=bool(req and req.reviewed))
         except KeyError:
             raise HTTPException(404, "scenario not found")
+        if req and req.play:
+            state = await engine.create_session(result["version_id"])
+            result["session_id"] = state.id
+        return result
 
     @api.get("/scenarios/{sid}/versions")
     async def scenario_versions(sid: str):
@@ -163,10 +216,52 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
         except KeyError:
             raise HTTPException(404, "character not found")
 
+    # ---------------- 角色素材（全局池，scenario_id=__global__）----------------
+    GLOBAL_ASSET_SCOPE = "__global__"
+
+    @api.get("/characters/{cid}/assets")
+    async def list_character_assets(cid: str):
+        """该角色可引用的素材：全局池 + entity 绑定到该角色的条目。"""
+        async with SessionLocal() as db:
+            rows = (await db.execute(
+                select(AssetRow).order_by(AssetRow.created_at.desc()))).scalars().all()
+        items = [r.data for r in rows
+                 if r.data.get("scenario_id") == GLOBAL_ASSET_SCOPE
+                 or r.data.get("entity") == cid]
+        return {"items": items}
+
+    @api.post("/characters/{cid}/assets")
+    async def upload_character_asset(cid: str, file: UploadFile,
+                                     role: str = Form("identity")):
+        """上传素材到角色全局池（G11：ref_* 槽位可从这里挑选绑定）。"""
+        suffix = (file.filename or "asset").rsplit(".", 1)[-1] if file.filename else "bin"
+        asset_id = uid("asset")
+        folder = settings.data_path / "assets" / GLOBAL_ASSET_SCOPE
+        folder.mkdir(parents=True, exist_ok=True)
+        path = folder / f"{asset_id}.{suffix}"
+        size = 0
+        async with aiofiles.open(path, "wb") as f:
+            while chunk := await file.read(1 << 20):
+                size += len(chunk)
+                await f.write(chunk)
+        mime = file.content_type or ""
+        atype = AssetType.IMAGE if mime.startswith("image/") else \
+            AssetType.VIDEO if mime.startswith("video/") else \
+            AssetType.VOICE if mime.startswith("audio/") else AssetType.IMAGE
+        asset = Asset(id=asset_id, scenario_id=GLOBAL_ASSET_SCOPE, type=atype,
+                      name=file.filename or asset_id, mime=mime, size=size,
+                      storage_path=str(path.relative_to(settings.data_path)),
+                      binding=cid, role=role, entity=cid, source="upload")
+        async with SessionLocal() as db:
+            async with db.begin():
+                db.add(AssetRow(id=asset_id, scenario_id=GLOBAL_ASSET_SCOPE,
+                                data=asset.model_dump(mode="json"), created_at=now_ms()))
+        return asset.model_dump(mode="json")
+
     # ---------------- 素材 ----------------
     @api.post("/scenarios/{sid}/assets")
-    async def upload_asset(sid: str, file: UploadFile, binding: str = "",
-                           role: str = "", entity: str = ""):
+    async def upload_asset(sid: str, file: UploadFile, binding: str = Form(""),
+                           role: str = Form(""), entity: str = Form("")):
         suffix = (file.filename or "asset").rsplit(".", 1)[-1] if file.filename else "bin"
         asset_id = uid("asset")
         folder = settings.data_path / "assets" / sid
@@ -233,6 +328,25 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
         path.unlink(missing_ok=True)
         await engine.refresh_assets(sid)
         return {"ok": True}
+
+    @api.patch("/scenarios/{sid}/assets/{aid}")
+    async def patch_asset(sid: str, aid: str, req: Request):
+        """G20：行内编辑素材元数据（role/entity/binding/authorized/canonical/trim/用途标记）。"""
+        body = await req.json()
+        allowed = {"role", "entity", "binding", "authorized", "canonical",
+                   "trim_start", "trim_end", "duration", "source"}
+        async with SessionLocal() as db:
+            async with db.begin():
+                row = await db.get(AssetRow, aid)
+                if row is None or row.scenario_id != sid:
+                    raise HTTPException(404, "asset not found")
+                data = dict(row.data)
+                for k in allowed:
+                    if k in body:
+                        data[k] = body[k]
+                row.data = data
+        await engine.refresh_assets(sid)
+        return data
 
     @api.get("/scenarios/{sid}/assets")
     async def list_assets(sid: str):
@@ -427,12 +541,72 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
                               provider=job.provider, status=job.status.value,
                               data=job.model_dump(mode="json"),
                               started_at=job.started_at))
+
+        async def _watch() -> None:
+            """推进 standalone job 状态到 READY/FAILED 并回写 JobRow（G23 收口）。"""
+            import time
+            from ..db_models import JobRow
+            for _ in range(240):
+                await asyncio.sleep(2)
+                try:
+                    result = await provider.status(handle)
+                except Exception as exc:          # noqa: BLE001
+                    job.status = JobStatus.FAILED
+                    job.error = str(exc)
+                    job.finished_at = int(time.time() * 1000)
+                    break
+                if result.status == "READY":
+                    job.status = JobStatus.READY
+                    job.output = {"handle": handle.provider_job_id,
+                                  "clips": (result.raw or {}).get("clips", [])}
+                    job.finished_at = int(time.time() * 1000)
+                    break
+                if result.status == "FAILED":
+                    job.status = JobStatus.FAILED
+                    job.error = result.error
+                    job.finished_at = int(time.time() * 1000)
+                    break
+            else:
+                job.status = JobStatus.FAILED
+                job.error = "status poll timeout"
+                job.finished_at = int(time.time() * 1000)
+            async with SessionLocal() as db:
+                async with db.begin():
+                    row = await db.get(JobRow, job.id)
+                    if row:
+                        row.status = job.status.value
+                        row.data = job.model_dump(mode="json")
+
+        asyncio.create_task(_watch())
         return job.model_dump(mode="json")
+
+    @api.get("/dev/jobs")
+    async def dev_jobs(limit: int = 50):
+        """G23：生成任务列表（Job ID/Provider/状态/起止/output/error）。"""
+        from ..db_models import JobRow
+        async with SessionLocal() as db:
+            rows = (await db.execute(
+                select(JobRow).order_by(JobRow.started_at.desc()).limit(limit)
+            )).scalars().all()
+        return {"items": [r.data for r in rows]}
 
     # ---------------- Skills / Feedback ----------------
     @api.get("/skills")
     async def list_skills():
         return skills_registry()
+
+    @api.get("/skills/{skill_id}/calls")
+    async def skill_calls(skill_id: str, limit: int = 5):
+        """G24：Skill 调用审计——最近 N 次调用 span（含禁用阻塞记录）。
+
+        DB 持久化的 span 优先；无记录时回落到进程内 recent（重启后丢失属预期）。
+        """
+        async with SessionLocal() as db:
+            spans = await tracer.spans_for_skill(db, skill_id, limit)
+        if not spans:
+            spans = [s for s in reversed(tracer.recent)
+                     if s.skill_id == skill_id or s.name.startswith(skill_id)][:limit]
+        return {"items": [s.model_dump(mode="json") for s in spans]}
 
     @api.post("/skills/{skill_id}/toggle")
     async def toggle_skill(skill_id: str, req: SkillToggleReq):

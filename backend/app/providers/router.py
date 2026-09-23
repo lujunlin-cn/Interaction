@@ -48,10 +48,19 @@ HYBRID_ROUTES: dict[str, list[str]] = {
     "authoring": ["step_5", "mock_text"],
     "decision": ["jev", "mock_decision"],
     "cloud_video": ["mock_video"],
-    "local_video": ["mock_video"],
+    "local_video": ["sol_h3_local", "mock_video"],
 }
 
 _MODE_ROUTES = {"live": LIVE_ROUTES, "hybrid": HYBRID_ROUTES}
+
+
+def _with_durations(timeline: list[dict]) -> list[dict]:
+    """G22：给七态 timeline 补每态停留时长（duration_ms）。"""
+    out = []
+    for i, t in enumerate(timeline):
+        nxt = timeline[i + 1]["at"] if i + 1 < len(timeline) else t["at"]
+        out.append({**t, "duration_ms": nxt - t["at"]})
+    return out
 
 # Runtime Profile 可用性（PRD 14.4）
 PROFILE_AVAILABLE = {
@@ -158,14 +167,14 @@ class ProviderRouter:
             self.profile_state = "ACTIVE"
             self.profile_history.append(
                 {"from": old.value, "to": target.value, "result": "rolled_back",
-                 "failed_health": failed, "timeline": timeline})
+                 "failed_health": failed, "timeline": _with_durations(timeline)})
             return {"ok": False, "profile": old.value, "restored": True,
-                    "failed_health": failed, "timeline": timeline}
+                    "failed_health": failed, "timeline": _with_durations(timeline)}
         mark("ACTIVE")
         self.profile_history.append(
             {"from": old.value, "to": target.value, "result": "switched",
-             "timeline": timeline})
-        return {"ok": True, "profile": target.value, "timeline": timeline}
+             "timeline": _with_durations(timeline)})
+        return {"ok": True, "profile": target.value, "timeline": _with_durations(timeline)}
 
     def profile_status(self) -> dict:
         return {"profile": self.profile.value, "state": self.profile_state,

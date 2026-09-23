@@ -11,7 +11,16 @@ export type CreatorTab =
 
 export type DevTab =
   | "skills" | "branches" | "world" | "drama" | "cache" | "router" | "runtime"
-  | "production" | "assembly" | "trace" | "metrics" | "qa";
+  | "production" | "assembly" | "trace" | "metrics" | "qa" | "prototype";
+
+/** G13：全局显示设置（持久化 localStorage，CSS 变量档位生效） */
+export interface DisplayPrefs {
+  appearance: "light" | "dark";
+  density: "comfortable" | "compact" | "roomy";
+  fontSize: "small" | "medium" | "large" | "xlarge";
+  subtitleSize: "small" | "medium" | "large";
+  subtitlePos: "bottom" | "top";
+}
 
 export interface UiState {
   page: Page;
@@ -26,12 +35,42 @@ export interface UiState {
   inspectorOpen: boolean;
   toast: string | null;
   playerView: PlayerView | null;    // WS 推送的最新玩家视图
+  display: DisplayPrefs;
 }
 
+function loadDisplay(): DisplayPrefs {
+  try {
+    const raw = localStorage.getItem("drama.display");
+    if (raw) return { appearance: "light", density: "comfortable", fontSize: "medium",
+      subtitleSize: "medium", subtitlePos: "bottom", ...JSON.parse(raw) };
+  } catch { /* ignore */ }
+  return { appearance: "light", density: "comfortable", fontSize: "medium",
+    subtitleSize: "medium", subtitlePos: "bottom" };
+}
+
+/** 深链：#/<page>[/<tab>] 直达页面（验收脚本与可分享链接用）。 */
+function pageFromHash(): { page: Page; creatorTab: CreatorTab; devTab: DevTab } {
+  const seg = location.hash.replace(/^#\/?/, "").split("/");
+  const p = seg[0] as Page;
+  const pages: Page[] = ["home", "player", "creator", "characterLibrary",
+    "assets", "developer", "settings", "feedback", "notes"];
+  const ctabs: CreatorTab[] = ["overview", "world", "characters", "drama",
+    "mechanics", "theme", "publish", "changes"];
+  const dtabs: DevTab[] = ["skills", "branches", "world", "drama", "cache",
+    "router", "runtime", "production", "assembly", "trace", "metrics", "qa",
+    "prototype"];
+  return {
+    page: pages.includes(p) ? p : "home",
+    creatorTab: ctabs.includes(seg[1] as CreatorTab) ? seg[1] as CreatorTab : "overview",
+    devTab: dtabs.includes(seg[1] as DevTab) ? seg[1] as DevTab : "branches",
+  };
+}
+
+const _init = pageFromHash();
 const initial: UiState = {
-  page: "home",
-  creatorTab: "overview",
-  devTab: "branches",
+  page: _init.page,
+  creatorTab: _init.creatorTab,
+  devTab: _init.devTab,
   mode: (localStorage.getItem("drama.mode") as "developer") || "standard",
   editId: localStorage.getItem("drama.editId"),
   sessionId: localStorage.getItem("drama.sessionId"),
@@ -41,6 +80,7 @@ const initial: UiState = {
   inspectorOpen: false,
   toast: null,
   playerView: null,
+  display: loadDisplay(),
 };
 
 let state: UiState = { ...initial };
@@ -61,7 +101,13 @@ export function setState(patch: Partial<UiState>) {
     patch.sessionId ? localStorage.setItem("drama.sessionId", patch.sessionId)
       : localStorage.removeItem("drama.sessionId");
   }
+  if (patch.display) localStorage.setItem("drama.display", JSON.stringify(patch.display));
   listeners.forEach((l) => l());
+}
+
+/** 合并式更新 display（避免调用方手动展开） */
+export function setDisplay(patch: Partial<DisplayPrefs>) {
+  setState({ display: { ...state.display, ...patch } });
 }
 
 export function toast(msg: string) {

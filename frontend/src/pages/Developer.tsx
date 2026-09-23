@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { api } from "../api";
 import { toast, useUi } from "../store";
-import type { DevState, SkillsRegistry } from "../types";
+import type { DevState, Fixtures, SkillsRegistry } from "../types";
 
 export default function Developer() {
   const ui = useUi();
@@ -44,8 +44,9 @@ export default function Developer() {
       {ui.devTab === "assembly" && <AssemblyTab state={state} />}
       {ui.devTab === "trace" && <TraceTab traces={traces} />}
       {ui.devTab === "metrics" && <MetricsTab state={state} providers={providers} />}
-      {ui.devTab === "skills" && skills && <SkillsTab skills={skills} />}
+      {ui.devTab === "skills" && skills && <SkillsTab skills={skills} onChanged={reload} />}
       {ui.devTab === "qa" && <QaTab state={state} />}
+      {ui.devTab === "prototype" && <PrototypeTab />}
     </>
   );
 }
@@ -228,42 +229,161 @@ function RouterTab({ providers, onChanged }: { providers: any; onChanged: () => 
 }
 
 function RuntimeTab({ providers }: { providers: any }) {
+  const [profile, setProfile] = useState<any>(null);
+  const [busy, setBusy] = useState(false);
+  const reloadProfile = () => api.devProfile().then(setProfile).catch(() => {});
+
+  useEffect(() => { reloadProfile(); }, [providers?.profile]);
+
+  const switchTo = async (target: string) => {
+    setBusy(true);
+    try {
+      const r = await api.devProfileSwitch(target);
+      if (r.ok) toast(`已切换到 ${target}。`);
+      else toast(`切换失败，已回滚：${(r.failed_health || []).join(", ") || r.error || "健康检查未通过"}`);
+      reloadProfile();
+    } catch (e: any) {
+      toast(`切换被拒：${e.message}`);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const PROFILES: Array<[string, string]> = [
+    ["AGENT_LOCAL_PROFILE", "Agent 本地（文本优先）"],
+    ["VIDEO_LOCAL_PROFILE", "视频本地（生成优先）"],
+  ];
   return (
-    <div className="card">
-      <h3>运行环境</h3>
-      <div className="kv">
-        <b>Runtime Profile</b><span className="mono">{providers.profile}</span>
-        <b>Provider 模式</b><span className="mono">{providers.mode}</span>
+    <>
+      <div className="card">
+        <h3>运行环境</h3>
+        <div className="kv">
+          <b>Runtime Profile</b><span className="mono">{providers.profile}</span>
+          <b>切换状态</b><span><Pill s={profile?.state ?? "ACTIVE"} /></span>
+          <b>Provider 模式</b><span className="mono">{providers.mode}</span>
+        </div>
+        <p className="muted">
+          AGENT_LOCAL_PROFILE ↔ VIDEO_LOCAL_PROFILE 为显式切换（drain → persist → unload → start → 健康检查）。
+          健康检查失败会自动回滚到原 Profile。VIDEO_LOCAL_PROFILE 下本地 Agent 模型不可用，角色自动走冻结的 fallback 链。
+        </p>
+        <div className="toolbar">
+          {PROFILES.map(([key, label]) => (
+            <button key={key} className="small"
+              disabled={busy || providers.profile === key || (profile && profile.state !== "ACTIVE")}
+              onClick={() => switchTo(key)}>
+              {providers.profile === key ? `✓ ${label}` : `切换到 ${label}`}
+            </button>
+          ))}
+        </div>
       </div>
-      <p className="muted">
-        AGENT_LOCAL_PROFILE ↔ VIDEO_LOCAL_PROFILE 为显式切换（drain → persist → unload → start → 路由切换）。
-        VIDEO_LOCAL_PROFILE 下本地 Agent 模型不可用，角色自动走冻结的 fallback 链。
-      </p>
-    </div>
+      {profile?.history?.length > 0 && (
+        <div className="card">
+          <h3>切换历史（七态 timeline）</h3>
+          {profile.history.slice().reverse().map((h: any, i: number) => (
+            <div key={i} style={{ marginBottom: 14 }}>
+              <div className="row">
+                <b className="mono">{h.from} → {h.to}</b>
+                <Pill s={h.result === "switched" ? "healthy" : "unhealthy"} />
+                <span className="muted">{h.result === "switched" ? "切换成功" : `回滚：${(h.failed_health || []).join(", ")}`}</span>
+              </div>
+              <div className="row" style={{ flexWrap: "wrap", gap: 4, marginTop: 6 }}>
+                {(h.timeline || []).map((t: any, j: number) => (
+                  <span key={j} className="badge" title={new Date(t.at).toLocaleTimeString()}>
+                    {t.state}{t.duration_ms != null ? ` ${t.duration_ms}ms` : ""}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </>
   );
 }
 
 function ProductionTab({ state }: { state: DevState }) {
   const rows = state.branches.filter((b) => b.routes?.length);
+  const [prompt, setPrompt] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [job, setJob] = useState<any>(null);
+  const [jobs, setJobs] = useState<any[]>([]);
+
+  const reloadJobs = () => api.devJobs().then((r) => setJobs(r.items)).catch(() => {});
+  useEffect(() => {
+    reloadJobs();
+    const t = setInterval(reloadJobs, 4000);   // G23：轮询状态迁移
+    return () => clearInterval(t);
+  }, []);
+
   return (
-    <div className="card">
-      <h3>视频生成</h3>
-      {rows.length === 0 ? <div className="empty">还没有生成任务。</div> : (
-        <table className="dev">
-          <thead><tr><th>分支</th><th>状态</th><th>路由链</th><th>成片</th></tr></thead>
-          <tbody>
-            {rows.map((b) => (
-              <tr key={b.id}>
-                <td>{b.label}</td>
-                <td><Pill s={b.status} /></td>
-                <td className="mono">{b.routes.map((r: any) => r.selected).join(" → ")}</td>
-                <td className="mono">{b.artifact?.assembled_path ?? "—"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    </div>
+    <>
+      <div className="card">
+        <h3>视频生成</h3>
+        {rows.length === 0 ? <div className="empty">还没有生成任务。</div> : (
+          <table className="dev">
+            <thead><tr><th>分支</th><th>状态</th><th>路由链</th><th>成片</th></tr></thead>
+            <tbody>
+              {rows.map((b) => (
+                <tr key={b.id}>
+                  <td>{b.label}</td>
+                  <td><Pill s={b.status} /></td>
+                  <td className="mono">{b.routes.map((r: any) => r.selected).join(" → ")}</td>
+                  <td className="mono">{b.artifact?.assembled_path ?? "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+      <div className="card">
+        <h3>本地直出任务（Sol-H3，不走剧情管线）</h3>
+        <p className="muted">
+          用本地视频模型直接生成一段短片段，用于验证本地模型可用性；与剧情分支管线相互独立。
+        </p>
+        <div className="row">
+          <input className="grow" placeholder="描述要生成的画面，例如：雨夜窗边的人影"
+            value={prompt} onChange={(e) => setPrompt(e.target.value)} />
+          <button className="primary" disabled={busy || !prompt.trim()} onClick={async () => {
+            setBusy(true);
+            try {
+              const r = await api.devLocalTask(prompt.trim());
+              setJob(r);
+              toast("本地任务已提交。");
+            } catch (e: any) {
+              toast(`提交失败：${e.message}`);
+            } finally {
+              setBusy(false);
+            }
+          }}>{busy ? "提交中…" : "提交本地任务"}</button>
+        </div>
+        {job && (
+          <pre style={{ marginTop: 10 }}>{JSON.stringify(job, null, 2)}</pre>
+        )}
+      </div>
+      {/* G23：任务列表（Job ID/Provider/Profile/状态/起止/output/error） */}
+      <div className="card">
+        <h3>生成任务（{jobs.length}）</h3>
+        {jobs.length === 0 ? <div className="empty">还没有任务记录。</div> : (
+          <table className="dev">
+            <thead><tr><th>Job ID</th><th>Provider</th><th>Profile</th><th>状态</th><th>开始</th><th>输出 / 错误</th></tr></thead>
+            <tbody>
+              {jobs.map((j) => (
+                <tr key={j.id}>
+                  <td className="mono">{j.id}</td>
+                  <td className="mono">{j.provider}</td>
+                  <td className="mono">{j.profile ?? "—"}</td>
+                  <td><Pill s={j.status} /></td>
+                  <td className="mono">{j.started_at ? new Date(j.started_at).toLocaleTimeString() : "—"}</td>
+                  <td className="mono" style={{ maxWidth: 280, overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {j.error ?? JSON.stringify(j.output ?? {}).slice(0, 90)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </>
   );
 }
 
@@ -335,21 +455,39 @@ function MetricsTab({ state, providers }: { state: DevState; providers: any }) {
   );
 }
 
-function SkillsTab({ skills }: { skills: SkillsRegistry }) {
+function SkillsTab({ skills, onChanged }: { skills: SkillsRegistry; onChanged: () => void }) {
+  const toggle = async (s: { id: string; title: string; enabled?: boolean }) => {
+    try {
+      await api.toggleSkill(s.id, s.enabled === false);
+      toast(`「${s.title}」已${s.enabled === false ? "启用" : "禁用"}。`);
+      onChanged();
+    } catch (e: any) {
+      toast(`切换失败：${e.message}`);
+    }
+  };
   return (
     <>
       <div className="card">
         <h3>平台 Skills</h3>
+        <p className="muted">
+          禁用某个 Skill 后，依赖它的生成步骤会被阻塞（分支标记失败并说明原因），可随时恢复。
+        </p>
         <table className="dev">
-          <thead><tr><th>Skill</th><th>版本</th><th>产出</th><th>使用方</th></tr></thead>
+          <thead><tr><th>Skill</th><th>版本</th><th>产出</th><th>使用方</th><th>最近调用</th><th>状态</th></tr></thead>
           <tbody>
             {skills.platform.map((s) => (
-              <tr key={s.id}>
+              <tr key={s.id} style={s.enabled === false ? { opacity: 0.5 } : undefined}>
                 <td><b>{s.title}</b><br /><span className="mono muted">{s.id}</span><br />
                   <span className="muted">{s.description}</span></td>
                 <td className="mono">{s.version}</td>
                 <td className="mono">{s.produces.join(", ")}</td>
                 <td>{(s.used_by || []).join(", ")}</td>
+                <td><SkillCalls skillId={s.id} /></td>
+                <td>
+                  <button className="small" onClick={() => toggle(s)}>
+                    {s.enabled === false ? "已禁用 · 点击启用" : "已启用 · 点击禁用"}
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -369,6 +507,101 @@ function SkillsTab({ skills }: { skills: SkillsRegistry }) {
             ))}
           </tbody>
         </table>
+      </div>
+    </>
+  );
+}
+
+/** G24：某 Skill 最近调用记录（含禁用阻塞记录） */
+function SkillCalls({ skillId }: { skillId: string }) {
+  const [calls, setCalls] = useState<any[] | null>(null);
+  useEffect(() => {
+    api.skillCalls(skillId).then((r) => setCalls(r.items)).catch(() => setCalls([]));
+  }, [skillId]);
+  if (calls === null) return <span className="muted">…</span>;
+  if (calls.length === 0) return <span className="muted">无记录</span>;
+  return (
+    <div className="mono" style={{ fontSize: "var(--font-xs)" }}>
+      {calls.slice(0, 3).map((c) => (
+        <div key={c.id} title={JSON.stringify(c.output).slice(0, 200)}>
+          {new Date(c.at).toLocaleTimeString()} {c.name}
+          <Pill s={c.status === "success" ? "healthy" : "unhealthy"} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** 原型夹具：只影响 Mock Provider 的行为档位，用于演示/验收不同响应路径。 */
+function PrototypeTab() {
+  const [fixtures, setFixtures] = useState<Fixtures | null>(null);
+  const reload = () => api.devFixtures().then(setFixtures).catch(() => {});
+  useEffect(() => { reload(); }, []);
+
+  if (!fixtures) return <div className="empty">正在载入…</div>;
+
+  const set = async (key: string, value: any) => {
+    try {
+      const r = await api.devSetFixture(key, value);
+      setFixtures(r);
+    } catch (e: any) {
+      toast(`设置失败：${e.message}`);
+    }
+  };
+
+  const CONFIDENCE: Array<[string, string]> = [
+    ["auto", "自动（按输入内容判断）"],
+    ["high", "总是高置信（直接生成）"],
+    ["medium", "总是中置信（触发理解确认）"],
+    ["low", "总是低置信（触发理解确认）"],
+  ];
+  const RESPONSE: Array<[string, string]> = [
+    ["auto", "自动（按影响面判断）"],
+    ["quick", "总是小动作（即时回应）"],
+    ["merged", "小动作（演示合并转场）"],
+    ["full", "总是完整分支（生成新场景）"],
+  ];
+
+  return (
+    <>
+      <div className="card">
+        <h3>意图理解置信度</h3>
+        <p className="muted">控制「自由输入」被理解时的置信度档位，用于演示「我这样理解你的意思」确认卡。</p>
+        <div className="toolbar">
+          {CONFIDENCE.map(([v, label]) => (
+            <button key={v} className={`small ${fixtures.confidence === v ? "primary" : ""}`}
+              onClick={() => set("confidence", v)}>{label}</button>
+          ))}
+        </div>
+      </div>
+      <div className="card">
+        <h3>行动响应档位</h3>
+        <p className="muted">控制自由输入产生的响应类型：小动作即时回应 / 完整分支生成 / 合并转场。</p>
+        <div className="toolbar">
+          {RESPONSE.map(([v, label]) => (
+            <button key={v} className={`small ${fixtures.response === v ? "primary" : ""}`}
+              onClick={() => set("response", v)}>{label}</button>
+          ))}
+        </div>
+      </div>
+      <div className="card">
+        <h3>叙事泄密注入</h3>
+        <p className="muted">
+          开启后，Mock 叙事会故意泄露未授权的真相片段，用于验证「泄密拦截 → 重写 → 分支失败」的安全链。
+        </p>
+        <div className="toolbar">
+          <button className={`small ${fixtures.leak_secret ? "primary" : ""}`}
+            onClick={() => set("leak_secret", !fixtures.leak_secret)}>
+            {fixtures.leak_secret ? "已开启 · 点击关闭" : "已关闭 · 点击开启"}
+          </button>
+        </div>
+      </div>
+      <div className="card">
+        <div className="row">
+          <h3 className="grow">重置</h3>
+          <button className="small danger" onClick={() => set("reset", true)}>全部恢复自动</button>
+        </div>
+        <p className="muted">夹具只影响 Mock Provider，不改变任何业务 Runtime 行为；重启服务后自动复位。</p>
       </div>
     </>
   );

@@ -69,5 +69,15 @@ class Tracer:
         rows = (await db.execute(q)).scalars().all()
         return [TraceSpan(**r.data) for r in rows]
 
+    async def spans_for_skill(self, db, skill_id: str, limit: int = 5) -> list[TraceSpan]:
+        """G24：某 Skill 最近调用记录（含被禁用时的阻塞记录）。"""
+        rows = (await db.execute(
+            select(TraceSpanRow)
+            .where(TraceSpanRow.name.like(f"{skill_id}%"))
+            .order_by(TraceSpanRow.at.desc()).limit(limit * 4))).scalars().all()
+        spans = [TraceSpan(**r.data) for r in rows]
+        hits = [s for s in spans if s.skill_id == skill_id or s.name.startswith(skill_id)]
+        return hits[:limit]
+
 
 tracer = Tracer()

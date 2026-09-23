@@ -37,6 +37,7 @@ export interface DramaSpec {
   ending_families: string;
   foreshadows: string;
   forbidden_outcomes: string;
+  timed_interactions: string;
 }
 
 export interface ThemeConfig {
@@ -66,7 +67,24 @@ export interface ScenarioDraft {
   reviewed: boolean;
   manual_edits: string[];
   locks: string[];
+  changes: ChangeEntry[];
   updated_at: number;
+}
+
+export interface ChangeEntry {
+  path: string;
+  before: unknown;
+  after: unknown;
+  reason?: string;
+  source: string;           // manual | instruct
+  at: number;
+}
+
+export interface PublishCheck {
+  id: string;
+  label: string;
+  ok: boolean;
+  detail: string;
 }
 
 export interface ScenarioVersion {
@@ -99,10 +117,16 @@ export interface Asset {
   name: string;
   mime: string;
   size: number;
+  duration?: number | null;
   storage_path: string;
   entity: string;
   binding: string;
   role: string;
+  canonical: boolean;
+  authorized: boolean;
+  source: string;
+  trim_start: number;
+  trim_end: number;
   version: number;
   created_at: number;
 }
@@ -114,6 +138,7 @@ export interface PlayerInfo {
   caption: string;
   video_url: string;
   duration: number;
+  lead: number;
   position: number;
 }
 
@@ -131,6 +156,64 @@ export interface GeneratingItem {
   phase_label: string;
 }
 
+export interface TimedView {
+  active: boolean;
+  kind: string;
+  timeout_seconds: number;
+  remaining_ms: number | null;
+  selection_open: boolean;
+  fallback_hint: string;
+}
+
+export interface PendingIntent {
+  raw_text: string;
+  action: string;
+  desire: string;
+  strategy: string;
+  confidence: number;
+  kind: "echo" | "clarification";
+}
+
+export interface KnownState {
+  inventory: string[];
+  relationships: { id: string; name: string; value: number }[];
+  clues: { id: string; label: string }[];
+  knowledge: { id: string; label: string }[];
+}
+
+export interface PlayerMessage {
+  kind: "ack" | "merged" | "system";
+  text: string;
+  at: number;
+}
+
+export interface EndingTurn {
+  at: number;
+  arc_seq: number;
+  label: string;
+  title: string;
+  artifact_id?: string | null;
+  video_url?: string;
+  duration?: number;
+  timed?: boolean;
+}
+
+export interface EndingView {
+  family: string | null;
+  title: string;
+  carried: {
+    relationships: { id: string; name: string; value: number }[];
+    inventory: string[];
+    knowledge: { id: string; label: string }[];
+    continue_note: string;
+  };
+  next_arc_hint: string;
+  turns: EndingTurn[];
+  arcs: { seq: number; ending_family: string | null; closed_at: number | null }[];
+  continue_available: boolean;
+  budget: { total: number; used: number };
+}
+
 export interface Wish {
   id: string;
   raw: string;
@@ -143,10 +226,21 @@ export interface Wish {
 
 export interface PlayerView {
   session_id: string;
+  scenario: { title: string; player_identity: string };
+  arc: { seq: number; total: number };
   player: PlayerInfo;
   recommendations: Recommendation[];
+  selected: { branch_id: string; label: string; status: string } | null;
   generating: GeneratingItem[];
+  timed: TimedView | null;
+  pending_intent: PendingIntent | null;
+  last_failed_action?: { branch_id: string; label: string; raw_text: string;
+    error: string; fail_stage: string } | null;
+  known: KnownState;
+  messages: PlayerMessage[];
+  hint_chips: string[];
   ended: boolean;
+  ending?: EndingView;
   pending_continuation: boolean;
   wishes: Wish[];
 }
@@ -206,4 +300,17 @@ export interface SkillInfo {
   writes_state?: boolean;
   used_by?: string[];
   user_facing?: string;
+  enabled?: boolean;
+}
+
+export interface ProfileStatus {
+  profile: string;
+  state: string;
+  history: any[];
+}
+
+export interface Fixtures {
+  confidence: string;
+  response: string;
+  leak_secret: boolean;
 }

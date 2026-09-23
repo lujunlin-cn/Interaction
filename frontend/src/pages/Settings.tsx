@@ -1,7 +1,7 @@
-/** 设置：标准 / 开发者模式切换 + 运行信息。 */
+/** 设置：标准 / 开发者模式 + 全局显示（外观/字号/密度/字幕）+ 运行信息。 */
 import React, { useEffect, useState } from "react";
 import { api } from "../api";
-import { setState, useUi } from "../store";
+import { setDisplay, setState, useUi } from "../store";
 
 export default function Settings() {
   const ui = useUi();
@@ -9,6 +9,7 @@ export default function Settings() {
   useEffect(() => {
     api.health().then(setHealth).catch(() => {});
   }, []);
+  const d = ui.display;
   return (
     <>
       <div className="card">
@@ -23,6 +24,65 @@ export default function Settings() {
             onClick={() => setState({ mode: "developer" })}>开发者模式</button>
         </div>
       </div>
+
+      <div className="card">
+        <h3>外观</h3>
+        <div className="two">
+          <label><span>主题</span>
+            <div className="toolbar" style={{ marginTop: 0 }}>
+              <button className={d.appearance === "light" ? "active" : ""}
+                onClick={() => setDisplay({ appearance: "light" })}>浅色</button>
+              <button className={d.appearance === "dark" ? "active" : ""}
+                onClick={() => setDisplay({ appearance: "dark" })}>深色</button>
+            </div>
+          </label>
+          <label><span>界面密度</span>
+            <div className="toolbar" style={{ marginTop: 0 }}>
+              {([["compact", "紧凑"], ["comfortable", "舒适"], ["roomy", "宽松"]] as const).map(([v, l]) => (
+                <button key={v} className={d.density === v ? "active" : ""}
+                  onClick={() => setDisplay({ density: v })}>{l}</button>
+              ))}
+            </div>
+          </label>
+          <label><span>界面字号</span>
+            <div className="toolbar" style={{ marginTop: 0 }}>
+              {([["small", "小"], ["medium", "标准"], ["large", "大"], ["xlarge", "特大"]] as const).map(([v, l]) => (
+                <button key={v} className={d.fontSize === v ? "active" : ""}
+                  onClick={() => setDisplay({ fontSize: v })}>{l}</button>
+              ))}
+            </div>
+          </label>
+          <label><span>字幕（字号 / 位置）</span>
+            <div className="toolbar" style={{ marginTop: 0 }}>
+              {([["small", "小"], ["medium", "中"], ["large", "大"]] as const).map(([v, l]) => (
+                <button key={v} className={d.subtitleSize === v ? "active" : ""}
+                  onClick={() => setDisplay({ subtitleSize: v })}>{l}</button>
+              ))}
+              <span style={{ width: 8 }} />
+              {([["bottom", "底部"], ["top", "顶部"]] as const).map(([v, l]) => (
+                <button key={v} className={d.subtitlePos === v ? "active" : ""}
+                  onClick={() => setDisplay({ subtitlePos: v })}>{l}</button>
+              ))}
+            </div>
+          </label>
+        </div>
+        {/* 实时预览 */}
+        <div className="display-preview">
+          <div className="preview-scene">
+            <div className="preview-caption" style={{
+              fontSize: d.subtitleSize === "small" ? 13 : d.subtitleSize === "large" ? 19 : 15,
+              top: d.subtitlePos === "top" ? 12 : "auto",
+              bottom: d.subtitlePos === "top" ? "auto" : 12,
+            }}>
+              雨夜的公寓里，你听到门外传来脚步声。
+            </div>
+          </div>
+          <p className="muted" style={{ marginTop: 8 }}>
+            预览随设置实时变化；界面按 100% 浏览器缩放设计。
+          </p>
+        </div>
+      </div>
+
       <div className="card">
         <h3>运行信息</h3>
         {health ? (

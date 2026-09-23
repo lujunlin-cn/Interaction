@@ -1,8 +1,8 @@
 /** 全局角色库：跨故事共享的稳定角色身份资产；故事使用快照，不被后续修改覆盖。 */
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { api } from "../api";
 import { setState, toast, useUi } from "../store";
-import type { GlobalCharacter } from "../types";
+import type { Asset, GlobalCharacter } from "../types";
 
 export default function CharacterLibrary() {
   const ui = useUi();
@@ -65,7 +65,11 @@ function CharacterDetail({ ch, onBack, onSaved }: {
   ch: GlobalCharacter; onBack: () => void; onSaved: () => void;
 }) {
   const [draft, setDraft] = useState(ch);
+  const [assets, setAssets] = useState<Asset[]>([]);
   useEffect(() => setDraft(ch), [ch.id, ch.version]);
+  const loadAssets = () =>
+    api.listCharacterAssets(ch.id).then((r) => setAssets(r.items)).catch(() => {});
+  useEffect(() => { void loadAssets(); }, [ch.id, ch.version]);
 
   const save = async () => {
     try {
@@ -76,6 +80,40 @@ function CharacterDetail({ ch, onBack, onSaved }: {
       onSaved();
     } catch (e: any) {
       toast(`保存失败：${e.message}`);
+    }
+  };
+
+  /** 绑定/解绑 ref_* 槽位（立即 PATCH 生成新版本，快照语义保持不变） */
+  const bindRef = async (key: string, assetId: string | null, multi?: boolean) => {
+    try {
+      const cur = (ch as any)[key];
+      const patch: Record<string, any> = multi
+        ? { [key]: Array.isArray(cur)
+            ? (cur.includes(assetId)
+                ? cur.filter((x: string) => x !== assetId)
+                : [...cur, assetId])
+            : assetId ? [assetId] : [] }
+        : { [key]: (cur === assetId ? null : assetId) };
+      const updated = await api.updateCharacter(ch.id, patch as Partial<GlobalCharacter>);
+      setDraft(updated);
+      toast("引用已更新为新版本。");
+      onSaved();
+    } catch (e: any) {
+      toast(`绑定失败：${e.message}`);
+    }
+  };
+
+  /** 上传到角色全局素材池，成功后自动绑定到该槽位 */
+  const uploadRef = async (key: string, file: File) => {
+    try {
+      const role = key === "ref_voice_asset" ? "voice"
+        : key === "ref_motion_asset" ? "motion" : "identity";
+      const a = await api.uploadCharacterAsset(ch.id, file, role);
+      toast(`已上传「${a.name}」。`);
+      loadAssets();
+      await bindRef(key, a.id, key === "ref_other_assets");
+    } catch (e: any) {
+      toast(`上传失败：${e.message}`);
     }
   };
 
@@ -113,30 +151,88 @@ function CharacterDetail({ ch, onBack, onSaved }: {
       </section>
       <section className="focus-section">
         <h3>视觉身份</h3>
-        <div className="identity-grid">
-          <RefList title="正面图" value={draft.ref_front_asset} />
-          <RefList title="侧面图" value={draft.ref_side_asset} />
-          <RefList title="背面图" value={draft.ref_back_asset} />
-          <RefList title="其他参考图片" value={(draft.ref_other_assets || []).join("、")} />
-        </div>
-        <p className="muted">在「素材」页上传图片后，可在故事角色中引用；形象参考的版本随角色快照固定。</p>
+        <RefSlotGrid ch={ch} assets={assets} onPick={bindRef} onUpload={uploadRef}
+          slots={[
+            { key: "ref_front_asset", title: "正面图", accept: "image" },
+            { key: "ref_side_asset", title: "侧面图", accept: "image" },
+            { key: "ref_back_asset", title: "背面图", accept: "image" },
+          ]} />
+        <RefSlotGrid ch={ch} assets={assets} onPick={bindRef} onUpload={uploadRef} multi
+          slots={[{ key: "ref_other_assets", title: "其他参考图片", accept: "image" }]} />
+        <p className="muted">形象参考绑定后随角色快照固定；上传的素材保存在角色全局素材池。</p>
       </section>
       <section className="focus-section">
-        <h3>声音身份</h3>
-        <div className="identity-grid">
-          <RefList title="主声音参考" value={draft.ref_voice_asset} />
-          <RefList title="动作参考（视频）" value={draft.ref_motion_asset} />
-        </div>
+        <h3>声音 / 动作身份</h3>
+        <RefSlotGrid ch={ch} assets={assets} onPick={bindRef} onUpload={uploadRef}
+          slots={[
+            { key: "ref_voice_asset", title: "主声音参考", accept: "voice" },
+            { key: "ref_motion_asset", title: "动作参考（视频）", accept: "video" },
+          ]} />
       </section>
     </>
   );
 }
 
-function RefList({ title, value }: { title: string; value?: string | null }) {
+/** ref_* 槽位组：已绑定素材缩略预览 + 从角色素材池选择 / 直接上传 / 解绑 */
+function RefSlotGrid({ ch, assets, slots, onPick, onUpload, multi }: {
+  ch: GlobalCharacter; assets: Asset[]; onUpload: (key: string, file: File) => void;
+  slots: { key: string; title: string; accept: "image" | "voice" | "video" }[];
+  onPick: (key: string, assetId: string | null, multi?: boolean) => void;
+  multi?: boolean;
+}) {
+  const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const boundIds = (key: string): string[] => {
+    const v = (ch as any)[key];
+    return Array.isArray(v) ? v : v ? [v] : [];
+  };
   return (
-    <div className="identity-panel">
-      <div className="row"><h4 className="grow">{title}</h4></div>
-      {value ? <div className="ref-chip">{value}</div> : <div className="muted">尚未添加</div>}
+    <div className="identity-grid">
+      {slots.map((slot) => {
+        const pool = assets.filter((a) => a.type === slot.accept);
+        const bound = boundIds(slot.key);
+        return (
+          <div className="identity-panel" key={slot.key}>
+            <div className="row"><h4 className="grow">{slot.title}</h4>
+              <button className="small" onClick={() => fileRefs.current[slot.key]?.click()}>
+                上传</button>
+              <input type="file" hidden
+                accept={slot.accept === "image" ? "image/*" : slot.accept === "voice" ? "audio/*" : "video/*"}
+                ref={(el) => { fileRefs.current[slot.key] = el; }}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) onUpload(slot.key, f);
+                  e.target.value = "";
+                }} />
+            </div>
+            {bound.length === 0 && <div className="muted">尚未添加</div>}
+            {bound.map((aid) => {
+              const a = assets.find((x) => x.id === aid);
+              return (
+                <div className="ref-chip" key={aid} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  {a?.type === "image" &&
+                    <img src={`/files/${a.storage_path}`} alt={a.name}
+                      style={{ width: 40, height: 40, objectFit: "cover", borderRadius: 4 }} />}
+                  {a?.type === "voice" && <audio controls src={`/files/${a.storage_path}`} style={{ height: 26 }} />}
+                  {a?.type === "video" && <video src={`/files/${a.storage_path}`} style={{ width: 56 }} />}
+                  <span className="grow" style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {a?.name || aid}</span>
+                  <button className="small danger" onClick={() => onPick(slot.key, aid, multi)}>解绑</button>
+                </div>
+              );
+            })}
+            {pool.filter((a) => !bound.includes(a.id)).length > 0 && (
+              <select defaultValue="" onChange={(e) => {
+                if (e.target.value) { onPick(slot.key, e.target.value, multi); e.target.value = ""; }
+              }}>
+                <option value="" disabled>从素材池选择…</option>
+                {pool.filter((a) => !bound.includes(a.id)).map((a) => (
+                  <option key={a.id} value={a.id}>{a.name}（{a.type}）</option>
+                ))}
+              </select>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
