@@ -1,0 +1,82 @@
+"""全局配置：全部通过环境变量 / .env 注入，禁止在代码中写死密钥或端点。"""
+from __future__ import annotations
+
+from pathlib import Path
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+
+    # --- 基础 ---
+    app_name: str = "interactive-drama"
+    env: str = "dev"
+    host: str = "0.0.0.0"
+    port: int = 9000
+
+    # --- 数据库 ---
+    database_url: str = "postgresql+asyncpg://drama:drama@127.0.0.1:5433/interaction_drama"
+
+    # --- 媒体与素材存储 ---
+    data_dir: Path = Path("./data")            # 素材上传
+    media_dir: Path = Path("./data/media")     # 生成的视频 / 装配产物
+
+    # --- Provider 密钥（全部来自环境，禁止入库 / 入代码）---
+    step_api_key: str = ""
+    step_base_url: str = "https://api.stepfun.com/v1"
+    step37_model: str = "step-3.7-flash"       # 实际模型 ID 待账号确认（PIN_*）
+    step5_model: str = "step-5-preview"        # 同上
+
+    fal_key: str = ""
+    fal_h3_model: str = "fal-ai/minimax/h3-max/reference-to-video"
+
+    jev_api_key: str = ""
+    jev_base_url: str = "https://api.typesafe.ai"   # Jev（TypeSafe SystemOne）API
+    jev_model: str = "jev-latest"                   # 锁定版本时改为具体 ID（如 jev-1.13.0，PRD S06）
+
+    local_llm_base_url: str = "http://127.0.0.1:8001/v1"   # DGX Spark 上的 vLLM (Nemotron Lightning)
+    local_llm_model: str = "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4"
+
+    # --- Provider 运行模式 ---
+    # mock     : 全部角色使用 Mock Provider（离线开发，零费用）
+    # live     : 按 PRD 冻结矩阵走真实 Provider（本地 Lightning / StepFun / fal）
+    # hybrid   : 文本走真实 Provider，视频走 Mock（默认，安全起步）
+    provider_mode: str = "hybrid"
+
+    # --- Runtime Profile（Q53/Q68：单 Spark 显式切换）---
+    runtime_profile: str = "AGENT_LOCAL_PROFILE"  # or VIDEO_LOCAL_PROFILE
+
+    # --- 调度默认值（PRD 12.2，部署配置，非业务常数）---
+    budget_total: int = 500
+    budget_per_turn: int = 60
+    budget_speculation_cap: int = 160
+    video_concurrency: int = 3
+    target_k: int = 3
+    shots_per_branch: int = 2
+    branch_ttl_seconds: int = 180
+    shot_unit_cost: int = 5  # 每 Shot 预留额度（内部记账单位）
+
+    # --- Provider 容错 ---
+    provider_timeout_seconds: float = 30.0
+    provider_circuit_threshold: int = 3
+
+    # --- 运行时节奏 ---
+    branch_phase_delay_ms: int = 350      # 各管线阶段之间的最小间隔（让状态转换可观察）
+    decision_lead_seconds: float = 2.0    # Decision Lead：距场景结束多少秒即可发布下一批推荐
+    mock_shot_duration: float = 5.0       # Mock 视频单镜头时长
+    timed_timeout_override: float = 0.0   # >0 时覆盖 Scenario 声明的限时秒数（测试用）
+
+    @property
+    def data_path(self) -> Path:
+        p = Path(self.data_dir)
+        p.mkdir(parents=True, exist_ok=True)
+        return p
+
+    @property
+    def media_path(self) -> Path:
+        p = Path(self.media_dir)
+        p.mkdir(parents=True, exist_ok=True)
+        return p
+
+
+settings = Settings()

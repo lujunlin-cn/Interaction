@@ -1,0 +1,1 @@
+{"root":["./src/App.tsx","./src/api.ts","./src/main.tsx","./src/store.ts","./src/types.ts","./src/components/Sidebar.tsx","./src/pages/Assets.tsx","./src/pages/CharacterLibrary.tsx","./src/pages/Creator.tsx","./src/pages/Developer.tsx","./src/pages/Feedback.tsx","./src/pages/Home.tsx","./src/pages/Notes.tsx","./src/pages/Player.tsx","./src/pages/Settings.tsx"],"version":"5.9.3"}

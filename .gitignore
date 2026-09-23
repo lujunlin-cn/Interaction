@@ -1,0 +1,22 @@
+# 环境与密钥（绝不入库）
+.env
+*.local
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+itest.db
+
+# 运行时数据与生成媒体
+backend/data/
+backend/itest.db
+
+# 前端
+frontend/node_modules/
+frontend/dist/
+
+# 系统
+.DS_Store
+nohup.out
