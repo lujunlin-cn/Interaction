@@ -124,3 +124,35 @@ class FeedbackRow(Base):
     id: Mapped[str] = mapped_column(String(64), primary_key=True)
     data: Mapped[dict] = mapped_column(JSONFlex)
     at: Mapped[int] = mapped_column(BigInteger)
+
+
+# --- v0.6 Character Asset System ---
+
+class CharacterAssetRow(Base):
+    __tablename__ = "character_assets"
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    character_id: Mapped[str] = mapped_column(String(64), index=True)
+    status: Mapped[str] = mapped_column(String(16), default="CANDIDATE")
+    role: Mapped[str] = mapped_column(String(32), default="")
+    data: Mapped[dict] = mapped_column(JSONFlex)      # CharacterAsset
+    created_at: Mapped[int] = mapped_column(BigInteger)
+
+
+class CharacterVersionRow(Base):
+    __tablename__ = "character_versions"
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    character_id: Mapped[str] = mapped_column(String(64), index=True)
+    version: Mapped[int] = mapped_column(Integer)
+    change_type: Mapped[str] = mapped_column(String(24), default="METADATA")
+    data: Mapped[dict] = mapped_column(JSONFlex)      # CharacterVersion
+    created_at: Mapped[int] = mapped_column(BigInteger)
+
+
+class ScenarioCharacterSnapshotRow(Base):
+    __tablename__ = "scenario_character_snapshots"
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    scenario_version_id: Mapped[str] = mapped_column(String(64), index=True)
+    global_character_id: Mapped[str] = mapped_column(String(64), index=True)
+    character_version_id: Mapped[str] = mapped_column(String(64))
+    data: Mapped[dict] = mapped_column(JSONFlex)      # ScenarioCharacterSnapshot
+    created_at: Mapped[int] = mapped_column(BigInteger)

@@ -214,7 +214,7 @@ class ScenarioVersionRecord(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# 全局角色库（跨 Scenario 共享，可检索）
+# 全局角色库（跨 Scenario 共享，可检索）+ v0.6 Character Asset System
 # ---------------------------------------------------------------------------
 
 class GlobalCharacter(BaseModel):
@@ -223,15 +223,103 @@ class GlobalCharacter(BaseModel):
     bio: str = ""
     personality: str = ""
     tags: list[str] = Field(default_factory=list)
+    appearance: str = ""                            # 外观文字描述（AI 可补全，用户确认）
     ref_front_asset: Optional[str] = None     # asset_id
     ref_side_asset: Optional[str] = None
     ref_back_asset: Optional[str] = None
     ref_other_assets: list[str] = Field(default_factory=list)
     ref_voice_asset: Optional[str] = None
     ref_motion_asset: Optional[str] = None
+    current_version_id: Optional[str] = None        # CharacterVersion.id（v0.6）
     version: int = 1
     created_at: int = Field(default_factory=now_ms)
     updated_at: int = Field(default_factory=now_ms)
+
+
+class CharacterAssetStatus(str, Enum):
+    GENERATED = "GENERATED"      # 模型刚产出
+    CANDIDATE = "CANDIDATE"      # 候选，待用户选择
+    APPROVED = "APPROVED"        # 用户批准（可作 Derived/Outfit ref）
+    CANONICAL = "CANONICAL"      # 正式 Canonical Reference
+    ARCHIVED = "ARCHIVED"        # 归档（被替换后）
+
+
+class CharacterAsset(BaseModel):
+    """角色视觉/声音资产（v0.6 FR-095）：非破坏式，role 与 status 分离。"""
+    id: str
+    character_id: str
+    character_version_id: Optional[str] = None
+    asset_id: Optional[str] = None              # 底层 Asset.id（文件）
+    role: str = ""                # front / three_quarter / side / full_front /
+                                # full_side / outfit / pose / motion / voice / derived
+    status: CharacterAssetStatus = CharacterAssetStatus.CANDIDATE
+    outfit_id: Optional[str] = None
+    source_asset_refs: list[str] = Field(default_factory=list)   # edit 的输入引用
+    generation_job_id: Optional[str] = None
+    provenance: dict[str, Any] = Field(default_factory=dict)     # provider/model/prompt_hash
+    url: str = ""                 # 可预览 URL（fal 返回或本地 /files/）
+    created_at: int = Field(default_factory=now_ms)
+
+
+class CharacterOutfit(BaseModel):
+    """Outfit 属于同一角色版本（Q76），不复制新角色。"""
+    id: str
+    name: str = ""
+    description: str = ""
+    reference_assets: list[str] = Field(default_factory=list)  # CharacterAsset.id
+    is_default: bool = False
+
+
+class CharacterVersion(BaseModel):
+    """角色可复现版本（Q84）：重要变化产生新版本，发布后不改写。"""
+    id: str
+    character_id: str
+    version: int
+    change_type: str = "METADATA"   # IDENTITY/APPEARANCE/METADATA/ASSET_ADDITION/VOICE
+    identity_spec: dict[str, Any] = Field(default_factory=dict)  # name/bio/personality/appearance
+    canonical_asset_refs: dict[str, Optional[str]] = Field(default_factory=dict)
+    outfits: list[CharacterOutfit] = Field(default_factory=list)
+    pose_refs: list[str] = Field(default_factory=list)
+    motion_refs: list[str] = Field(default_factory=list)
+    canonical_voice_ref: Optional[str] = None
+    alternate_voice_refs: list[str] = Field(default_factory=list)
+    source_version_id: Optional[str] = None
+    breaking_identity_change: bool = False
+    created_at: int = Field(default_factory=now_ms)
+
+
+class ScenarioCharacterSnapshot(BaseModel):
+    """Scenario 消费的角色快照（Q86）：Global 新版不自动渗透。"""
+    id: str
+    scenario_version_id: str
+    global_character_id: str
+    character_version_id: str
+    character_version: int = 1
+    frozen_identity: dict[str, Any] = Field(default_factory=dict)
+    frozen_asset_refs: dict[str, Any] = Field(default_factory=dict)
+    local_overrides: dict[str, Any] = Field(default_factory=dict)
+    created_at: int = Field(default_factory=now_ms)
+
+
+class CharacterVersionDiff(BaseModel):
+    from_version: int
+    to_version: int
+    change_types: list[str] = Field(default_factory=list)
+    field_diffs: dict[str, dict[str, Any]] = Field(default_factory=dict)
+    asset_diffs: dict[str, dict[str, Any]] = Field(default_factory=dict)
+    breaking_identity_change: bool = False
+
+
+class CharacterReferenceSelection(BaseModel):
+    """Production Reference Resolver 输出（Q89-91 / FR-093）：实际发送可审计。"""
+    scene_or_shot_id: str
+    character_snapshot_id: str
+    selected_image_refs: list[str] = Field(default_factory=list)   # 2-4 张
+    voice_ref: Optional[str] = None
+    motion_ref: Optional[str] = None
+    selection_reason: str = ""
+    developer_override: bool = False
+    provider_limits_snapshot: dict[str, Any] = Field(default_factory=dict)
 
 
 # ---------------------------------------------------------------------------

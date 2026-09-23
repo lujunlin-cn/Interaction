@@ -64,6 +64,9 @@ class FalH3MaxProvider:
     def __init__(self, api_key: str = "", model: str = ""):
         self.api_key = api_key or settings.fal_key
         self.model = model or settings.fal_h3_model
+        # submit 用完整 endpoint id；status/result/cancel 优先用 submit 响应
+        # 返回的 status_url/response_url/cancel_url（官方文档推荐做法，
+        # 避免自己猜 app-id 层级导致 405）。
         self.base = f"https://queue.fal.run/{self.model}"
 
     def capabilities(self) -> dict:
@@ -120,18 +123,36 @@ class FalH3MaxProvider:
             resp = await client.post(self.base, json=payload, headers=headers)
             resp.raise_for_status()
             data = resp.json()
-        return VideoJobHandle(provider_job_id=data["request_id"], provider=self.name)
+        return VideoJobHandle(
+            provider_job_id=data["request_id"], provider=self.name,
+            status_url=data.get("status_url"),
+            response_url=data.get("response_url"),
+            cancel_url=data.get("cancel_url"))
+
+    def _status_url(self, handle: VideoJobHandle) -> str:
+        if handle.status_url:
+            return handle.status_url
+        raise RuntimeError(
+            "fal handle missing status_url (job submitted before handle-url "
+            "support); resubmit the job to obtain queue URLs")
 
     async def status(self, handle: VideoJobHandle) -> VideoJobResult:
         headers = {"Authorization": f"Key {self.api_key}"}
         async with httpx.AsyncClient(timeout=settings.provider_timeout_seconds) as client:
-            resp = await client.get(f"{self.base}/requests/{handle.provider_job_id}/status", headers=headers)
+            resp = await client.get(self._status_url(handle), headers=headers)
             resp.raise_for_status()
             st = resp.json().get("status", "")
             if st not in ("COMPLETED",):
                 return VideoJobResult(status="GENERATING" if st in ("IN_PROGRESS", "IN_QUEUE") else st,
                                       raw={"fal_status": st})
-            result = await client.get(f"{self.base}/requests/{handle.provider_job_id}", headers=headers)
+            result_url = handle.response_url
+            if not result_url and handle.status_url:
+                # minimax 这类 app 返回的 response_url 即 .../requests/{id}（不带 /response）
+                result_url = handle.status_url[: -len("/status")] \
+                    if handle.status_url.endswith("/status") else handle.status_url
+            if not result_url:
+                raise RuntimeError("fal handle missing response_url")
+            result = await client.get(result_url, headers=headers)
             result.raise_for_status()
             data = result.json()
         video_url = (data.get("video") or {}).get("url") or data.get("video_url")
@@ -150,11 +171,12 @@ class FalH3MaxProvider:
         return VideoJobResult(status="READY", video_path=str(out), raw={"clips": [str(target)], "fal": data})
 
     async def cancel_if_supported(self, handle: VideoJobHandle) -> bool:
+        if not handle.cancel_url:
+            return False
         try:
             headers = {"Authorization": f"Key {self.api_key}"}
             async with httpx.AsyncClient(timeout=10) as client:
-                resp = await client.put(
-                    f"{self.base}/requests/{handle.provider_job_id}/cancel", headers=headers)
+                resp = await client.put(handle.cancel_url, headers=headers)
                 return resp.status_code < 300
         except Exception:
             return False
@@ -438,6 +460,95 @@ class JevDecisionProvider:
         return bool(self.api_key and self.base_url)
 
 
+class FalImageProvider:
+    """fal.ai Nano Banana 2 角色生图/编图（v0.6 IMAGE-01 / FR-085/086/097）。
+
+    业务层只调逻辑能力 IMAGE_GENERATION / IMAGE_EDIT；具体 endpoint、
+    模型 id、key 只存在这个 Adapter，不散落到 Character UI / Runtime。
+
+    - IMAGE_GENERATION → fal-ai/nano-banana-2        （text-to-image, num_images）
+    - IMAGE_EDIT       → fal-ai/nano-banana-2/edit   （image_urls + prompt）
+
+    与 FalH3MaxProvider 共用 fal queue 语义：submit 响应返回
+    status_url / response_url / cancel_url，轮询 status 到 COMPLETED 后
+    取 result（images[]）。结果是非破坏式 Candidate，由调用方落 CharacterAsset。
+    """
+
+    name = "nano_banana_2"
+
+    GENERATE_ENDPOINT = "fal-ai/nano-banana-2"
+    EDIT_ENDPOINT = "fal-ai/nano-banana-2/edit"
+
+    def __init__(self, api_key: str = ""):
+        self.api_key = api_key or settings.fal_key
+
+    def capabilities(self) -> dict:
+        return {"image_generation": "documented", "image_edit": "documented",
+                "num_images_max": 4, "edit_image_urls_max": 4,
+                "endpoint_generation": self.GENERATE_ENDPOINT,
+                "endpoint_edit": self.EDIT_ENDPOINT}
+
+    async def _submit_and_wait(self, endpoint: str, payload: dict,
+                               timeout_s: int = 180) -> dict:
+        """提交 queue 任务并轮询到 COMPLETED；返回 result JSON。"""
+        headers = {"Authorization": f"Key {self.api_key}",
+                   "Content-Type": "application/json"}
+        base = f"https://queue.fal.run/{endpoint}"
+        async with httpx.AsyncClient(timeout=settings.provider_timeout_seconds) as client:
+            resp = await client.post(base, json=payload, headers=headers)
+            resp.raise_for_status()
+            sub = resp.json()
+            status_url = sub.get("status_url")
+            response_url = sub.get("response_url")
+            if not status_url or not response_url:
+                raise RuntimeError(f"fal submit missing queue urls: {sub}")
+            deadline = time.time() + timeout_s
+            while time.time() < deadline:
+                st = await client.get(status_url,
+                                      headers={"Authorization": f"Key {self.api_key}"})
+                st.raise_for_status()
+                body = st.json()
+                s = body.get("status", "")
+                if s == "COMPLETED":
+                    rr = await client.get(response_url,
+                                          headers={"Authorization": f"Key {self.api_key}"})
+                    rr.raise_for_status()
+                    return rr.json()
+                if s not in ("IN_QUEUE", "IN_PROGRESS"):
+                    raise RuntimeError(f"fal job terminal status={s}: {body}")
+                await asyncio.sleep(3)
+        raise RuntimeError(f"fal image job timeout after {timeout_s}s")
+
+    async def generate(self, request: dict) -> dict:
+        """IMAGE_GENERATION：{prompt, num_images?, image_size?} → {images:[{url,..}], model, job}"""
+        payload = {
+            "prompt": request.get("prompt", ""),
+            "num_images": min(int(request.get("num_images", 2)), 4),
+        }
+        if request.get("image_size"):
+            payload["image_size"] = request["image_size"]
+        if request.get("aspect_ratio"):
+            payload["aspect_ratio"] = request["aspect_ratio"]
+        data = await self._submit_and_wait(self.GENERATE_ENDPOINT, payload)
+        return {"images": data.get("images", []), "model": self.GENERATE_ENDPOINT,
+                "raw": {k: v for k, v in data.items() if k != "images"}}
+
+    async def edit(self, request: dict) -> dict:
+        """IMAGE_EDIT：{prompt, image_urls:[...]} → {images:[..], model, job}
+        非破坏式：返回新 Candidate，不覆盖输入图。"""
+        image_urls = list(request.get("image_urls") or [])
+        if not image_urls:
+            raise RuntimeError("IMAGE_EDIT requires image_urls")
+        payload = {"prompt": request.get("prompt", ""),
+                   "image_urls": image_urls[:4]}
+        data = await self._submit_and_wait(self.EDIT_ENDPOINT, payload)
+        return {"images": data.get("images", []), "model": self.EDIT_ENDPOINT,
+                "raw": {k: v for k, v in data.items() if k != "images"}}
+
+    async def health(self) -> bool:
+        return bool(self.api_key)
+
+
 def build_provider_registry(mode: str) -> dict:
     """按 provider_mode 构建注册表。mock 模式下所有角色都有确定性 Provider。"""
     step37 = OpenAICompatTextProvider("step_37", settings.step_base_url, settings.step_api_key, settings.step37_model)
@@ -451,6 +562,7 @@ def build_provider_registry(mode: str) -> dict:
         "h3_max": FalH3MaxProvider(),
         "sol_h3_local": SolH3LocalProvider(settings.sol_h3_base_url, settings.sol_h3_api_key),
         "jev": JevDecisionProvider(),
+        "nano_banana_2": FalImageProvider(),
     }
     if mode in ("mock", "hybrid"):
         from .mock_decision import MockDecisionProvider

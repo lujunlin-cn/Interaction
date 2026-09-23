@@ -6,7 +6,7 @@
 | Ollama gemma3:27b | — | `11434` 在线，`/v1/models` OK；`/chat/completions` 偶发 "model failed to load"（资源紧张时加载失败） | 可用但不稳 | 作为 nemotron_local 降级底；故障时走 mock_text 兜底（HYBRID 末位） |
 | step_37 / step_5 | StepFun `api.stepfun.com` | env 已配 `STEP_API_KEY`/`STEP37_MODEL`/`STEP5_MODEL` | 就绪（真实调用待验收 #29） | HYBRID narrative→step_37 首位 |
 | jev（decision）| TypeSafe `api.typesafe.ai` | env 已配 `JEV_API_KEY`/`JEV_MODEL=jev-latest` | 就绪 | decision 路由首位 |
-| h3_max（cloud_video）| fal.ai `fal-ai/minimax/h3-max/reference-to-video` | env 已配 `FAL_KEY` | 就绪 | HYBRID cloud_video→mock（安全起步）；live 可切 |
+| h3_max（cloud_video）| fal.ai `minimax/h3-max/reference-to-video` | env 已配 `FAL_KEY` | **已实测出片** | job `01a0ceef-d403-78c2-b737-7aa3cccb8f05` → COMPLETED → 下载 `clip_1.mp4`（6.9MB, ffprobe 5.184s）。endpoint id 已修正（原 `fal-ai/` 前缀 404）；reference-to-video 必须带≥1 参考图。 |
 | sol_h3_local（local_video，VIDEO_LOCAL_PROFILE）| Sol-H3 本地 | 原实现**未配置阻塞**。DGX 实测存在 `h3-adapter`（`127.0.0.1:8790`，ComfyUI-H3/Sol 队列） | **已接**：按真实协议实现 SolH3LocalProvider | `SOL_H3_BASE_URL=http://127.0.0.1:8790`，`SOL_H3_API_KEY=<set-in-DGX-env>` |
 | 其他本地服务 | — | ComfyUI `8188` 在线；h3-object3d-worker `8792`（TRELLIS.2-4B）在线 | 非本系统槽位 | 不接 |
 

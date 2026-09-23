@@ -29,7 +29,9 @@ class Settings(BaseSettings):
     step5_model: str = "step-5-preview"        # 同上
 
     fal_key: str = ""
-    fal_h3_model: str = "fal-ai/minimax/h3-max/reference-to-video"
+    # fal 官方 endpoint id 不带 fal-ai/ 前缀（fal-ai/ 命名空间会 404
+    # "Path /h3-max/reference-to-video not found"）。
+    fal_h3_model: str = "minimax/h3-max/reference-to-video"
 
     jev_api_key: str = ""
     jev_base_url: str = "https://api.typesafe.ai"   # Jev（TypeSafe SystemOne）API

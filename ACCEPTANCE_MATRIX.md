@@ -124,7 +124,7 @@ NOT_RUN，**不伪造**。
 | AT-73 | 改文字描述不点重新生成→不动资产 | ✅ | 旧视觉资产不变、UI 提示不一致、无自动 API 请求。 |
 | AT-74 | 多分辨率 100% Zoom 走四页 | ✅ | `docs/acceptance/shots/`：1366×768 / 1440×900 / 1920×1080 / 2560×1440 / 3840×2160 五档走 home/creator/developer——文字可读、侧边栏与工作区无关键遮挡；4K 合理扩展。新增 `#/<page>[/<tab>]` 深链（store.ts）支撑可分享直达与验收脚本。 |
 | AT-75 | 标准隐藏 Prompt/Provider，开发者可见 | ✅ | 术语隔离：玩家界面自然中文、Provider/model 仅开发者模式；FAL_KEY 不进浏览器/Trace（G28）。 |
-| AT-76 | 封版部署核查 + AGENT↔VIDEO 往返 | 🔶 | 六类 Provider 有配置+健康矩阵+部分真实输出（sol_h3 出片、step_37 在线、jev 在线）；六类全部真实请求证据未齐（h3_max 未真实出片、nemotron_local 不稳）。 |
+| AT-76 | 封版部署核查 + AGENT↔VIDEO 往返 | 🔶 | 六类 Provider 有配置+健康矩阵+真实输出：h3_max 已真实出片（job `01a0ceef` → 6.9MB mp4/5.18s）、sol_h3 出片、step_37/jev 在线；nemotron_local 本地仍不稳走降级链。 |
 
 ---
 
@@ -141,8 +141,9 @@ NOT_RUN，**不伪造**。
 **BLOCKED / 待外部条件**：
 
 - **AT-44**：需真实用户试玩反馈，不虚构。
-- **AT-76 残项**：h3_max（fal 云端）真实出片、nemotron_local 稳态——前者耗 fal 配额，
-  后者依赖 DGX GPU/Ollama 稳态；两者机制均已接通，留待配额/资源允许时补真实留证。
+- **AT-76 残项**：nemotron_local 稳态（DGX GPU/Ollama 侧）——h3_max 已真实出片
+  （fal job `01a0ceef` → `clip_1.mp4` 6.9MB/5.184s，endpoint 修正为
+  `minimax/h3-max/reference-to-video`）；nemotron 机制接通，留待 GPU 稳态补留证。
 - **AT-45/47/51/60/62~65/68/71/72**：路径实现且有结构证据，缺大规模或真实配额下的
   端到端留证，标 PARTIAL 而非 PASS。
 

@@ -56,6 +56,11 @@ class VideoJobHandle(BaseModel):
     provider_job_id: str
     provider: str
     submitted: bool = True
+    # fal queue submit 返回的便利 URL（status_url/response_url/cancel_url），
+    # 由 provider 自行选择使用；为空时 provider 自行按平台规则拼 URL。
+    status_url: Optional[str] = None
+    response_url: Optional[str] = None
+    cancel_url: Optional[str] = None
 
 
 class VideoJobResult(BaseModel):
