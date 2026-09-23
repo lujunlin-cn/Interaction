@@ -110,16 +110,16 @@ NOT_RUN，**不伪造**。
 | AT | 用例 | 状态 | 证据 / 备注 |
 | --- | --- | --- | --- |
 | AT-61 | 全局角色库按 personality 搜索 | ✅ | 角色库 search 后端真实返回（#20 闭环）；UI 与能力一致。 |
-| AT-62 | 一句描述 AI 建角色→2 张 Candidate | 🔶 | v0.6 全链已实现并 mock 实测：`POST /characters/{id}/ai-generate`→2×CANDIDATE（SVG data-URL 桩，mock 绿）；真实 fal nano-banana-2 出图配额留证待跑。 |
-| AT-63 | 选主图→二次确认→标准参考组 | 🔶 | approve→front Canonical（IDENTITY 版本）→`standard-views` 批量 4 视图（mock 实测 role 齐）；前端二次确认 confirm；真实批量出图留证未全量。 |
-| AT-64 | 「换雨衣保持身份」编辑 | 🔶 | `edit-image` 非破坏式→derived CANDIDATE、identity guard prompt 注入（mock 实测）；真实 nano-banana-2/edit 留证待跑。 |
+| AT-62 | 一句描述 AI 建角色→2 张 Candidate | ✅ | DGX 实测：`ai-generate`→2×CANDIDATE（真实 fal `v3b.fal.media` URL）；`ai-describe`→真实 LLM 外观草案（FR-096 确认制不落库）。 |
+| AT-63 | 选主图→二次确认→标准参考组 | ✅ | DGX 实测：approve front→CANONICAL+IDENTITY 版本→`standard-views` 真实 4 视图并行（three_quarter/side/full_front/full_side）→ 各 approve 成 Canonical。 |
+| AT-64 | 「换雨衣保持身份」编辑 | 🔶 | `edit-image` 非破坏式→derived CANDIDATE、identity guard prompt 注入（mock 实测）；真实 nano-banana-2/edit 单次留证待跑（路径与 standard-views 同一 adapter）。 |
 | AT-65 | 快捷只改背景/姿势 + 自由语言编辑 | 🔶 | 前端 Edit 入口落 IMAGE_EDIT、指令自由文本、新候选引用 source_asset_refs 可追踪；无需 Mask 编辑器。 |
 | AT-66 | Outfit 属同一 GlobalCharacter | ✅ | Outfit 挂同一 CharacterVersion、可缺视图、不复制角色（数据结构）。 |
 | AT-67 | 上传 Pose/动作视频 Reference | ✅ | 两类 Reference 绑定 CharacterVersion 并可被 Production Resolver 读（references 链）。 |
-| AT-68 | 换主图/Canonical Voice/新增 Outfit | 🔶 | approve front→IDENTITY+breaking_identity_change；其他 role→ASSET_ADDITION；`versions`/`versions/diff` 可查（mock 实测版本链 v1→v2）；Voice/Outfit 三类各一次实测未全跑。 |
-| AT-69 | Scenario 用 v3 后 Global 升 v4 | ✅ | publish 自动 `snapshot_for_scenario`（routes.py publish 钩）→ frozen_asset_refs；Global 新版本不渗透（snapshot 隔离 + mock 实测 promote 升全局）。 |
-| AT-70 | Scenario 内改外观→仅本故事/全局 | ✅ | `character-snapshots/{id}/override` 写 local_overrides 不污染 Global；`/promote` 人工升为新全局版本（mock 实测 200→全局 appearance 生效）。 |
-| AT-71 | 单角色 Scene→自动选 2-4 张图 | 🔶 | `resolve-references` 按 front>3⁄4>side>full_* 选 ≤4 张+selection_reason 可审计（mock 实测 5 Canonical→4）；create_session 把 frozen refs 直进 asset_manifest（engine.py v0.6 快照消费）；实际 H3 请求一致留证未全量。 |
+| AT-68 | 换主图/Canonical Voice/新增 Outfit | 🔶 | DGX 实测：版本链 v1..v7（IDENTITY×3→ASSET_ADDITION×4）、diff v1→v6 资产差异正确；Voice/Outfit 三类各一次留证未全跑。 |
+| AT-69 | Scenario 用 v3 后 Global 升 v4 | ✅ | publish 自动 `snapshot_for_scenario`（routes.py publish 钩）→ frozen_asset_refs；Global 新版本不渗透（DGX 实测 promote 升全局 v7）。 |
+| AT-70 | Scenario 内改外观→仅本故事/全局 | ✅ | `character-snapshots/{id}/override` 写 local_overrides 不污染 Global；`/promote` 人工升为新全局版本（DGX 实测 200→全局 appearance 生效）。 |
+| AT-71 | 单角色 Scene→自动选 2-4 张图 | ✅ | DGX 实测：5 Canonical→resolve 选 4 张+selection_reason 可审计；create_session 把 frozen refs 直进 asset_manifest（engine.py v0.6 快照消费）；developer_override 优先（mock 实测）。 |
 | AT-72 | 双角色素材近上限→确定性裁剪 | 🔶 | `_bound_references` 按角色分桶+每角色≤4+主身份优先（engine.py）；双角色边界实测未跑。 |
 | AT-73 | 改文字描述不点重新生成→不动资产 | ✅ | 保存仅 PATCH 文本字段；Studio 提示「不会自动生图」；`ai-describe` 仅返回草案不落库（FR-096 确认制）。 |
 | AT-74 | 多分辨率 100% Zoom 走四页 | ✅ | `docs/acceptance/shots/`：1366×768 / 1440×900 / 1920×1080 / 2560×1440 / 3840×2160 五档走 home/creator/developer——文字可读、侧边栏与工作区无关键遮挡；4K 合理扩展。新增 `#/<page>[/<tab>]` 深链（store.ts）支撑可分享直达与验收脚本。 |

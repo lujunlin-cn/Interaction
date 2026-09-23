@@ -133,9 +133,13 @@ class CharacterAssetService:
                 )).scalars().all()
                 for old in rows:
                     old.status = CharacterAssetStatus.ARCHIVED.value
-                    old.data["status"] = CharacterAssetStatus.ARCHIVED.value
+                    od = dict(old.data)
+                    od["status"] = CharacterAssetStatus.ARCHIVED.value
+                    old.data = od               # JSON 列重赋值 → flag_modified
                 row.status = CharacterAssetStatus.CANONICAL.value
-                row.data["status"] = CharacterAssetStatus.CANONICAL.value
+                nd = dict(row.data)
+                nd["status"] = CharacterAssetStatus.CANONICAL.value
+                row.data = nd
                 asset.status = CharacterAssetStatus.CANONICAL
         # canonical 变化 → 新版本（ASSET_ADDITION / IDENTITY 若主图）
         change = CHANGE_IDENTITY if asset.role == "front" else CHANGE_ASSET
@@ -193,17 +197,17 @@ class CharacterAssetService:
             "full_front": "full body front view",
             "full_side": "full body side view",
         }
-        out: list[CharacterAsset] = []
-        for role, desc in view_prompts.items():
+        async def _one(role: str, desc: str) -> list[CharacterAsset]:
             prompt = (f"{desc} of the same character, consistent identity, "
                       f"same face, same hairstyle, same outfit. "
                       f"{self._build_portrait_prompt(ch, '')[:200]}")
             result = await provider.edit(
                 {"prompt": prompt, "image_urls": [front.url]})
+            made: list[CharacterAsset] = []
             for img in result.get("images", [])[:1]:
                 if not img.get("url"):
                     continue
-                out.append(await self.add_asset(
+                made.append(await self.add_asset(
                     character_id, role=role, url=img["url"],
                     status=CharacterAssetStatus.CANDIDATE, job_id=job_id,
                     source_refs=[front_asset_id],
@@ -212,6 +216,22 @@ class CharacterAssetService:
                                 "prompt_hash": _prompt_hash(prompt),
                                 "capability": "IMAGE_EDIT",
                                 "standard_view": role}))
+            return made
+
+        # 4 视图并行（fal queue 单任务可能 >180s，串行会成倍放大超时面）
+        import asyncio
+        batches = await asyncio.gather(
+            *[_one(r, d) for r, d in view_prompts.items()],
+            return_exceptions=True)
+        out: list[CharacterAsset] = []
+        failed: list[str] = []
+        for b in batches:
+            if isinstance(b, Exception):
+                failed.append(str(b)[:120])
+            else:
+                out.extend(b)
+        if not out and failed:
+            raise RuntimeError(f"all views failed: {failed[0]}")
         await tracer.emit("character.standard_views", "success",
                           input_={"character": character_id},
                           output={"views": len(out)}, provider="nano_banana_2")

@@ -489,7 +489,7 @@ class FalImageProvider:
                 "endpoint_edit": self.EDIT_ENDPOINT}
 
     async def _submit_and_wait(self, endpoint: str, payload: dict,
-                               timeout_s: int = 180) -> dict:
+                               timeout_s: int = 300) -> dict:
         """提交 queue 任务并轮询到 COMPLETED；返回 result JSON。"""
         headers = {"Authorization": f"Key {self.api_key}",
                    "Content-Type": "application/json"}
