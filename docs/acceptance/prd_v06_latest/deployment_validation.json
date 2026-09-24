@@ -1,0 +1,498 @@
+{
+  "started_at": 1790274330.9421048,
+  "deployment_checkout_sha": "b41c0f77bad127c1f298aede29d5f9a860882558",
+  "source_candidate_sha": "2e548769d0960d901075eca46ac2f7ec63409512",
+  "old_pid": 3088276,
+  "nemotron_before": "f62e2ab5aac7582acc64748da785092b03cd7c9f33c6b7307ef88cd61dbfb80f 2026-09-24T15:23:53.144621924Z true",
+  "data_before": {
+    "captured_at": 1790274186705,
+    "sessions": {
+      "sess_00003_fef0ad": "8c47ab9f5e7393b581ed31d7426d5b143ebd77733b5dbf3ff057d14043fc1dc5",
+      "sess_00076_d08233": "e59ed80addfeb41964d254631bfbd39521889f723692352f9b14938413d2eb0a",
+      "sess_00003_abf087": "4c740b8a5269b472b1006aeeb197d1c36aef3c5cc84ca2ec336a75330df97033",
+      "sess_00003_25930d": "d5211b5b7bca282fee88e4ea92ac751f8e1ee45fcb192a696099ac17910703dc",
+      "sess_00026_06c1dc": "872eb1d464299b7f5c9d559b935c20b1c3c863b910ddc96fa8236dc945ccf3db",
+      "sess_00184_7d3e48": "f05c2c8b05d0b03b1410feddec8775c19a0f3efdf25dd1138440bbc1c4ee1f0d",
+      "sess_00003_0fb7c7": "a134d6e70218ea916760d9dd5c5de3ef6052f12e600bff91705f79efff16832c",
+      "sess_00018_0a81a7": "46e7a64d7ab589bbf8fc5a061c22c43b70ba083c77ba582eaf76e42643151759",
+      "sess_00003_b830d5": "06185fa1cbedbf1a8142085f89965f7e2c5885fe9286f52fa986a9c743a0f72f",
+      "sess_00003_3452cf": "5fc81c1bc1863b6bf5bfcd80af6211807e02f646e6b6a0c80f1aba972188c68d",
+      "sess_00003_13fa29": "562145d951bd2b95fd93fa4ed4c6592619fa0520dc91d514bc1c43e788250dbd",
+      "sess_00230_fede82": "835ccdb4cd228084f7b2cc82a84199bee14b59ad0467a834fdd6c0af141057de",
+      "sess_00301_04498e": "9a545fd9d1156a29e2f69bbfcdd636da0cc25fef8f2f930c8b23b3aa953c8254",
+      "sess_00041_0b4332": "5ad2c68e3f695b9ac4acf6d999d96516cb95cb0a379a23fd53c1289250413994",
+      "sess_00003_7e1bf3": "9283fa06ad4186857939a2cd7c4b23f0a45cb2d58e28608653aab11aaf6f5eff",
+      "sess_00003_e13d4c": "a98edf92c01eee03497168a6e8b53951a3f6a5f359e01c3b33df3ba43d4459da",
+      "sess_00003_1f0161": "af1d1a085744eafdbbaab58b6e75d62bd3c7484f2436efe19bf87c059a7f1efe",
+      "sess_00003_847a85": "af64ec30ed1eebc4b5cf0471e9084342073130deb65188ea7f001b056c695c66",
+      "sess_00003_a0ed4a": "5f6f447fa95da44591161cc7b9d5aef5345d384049a60d420378729f84c3196f",
+      "sess_00004_b28f5d": "ca260ca007b0154a8849fd418d9ee5ca9eb416b334d994f5b06c022d9a2cb2b2",
+      "sess_00007_b1da61": "8aa42513f6eb62e010f0aeaa7104209d665a083665c8c7b3cc726914724fec3d"
+    },
+    "scenarios": {
+      "rainy_apartment": "7f960d36a8197d7d1e9317c6436a9f42bf06f685b855bcee777ebe09793a4f45",
+      "scn_00076_a3713d": "23461a3ee1c0e3b9ae891e6dc008e949a28906e3c9702ca868245d365ec26e81",
+      "scn_00001_7b455a": "e71f9e3b226e90c59083837d9a8f7f365b53893f4eebeef30e4a47782f0a1f77"
+    },
+    "versions": {
+      "ver_rainy_1_0_0": "7f960d36a8197d7d1e9317c6436a9f42bf06f685b855bcee777ebe09793a4f45"
+    },
+    "characters": {
+      "chr_alice": "9dc3c4b8e3888167219e1fc3faac4737bca5e223595e6c240c9e08c7eff0d784",
+      "chr_00001_858c12": "70faf0ab245f10ddd771774799f876164b340b1978279ead0b52a9a8ee520d13",
+      "chr_00001_7923c9": "cee529cd602b6d5f0048cfccff871073e813833486f5534dfe8983bf0942833b",
+      "chr_00001_4bddcd": "b96ae7eeaceaeff5baa2c1a765136f33ee92bcf4b9a003ba7935b5e64e55f45d"
+    },
+    "nonterminal_branches": [
+      {
+        "session_id": "sess_00003_7e1bf3",
+        "branch_id": "br_00085_377edf",
+        "status": "NARRATIVE",
+        "updated_at": 1790172903993,
+        "age_seconds": 101283
+      },
+      {
+        "session_id": "sess_00003_7e1bf3",
+        "branch_id": "br_00087_b54285",
+        "status": "NARRATIVE",
+        "updated_at": 1790172903993,
+        "age_seconds": 101283
+      },
+      {
+        "session_id": "sess_00003_7e1bf3",
+        "branch_id": "br_00089_c43370",
+        "status": "NARRATIVE",
+        "updated_at": 1790172903993,
+        "age_seconds": 101283
+      },
+      {
+        "session_id": "sess_00003_7e1bf3",
+        "branch_id": "br_00091_ebab10",
+        "status": "PRODUCTION",
+        "updated_at": 1790172903993,
+        "age_seconds": 101283
+      },
+      {
+        "session_id": "sess_00003_e13d4c",
+        "branch_id": "br_00133_6d05db",
+        "status": "PLANNING",
+        "updated_at": 1790155099676,
+        "age_seconds": 119087
+      },
+      {
+        "session_id": "sess_00003_e13d4c",
+        "branch_id": "br_00135_3a0297",
+        "status": "PLANNING",
+        "updated_at": 1790155099676,
+        "age_seconds": 119087
+      },
+      {
+        "session_id": "sess_00003_e13d4c",
+        "branch_id": "br_00137_892d73",
+        "status": "PLANNING",
+        "updated_at": 1790155099676,
+        "age_seconds": 119087
+      },
+      {
+        "session_id": "sess_00003_e13d4c",
+        "branch_id": "br_00139_b1050a",
+        "status": "NARRATIVE",
+        "updated_at": 1790155099676,
+        "age_seconds": 119087
+      }
+    ]
+  },
+  "jobs_before": {
+    "items": [
+      {
+        "id": "job_00002_6bbc98",
+        "node": "",
+        "error": null,
+        "output": {
+          "clips": [
+            "data/media/clips/h3_a90abb24a91c4c07b17230db7cd0d3e4/clip_1.mp4"
+          ],
+          "handle": "h3_a90abb24a91c4c07b17230db7cd0d3e4"
+        },
+        "status": "READY",
+        "attempt": 0,
+        "profile": "VIDEO_LOCAL_PROFILE",
+        "request": {
+          "prompt": "废弃灯塔夜间海雾中，探照灯扫过湿滑石阶，电影感镜头，真实视频"
+        },
+        "shot_id": null,
+        "provider": "sol_h3_local",
+        "branch_id": null,
+        "standalone": true,
+        "started_at": 1790262580128,
+        "finished_at": 1790262697242,
+        "request_hash": "",
+        "model_version": ""
+      },
+      {
+        "id": "job_00181_bc7c33",
+        "node": "",
+        "error": null,
+        "output": {
+          "clips": [
+            "data/media/clips/h3_5b881d433e9e4dee8b5a98f6785e8783/clip_1.mp4"
+          ],
+          "handle": "h3_5b881d433e9e4dee8b5a98f6785e8783"
+        },
+        "status": "READY",
+        "attempt": 0,
+        "profile": "VIDEO_LOCAL_PROFILE",
+        "request": {
+          "prompt": "Sol-H3 integration smoke: a paper boat floating in a sunlit puddle, gentle camera movement"
+        },
+        "shot_id": null,
+        "provider": "sol_h3_local",
+        "branch_id": null,
+        "standalone": true,
+        "started_at": 1790232008387,
+        "finished_at": 1790232341737,
+        "request_hash": "",
+        "model_version": ""
+      },
+      {
+        "id": "job_00002_1fe6ad",
+        "node": "",
+        "error": null,
+        "output": {
+          "clips": [
+            "data/media/clips/h3_519752b6fc1c491ea2f63c319a219471/clip_1.mp4"
+          ],
+          "handle": "h3_519752b6fc1c491ea2f63c319a219471"
+        },
+        "status": "READY",
+        "attempt": 0,
+        "profile": "VIDEO_LOCAL_PROFILE",
+        "request": {
+          "prompt": "G23 verify: lighthouse beam at night"
+        },
+        "shot_id": null,
+        "provider": "sol_h3_local",
+        "branch_id": null,
+        "standalone": true,
+        "started_at": 1790170664757,
+        "finished_at": 1790170741257,
+        "request_hash": "",
+        "model_version": ""
+      },
+      {
+        "id": "job_00002_3322d7",
+        "node": "",
+        "error": null,
+        "output": {
+          "handle": "h3_614721b7f7dc47b592eea2866c167c05"
+        },
+        "status": "GENERATING",
+        "attempt": 0,
+        "profile": "VIDEO_LOCAL_PROFILE",
+        "request": {
+          "prompt": "verification shot: neon city rain"
+        },
+        "shot_id": null,
+        "provider": "sol_h3_local",
+        "branch_id": null,
+        "standalone": true,
+        "started_at": 1790170090692,
+        "finished_at": null,
+        "request_hash": "",
+        "model_version": ""
+      },
+      {
+        "id": "job_00002_13d63c",
+        "node": "",
+        "error": null,
+        "output": {
+          "handle": "job_00002_13d63c"
+        },
+        "status": "GENERATING",
+        "attempt": 0,
+        "profile": "VIDEO_LOCAL_PROFILE",
+        "request": {
+          "prompt": "a lighthouse on a cliff at dusk, cinematic"
+        },
+        "shot_id": null,
+        "provider": "mock_video",
+        "branch_id": null,
+        "standalone": true,
+        "started_at": 1790169457009,
+        "finished_at": null,
+        "request_hash": "",
+        "model_version": ""
+      }
+    ]
+  },
+  "old_records_note": "Two standalone jobs and two sessions contain old unfinished records older than 28 hours. No current generation was submitted by this deployment; original records retained.",
+  "configuration": {
+    "provider_timeout_seconds": 120,
+    "provider_mode": "hybrid",
+    "profile": "AGENT_LOCAL_PROFILE",
+    "profile_lifecycle_enabled": true,
+    "branch_ttl_seconds": 180
+  },
+  "new_pid": 3886977,
+  "local_health": {
+    "ok": true,
+    "provider_mode": "hybrid",
+    "profile": "AGENT_LOCAL_PROFILE"
+  },
+  "public_health": {
+    "ok": true,
+    "provider_mode": "hybrid",
+    "profile": "AGENT_LOCAL_PROFILE"
+  },
+  "new_api_paths": {
+    "/api/scenarios/{sid}/understanding": true,
+    "/api/scenarios/{sid}/understanding/confirm": true,
+    "/api/characters/{cid}/understanding": true
+  },
+  "bundles": {
+    "index-BUpI9x27.js": "c44be41c360844b6b79df31f18fc32e1f140a5934bd453f3baad796ac8a39207",
+    "index-CfRTihTj.css": "f97ebe9101489429f86c8bc9fb68a41d4951bdfe294c3fa08f5e3d781a2d5f8f"
+  },
+  "missing_scenario_new_api": {
+    "status": 404,
+    "body": {
+      "detail": "故事不存在"
+    }
+  },
+  "nemotron_models": {
+    "object": "list",
+    "data": [
+      {
+        "id": "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4",
+        "object": "model",
+        "created": 1790274333,
+        "owned_by": "vllm",
+        "root": "/models/nemotron",
+        "parent": null,
+        "max_model_len": 8192,
+        "permission": [
+          {
+            "id": "modelperm-a4fe96306c503df3",
+            "object": "model_permission",
+            "created": 1790274333,
+            "allow_create_engine": false,
+            "allow_sampling": true,
+            "allow_logprobs": true,
+            "allow_search_indices": false,
+            "allow_view": true,
+            "allow_fine_tuning": false,
+            "organization": "*",
+            "group": null,
+            "is_blocking": false
+          }
+        ]
+      }
+    ]
+  },
+  "nemotron_after": "f62e2ab5aac7582acc64748da785092b03cd7c9f33c6b7307ef88cd61dbfb80f 2026-09-24T15:23:53.144621924Z true",
+  "status": "PASS",
+  "completed_at": 1790274457622,
+  "data_after": {
+    "captured_at": 1790274396021,
+    "sessions": {
+      "sess_00003_fef0ad": "8c47ab9f5e7393b581ed31d7426d5b143ebd77733b5dbf3ff057d14043fc1dc5",
+      "sess_00076_d08233": "e59ed80addfeb41964d254631bfbd39521889f723692352f9b14938413d2eb0a",
+      "sess_00003_abf087": "4c740b8a5269b472b1006aeeb197d1c36aef3c5cc84ca2ec336a75330df97033",
+      "sess_00003_25930d": "d5211b5b7bca282fee88e4ea92ac751f8e1ee45fcb192a696099ac17910703dc",
+      "sess_00026_06c1dc": "872eb1d464299b7f5c9d559b935c20b1c3c863b910ddc96fa8236dc945ccf3db",
+      "sess_00184_7d3e48": "f05c2c8b05d0b03b1410feddec8775c19a0f3efdf25dd1138440bbc1c4ee1f0d",
+      "sess_00003_0fb7c7": "a134d6e70218ea916760d9dd5c5de3ef6052f12e600bff91705f79efff16832c",
+      "sess_00018_0a81a7": "46e7a64d7ab589bbf8fc5a061c22c43b70ba083c77ba582eaf76e42643151759",
+      "sess_00003_b830d5": "06185fa1cbedbf1a8142085f89965f7e2c5885fe9286f52fa986a9c743a0f72f",
+      "sess_00003_3452cf": "5fc81c1bc1863b6bf5bfcd80af6211807e02f646e6b6a0c80f1aba972188c68d",
+      "sess_00003_13fa29": "562145d951bd2b95fd93fa4ed4c6592619fa0520dc91d514bc1c43e788250dbd",
+      "sess_00230_fede82": "835ccdb4cd228084f7b2cc82a84199bee14b59ad0467a834fdd6c0af141057de",
+      "sess_00301_04498e": "9a545fd9d1156a29e2f69bbfcdd636da0cc25fef8f2f930c8b23b3aa953c8254",
+      "sess_00041_0b4332": "5ad2c68e3f695b9ac4acf6d999d96516cb95cb0a379a23fd53c1289250413994",
+      "sess_00003_7e1bf3": "9283fa06ad4186857939a2cd7c4b23f0a45cb2d58e28608653aab11aaf6f5eff",
+      "sess_00003_e13d4c": "a98edf92c01eee03497168a6e8b53951a3f6a5f359e01c3b33df3ba43d4459da",
+      "sess_00003_1f0161": "af1d1a085744eafdbbaab58b6e75d62bd3c7484f2436efe19bf87c059a7f1efe",
+      "sess_00003_847a85": "af64ec30ed1eebc4b5cf0471e9084342073130deb65188ea7f001b056c695c66",
+      "sess_00003_a0ed4a": "5f6f447fa95da44591161cc7b9d5aef5345d384049a60d420378729f84c3196f",
+      "sess_00004_b28f5d": "ca260ca007b0154a8849fd418d9ee5ca9eb416b334d994f5b06c022d9a2cb2b2",
+      "sess_00007_b1da61": "8aa42513f6eb62e010f0aeaa7104209d665a083665c8c7b3cc726914724fec3d"
+    },
+    "scenarios": {
+      "rainy_apartment": "4b6065a8f5d87d8e66d18fbde2c66994be275e363e3d949a12f2d562c3872315",
+      "scn_00076_a3713d": "23461a3ee1c0e3b9ae891e6dc008e949a28906e3c9702ca868245d365ec26e81",
+      "scn_00001_7b455a": "e71f9e3b226e90c59083837d9a8f7f365b53893f4eebeef30e4a47782f0a1f77"
+    },
+    "versions": {
+      "ver_rainy_1_0_0": "4b6065a8f5d87d8e66d18fbde2c66994be275e363e3d949a12f2d562c3872315"
+    },
+    "characters": {
+      "chr_alice": "9dc3c4b8e3888167219e1fc3faac4737bca5e223595e6c240c9e08c7eff0d784",
+      "chr_00001_858c12": "70faf0ab245f10ddd771774799f876164b340b1978279ead0b52a9a8ee520d13",
+      "chr_00001_7923c9": "cee529cd602b6d5f0048cfccff871073e813833486f5534dfe8983bf0942833b",
+      "chr_00001_4bddcd": "b96ae7eeaceaeff5baa2c1a765136f33ee92bcf4b9a003ba7935b5e64e55f45d"
+    },
+    "nonterminal_branches": [
+      {
+        "session_id": "sess_00003_7e1bf3",
+        "branch_id": "br_00085_377edf",
+        "status": "NARRATIVE",
+        "updated_at": 1790172903993,
+        "age_seconds": 101492
+      },
+      {
+        "session_id": "sess_00003_7e1bf3",
+        "branch_id": "br_00087_b54285",
+        "status": "NARRATIVE",
+        "updated_at": 1790172903993,
+        "age_seconds": 101492
+      },
+      {
+        "session_id": "sess_00003_7e1bf3",
+        "branch_id": "br_00089_c43370",
+        "status": "NARRATIVE",
+        "updated_at": 1790172903993,
+        "age_seconds": 101492
+      },
+      {
+        "session_id": "sess_00003_7e1bf3",
+        "branch_id": "br_00091_ebab10",
+        "status": "PRODUCTION",
+        "updated_at": 1790172903993,
+        "age_seconds": 101492
+      },
+      {
+        "session_id": "sess_00003_e13d4c",
+        "branch_id": "br_00133_6d05db",
+        "status": "PLANNING",
+        "updated_at": 1790155099676,
+        "age_seconds": 119296
+      },
+      {
+        "session_id": "sess_00003_e13d4c",
+        "branch_id": "br_00135_3a0297",
+        "status": "PLANNING",
+        "updated_at": 1790155099676,
+        "age_seconds": 119296
+      },
+      {
+        "session_id": "sess_00003_e13d4c",
+        "branch_id": "br_00137_892d73",
+        "status": "PLANNING",
+        "updated_at": 1790155099676,
+        "age_seconds": 119296
+      },
+      {
+        "session_id": "sess_00003_e13d4c",
+        "branch_id": "br_00139_b1050a",
+        "status": "NARRATIVE",
+        "updated_at": 1790155099676,
+        "age_seconds": 119296
+      }
+    ]
+  },
+  "data_integrity": {
+    "sessions_unchanged": true,
+    "characters_unchanged": true,
+    "scenario_version_content_preserved": true,
+    "seed_operational_timestamp_refreshed": true,
+    "raw_hash_difference_explained": true
+  },
+  "post_restart_capture": {
+    "captured_at": 1790274396021,
+    "sessions": {
+      "sess_00003_fef0ad": "8c47ab9f5e7393b581ed31d7426d5b143ebd77733b5dbf3ff057d14043fc1dc5",
+      "sess_00076_d08233": "e59ed80addfeb41964d254631bfbd39521889f723692352f9b14938413d2eb0a",
+      "sess_00003_abf087": "4c740b8a5269b472b1006aeeb197d1c36aef3c5cc84ca2ec336a75330df97033",
+      "sess_00003_25930d": "d5211b5b7bca282fee88e4ea92ac751f8e1ee45fcb192a696099ac17910703dc",
+      "sess_00026_06c1dc": "872eb1d464299b7f5c9d559b935c20b1c3c863b910ddc96fa8236dc945ccf3db",
+      "sess_00184_7d3e48": "f05c2c8b05d0b03b1410feddec8775c19a0f3efdf25dd1138440bbc1c4ee1f0d",
+      "sess_00003_0fb7c7": "a134d6e70218ea916760d9dd5c5de3ef6052f12e600bff91705f79efff16832c",
+      "sess_00018_0a81a7": "46e7a64d7ab589bbf8fc5a061c22c43b70ba083c77ba582eaf76e42643151759",
+      "sess_00003_b830d5": "06185fa1cbedbf1a8142085f89965f7e2c5885fe9286f52fa986a9c743a0f72f",
+      "sess_00003_3452cf": "5fc81c1bc1863b6bf5bfcd80af6211807e02f646e6b6a0c80f1aba972188c68d",
+      "sess_00003_13fa29": "562145d951bd2b95fd93fa4ed4c6592619fa0520dc91d514bc1c43e788250dbd",
+      "sess_00230_fede82": "835ccdb4cd228084f7b2cc82a84199bee14b59ad0467a834fdd6c0af141057de",
+      "sess_00301_04498e": "9a545fd9d1156a29e2f69bbfcdd636da0cc25fef8f2f930c8b23b3aa953c8254",
+      "sess_00041_0b4332": "5ad2c68e3f695b9ac4acf6d999d96516cb95cb0a379a23fd53c1289250413994",
+      "sess_00003_7e1bf3": "9283fa06ad4186857939a2cd7c4b23f0a45cb2d58e28608653aab11aaf6f5eff",
+      "sess_00003_e13d4c": "a98edf92c01eee03497168a6e8b53951a3f6a5f359e01c3b33df3ba43d4459da",
+      "sess_00003_1f0161": "af1d1a085744eafdbbaab58b6e75d62bd3c7484f2436efe19bf87c059a7f1efe",
+      "sess_00003_847a85": "af64ec30ed1eebc4b5cf0471e9084342073130deb65188ea7f001b056c695c66",
+      "sess_00003_a0ed4a": "5f6f447fa95da44591161cc7b9d5aef5345d384049a60d420378729f84c3196f",
+      "sess_00004_b28f5d": "ca260ca007b0154a8849fd418d9ee5ca9eb416b334d994f5b06c022d9a2cb2b2",
+      "sess_00007_b1da61": "8aa42513f6eb62e010f0aeaa7104209d665a083665c8c7b3cc726914724fec3d"
+    },
+    "scenarios": {
+      "rainy_apartment": "4b6065a8f5d87d8e66d18fbde2c66994be275e363e3d949a12f2d562c3872315",
+      "scn_00076_a3713d": "23461a3ee1c0e3b9ae891e6dc008e949a28906e3c9702ca868245d365ec26e81",
+      "scn_00001_7b455a": "e71f9e3b226e90c59083837d9a8f7f365b53893f4eebeef30e4a47782f0a1f77"
+    },
+    "versions": {
+      "ver_rainy_1_0_0": "4b6065a8f5d87d8e66d18fbde2c66994be275e363e3d949a12f2d562c3872315"
+    },
+    "characters": {
+      "chr_alice": "9dc3c4b8e3888167219e1fc3faac4737bca5e223595e6c240c9e08c7eff0d784",
+      "chr_00001_858c12": "70faf0ab245f10ddd771774799f876164b340b1978279ead0b52a9a8ee520d13",
+      "chr_00001_7923c9": "cee529cd602b6d5f0048cfccff871073e813833486f5534dfe8983bf0942833b",
+      "chr_00001_4bddcd": "b96ae7eeaceaeff5baa2c1a765136f33ee92bcf4b9a003ba7935b5e64e55f45d"
+    },
+    "nonterminal_branches": [
+      {
+        "session_id": "sess_00003_7e1bf3",
+        "branch_id": "br_00085_377edf",
+        "status": "NARRATIVE",
+        "updated_at": 1790172903993,
+        "age_seconds": 101492
+      },
+      {
+        "session_id": "sess_00003_7e1bf3",
+        "branch_id": "br_00087_b54285",
+        "status": "NARRATIVE",
+        "updated_at": 1790172903993,
+        "age_seconds": 101492
+      },
+      {
+        "session_id": "sess_00003_7e1bf3",
+        "branch_id": "br_00089_c43370",
+        "status": "NARRATIVE",
+        "updated_at": 1790172903993,
+        "age_seconds": 101492
+      },
+      {
+        "session_id": "sess_00003_7e1bf3",
+        "branch_id": "br_00091_ebab10",
+        "status": "PRODUCTION",
+        "updated_at": 1790172903993,
+        "age_seconds": 101492
+      },
+      {
+        "session_id": "sess_00003_e13d4c",
+        "branch_id": "br_00133_6d05db",
+        "status": "PLANNING",
+        "updated_at": 1790155099676,
+        "age_seconds": 119296
+      },
+      {
+        "session_id": "sess_00003_e13d4c",
+        "branch_id": "br_00135_3a0297",
+        "status": "PLANNING",
+        "updated_at": 1790155099676,
+        "age_seconds": 119296
+      },
+      {
+        "session_id": "sess_00003_e13d4c",
+        "branch_id": "br_00137_892d73",
+        "status": "PLANNING",
+        "updated_at": 1790155099676,
+        "age_seconds": 119296
+      },
+      {
+        "session_id": "sess_00003_e13d4c",
+        "branch_id": "br_00139_b1050a",
+        "status": "NARRATIVE",
+        "updated_at": 1790155099676,
+        "age_seconds": 119296
+      }
+    ]
+  }
+}

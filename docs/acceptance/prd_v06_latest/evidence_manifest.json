@@ -147,6 +147,10 @@
     "bytes": 215160,
     "sha256": "65f22ff5132baa14dc04840b9608022ad3892199a5e0584987664046e7d16000"
   },
+  "deployment_validation.json": {
+    "bytes": 19773,
+    "sha256": "d32c5792bda0c4276d1228a1edad1eb7ff2d6fa2b94ed12125914f821cb7d448"
+  },
   "developer_drama.png": {
     "bytes": 213235,
     "sha256": "67133baf26d9074af9e16e279ccb52f9e4727b32d9774506f52cec9598685090"
