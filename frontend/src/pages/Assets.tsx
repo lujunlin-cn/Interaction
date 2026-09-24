@@ -12,6 +12,7 @@ const ROLE_OPTIONS: Array<[string, string]> = [
 
 export default function Assets() {
   const ui = useUi();
+  const [bindings, setBindings] = useState<Array<{id: string; label: string}>>([]);
   const [items, setItems] = useState<Asset[]>([]);
   const [filter, setFilter] = useState("all");
   const [binding, setBinding] = useState("");
@@ -23,6 +24,10 @@ export default function Assets() {
     if (sid) api.listAssets(sid).then((r) => setItems(r.items)).catch(() => {});
   };
   useEffect(reload, [sid]);
+  useEffect(() => { if (sid) api.getScenario(sid).then(d => setBindings([
+    ...d.characters.map(c => ({ id: c.id, label: c.identity })),
+    ...d.world.locations.split("\n").filter(Boolean).map(l => { const [id, label] = l.split("｜"); return { id, label: label || "故事地点" }; }),
+  ])).catch(() => {}); }, [sid]);
 
   if (!sid) return <div className="empty">请先在「创作 → 概览」选择一个故事。</div>;
 
@@ -38,8 +43,8 @@ export default function Assets() {
             <option value="voice">声音</option>
             <option value="video">视频</option>
           </select>
-          <input placeholder="绑定对象（如 alice / foyer / style）" value={binding}
-            onChange={(e) => setBinding(e.target.value)} style={{ width: 200 }} />
+          {ui.mode === "developer" ? <input placeholder="绑定对象 ID" value={binding} onChange={e => setBinding(e.target.value)} />
+            : <select aria-label="素材用于" value={binding} onChange={e => setBinding(e.target.value)}><option value="">选择人物或地点…</option>{bindings.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}</select>}
           <select value={role} onChange={(e) => setRole(e.target.value)} title="参考用途">
             {ROLE_OPTIONS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
           </select>
@@ -59,8 +64,7 @@ export default function Assets() {
             }} />
         </div>
         <p className="muted">
-          用途标记（role）决定素材进入哪个参考槽位；canonical 素材是角色的标准参考；
-          authorized 表示已获授权可用于生成。素材变更会让依赖它的候选分支失效（fingerprint miss）。
+          为素材选择用途，并绑定到人物或地点。确认授权后，可以将它用于故事画面、声音或动作。
         </p>
       </div>
       {shown.length === 0 ? <div className="empty">还没有素材。</div> : (
@@ -71,7 +75,7 @@ export default function Assets() {
           </tr></thead>
           <tbody>
             {shown.map((a) => (
-              <AssetRow key={a.id} a={a} sid={sid} onChanged={reload} />
+              <AssetRow key={a.id} a={a} sid={sid} onChanged={reload} bindings={bindings} />
             ))}
           </tbody>
         </table>
@@ -81,7 +85,8 @@ export default function Assets() {
 }
 
 /** 单个素材行：预览 / 元数据行内编辑 / 替换（版本+1）/ 删除 */
-function AssetRow({ a, sid, onChanged }: { a: Asset; sid: string; onChanged: () => void }) {
+function AssetRow({ a, sid, onChanged, bindings }: { a: Asset; sid: string; onChanged: () => void; bindings: Array<{id:string;label:string}> }) {
+  const developer = useUi().mode === "developer";
   const replaceRef = useRef<HTMLInputElement>(null);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<Partial<Asset>>({});
@@ -103,9 +108,9 @@ function AssetRow({ a, sid, onChanged }: { a: Asset; sid: string; onChanged: () 
         <td>{a.name}</td>
         <td>{TYPE_LABELS[a.type] ?? a.type}<div className="muted">{(a.size / 1024).toFixed(0)} KB</div></td>
         <td>{ROLE_OPTIONS.find(([v]) => v === a.role)?.[1] ?? (a.role || "—")}</td>
-        <td>{a.entity || a.binding || "—"}</td>
+        <td>{developer ? a.entity || a.binding || "—" : bindings.find(b => b.id === (a.entity || a.binding))?.label || "通用素材"}</td>
         <td>
-          {a.canonical && <span className="badge ok">canonical</span>}{" "}
+          {a.canonical && <span className="badge ok">{developer ? "canonical" : "标准参考"}</span>}{" "}
           {a.authorized ? <span className="badge ok">已授权</span> : <span className="badge warn">未授权</span>}
           {a.source && <div className="muted">{a.source}</div>}
         </td>
@@ -157,18 +162,17 @@ function AssetRow({ a, sid, onChanged }: { a: Asset; sid: string; onChanged: () 
         <tr>
           <td colSpan={9} style={{ background: "var(--bg-soft, rgba(128,128,128,.06))" }}>
             <div className="row" style={{ flexWrap: "wrap", gap: 10 }}>
-              <label><span>用途 role</span>
+              <label><span>{developer ? "用途 role" : "参考用途"}</span>
                 <select value={form.role ?? a.role}
                   onChange={(e) => setForm({ ...form, role: e.target.value })}>
                   {ROLE_OPTIONS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                 </select></label>
-              <label><span>绑定 entity</span>
-                <input style={{ width: 140 }} value={form.entity ?? a.entity}
-                  onChange={(e) => setForm({ ...form, entity: e.target.value })} /></label>
-              <label><span>binding</span>
-                <input style={{ width: 140 }} value={form.binding ?? a.binding}
-                  onChange={(e) => setForm({ ...form, binding: e.target.value })} /></label>
-              <label><span>来源 source</span>
+              {developer ? <><label><span>entity</span><input value={form.entity ?? a.entity} onChange={e => setForm({ ...form, entity: e.target.value })} /></label>
+                <label><span>binding</span><input value={form.binding ?? a.binding} onChange={e => setForm({ ...form, binding: e.target.value })} /></label></>
+                : <label><span>人物或地点</span><select value={form.entity ?? a.entity ?? ""} onChange={e => setForm({ ...form, entity: e.target.value, binding: e.target.value })}>
+                  <option value="">通用素材</option>{bindings.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
+                </select></label>}
+              <label><span>来源说明</span>
                 <input style={{ width: 140 }} value={form.source ?? a.source ?? ""}
                   onChange={(e) => setForm({ ...form, source: e.target.value })} /></label>
               {a.type === "video" && (<>
@@ -185,7 +189,7 @@ function AssetRow({ a, sid, onChanged }: { a: Asset; sid: string; onChanged: () 
                 <input type="checkbox" style={{ width: "auto" }}
                   checked={form.canonical ?? a.canonical}
                   onChange={(e) => setForm({ ...form, canonical: e.target.checked })} />
-                canonical</label>
+                {developer ? "canonical" : "作为标准参考"}</label>
               <label style={{ display: "flex", gap: 4, alignItems: "center" }}>
                 <input type="checkbox" style={{ width: "auto" }}
                   checked={form.authorized ?? a.authorized}

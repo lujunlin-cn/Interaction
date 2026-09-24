@@ -26,7 +26,7 @@ logger = logging.getLogger("drama")
 
 def build_runtime() -> tuple[RuntimeEngine, ProviderRouter]:
     registry = build_provider_registry(settings.provider_mode)
-    # mock：全部走 Mock；hybrid：文本/决策走真实 Provider、视频走 Mock（安全起步）；
+    # mock：全部走 Mock；hybrid：文本/决策/视频优先真实 Provider，允许显式 Mock 降级；
     # live：完整 PRD 冻结矩阵。真实 Provider 不可用时由 Router 按规则降级/熔断。
     router = ProviderRouter(registry, mode=settings.provider_mode,
                             profile=RuntimeProfile(settings.runtime_profile))

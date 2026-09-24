@@ -5,6 +5,7 @@ import { setState, toast, useUi } from "../store";
 import CharacterProfile from "../components/CharacterProfile";
 import type { Asset, CharacterAsset, CharacterVersion, GlobalCharacter } from "../types";
 
+const ROLE_LABELS: Record<string,string> = {front:"正面主图",three_quarter:"四分之三视图",side:"侧面视图",back:"背面视图",full_front:"全身正面",full_side:"全身侧面",outfit:"造型参考",pose:"姿势参考",motion:"动作参考",voice:"声音参考",derived:"编辑后的形象"};
 export default function CharacterLibrary() {
   const ui = useUi();
   const [items, setItems] = useState<GlobalCharacter[]>([]);
@@ -263,7 +264,7 @@ function CharacterDetail({ ch, onBack, onSaved }: {
         <div className="studio-asset-grid">
           {studioAssets.map((a) => <article className="studio-asset" key={a.id}>
             <img src={a.url.startsWith("/") ? a.url : a.url} alt={a.role} />
-            <div className="row"><b className="grow">{a.role === "front" ? "正面主图" : a.role === "three_quarter" ? "三分之四视图" : a.role === "side" ? "侧面视图" : a.role}</b>{developer && <span className="status-pill">{a.status}</span>}</div>
+            <div className="row"><b className="grow">{ROLE_LABELS[a.role] || (developer ? a.role : "参考图")}</b>{developer && <span className="status-pill">{a.status}</span>}</div>
             {developer && <details><summary>Provider / Model / Prompt / request ID</summary><pre>{JSON.stringify(a, null, 2)}</pre></details>}
             <div className="row">
               {a.status === "CANDIDATE" && <button className="small" onClick={() => run(developer ? "Candidate 已批准" : "候选图已确认", () => api.setCharacterAssetStatus(a.id, "APPROVED"))}>{developer ? "批准" : "确认候选图"}</button>}
@@ -273,7 +274,7 @@ function CharacterDetail({ ch, onBack, onSaved }: {
         </div>
         <label><span>编辑源图</span><select value={editSourceId} onChange={(e) => setEditSourceId(e.target.value)}>
           <option value="">选择候选图或主形象</option>
-          {studioAssets.map((a) => <option value={a.id} key={a.id}>{a.role} · {developer ? `${a.status} · ${a.id}` : (a.status === "CANONICAL" ? "主形象" : "候选图")}</option>)}
+          {studioAssets.map((a) => <option value={a.id} key={a.id}>{ROLE_LABELS[a.role] || (developer ? a.role : "参考图")} · {developer ? `${a.status} · ${a.id}` : (a.status === "CANONICAL" ? "主形象" : "候选图")}</option>)}
         </select></label>
         {confirmViews && <div className="notice">
           <b>生成标准参考图？将基于主图生成其他视角，请确认后继续。</b>

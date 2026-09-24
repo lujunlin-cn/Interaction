@@ -48,7 +48,7 @@ export default function App() {
     case "developer": content = ui.mode === "developer" ? <Developer /> : <Settings />; break;
     case "settings": content = <Settings />; break;
     case "feedback": content = <Feedback />; break;
-    case "notes": content = <Notes />; break;
+    case "notes": content = ui.mode === "developer" ? <Notes /> : <Home />; break;
     default: content = <Home />;
   }
 

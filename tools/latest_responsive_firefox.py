@@ -1,7 +1,7 @@
 """Capture current React pages with a real video in Firefox, browser zoom 100%."""
-import json,time
+import json,time,os
 from latest_prd_firefox import Browser, OUT
-sid=(OUT/'live_session_id.txt').read_text();scenario=(OUT/'live_scenario_id.txt').read_text();b=Browser();results=[]
+sid=os.getenv('SESSION_ID') or (OUT/'live_session_id.txt').read_text();scenario=(OUT/'live_scenario_id.txt').read_text();b=Browser();results=[]
 try:
  b.goto('/');b.js('localStorage.setItem("drama.mode","standard");localStorage.setItem("drama.sessionId",arguments[0]);localStorage.setItem("drama.editId",arguments[1])',sid,scenario)
  for width,height in [(1366,768),(1440,900),(1920,1080),(2560,1440),(3840,2160)]:
