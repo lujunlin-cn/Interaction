@@ -18,7 +18,7 @@ NOT_RUN，**不伪造**。
 - Character Studio 正式 React 操作已接入 AI Candidate、Canonical、标准视图、非破坏编辑、Outfit、版本读取。
 - Runtime 已按 `ShotPlan N → N 个 Provider Job → N 个 clip → FFmpeg concat` 执行；Trace 的 `video.generate` 记录 `jobs`、`clips`、`shot_ids`。
 - `hybrid` 云视频路由为 `h3_max → mock_video`。本次没有外部 H3 Max 新任务产物，真实链路保持 PARTIAL。
-- Nemotron 3.5 Lightning NVFP4 未在本次会话启动，保持 BLOCKED；`gemma3:27b` 不计入 PASS。
+- Nemotron 3.5 Lightning NVFP4 已在 DGX Spark 通过 vLLM 0.27.1-aarch64 启动；`:8001/v1/models` 与中文 Director JSON 冒烟均通过。`gemma3:27b` 不计入 Nemotron PASS。
 - 真实链路冒烟：`sess_00003_fef0ad` → 自由输入「我找到那段录音」→ Jev
   `CLARIFICATION_REQUIRED`(0.44) → confirm → `br_00051_ff2a3d` CANONICAL →
   真实 mp4 `/media/scenes/scene_00083_00ca24.mp4` + 真实 LLM 叙事 +
@@ -98,7 +98,7 @@ NOT_RUN，**不伪造**。
 
 | AT | 用例 | 状态 | 证据 / 备注 |
 | --- | --- | --- | --- |
-| AT-45 | DGX 启动本地 Director + 中文规划 | 🔶 | nemotron_local 已配置但 DGX 实测 circuit_open（Ollama 资源不稳）→ 降级 step_5→mock_text 链真实发生（routes 记录）；本地 Lightning 稳定出合法 Director 产物待 GPU 侧稳态。 |
+| AT-45 | DGX 启动本地 Director + 中文规划 | ✅ | vLLM `:8001/v1/models` 返回固定 Nemotron ID；真实中文请求返回合法 `outcome`/`directive` JSON。 |
 | AT-46 | Ready 点击 vs 自由输入路径 | ✅ | Ready 复用 BranchContract 不重复生成；自由输入新 FREE branch 保留原文+Jev observation。 |
 | AT-47 | Director prompt 分层 Context | 🔶 | `_scenario_brief` 摘要注入而非全量 Event Log；token 占比/检索来源量化未采集。 |
 | AT-48 | Narrative 试图泄露未授权秘密被拒 | ✅ | `leak_secret` fixture 注入 → forbidden_revelations 校验拦截（FR-068 测试夹具）。 |
@@ -107,7 +107,7 @@ NOT_RUN，**不伪造**。
 | AT-51 | 全链耗时分阶段 timing | 🔶 | 各阶段 span 有 ts/时长；cold-hot 标记与 P95 判定未建报表（PRD 明确不以旧 P95 判 PASS）。 |
 | AT-52 | Top-K 中一条失败两次→K-1 发布 | ✅ | 单分支快速 retry 1 次→仍失败→其余 Ready 以 K-1 原子发布，`effective_k`+原因记 scheduler span。 |
 | AT-53 | Step3.7 Narrative timeout→本地 Lightning | ✅ | narrative 路由 `step_37→nemotron_local→mock_text`；inject timeout→Router 记错误回退、契约不变、来源标 fallback（#26/路由矩阵实测）。 |
-| AT-54 | 本地 Lightning OOM→Step5（非3.7） | ✅ | director 路由 `nemotron_local→step_5→mock_text`；DGX 实测 nemotron_local circuit_open→跳过→选 step_5（不误路由 3.7 为第一 fallback）。 |
+| AT-54 | 本地 Lightning OOM→Step5（非3.7） | ✅ | admission/Provider error 均按 `nemotron_local→step_5→mock_text` 回退；本次实测服务无 OOM，故障路径由路由测试覆盖。 |
 | AT-55 | 未选分支相似请求的指纹复用/失效 | ✅ | Dependency Fingerprint sha256：兼容才复用，人物/Wish/Asset 变→确定性 INVALIDATED。 |
 | AT-56 | AGENT↔VIDEO 往返切换 drain/persist | 🔶 | `/dev/profile/switch` 切换 + profile_unavailable→fallback 验证（#26）；drain/persist/unload 全程时序留证未全量。 |
 | AT-57 | VIDEO_LOCAL 下 Production 走 3.7 | ✅ | VIDEO_LOCAL 时本地 Lightning unavailable→production 按 Q69 自动 step_37，来源正确（profile 切换实测）。 |
@@ -134,7 +134,7 @@ NOT_RUN，**不伪造**。
 | AT-73 | 改文字描述不点重新生成→不动资产 | ✅ | 保存仅 PATCH 文本字段；Studio 提示「不会自动生图」；`ai-describe` 仅返回草案不落库（FR-096 确认制）。 |
 | AT-74 | 多分辨率 100% Zoom 走四页 | ✅ | `docs/acceptance/shots/`：1366×768 / 1440×900 / 1920×1080 / 2560×1440 / 3840×2160 五档走 home/creator/developer——文字可读、侧边栏与工作区无关键遮挡；4K 合理扩展。新增 `#/<page>[/<tab>]` 深链（store.ts）支撑可分享直达与验收脚本。 |
 | AT-75 | 标准隐藏 Prompt/Provider，开发者可见 | ✅ | 术语隔离：玩家界面自然中文、Provider/model 仅开发者模式；FAL_KEY 不进浏览器/Trace（G28）。 |
-| AT-76 | 封版部署核查 + AGENT↔VIDEO 往返 | 🔶 | 六类 Provider 有配置+健康矩阵+真实输出：h3_max 已真实出片（job `01a0ceef` → 6.9MB mp4/5.18s）、sol_h3 出片、step_37/jev 在线；nemotron_local 本地仍不稳走降级链。 |
+| AT-76 | 封版部署核查 + AGENT↔VIDEO 往返 | 🔶 | Nemotron Lightning 已真实部署并完成 1/2/4 路 Director 验证；h3_max 有历史真实出片，Sol-H3 本轮未重新取得产物，Profile 往返仍保留 PARTIAL。 |
 
 ---
 
@@ -153,9 +153,7 @@ NOT_RUN，**不伪造**。
 **BLOCKED / 待外部条件**：
 
 - **AT-44**：需真实用户试玩反馈，不虚构。
-- **AT-76 残项**：nemotron_local 稳态（DGX GPU/Ollama 侧）——h3_max 已真实出片
-  （fal job `01a0ceef` → `clip_1.mp4` 6.9MB/5.184s，endpoint 修正为
-  `minimax/h3-max/reference-to-video`）；nemotron 机制接通，留待 GPU 稳态补留证。
+- **AT-76 残项**：Sol-H3 本轮未重新取得任务产物，Profile 往返的 unload/start 过程仍需完整运行证据；Nemotron 部署本身已通过。
 - **AT-45/47/51/60/62~65/68/71/72**：路径实现且有结构证据，缺大规模或真实配额下的
   端到端留证，标 PARTIAL 而非 PASS。
 

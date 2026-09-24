@@ -38,9 +38,9 @@ class Settings(BaseSettings):
     jev_model: str = "jev-latest"                   # 锁定版本时改为具体 ID（如 jev-1.13.0，PRD S06）
 
     local_llm_base_url: str = "http://127.0.0.1:8001/v1"   # DGX Spark 本地 OpenAI 兼容端点
-    # 期望模型：Nemotron-3.5-Lightning（vLLM 8001）；DGX 实测 8001 无服务时
-    # 用 Ollama(11434/v1) 的 gemma3:27b 顶替同槽位（G29 实测降级，OpenAI 兼容）。
-    local_llm_model: str = "gemma3:27b"
+    # 固定的 Director primary。Gemma/Ollama 只能作为显式外部 fallback，
+    # 不允许再通过 nemotron_local 槽位冒充该模型。
+    local_llm_model: str = "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4"
 
     sol_h3_base_url: str = ""               # 本地视频适配器（如 h3-adapter 8790）
     sol_h3_api_key: str = ""                # 适配器鉴权（若启用）
@@ -67,6 +67,10 @@ class Settings(BaseSettings):
     # --- Provider 容错 ---
     provider_timeout_seconds: float = 30.0
     provider_circuit_threshold: int = 3
+    director_local_max_concurrency: int = 2
+    director_queue_timeout_seconds: float = 10.0
+    director_queue_max: int = 16
+    director_local_request_timeout_seconds: float = 90.0
 
     # --- CORS（G28：收敛，不再 "*"）---
     # 逗号分隔；默认同源 + 常见本地 dev（vite 5173/4173、preview）。

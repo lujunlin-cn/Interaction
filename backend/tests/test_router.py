@@ -1,9 +1,12 @@
 """ProviderRouter 单元测试：路由矩阵、fallback、熔断、Profile 约束。"""
 import pytest
+import asyncio
 
 from app.domain.schemas import RuntimeProfile
+from app.providers.base import TextResponse
 from app.providers.real import build_provider_registry
 from app.providers.router import ProviderBlocked, ProviderRouter
+from app.config import settings
 
 
 def make_router(mode="mock", profile=RuntimeProfile.AGENT_LOCAL):
@@ -61,3 +64,42 @@ class TestRouter:
         r.recover_all()
         provider, rec = r.route("authoring")
         assert rec.selected == "step_5"
+
+    def test_director_admission_falls_back_without_unhealthy_circuit(self, monkeypatch):
+        class SlowLocal:
+            name = "nemotron_local"
+            model = "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4"
+
+            async def health(self):
+                return True
+
+            async def generate(self, *_args):
+                await asyncio.sleep(0.08)
+                return TextResponse(content='{"ok":true}', model=self.model)
+
+        class StepFive:
+            name = "step_5"
+            model = "step-5-preview"
+
+            async def generate(self, *_args):
+                return TextResponse(content='{"ok":true}', model=self.model)
+
+        monkeypatch.setattr(settings, "director_local_max_concurrency", 1)
+        monkeypatch.setattr(settings, "director_queue_timeout_seconds", 0.01)
+        monkeypatch.setattr(settings, "director_queue_max", 1)
+        router = ProviderRouter({"nemotron_local": SlowLocal(), "step_5": StepFive()},
+                                mode="live")
+
+        async def concurrent():
+            return await asyncio.gather(*[
+                router.call_text("director", [{"role": "user", "content": str(i)}],
+                                 {"purpose": "director_plan"})
+                for i in range(4)
+            ])
+
+        results = asyncio.run(concurrent())
+        selected = [rec.selected for _, rec, _ in results]
+        assert selected.count("nemotron_local") == 1
+        assert selected.count("step_5") == 3
+        assert router.health["nemotron_local"].circuit == "CLOSED"
+        assert router.health_snapshot()["director_admission"]["queue_rejected"] >= 1

@@ -12,7 +12,7 @@
                                             ├─► Jev api.typesafe.ai        (decision)
                                             ├─► fal.ai                     (h3_max cloud video)
                                             ├─► Sol-H3 local adapter       (local_video, VIDEO_LOCAL)
-                                            └─► Ollama/vLLM 127.0.0.1      (nemotron_local director/production)
+                                            └─► vLLM 127.0.0.1:8001       (Nemotron Lightning director/production)
 ```
 
 ## 启动 / 重启
@@ -67,7 +67,10 @@ tar czf - . | sshpass -p "$PW" ssh -p 22222 hajimi2025@139.199.69.46 \
 | `JEV_API_KEY` | Jev 决策 |
 | `FAL_KEY` | fal h3_max 云视频 |
 | `SOL_H3_*` | Sol-H3 本地 adapter 端点/token |
-| `LOCAL_LLM_*` | nemotron_local（Ollama/vLLM OpenAI 兼容端点） |
+| `LOCAL_LLM_*` | 固定 Nemotron Lightning vLLM OpenAI 兼容端点；Gemma 不能占用 nemotron_local 槽位 |
+| `DIRECTOR_LOCAL_MAX_CONCURRENCY` | 本地 Director 同时推理上限（默认 2） |
+| `DIRECTOR_QUEUE_TIMEOUT_SECONDS` | 等待本地 Director slot 的超时（默认 10 秒，随后路由 Step 5） |
+| `DIRECTOR_QUEUE_MAX` | 本地 Director 等待队列上限（默认 16） |
 | `CORS_ORIGINS` | 逗号分隔白名单（默认同源 + 本地 dev 端口） |
 
 ## Provider 运行模式
@@ -98,7 +101,16 @@ tar czf - . | sshpass -p "$PW" ssh -p 22222 hajimi2025@139.199.69.46 \
 | `location`/角色 op 不生效 | mock `_director_plan` 的 `scenario_context` 提取——已修 `raw_decode`（2026-09-23），确认 DGX 同步 |
 | 公网 curl POST 返回空 | FRP 间歇丢包：服务端可能已执行。**不要盲重试**，先 `GET /sessions/{sid}/view` 查状态，或走 `ssh … curl 127.0.0.1:9000` 本地回环 |
 | `last_failed_action` 有值 | G27 恢复路径：`POST /sessions/{sid}/action` 重发 `raw_text` |
-| Nemotron 不稳 | Ollama 偶发 OOM → director 自动降级 step_5→mock_text，属预期 fallback |
+| Nemotron 未部署或满载 | 检查 `:8001/v1/models`、`/api/dev/providers` 的 `director_admission`；Director 回退 Step 5，Gemma 不计为 Nemotron 成功 |
+
+Nemotron 启动入口为 `deploy/start_nemotron_lightning.sh`，使用本机已安装的
+`vllm/vllm-openai:v0.27.1-aarch64` 容器。模型目录默认为
+`/home/hajimi2025/.cache/interaction-nemotron`；脚本会先检查 52 个权重分片。
+本机与其他 GPU 进程共用内存，旧值 `LOCAL_LLM_GPU_MEMORY_UTILIZATION=0.75`
+启动失败，实测可用值 `0.65` 已成为脚本默认值。启动后以
+`curl http://127.0.0.1:8001/v1/models` 核对模型 ID，再用
+`tools/director_concurrency_probe.py` 测并发。2026-09-24 的 1/2/4 路实测见
+`DIRECTOR_CONCURRENCY_REPORT.md`；该探针直连 vLLM，不经过业务后端限流。
 
 ## 测试
 

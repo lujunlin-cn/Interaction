@@ -47,6 +47,12 @@ DATABASE_URL=sqlite+aiosqlite:///./itest.db PROVIDER_MODE=mock \
   .venv/bin/python -m pytest tests/ -q
 ```
 
+2026-09-24 DGX Spark 实测：Nemotron Lightning NVFP4 通过 vLLM 0.27.1-aarch64
+运行于 `127.0.0.1:8001`，`/v1/models` 返回固定模型 ID，中文 Director JSON 冒烟成功。
+真实直连并发 1/2/4 路三轮成功率为 3/3、6/6、12/12，8 路单轮为 8/8；业务
+`DIRECTOR_LOCAL_MAX_CONCURRENCY` 默认仍为 2，超时回退 Step 5。详见
+`DIRECTOR_CONCURRENCY_REPORT.md` 与 `G29_MODEL_DEPLOY_AUDIT.md`。
+
 ## 关键契约
 
 - **Ready Gate**：只有媒体 READY 的分支显示给玩家（I05）；Top-K 锁定后并行生成；

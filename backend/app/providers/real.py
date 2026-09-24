@@ -27,16 +27,24 @@ class OpenAICompatTextProvider:
         payload: dict = {"model": self.model, "messages": messages, "temperature": 0.7}
         if output_contract:
             payload["response_format"] = {"type": "json_object"}
+        if self.name == "nemotron_local":
+            payload["chat_template_kwargs"] = {"enable_thinking": False}
         headers = {"Content-Type": "application/json"}
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
-        async with httpx.AsyncClient(timeout=settings.provider_timeout_seconds) as client:
+        timeout = (settings.director_local_request_timeout_seconds
+                   if self.name == "nemotron_local" else settings.provider_timeout_seconds)
+        async with httpx.AsyncClient(timeout=timeout) as client:
             resp = await client.post(f"{self.base_url}/chat/completions", json=payload, headers=headers)
             resp.raise_for_status()
             data = resp.json()
+        actual_model = data.get("model", "")
+        if self.name == "nemotron_local" and actual_model != self.model:
+            raise RuntimeError(
+                f"nemotron_local model mismatch: expected {self.model}, got {actual_model}")
         return TextResponse(
             content=data["choices"][0]["message"]["content"],
-            model=data.get("model", self.model),
+            model=actual_model or self.model,
             provider=self.name,
             latency_ms=int((time.time() - t0) * 1000),
             usage=data.get("usage", {}),
@@ -51,7 +59,11 @@ class OpenAICompatTextProvider:
                 if self.api_key:
                     headers["Authorization"] = f"Bearer {self.api_key}"
                 resp = await client.get(f"{self.base_url}/models", headers=headers)
-                return resp.status_code < 500
+                resp.raise_for_status()
+                if self.name == "nemotron_local":
+                    return any(m.get("id") == self.model
+                               for m in resp.json().get("data", []))
+                return True
         except Exception:
             return False
 

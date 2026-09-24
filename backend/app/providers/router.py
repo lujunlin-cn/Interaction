@@ -81,6 +81,10 @@ class ProviderError(Exception):
         self.provider = provider
 
 
+class DirectorAdmissionRejected(Exception):
+    """Local capacity limit; it must not count as a model health failure."""
+
+
 class ProviderBlocked(Exception):
     def __init__(self, role: str, reasons: list[dict[str, str]], permanent: bool = False):
         super().__init__(f"no available provider for role={role}")
@@ -115,6 +119,10 @@ class ProviderRouter:
         self.profile_state = "ACTIVE"   # ACTIVE/DRAINING/PERSISTING/STOPPING/
                                         # STARTING_TARGET/HEALTH_CHECK/FAILED_RECOVERABLE
         self.profile_history: list[dict] = []
+        self._director_slots = asyncio.Semaphore(max(1, settings.director_local_max_concurrency))
+        self._director_queue = 0
+        self._director_queue_rejected = 0
+        self._director_admission_until = 0.0
 
     # 每个 Profile 必需的本地服务（缺失/不健康则切换失败并回滚）
     PROFILE_REQUIRED = {
@@ -228,6 +236,10 @@ class ProviderRouter:
             if not self._available_by_profile(pid):
                 skipped.append({"provider": pid, "reason": "profile_unavailable"})
                 continue
+            if role == "director" and pid == "nemotron_local" and \
+                    time.monotonic() < self._director_admission_until:
+                skipped.append({"provider": pid, "reason": "admission_limited"})
+                continue
             ok, why = self._health_ok(pid)
             if not ok:
                 skipped.append({"provider": pid, "reason": why})
@@ -302,20 +314,51 @@ class ProviderRouter:
             except ProviderBlocked:
                 raise
             t0 = time.time()
+            acquired_director = False
             try:
+                if role == "director" and rec.selected == "nemotron_local":
+                    if not await asyncio.wait_for(provider.health(), timeout=3):
+                        raise ProviderError("provider_unhealthy", "nemotron_local health failed",
+                                            "nemotron_local")
+                    if self._director_queue >= settings.director_queue_max:
+                        self._director_queue_rejected += 1
+                        self._director_admission_until = time.monotonic() + 1.0
+                        raise DirectorAdmissionRejected("director admission queue full")
+                    self._director_queue += 1
+                    try:
+                        await asyncio.wait_for(
+                            self._director_slots.acquire(),
+                            timeout=settings.director_queue_timeout_seconds)
+                        acquired_director = True
+                    except asyncio.TimeoutError as exc:
+                        self._director_queue_rejected += 1
+                        self._director_admission_until = time.monotonic() + 1.0
+                        raise DirectorAdmissionRejected(
+                            "director admission queue timeout") from exc
+                    finally:
+                        self._director_queue -= 1
                 resp = await asyncio.wait_for(
                     provider.generate(messages, output_contract, None, budget),
-                    timeout=settings.provider_timeout_seconds)
+                    timeout=(settings.director_local_request_timeout_seconds
+                             if role == "director" and rec.selected == "nemotron_local"
+                             else settings.provider_timeout_seconds))
                 rec.model = resp.model
                 self._mark_success(rec.selected)
                 return provider, rec, resp
             except Exception as exc:  # noqa: BLE001
-                kind = self._classify(exc)
-                self._mark_failure(rec.selected, kind)
+                kind = "retryable_transient" if isinstance(exc, DirectorAdmissionRejected) \
+                    else self._classify(exc)
+                if not isinstance(exc, DirectorAdmissionRejected):
+                    self._mark_failure(rec.selected, kind)
+                    if role == "director" and rec.selected == "nemotron_local":
+                        self._director_admission_until = time.monotonic() + 1.0
                 last_exc = ProviderError(kind, str(exc), rec.selected)
                 if kind in ("policy_rejection", "permanent_request_error", "schema_failure"):
                     break           # 永久错误不重试
                 # 暂时错误：换 fallback 链上的下一个（由 route 重新计算）
+            finally:
+                if acquired_director:
+                    self._director_slots.release()
         assert last_exc is not None
         raise last_exc
 
@@ -339,7 +382,15 @@ class ProviderRouter:
 
     # ------------------------------------------------------------------
     def health_snapshot(self) -> dict[str, dict]:
-        return {k: h.to_dict() for k, h in self.health.items()}
+        out = {k: h.to_dict() for k, h in self.health.items()}
+        out["director_admission"] = {
+            "max_concurrency": settings.director_local_max_concurrency,
+            "queue": self._director_queue,
+            "queue_max": settings.director_queue_max,
+            "queue_rejected": self._director_queue_rejected,
+            "queue_timeout_seconds": settings.director_queue_timeout_seconds,
+        }
+        return out
 
     def route_matrix(self) -> list[dict]:
         out = []

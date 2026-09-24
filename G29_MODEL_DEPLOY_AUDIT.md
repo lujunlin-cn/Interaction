@@ -4,8 +4,8 @@
 
 | 槽位 | 期望 | DGX 实况 | 结论 | 处理 |
 |---|---|---|---|---|
-| nemotron_local（director/production）| vLLM `http://127.0.0.1:8001/v1` Nemotron-3.5-Lightning-30B | **8001 无监听**；vLLM 未部署 | BLOCKED（硬件/模型未就绪） | `local_llm_base_url` 临时指向 Ollama `http://127.0.0.1:11434/v1`，`local_llm_model=gemma3:27b`（OpenAI 兼容、同槽位降级） |
-| Ollama gemma3:27b | — | `11434` 在线，`/v1/models` OK；`/chat/completions` 偶发 "model failed to load"（资源紧张时加载失败） | 可用但不稳 | 作为 nemotron_local 降级底；故障时走 mock_text 兜底（HYBRID 末位） |
+| nemotron_local（director/production）| vLLM `http://127.0.0.1:8001/v1` `nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4` | `/v1/models` 返回固定模型 ID；中文 JSON 冒烟成功；vLLM 0.27.1-aarch64，GPU 进程约 80,329 MiB | **PASS（实部署）** | `local_llm_base_url` 与 `local_llm_model` 固定为 Nemotron；Gemma 不占用此槽位 |
+| Ollama gemma3:27b | 显式降级 Provider | 可保留在 11434，但不作为 Nemotron 证据 | 非 Nemotron PASS | 仅在显式配置为外部 fallback 时使用 |
 | step_37 / step_5 | StepFun `api.stepfun.com` | env 已配 `STEP_API_KEY`/`STEP37_MODEL`/`STEP5_MODEL` | 就绪（真实调用待验收 #29） | HYBRID narrative→step_37 首位 |
 | jev（decision）| TypeSafe `api.typesafe.ai` | env 已配 `JEV_API_KEY`/`JEV_MODEL=jev-latest` | 就绪 | decision 路由首位 |
 | h3_max（cloud_video）| fal.ai `minimax/h3-max/reference-to-video` | env 已配 `FAL_KEY` | **已实测出片** | job `01a0ceef-d403-78c2-b737-7aa3cccb8f05` → COMPLETED → 下载 `clip_1.mp4`（6.9MB, ffprobe 5.184s）。endpoint id 已修正（原 `fal-ai/` 前缀 404）；reference-to-video 必须带≥1 参考图。 |
@@ -23,11 +23,10 @@
 
 ## 代码改动
 
-- `config.py`：`local_llm_model` 默认改 `gemma3:27b`；新增 `sol_h3_base_url`/`sol_h3_api_key`
+- `config.py`：`local_llm_model` 固定为 Nemotron Lightning；新增 Director admission 配置与 `sol_h3_base_url`/`sol_h3_api_key`
 - `providers/real.py`：`SolH3LocalProvider` 由占位重写为 h3-adapter 真实协议（submit/status/cancel/health + references 适配）；注册表注入 env 配置
 
 ## 当前 BLOCKED / 待办
 
-- **Nemotron 8001**：vLLM 未部署 → AGENT_LOCAL_PROFILE 的 director/production 实际走 `gemma3:27b`（Ollama）。正式验收需 DGX 侧起 vLLM 或确认降级可接受。
+- **Nemotron 并发边界**：直连 vLLM 的 1/2/4 路三轮分别 3/3、6/6、12/12；4 路短请求无 OOM/timeout。业务 admission 仍保守设为 2，详见 `DIRECTOR_CONCURRENCY_REPORT.md`。
 - **sol_h3_local 真实出片**：本次 Final Closure 未重新取得任务产物，保持 PARTIAL，不升级为 PASS。
-- **Ollama 加载稳定性**：偶发 OOM 式 "model failed to load"；监控，必要时降并发或换小模型。

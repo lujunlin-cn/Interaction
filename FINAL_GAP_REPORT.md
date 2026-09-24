@@ -2,16 +2,16 @@
 
 审计基线：PRD v0.6（唯一业务 SoT）+ `interactive_drama_prototype.html`（UI 参考）+ 当前后端/前端全量代码 + DGX Spark 历史实测（2026-09-24 更新）。
 
-> 前一版 v0.5 / Sol-H3 “无服务”结论已过期。当前 Sol-H3 adapter 已实现；本轮未重新取得 DGX 产物，
-> 因此保持 PARTIAL。Nemotron 3.5 Lightning NVFP4 未启动，保持 BLOCKED。
+> 前一版 v0.5 / Nemotron 未部署结论已过期。Nemotron Lightning 已在本机 vLLM 容器真实启动并完成中文 JSON 与 1/2/4 路并发验证；Sol-H3 本轮未重新取得 DGX 产物，因此保持 PARTIAL。
 判定标准：「类/接口/字段存在」≠ 完成。完成 = 用户可操作 + Runtime 真执行 + Provider/状态真变化 + Trace 可查 + 正常/失败路径可复现。
 
-## DGX 实测快照（2026-09-23 19:47 CST）
+## DGX 实测快照（2026-09-24）
 
 - 服务：uvicorn :9000 运行中，commit `6e8b826`，`PROVIDER_MODE=hybrid`，`AGENT_LOCAL_PROFILE`，/api/health OK。
 - 硬件：NVIDIA GB10（CUDA 13.0，driver 580.159.03），内存 121G 已用 102G。
-- Nemotron Lightning：127.0.0.1:8001 **无服务**（/v1/models 空响应）→ Director primary 实际熔断降级到 step_5。
-- Ollama：gemma3:27b 在跑（可作本地 OpenAI 兼容端点替代验证）。
+- Nemotron Lightning：vLLM 0.27.1-aarch64 监听 `127.0.0.1:8001`，`/v1/models` 返回 `nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4`；中文 JSON 冒烟成功，GPU 进程约 80,329 MiB。
+- Director 并发：直连 vLLM 的 1/2/4 路三轮成功率为 3/3、6/6、12/12；4 路未见 OOM/timeout。业务 admission 默认 2，队列超时回退 Step 5。
+- Ollama：可作为显式降级 Provider，但不再冒充 Nemotron。
 - PG：`interaction-drama-db` @127.0.0.1:5433 正常。
 - Sol-H3 本地视频：adapter 已实现真实 submit/status/cancel/health；本轮未重新取得目标机出片产物，结论为 PARTIAL。
 - ComfyUI @8188 在跑（与本案无关）。
@@ -48,7 +48,7 @@
 | G26 | Mechanic Skill 闭环 | trigger→Skill→versioned input→Proposal→validate→commit→Trace→UI→下一拍 | Mock outcome 里 `mech_enabled()` 直接产 ops——Skill 没有独立 Proposal 步骤与 Trace | 「Registry+if」模式 | relationship/clue 做成显式 invocation：director 返回 trigger → runtime 调 skill fn → Proposal（带 skill_version+input）→ state_manager → trace | trace 有 `skill.relationship` span，v1.0.0，输入输出可查 |
 | G27 | 自由输入失败恢复 | 重试/修改输入/取消 | 分支 FAILED 后前端只 toast | 无重试入口 | view 加 `last_failed_action`；前端给重试按钮（重发 action） | 注入失败后点重试成功 |
 | G28 | Security | key 不入 Git/trace/UI | FalH3 header Key 在 provider 内；trace 不记 key ✓；CORS `*` | CORS 过宽；media/files 目录无鉴权（内网可接受，文档注明） | CORS 收敛为同源；KNOWN_LIMITATIONS 注明 | grep 无 key 泄露 |
-| G29 | Nemotron 部署 | 真实 NVFP4 在 Spark | 8001 无服务 | Director primary 长期降级 | 尝试起 vLLM/ollama OpenAI 兼容端点（gemma3:27b 已可作临时真实本地模型）；记录 MODEL_DEPLOYMENT_REPORT | /v1/models 返回模型 ID + chat 实测 |
+| G29 | Nemotron 部署 | 真实 NVFP4 在 Spark | vLLM 8001 已监听，模型 ID 与中文 chat 已核实 | 并发长稳态仍需持续压测 | vLLM 容器启动脚本、固定模型配置、admission control、并发探针 | `/v1/models` + 中文 JSON + 1/2/4 路报告 |
 | G30 | AT-01~60 | 逐条矩阵 | 无 | 交付物缺 | ACCEPTANCE_MATRIX.md 按实测填写；BLOCKED 不伪造 | 文件交付 |
 | G31 | 前端补充 | Decision Lead/选择反馈/Ending 已有；Hint chips 已有 | Player 基本完整；缺：失败重试(G27)、subtitle 设置生效、wish 状态文案(G25) | — | 随 G13/G25/G27 | — |
 | G32 | Prototype 对照 | Intent Echo/Timed/Lead/状态面板/反馈/Ending | 均存在；玩家状态面板无 secret/confidence/fingerprint ✓ | 待逐项浏览器复验 | Playwright 回归 | 截图留证 |

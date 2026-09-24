@@ -166,11 +166,17 @@ class TestInteractionContracts:
             client.post("/api/skills/h3-production/toggle", json={"enabled": True})
 
     # ------------------------------------------------------------- Profile
-    def test_profile_switch(self, client):
+    def test_profile_switch(self, client, monkeypatch):
+        from app.main import provider_router
+
+        async def unavailable():
+            return False
+
+        monkeypatch.setattr(provider_router.registry["sol_h3_local"], "health", unavailable)
         r = client.get("/api/dev/profile")
         assert r.json()["profile"] == "AGENT_LOCAL_PROFILE"
         assert r.json()["state"] == "ACTIVE"
-        # mock 注册表中 Sol-H3 本地服务真实缺席 → 健康检查失败 → 自动回滚（AT-56）
+        # 显式模拟 Sol-H3 不健康，验证健康检查失败后的回滚（AT-56）。
         r = client.post("/api/dev/profile/switch",
                         json={"target": "VIDEO_LOCAL_PROFILE"})
         body = r.json()
