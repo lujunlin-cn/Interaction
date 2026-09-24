@@ -351,6 +351,9 @@ class RuntimeEngine:
             inventory=[], objects={}, relationships={}, knowledge=[], clues={},
             truth=truth_facts, fiction_minutes=0, health=100, inspected=[])
         for ch in characters:
+            if not ch.get("id") or ch["id"] == snapshot.get("player_character", "player"):
+                continue
+            world.relationships[ch["id"]] = mechanic_skill.INITIAL_RELATIONSHIP
             rel = ch.get("relationship", "")
             if "信任" in rel and "/" in rel:
                 try:
@@ -904,6 +907,15 @@ class RuntimeEngine:
         messages = [{"role": "system", "content": "严格返回 JSON {outcome, directive}。outcome 必须含 title 和 text。QUICK_ACK 只用于轻量观察；改变地点、关系、获得重要证据、主动退出或形成结局使用 FULL_BEAT。决定关闭篇章时给 ending（合法结局方向或退出后果），ending 非空必须使用 FULL_BEAT，不得仅用确认文案假装故事已结束。不能改写核心真相。schema: " + json.dumps(schema, ensure_ascii=False)}] + messages
         enabled = [k for k, v in mechanics.items() if isinstance(v, dict) and v.get("enabled")]
         messages[0]["content"] += " 已启用玩法：" + json.dumps(enabled) + "。关系、线索和物品变化用相应 skill_triggers 提案，同一变化只提出一次。target 使用场景中的角色/物品/线索标识，location 使用 locations 字典的键。"
+        messages[0]["content"] += (
+            " outcome 必须显式给出 ops、evidence、skill_triggers 三个数组；没有变化时返回空数组。"
+            "如果你决定人物信任改变、发现线索或获得物品，必须在 skill_triggers 给出相应的类型化提案，"
+            "不能仅在 text 或 directive.secondary_functions 中描述变化。"
+            '关系提案格式：{"skill":"relationship","target":"场景角色ID","value":变化量}；'
+            '线索提案格式：{"skill":"clue-system","target":"线索ID","stage":"DISCOVERED"}；'
+            '物品提案格式：{"skill":"inventory","target":"物品ID","action":"add"}。'
+            "只为已启用的玩法提出与当前行动有因果依据的变化，不为凑齐字段发明事实。"
+        )
         for attempt in range(2):
             _, rec, resp = await self.router.call_text("director", messages=messages,
                 output_contract={"purpose": "director_plan", "mechanics": mechanics}, branch_id=branch_id)
@@ -1540,6 +1552,9 @@ class RuntimeEngine:
         except (EngineError, ProposalRejected) as e:
             branch.status = BranchStatus.FAILED
             branch.rollback_reason = str(e)
+            branch.last_error = str(e)
+            branch.fail_stage = "COMMIT"
+            state.player.status = "FAILED_RECOVERABLE"
             self._event(state, "commit_rolled_back", f"提交回滚：{branch.label}",
                         branch_id=branch.id, error=str(e))
             await tracer.emit("commit.canonical", "failed", output={"error": str(e)},

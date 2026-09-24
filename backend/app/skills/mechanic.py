@@ -13,6 +13,9 @@ from ..domain.ids import uid
 from .registry import MECHANIC_SKILLS, is_enabled
 
 _VERSION = {s["id"]: s["version"] for s in MECHANIC_SKILLS}
+# A numeric starting point for optional, natural-language relationship fields.
+# It does not infer trust from prose; an explicit authored number still wins.
+INITIAL_RELATIONSHIP = 50
 
 
 def skill_version(skill_id: str) -> str:
@@ -68,6 +71,11 @@ def _relationship(trigger: dict, context: dict, mechanics: dict) -> list[dict]:
     if delta is None:
         delta = int((mechanics.get("relationship", {}).get("config") or {})
                     .get("care_delta", 9))
+    if target not in context.get("relationships", {}) and any(n.get("id") == target for n in npcs):
+        # Older Sessions may predate numeric initialization. Propose the first
+        # value atomically; never mutate canonical state while planning.
+        return [{"op": "set", "path": f"relationships.{target}",
+                 "value": max(0, min(100, INITIAL_RELATIONSHIP + int(delta)))}]
     return [{"op": "increment", "path": f"relationships.{target}", "value": int(delta)}]
 
 

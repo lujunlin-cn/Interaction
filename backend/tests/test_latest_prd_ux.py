@@ -242,3 +242,51 @@ def test_text_recovery_closes_accepted_ending_once(client):
     after=client.get(f'/api/dev/sessions/{sid}/state').json()
     assert after['world']==s['world'] and after['drama']==s['drama']
     assert len([e for e in after['events'] if e['type']=='branch_canonical'])==1
+
+def test_natural_relationships_commit_without_requiring_numeric_dsl():
+    from app.main import runtime_engine
+    from app.skills.mechanic import invoke
+    from app.domain.schemas import WorldState, StatePatchProposal
+    from app.domain.state_manager import StateManager
+    snapshot = {'player_character': 'detective', 'characters': [
+        {'id': 'detective', 'relationship': ''},
+        {'id': 'keeper', 'relationship': '与调查员是旧识'},
+        {'id': 'explicit', 'relationship': '对玩家信任 42 / 100'}]}
+    fresh = runtime_engine._bootstrap('v', 'lighthouse', snapshot)
+    assert fresh.world.relationships == {'keeper': 50, 'explicit': 42}
+    # Existing Sessions keep their facts; the first change is only a proposal.
+    legacy = WorldState()
+    result = invoke('relationship', {'target': 'keeper', 'value': 5},
+                    {'npcs': [{'id': 'keeper'}], 'relationships': legacy.relationships},
+                    {'relationship': {'enabled': True, 'config': {}}}, 'branch', 1, 1)
+    assert legacy.relationships == {}
+    changed = StateManager().validate(legacy, StatePatchProposal.model_validate(result['proposal']), [], drama_revision=1)
+    assert changed.relationships == {'keeper': 55} and legacy.relationships == {}
+    again = invoke('relationship', {'target': 'keeper', 'value': 5},
+                   {'npcs': [{'id': 'keeper'}], 'relationships': changed.relationships},
+                   {'relationship': {'enabled': True, 'config': {}}}, 'next', 2, 1)
+    changed = StateManager().validate(changed, StatePatchProposal.model_validate(again['proposal']), [], drama_revision=1)
+    assert changed.relationships == {'keeper': 60}
+
+
+def test_rejected_commit_is_recoverable_without_state_mutation(client):
+    from app.main import runtime_engine
+    from app.domain.schemas import Branch, BranchSource, BranchStatus, OutcomeSpec, StatePatchProposal, PatchOperation
+    from app.seed.rainy_apartment import rainy_apartment
+    async def run():
+        state = runtime_engine._bootstrap('v', 'rainy_apartment', rainy_apartment().model_dump())
+        state.text_mode = True
+        before = state.world.model_dump()
+        b = Branch(id='rejected_commit_recovery', session_id=state.id, arc_id=state.current_arc().id,
+                   source=BranchSource.FREE, status=BranchStatus.READY, label='坏提案', narrative='原行动仍保留。',
+                   base_versions=runtime_engine._branch_base_versions(state), outcome=OutcomeSpec(title='行动',text='原行动仍保留。'),
+                   state_patch_proposal=StatePatchProposal(proposal_id='bad',base_version=1,source='test',
+                       operations=[PatchOperation(op='increment',path='objects.missing',value=1)]))
+        state.branches.append(b);state.pending_freeform_id=b.id;state.player.status='GENERATING_NEXT'
+        await runtime_engine._text_artifact(state, b)
+        await runtime_engine._commit_selected(state,b)
+        assert state.world.model_dump()==before
+        assert b.status==BranchStatus.FAILED and b.fail_stage=='COMMIT'
+        assert state.player.status=='FAILED_RECOVERABLE'
+        assert runtime_engine.player_view(state)['presentation']['recovery_actions']
+    client.portal.call(run)
