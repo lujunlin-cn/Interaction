@@ -45,10 +45,10 @@ export default function Settings() {
       <div className="card">
         <h3>本地运行模式</h3>
         <p className="muted">
-          视频本地模式使用本机 Sol-H3 生成视频；切换会排空当前任务、保存状态、切换 Provider 并执行健康检查，失败会自动回滚。
+          选择在本机生成视频或优先生成故事。切换期间会保存进度，准备好后可以继续游玩。
         </p>
         <div className="toolbar">
-          {([["AGENT_LOCAL_PROFILE", "Agent 本地"], ["VIDEO_LOCAL_PROFILE", "Sol-H3 视频本地"]] as const).map(([target, label]) => (
+          {([["AGENT_LOCAL_PROFILE", "故事优先"], ["VIDEO_LOCAL_PROFILE", "本机视频"]] as const).map(([target, label]) => (
             <button key={target} className={providers?.profile === target ? "active" : ""}
               disabled={switching || providers?.profile === target || profile?.state !== "ACTIVE"}
               onClick={() => switchProfile(target)}>
@@ -56,11 +56,12 @@ export default function Settings() {
             </button>
           ))}
         </div>
-        <div className="kv" style={{ marginTop: 12 }}>
+        {ui.mode === "developer" && <div className="kv" style={{ marginTop: 12 }}>
           <b>当前 Profile</b><span className="mono">{providers?.profile ?? "正在载入…"}</span>
           <b>Sol-H3</b><span className="mono">{providers?.health?.sol_h3_local?.status ?? "未检查"}</span>
           <b>切换状态</b><span>{profile?.state ?? "ACTIVE"}{profile?.error ? `：${profile.error}` : ""}</span>
-        </div>
+        </div>}
+        {ui.mode === "standard" && <p className="muted">{switching ? "正在准备，请稍候…" : profile?.error ? "切换暂时未完成，请重试。" : "运行环境已就绪"}</p>}
       </div>
 
       <div className="card">
@@ -122,7 +123,7 @@ export default function Settings() {
         </div>
       </div>
 
-      <div className="card">
+      {ui.mode === "developer" && <div className="card">
         <h3>运行信息</h3>
         {health ? (
           <div className="kv">
@@ -133,7 +134,7 @@ export default function Settings() {
         <p className="muted">
           API Key、Endpoint、模型 ID 全部由部署环境的 .env 注入，不在界面显示、不入库。
         </p>
-      </div>
+      </div>}
     </>
   );
 }

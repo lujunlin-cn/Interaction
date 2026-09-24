@@ -133,6 +133,12 @@ class AssetType(str, Enum):
 class MechanicConfig(BaseModel):
     enabled: bool = False
     config: dict[str, Any] = Field(default_factory=dict)
+    skill_id: str = ""
+    version: str = "1.0.0"
+    title: str = ""
+    tutorial: str = ""
+    trigger: str = ""
+    state_patch_contract: list[str] = Field(default_factory=list)
 
 
 class ScenarioCharacter(BaseModel):
@@ -198,6 +204,9 @@ class ScenarioDraft(BaseModel):
     drama: DramaSpec = Field(default_factory=DramaSpec)
     mechanics: dict[str, MechanicConfig] = Field(default_factory=dict)
     theme: ThemeConfig = Field(default_factory=ThemeConfig)
+    authoring_intent: str = ""
+    mechanic_authoring_intent: str = ""
+    creator_projection: dict[str, Any] = Field(default_factory=dict)
     reviewed: bool = False
     manual_edits: list[str] = Field(default_factory=list)
     locks: list[str] = Field(default_factory=list)
@@ -224,6 +233,11 @@ class GlobalCharacter(BaseModel):
     bio: str = ""
     personality: str = ""
     tags: list[str] = Field(default_factory=list)
+    default_desire: str = ""
+    default_fear: str = ""
+    default_secrets: str = ""
+    default_knowledge: str = ""
+    default_relationship: str = ""
     appearance: str = ""                            # 外观文字描述（AI 可补全，用户确认）
     ref_front_asset: Optional[str] = None     # asset_id
     ref_side_asset: Optional[str] = None
@@ -531,6 +545,7 @@ class ShotPlan(BaseModel):
 
 
 class SceneArtifact(BaseModel):
+    media_type: Literal["video", "text"] = "video"
     id: str
     branch_id: str
     clip_refs: list[str] = Field(default_factory=list)
@@ -617,8 +632,10 @@ class Branch(BaseModel):
     created_at: int = Field(default_factory=now_ms)
     ready_at: Optional[int] = None
     expires_at: int = 0
+    director_result: dict[str, Any] = Field(default_factory=dict)  # accepted FREE skeleton, never silently re-planned
     narrative: str = ""                          # NARRATIVE 阶段产出的 beat 文本
     caption: str = ""
+    caption_speaker: str = ""
     media_clips: list[str] = Field(default_factory=list)   # GENERATING 产出的镜头文件
     shots: list[ShotPlan] = Field(default_factory=list)
     shot_count: int = 2

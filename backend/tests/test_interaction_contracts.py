@@ -33,8 +33,9 @@ def new_session(client):
 def commit_first_rec(client, sid):
     view = wait_for(client, sid, lambda v: len(v["recommendations"]) >= 1)
     bid = view["recommendations"][0]["branch_id"]
-    assert client.post(f"/api/sessions/{sid}/select",
-                       json={"branch_id": bid}).json()["status"] == "CANONICAL"
+    response = client.post(f"/api/sessions/{sid}/select", json={"branch_id": bid})
+    assert response.status_code == 200, response.text
+    assert response.json()["status"] == "CANONICAL"
     client.post(f"/api/sessions/{sid}/player", json={"command": "skip"})
     client.post(f"/api/sessions/{sid}/receipt")
 
@@ -126,8 +127,9 @@ class TestInteractionContracts:
                         lambda v: v.get("timed") and v["timed"]["selection_open"]
                         and len(v["recommendations"]) >= 1, timeout=90)
         bid = view["recommendations"][0]["branch_id"]
-        assert client.post(f"/api/sessions/{sid}/select",
-                           json={"branch_id": bid}).json()["status"] == "CANONICAL"
+        response = client.post(f"/api/sessions/{sid}/select", json={"branch_id": bid})
+        assert response.status_code == 200, response.text
+        assert response.json()["status"] == "CANONICAL"
         view = client.get(f"/api/sessions/{sid}/view").json()
         assert not (view.get("timed") and view["timed"]["active"])
 

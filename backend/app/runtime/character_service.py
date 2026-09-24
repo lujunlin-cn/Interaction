@@ -307,6 +307,8 @@ class CharacterAssetService:
                     .order_by(CharacterVersionRow.version.desc()).limit(1))
                 ).scalars().first()
                 n = (last.version + 1) if last else 1
+                row.version = n
+                data["version"] = n
                 canonical = await self._canonical_refs(db, character_id)
                 ver = CharacterVersion(
                     id=uid("cv"), character_id=character_id, version=n,
@@ -315,7 +317,8 @@ class CharacterAssetService:
                                    "bio": data.get("bio", ""),
                                    "personality": data.get("personality", ""),
                                    "appearance": data.get("appearance", ""),
-                                   "tags": data.get("tags", [])},
+                                   "tags": data.get("tags", []),
+                                   **{k: data.get(k, "") for k in ("default_desire", "default_fear", "default_secrets", "default_knowledge", "default_relationship")}},
                     canonical_asset_refs=canonical,
                     outfits=[CharacterOutfit(**o) for o in data.get("outfits", [])],
                     canonical_voice_ref=data.get("ref_voice_asset"),
@@ -393,13 +396,18 @@ class CharacterAssetService:
     # ------------------------------------------------------------------
     # Scenario Snapshot（FR-091 / Q86）
     async def snapshot_for_scenario(self, scenario_version_id: str,
-                                    character_id: str) -> ScenarioCharacterSnapshot:
+                                    character_id: str, version: int | None = None,
+                                    overrides: dict | None = None) -> ScenarioCharacterSnapshot:
         ch = await self.get_character(character_id)
         if ch is None:
             raise KeyError(character_id)
         ver_id = ch.get("current_version_id")
         ver: Optional[CharacterVersion] = None
-        if ver_id:
+        if version is not None:
+            ver = next((v for v in await self.list_versions(character_id) if v.version == version), None)
+            if ver is None:
+                raise KeyError(f"character version {version}")
+        elif ver_id:
             async with SessionLocal() as db:
                 r = await db.get(CharacterVersionRow, ver_id)
                 if r:
@@ -410,7 +418,7 @@ class CharacterAssetService:
             id=uid("snap"), scenario_version_id=scenario_version_id,
             global_character_id=character_id,
             character_version_id=ver.id, character_version=ver.version,
-            frozen_identity=ver.identity_spec,
+            frozen_identity=ver.identity_spec, local_overrides=overrides or {},
             frozen_asset_refs={k: v for k, v in ver.canonical_asset_refs.items()})
         async with SessionLocal() as db:
             async with db.begin():
@@ -461,6 +469,10 @@ class CharacterAssetService:
                 for k, v in snap.local_overrides.items():
                     if k in ("name", "bio", "personality", "appearance", "tags"):
                         data[k] = v
+                    elif k in ("desire", "fear", "secrets", "knowledge", "relationship"):
+                        data["default_" + k] = v
+                    elif k == "visual_state":
+                        data["appearance"] = v
                 crow.data = data
                 crow.version += 1
                 crow.updated_at = now_ms()

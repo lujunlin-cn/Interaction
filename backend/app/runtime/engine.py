@@ -26,7 +26,7 @@ from ..domain.drama_manager import DramaStateManager
 from ..domain.fingerprint import fingerprint_of
 from ..domain.ids import uid
 from ..domain.schemas import (
-    BaseVersions, Branch, BranchSource, BranchStatus, DramaticDirective, DramaPatchProposal,
+    RuntimeProfile, BaseVersions, Branch, BranchSource, BranchStatus, DramaticDirective, DramaPatchProposal,
     DramaState, Event, ForeshadowEntry, InteractionMode, OutcomeSpec, PatchOperation,
     PhaseHint, PresentationReceipt, PressureInstance, RecommendationEpoch, ResolvedIntent,
     SceneArtifact, ScenePacket, ShotPlan, StatePatchProposal, Wish, WishStatus, WorldState,
@@ -135,7 +135,8 @@ class RuntimeEngine:
             "title": snapshot.get("title", ""),
             "genre": snapshot.get("genre", ""),
             "tone": snapshot.get("tone", ""),
-            "core_question": drama.get("core_question", ""),
+            "core_question": (state.current_arc().question if state.current_arc() else "") or drama.get("core_question", ""),
+            "central_conflict": (state.current_arc().conflict if state.current_arc() else "") or drama.get("central_conflict", ""),
             "ending_families": _ending_families(state),
             "truth_model": drama.get("truth_model", ""),
             "locations": _scenario_location_names(state),
@@ -144,7 +145,7 @@ class RuntimeEngine:
             "clues": list(state.world.clues.keys()),
             "relationships": state.world.relationships,
             "phase": state.drama.phase.value,
-            "npcs": [{"id": cid, "identity": chars.get(cid, {}).get("identity", cid)}
+            "npcs": [{**chars.get(cid, {}), "id": cid}
                      for cid in _npc_ids(state)],
         }
 
@@ -193,7 +194,8 @@ class RuntimeEngine:
             vrow = await db.get(ScenarioVersionRow, scenario_version_id)
             if vrow is None:
                 raise EngineError(f"scenario version not found: {scenario_version_id}")
-            snapshot = vrow.snapshot
+            import copy
+            snapshot = copy.deepcopy(vrow.snapshot)
             scenario_id = vrow.scenario_id
             arows = (await db.execute(
                 select(AssetRow).where(AssetRow.scenario_id == scenario_id))).scalars().all()
@@ -223,6 +225,7 @@ class RuntimeEngine:
                 srow = snap_by_gcid.get(gcid) if gcid else None
                 if srow is None:
                     continue
+                ch.update({k: v for k, v in (srow.data.get("local_overrides") or {}).items() if k in ("identity", "personality", "desire", "fear", "secrets", "knowledge", "relationship", "visual_state")})
                 for role, ca_id in (srow.data.get("frozen_asset_refs") or {}).items():
                     if not ca_id or ca_id in g_assets:
                         continue
@@ -493,7 +496,7 @@ class RuntimeEngine:
             "inventory": world.inventory,
             "clues": list(world.clues.keys()),
             "relationships": world.relationships,
-            "npcs": [{"id": cid, "identity": chars.get(cid, {}).get("identity", cid)}
+            "npcs": [{**chars.get(cid, {}), "id": cid}
                      for cid in npcs],
             "phase": state.drama.phase.value,
             "wishes": [w.raw for w in state.wishes if w.status == WishStatus.ACTIVE],
@@ -663,7 +666,8 @@ class RuntimeEngine:
         turns_done = len([t for t in state.turns
                           if arc and t.get("arc_seq") == arc.seq
                           and not t.get("opening")])
-        if turns_done < 1:
+        trigger_after = state.scenario_snapshot.get("mechanics", {}).get("qte", {}).get("config", {}).get("trigger_after_actions", 1)
+        if turns_done < trigger_after:
             return None   # 至少完成一个关键行动后才可能进入限时节点
         raw = state.scenario_snapshot.get("drama", {}).get("timed_interactions", "")
         for line in raw.splitlines():
@@ -691,8 +695,15 @@ class RuntimeEngine:
                 await asyncio.sleep(0.25)
                 async with self._lock(session_id):
                     state = await self.load_session(session_id)
-                    if not state or not state.timed.active or not state.timed.deadline_ms:
+                    if not state or not state.timed.active:
                         return
+                    if not state.timed.deadline_ms:
+                        if state.player.position() < state.player.decision_open_at and state.player.status not in ("READY", "WAITING_DECISION", "ENDED"):
+                            continue
+                        state.timed.selection_open = True
+                        state.timed.deadline_ms = now_ms() + int(state.timed.timeout_seconds * 1000)
+                        await self._persist(state)
+                        await self._push(state)
                     remaining = state.timed.deadline_ms - now_ms()
                     if remaining > 0:
                         continue
@@ -767,7 +778,7 @@ class RuntimeEngine:
                     if branch and branch.status != BranchStatus.READY:
                         branch.status = BranchStatus.FAILED
                         branch.last_error = str(e)
-                        if branch.source == BranchSource.OPENING:
+                        if branch.source in (BranchSource.OPENING, BranchSource.FREE):
                             state.player.status = "FAILED_RECOVERABLE"
                         self._release_budget(state, branch)
                         self._event(state, "branch_failed", f"生成失败：{branch.label}",
@@ -802,6 +813,10 @@ class RuntimeEngine:
             if branch.status != BranchStatus.NARRATIVE:
                 return
             await self._narrate_branch(state, branch)
+            if state.text_mode and branch.source in (BranchSource.OPENING, BranchSource.FREE):
+                await self._text_artifact(state, branch)
+                await self._commit_selected(state, branch)
+                return
             await self._set_phase(state, branch, BranchStatus.PRODUCTION)
 
         await self._phase_sleep()
@@ -817,7 +832,7 @@ class RuntimeEngine:
         try:
             await self._generate_branch_media(session_id, branch_id)
         except Exception as e:  # noqa: BLE001
-            gen_error = str(e)
+            gen_error = f"{type(e).__name__}: {e}"
         async with self._lock(session_id):
             state = await self.load_session(session_id)
             branch = state.branch(branch_id)
@@ -843,8 +858,9 @@ class RuntimeEngine:
                             branch_id=branch.id, error=gen_error)
                 await self._persist(state)
                 await self._maybe_publish(state)
-                if branch.source == BranchSource.OPENING:
+                if branch.source in (BranchSource.OPENING, BranchSource.FREE):
                     state.player.status = "FAILED_RECOVERABLE"
+                await self._persist(state)
                 await self._push(state)
                 return
             await self._set_phase(state, branch, BranchStatus.ASSEMBLING)
@@ -882,6 +898,31 @@ class RuntimeEngine:
     # ------------------------------------------------------------------
     # 各阶段实现（Provider 调用经 Router，Agent 不直接绑 SDK）
     # ------------------------------------------------------------------
+    async def _director_output(self, messages, mechanics, session_id, branch_id=None):
+        from .director_output import normalize_director_output, DirectorOutcome
+        schema = {"outcome": DirectorOutcome.model_json_schema(), "directive": DramaticDirective.model_json_schema()}
+        messages = [{"role": "system", "content": "严格返回 JSON {outcome, directive}。outcome 必须含 title 和 text。QUICK_ACK 只用于轻量观察；改变地点、关系、获得重要证据、主动退出或形成结局使用 FULL_BEAT。决定关闭篇章时给 ending（合法结局方向或退出后果），ending 非空必须使用 FULL_BEAT，不得仅用确认文案假装故事已结束。不能改写核心真相。schema: " + json.dumps(schema, ensure_ascii=False)}] + messages
+        enabled = [k for k, v in mechanics.items() if isinstance(v, dict) and v.get("enabled")]
+        messages[0]["content"] += " 已启用玩法：" + json.dumps(enabled) + "。关系、线索和物品变化用相应 skill_triggers 提案，同一变化只提出一次。target 使用场景中的角色/物品/线索标识，location 使用 locations 字典的键。"
+        for attempt in range(2):
+            _, rec, resp = await self.router.call_text("director", messages=messages,
+                output_contract={"purpose": "director_plan", "mechanics": mechanics}, branch_id=branch_id)
+            try:
+                result = normalize_director_output(resp.content)
+                original = json.loads(resp.content) if resp.content.lstrip().startswith("{") else result
+                if original.get("directive", {}).get("target_changes") != result["directive"].get("target_changes"):
+                    await tracer.emit("director.schema_repaired", "success", output={"raw_output": resp.content, "normalized": result["directive"]},
+                        provider=rec.selected or "", model=resp.model, session_id=session_id, branch_id=branch_id)
+                return result, rec
+            except (ValueError, TypeError) as error:
+                await tracer.emit("director.schema", "failed", input_={"attempt": attempt + 1},
+                    output={"error": str(error), "raw_output": resp.content}, provider=rec.selected or "",
+                    model=resp.model, session_id=session_id, branch_id=branch_id)
+                if attempt:
+                    raise
+                messages = messages + [{"role": "assistant", "content": resp.content},
+                    {"role": "user", "content": "只修复输出格式，保持原意、事实和状态操作不变。校验错误：" + str(error)}]
+
     async def _plan_branch(self, state: SessionState, branch: Branch) -> None:
         if branch.source == BranchSource.OPENING:
             snapshot = state.scenario_snapshot
@@ -922,18 +963,18 @@ class RuntimeEngine:
             "\"target\": str, \"action\": \"add|remove\", \"stage\": "
             "\"DISCOVERED|VERIFIED|USED\", \"value\": int}]}, "
             "\"directive\": {\"primary_function\": str, \"secondary_functions\": [str], "
-            "\"target_changes\": [str], \"hard_constraints\": [str], \"avoid\": [str]}}。"
+            "\"target_changes\": [{\"description\": str}], \"hard_constraints\": [str], \"avoid\": [str]}}。"
             "skill_triggers 仅在玩家行动明确触发玩法机制时给出（如获得物品→inventory、"
             "发现线索→clue-system、关心角色→relationship）；不触发则为空数组。")
-        _, rec, resp = await self.router.call_text(
-            "director",
-            messages=[{"role": "user", "content":
-                       f"raw_player_input: {branch.label}\n"
-                       f"scenario_context: {json.dumps(self._scenario_brief(state), ensure_ascii=False)}\n"
-                       f"{schema_hint}"}],
-            output_contract={"purpose": "director_plan", "mechanics": mechanics},
-            branch_id=branch.id)
-        content = json.loads(resp.content)
+        if branch.source == BranchSource.FREE and branch.director_result:
+            content = branch.director_result
+            rec = branch.routes[-1]
+        else:
+            content, rec = await self._director_output(
+                [{"role": "user", "content":
+                  f"raw_player_input: {branch.label}\n"
+                  f"scenario_context: {json.dumps(self._scenario_brief(state), ensure_ascii=False)}\n{schema_hint}"}],
+                mechanics, state.id, branch.id)
         outcome = content.get("outcome") or {}
         directive_data = content.get("directive") or {}
         branch.directive = DramaticDirective(
@@ -984,7 +1025,8 @@ class RuntimeEngine:
             idempotency_key=f"dcommit:{branch.id}")
         branch.context = self.build_context(state, directive_data)
         branch.packet = self._build_scene_packet(state, branch)
-        branch.routes.append(rec)
+        if not branch.routes or branch.routes[-1] != rec:
+            branch.routes.append(rec)
         await tracer.emit("director.plan", "success", input_={"label": branch.label},
                           output={"primary_function": branch.directive.primary_function},
                           provider=rec.selected or "", model=rec.model or "",
@@ -1057,7 +1099,7 @@ class RuntimeEngine:
 
     async def _narrate_branch(self, state: SessionState, branch: Branch) -> None:
         outcome = branch.outcome
-        base_messages = [{"role": "user", "content":
+        base_messages = [{"role": "system", "content": "只返回 JSON {title:字符串,text:本幕短叙事,caption:简短中文字幕,dialogue:[{speaker:角色ID,line:台词}]}。旁白无 speaker，不泄露授权范围以外的信息，不替玩家做下一步决定。场景包：" + json.dumps(branch.packet.model_dump(exclude={"forbidden_revelations"}) if branch.packet else {}, ensure_ascii=False)}, {"role": "user", "content":
                           f"scene_title: {outcome.title if outcome else branch.label}\n"
                           f"scene_text: {outcome.text if outcome else branch.summary}\n"
                           f"caption: {branch.summary}"}]
@@ -1077,12 +1119,27 @@ class RuntimeEngine:
                                  if branch.packet else {},
                                  "scenario_brief": self._scenario_brief(state)},
                 branch_id=branch.id)
-            content = json.loads(resp.content)
-            text = content.get("text") or (outcome.text if outcome else branch.summary)
+            from .structured_output import decode_object
+            try:
+                content = decode_object(resp.content)
+                text = content.get("text") or content.get("scene_text")
+                if not isinstance(text, str) or not text.strip():
+                    raise ValueError("Narrative output requires non-empty text")
+            except ValueError as error:
+                await tracer.emit("narrative.schema", "failed", output={"error": str(error), "raw_output": resp.content, "attempt": attempt + 1},
+                                  provider=rec.selected or "", model=resp.model, session_id=state.id, branch_id=branch.id)
+                if attempt:
+                    branch.fail_stage = "NARRATIVE"
+                    raise EngineError("Narrative output failed schema validation") from error
+                base_messages += [{"role": "user", "content": "上次缺少有效 text。请返回完整 JSON {title,text,caption,dialogue}；正文只能描述场景包授权的可观察信息。"}]
+                continue
             leaked = self._forbidden_hits(state, branch, text)
             if not leaked:
                 branch.narrative = text
                 branch.caption = content.get("caption") or branch.summary
+                dialogue = content.get("dialogue") or []
+                if dialogue and isinstance(dialogue[0], dict) and dialogue[0].get("line") == branch.caption:
+                    branch.caption_speaker = str(dialogue[0].get("speaker") or "")
                 break
             self._event(state, "narrative_blocked",
                         "叙事越权揭示未授权真相，已拦截" if attempt == 0
@@ -1145,7 +1202,7 @@ class RuntimeEngine:
     async def _shoot_branch(self, state: SessionState, branch: Branch) -> None:
         _, rec, resp = await self.router.call_text(
             "production",
-            messages=[{"role": "user", "content":
+            messages=[{"role": "system", "content": f"返回 JSON，包含 shots 数组，共 {settings.shots_per_branch} 个镜头，每个 title/prompt/subtitle 为字符串，duration 为 {settings.mock_shot_duration} 秒。prompt 使用完整的具体影视描述，人物和场景保持连续。角色在本故事中的外观：" + json.dumps([{k: c.get(k, "") for k in ("identity", "visual_state")} for c in state.scenario_snapshot.get("characters", [])], ensure_ascii=False)}, {"role": "user", "content":
                        f"raw_player_input: {branch.label}\n"
                        f"scene_title: {branch.outcome.title if branch.outcome else branch.label}\n"
                        f"scene_text: {branch.narrative[:120]}"}],
@@ -1185,10 +1242,10 @@ class RuntimeEngine:
             state = await self.load_session(session_id)
             branch = state.branch(branch_id)
             shots = [{"id": s.id, "title": s.title, "subtitle": s.subtitle,
-                      "duration": s.duration, "references": s.references}
+                      "duration": s.duration, "references": s.references, "prompt": s.prompt}
                      for s in branch.shots]
             references = branch.references
-        provider, rec = self.router.video_provider(branch_id)
+        provider, rec = self.router.video_provider(branch_id, local=self.router.profile == RuntimeProfile.VIDEO_LOCAL)
         # H3 Max reference-to-video requires at least one reference asset. A
         # scenario may intentionally start without assets; in hybrid mode use
         # the explicit Mock fallback for the Opening so the player still gets
@@ -1208,9 +1265,25 @@ class RuntimeEngine:
         async def submit_one(shot: dict):
             submitted_at = now_ms()
             prompt = shot.get("prompt") or shot.get("title", "")
-            handle = await provider.submit({
-                "job_id": f"{branch_id}_{shot['id']}", "shots": [shot],
-                "references": references, "prompt": prompt})
+            try:
+                handle = await provider.submit({
+                    "job_id": f"{branch_id}_{shot['id']}", "shots": [shot],
+                    "references": references, "prompt": prompt})
+            except Exception as error:
+                await tracer.emit("video.submit", "failed", input_={"shot_id": shot["id"], "prompt": prompt, "references": references},
+                    output={"error": repr(error), "submitted_at": submitted_at}, provider=rec.selected or "",
+                    session_id=session_id, branch_id=branch_id)
+                raise
+            await tracer.emit("video.submit", "success", input_={"shot_id": shot["id"], "prompt": prompt, "references": references},
+                output={"provider_job_id": handle.provider_job_id, "submitted_at": submitted_at}, provider=rec.selected or "",
+                session_id=session_id, branch_id=branch_id)
+            async with self._lock(session_id):
+                current = await self.load_session(session_id)
+                current_branch = current.branch(branch_id)
+                current_branch.jobs.append(handle.provider_job_id)
+                current_branch.pipeline_events.append({"event": "video_submit", "shot_id": shot["id"],
+                    "provider": rec.selected, "provider_job_id": handle.provider_job_id, "submitted_at": submitted_at})
+                await self._persist(current)
             return shot, handle, submitted_at, prompt
         submitted = await asyncio.gather(*(submit_one(shot) for shot in shots))
         clips: list[str] = []
@@ -1262,6 +1335,24 @@ class RuntimeEngine:
                               provider=rec.selected or "",
                               session_id=session_id, branch_id=branch_id)
             await self._persist(state)
+
+    async def _text_artifact(self, state, branch):
+        """Explicit user-selected text presentation. Never a video recommendation."""
+        if not branch.narrative.strip() or not branch.outcome:
+            raise EngineError("这个行动尚未形成有效文字结果，请修改或重试。")
+        folder = settings.media_path / "text"
+        folder.mkdir(parents=True, exist_ok=True)
+        artifact_id = uid("text_scene")
+        path = folder / f"{artifact_id}.txt"
+        path.write_text(branch.narrative, encoding="utf-8")
+        branch.artifact = SceneArtifact(id=artifact_id, branch_id=branch.id, media_type="text",
+            assembled_path=f"text/{artifact_id}.txt", quality_status="READY", duration=0,
+            provenance={"presentation": "user_requested_text", "video_error": branch.last_error,
+                        "providers": [r.selected for r in branch.routes], "video_jobs": list(branch.jobs)})
+        branch.status = BranchStatus.READY
+        self._release_budget(state, branch)
+        await tracer.emit("presentation.text", "success", output={"artifact_id": artifact_id, "path": str(path), "video_generated": False},
+                          session_id=state.id, branch_id=branch.id)
 
     async def _assemble_branch(self, state: SessionState, branch: Branch) -> None:
         """确定性装配：FFmpeg concat → 受控媒体目录（Assembly 不走生成模型）。"""
@@ -1337,6 +1428,8 @@ class RuntimeEngine:
             return
         branches = [state.branch(bid) for bid in epoch.branch_ids]
         branches = [b for b in branches if b]
+        if branches and all(b.source == BranchSource.OPENING for b in branches):
+            return  # Opening is auto-presented; it is never a user recommendation.
         in_flight = (BranchStatus.PREDICTED, BranchStatus.PLANNING, BranchStatus.NARRATIVE,
                      BranchStatus.PRODUCTION, BranchStatus.GENERATING,
                      BranchStatus.ASSEMBLING, BranchStatus.RETRYING)
@@ -1362,8 +1455,9 @@ class RuntimeEngine:
         await self._persist(state)
         # 限时批次：全部 READY 后才开放选择并启动倒计时（I02：倒计时窗口从可选时开始）
         if state.timed.active and epoch.timed:
-            state.timed.selection_open = True
-            state.timed.deadline_ms = now_ms() + int(state.timed.timeout_seconds * 1000)
+            lead_open = state.player.position() >= state.player.decision_open_at or state.player.status in ("READY", "WAITING_DECISION", "ENDED")
+            state.timed.selection_open = lead_open
+            state.timed.deadline_ms = (now_ms() + int(state.timed.timeout_seconds * 1000)) if lead_open else None
             await self._persist(state)
             await self._push(state)
             self._schedule_timed_watchdog(state.id)
@@ -1388,6 +1482,8 @@ class RuntimeEngine:
             state = await self.load_session(session_id)
             if not state:
                 raise EngineError("session not found")
+            if state.player.status == "GENERATING_NEXT" and not state.pending_freeform_id:
+                raise EngineError("这一幕正在重新生成，请稍候")
             if state.selection_lock:
                 raise EngineError("另一个选择正在提交中")
             if state.timed.active and not state.timed.selection_open:
@@ -1428,6 +1524,8 @@ class RuntimeEngine:
             media_file = settings.media_path / branch.artifact.assembled_path
             if not media_file.exists():
                 raise EngineError("media file missing")
+            if branch.artifact.media_type == "text" and (not state.text_mode or media_file.read_text(encoding="utf-8") != branch.narrative or not branch.narrative.strip()):
+                raise EngineError("text presentation not confirmed")
             # Phase 2：媒体确认 → 双域原子提交 → CANONICAL
             await self._commit_branch(state, branch)
             branch.status = BranchStatus.CANONICAL
@@ -1513,7 +1611,7 @@ class RuntimeEngine:
         state.player.scene_title = branch.outcome.title if branch.outcome else branch.label
         state.player.scene_text = branch.narrative
         state.player.caption = branch.caption
-        state.player.video_url = f"/media/{branch.artifact.assembled_path}" if branch.artifact else ""
+        state.player.video_url = f"/media/{branch.artifact.assembled_path}" if branch.artifact and branch.artifact.media_type == "video" else ""
         state.player.branch_id = branch.id
         state.player.duration = duration
         state.player.lead = max(0.0, duration - settings.decision_lead_seconds)
@@ -1522,6 +1620,9 @@ class RuntimeEngine:
         state.player.playing = True
         state.player.clock_started_at = now_ms()
         state.player.receipt_committed = False
+        if branch.artifact and branch.artifact.media_type == "text":
+            state.player.status = "WAITING_DECISION"
+            state.player.playing = False
         state.epoch = None  # 本批推荐已消费
         # 关键行动记录（结局页「本篇章关键行动」回顾）
         arc = state.current_arc()
@@ -1549,6 +1650,7 @@ class RuntimeEngine:
             arc.ending_family = ending_family
             arc.closed_at = now_ms()
         state.ended = True
+        state.player.status = "ENDED"
         if state.timed.active:
             self._cancel_timed(state)
         self._event(state, "arc_closed", f"篇章收束：{ending_family}")
@@ -1576,12 +1678,63 @@ class RuntimeEngine:
                         branch_id=state.player.branch_id)
             await self._persist(state)
 
+    async def _regenerate_presentation(self, session_id, branch_id):
+        try:
+            await self._generate_branch_media(session_id, branch_id)
+            async with self._lock(session_id):
+                state = await self.load_session(session_id)
+                branch = state.branch(branch_id)
+                await self._assemble_branch(state, branch)
+                state.player.video_url = f"/media/{branch.artifact.assembled_path}"
+                state.player.duration = branch.artifact.duration
+                state.player.position_base = 0
+                state.player.playing = False
+                state.player.status = "PLAYING"
+                await self._persist(state)
+                await self._push(state)
+        except Exception as error:
+            async with self._lock(session_id):
+                state = await self.load_session(session_id)
+                state.branch(branch_id).last_error = str(error)
+                state.player.status = "FAILED_RECOVERABLE"
+                await tracer.emit("media.regenerate", "failed", output={"error": str(error)}, session_id=session_id, branch_id=branch_id)
+                await self._persist(state)
+                await self._push(state)
+
     async def player_command(self, session_id: str, command: str) -> dict:
         async with self._lock(session_id):
             state = await self.load_session(session_id)
             if not state:
                 raise EngineError("session not found")
             player = state.player
+            if command == "regenerate":
+                old = state.branch(player.branch_id) if player.branch_id else None
+                if old and old.status == BranchStatus.CANONICAL:
+                    player.status = "GENERATING_NEXT"
+                    self._pipeline_tasks[old.id] = asyncio.create_task(self._regenerate_presentation(session_id, old.id))
+                    await self._persist(state)
+                    await self._push(state)
+                    return {"position": player.position(), "status": player.status}
+                command = "retry"
+            if command == "text_continue":
+                state.text_mode = True
+                failed = state.branch(state.pending_freeform_id) if state.pending_freeform_id else next((b for b in reversed(state.branches) if b.source == BranchSource.OPENING and b.status == BranchStatus.FAILED), None)
+                if failed and failed.status != BranchStatus.FAILED:
+                    failed = None
+                if failed and failed.outcome and failed.narrative and failed.fingerprint == self.compute_fingerprint(state):
+                    await self._text_artifact(state, failed)
+                    await self._commit_selected(state, failed)
+                    return {"position": player.position(), "status": player.status}
+                player.video_url = ""
+                player.playing = False
+                player.position_base = player.duration
+                player.status = "ENDED" if state.ended else "WAITING_DECISION"
+                raw_text = failed.intent.raw_text if failed else ""
+                state.pending_freeform_id = None
+                state.messages.append({"kind": "system", "text": "已切换文字模式。尚未形成结果的行动已保留在输入框，可以修改后继续。" if failed else "已切换文字模式，故事可以继续。", "at": now_ms()})
+                await self._persist(state)
+                await self._push(state)
+                return {"position": player.position(), "status": player.status, "needs_action": bool(failed), "raw_text": raw_text}
             if command == "retry":
                 if player.status not in ("FAILED", "FAILED_RECOVERABLE"):
                     raise EngineError("当前没有可恢复的生成失败")
@@ -1633,8 +1786,13 @@ class RuntimeEngine:
             state = await self.load_session(session_id)
             if not state:
                 raise EngineError("session not found")
+            if state.player.status == "GENERATING_NEXT" and not state.pending_freeform_id:
+                raise EngineError("这一幕正在重新生成，请稍候")
             if state.selection_lock:
                 raise EngineError("正在提交上一个选择，请稍候")
+            pending = state.branch(state.pending_freeform_id) if state.pending_freeform_id else None
+            if pending and pending.status not in (BranchStatus.CANONICAL, BranchStatus.FAILED, BranchStatus.CANCELLED, BranchStatus.INVALIDATED, BranchStatus.EXPIRED):
+                raise EngineError("正在继续上一个行动，请稍候")
             if state.ended:
                 raise EngineError("本篇章已结束")
             if state.timed.active:
@@ -1648,6 +1806,9 @@ class RuntimeEngine:
                     state={"location": state.world.location, "raw_player_input": text},
                     questions=[{"id": "intent", "text": text}])
                 intent_obs = answer.details or {}
+                await tracer.emit("decision.intent", "success", input_={"raw_player_input": text},
+                                  output={"observation": intent_obs}, provider=_drec.selected or "", model=answer.model,
+                                  session_id=state.id)
             except (ProviderBlocked, ProviderError):
                 intent_obs = {"confidence": 0.9, "impact": "LOW",
                               "clarification_required": False}
@@ -1729,15 +1890,30 @@ class RuntimeEngine:
                                 intent_obs: dict, label_override: str = "") -> dict:
         """自由输入的规划路径：Director 判定三档响应 → QUICK_ACK 立即提交 / 完整分支生成。"""
         mechanics = state.scenario_snapshot.get("mechanics", {})
-        _, rec, resp = await self.router.call_text(
-            "director",
-            messages=[{"role": "user", "content":
-                       f"raw_player_input: {text}\n"
-                       f"scenario_context: {json.dumps(self._scenario_brief(state), ensure_ascii=False)}"}],
-            output_contract={"purpose": "director_plan", "mechanics": mechanics})
-        content = json.loads(resp.content)
+        try:
+            content, rec = await self._director_output(
+                [{"role": "user", "content": f"raw_player_input: {text}\nscenario_context: {json.dumps(self._scenario_brief(state), ensure_ascii=False)}"}],
+                mechanics, state.id)
+        except Exception as error:
+            branch = Branch(id=uid("br"), trace_id=uid("trace"), session_id=state.id,
+                arc_id=state.current_arc().id if state.current_arc() else "",
+                source=BranchSource.FREE, label=label_override or text,
+                intent=ResolvedIntent(raw_text=text, action=label_override or text),
+                base_versions=self._branch_base_versions(state), read_set=self.build_read_set(state),
+                fingerprint=self.compute_fingerprint(state),
+                expires_at=now_ms() + settings.branch_ttl_seconds * 1000,
+                status=BranchStatus.FAILED, fail_stage="PLANNING", last_error=str(error))
+            state.branches.append(branch)
+            state.pending_freeform_id = branch.id
+            state.player.status = "FAILED_RECOVERABLE"
+            self._event(state, "branch_failed", "行动暂时没有生成成功", branch_id=branch.id, error=str(error))
+            await self._persist(state)
+            await self._push(state)
+            return {"status": "FAILED_RECOVERABLE"}
         outcome = content.get("outcome") or {}
-        mode = outcome.get("mode", "FULL_BEAT")
+        mode = "FULL_BEAT" if outcome.get("ending") else outcome.get("mode", "FULL_BEAT")
+        await tracer.emit("director.action", "success", input_={"raw_player_input": text},
+                          output={"response_mode": mode, "outcome": outcome, "directive": content.get("directive")}, provider=rec.selected or "", model=rec.model or "", session_id=state.id)
         if mode == "QUICK_ACK":
             # 轻量回应：确定性 patch 直接提交，不产生媒体分支
             ops = _to_patch_ops(outcome.get("ops", []))
@@ -1777,6 +1953,7 @@ class RuntimeEngine:
         state.merge_buffer = []   # 完整 beat 打断小动作序列
         # 完整分支
         branch = Branch(
+            director_result=content, routes=[rec],
             id=uid("br"), trace_id=uid("trace"), session_id=state.id,
             arc_id=state.current_arc().id if state.current_arc() else "",
             source=BranchSource.FREE, label=text,
@@ -1793,6 +1970,7 @@ class RuntimeEngine:
             fingerprint=self.compute_fingerprint(state),
             expires_at=now_ms() + settings.branch_ttl_seconds * 1000)
         state.branches.append(branch)
+        state.player.status = "GENERATING_NEXT"
         state.pending_freeform_id = branch.id   # 就绪后自动选中（玩家已通过输入选择）
         if not (state.epoch and state.epoch.published):
             state.epoch = RecommendationEpoch(
@@ -1967,15 +2145,34 @@ class RuntimeEngine:
             state.pending_continuation = True
             await self._persist(state)
             await self._push(state)
-        _, _rec, resp = await self.router.call_text(
-            "authoring",
-            messages=[{"role": "user", "content": "new_arc: continue world"}],
-            output_contract={"purpose": "new_arc"})
-        content = json.loads(resp.content)
+        from .structured_output import decode_object
+        try:
+            messages = [{"role": "system", "content": "仅返回 JSON {question:中文新篇章问题,conflict:中文新矛盾}。延续已发生的事实，不撤销旧结局，不把未选择的未来当作事实。"},
+                        {"role": "user", "content": "new_arc: " + json.dumps({"world": state.world.model_dump(mode="json"), "last_ending": state.arcs[-1].model_dump(mode="json")}, ensure_ascii=False)}]
+            for attempt in range(2):
+                _, _rec, resp = await self.router.call_text("authoring", messages=messages,
+                    output_contract={"purpose": "new_arc"}, budget={"max_tokens": 1200, "reasoning_effort": "low"})
+                try:
+                    content = decode_object(resp.content)
+                    if not all(isinstance(content.get(k), str) and content[k].strip() for k in ("question", "conflict")):
+                        raise ValueError("new arc requires question and conflict")
+                    break
+                except ValueError:
+                    if attempt:
+                        raise
+                    messages.append({"role": "user", "content": "请返回完整的 question 和 conflict 两个非空字符串字段。"})
+        except Exception as error:
+            async with self._lock(session_id):
+                state = await self.load_session(session_id)
+                state.pending_continuation = False
+                await self._persist(state)
+                await self._push(state)
+            await tracer.emit("arc.continue", "failed", output={"error": repr(error)}, session_id=session_id)
+            raise EngineError("新篇章暂时没有准备成功，世界已保存，可以重试。") from error
         async with self._lock(session_id):
             state = await self.load_session(session_id)
             seq = len(state.arcs) + 1
-            state.arcs.append(Arc(id=uid("arc"), seq=seq))
+            state.arcs.append(Arc(id=uid("arc"), seq=seq, question=content["question"], conflict=content["conflict"]))
             state.ended = False
             state.pending_continuation = False
             state.player.status = "WAITING_DECISION"
@@ -1991,7 +2188,7 @@ class RuntimeEngine:
         try:
             async with self._lock(session_id):
                 state = await self.load_session(session_id)
-                if state and not state.ended:
+                if state and not state.ended and not state.text_mode:
                     await self.prepare_recommendations(state)
                     await self._persist(state)
                     await self._push(state)
@@ -2025,10 +2222,12 @@ class RuntimeEngine:
         # (or an explicitly ended scene) can expose ready branches.
         lead_open = (state.player.status in ("WAITING_DECISION", "READY", "ENDED")
                      or position >= state.player.decision_open_at)
-        if lead_open and state.epoch and state.epoch.published:
+        pending_demand = state.branch(state.pending_freeform_id) if state.pending_freeform_id else None
+        demand_running = pending_demand and pending_demand.status not in (BranchStatus.FAILED, BranchStatus.CANONICAL, BranchStatus.CANCELLED, BranchStatus.INVALIDATED, BranchStatus.EXPIRED)
+        if lead_open and not state.text_mode and not demand_running and state.epoch and state.epoch.published:
             for bid in state.epoch.ready_ids:
                 b = state.branch(bid)
-                if b and self.valid_branch(state, b):
+                if b and b.source in (BranchSource.RECOMMENDATION, BranchSource.TIMED) and self.valid_branch(state, b) and b.artifact.media_type == "video":
                     recommendations.append({
                         "branch_id": b.id, "label": b.label,
                         "summary": b.summary, "confidence": b.probability,
@@ -2082,12 +2281,18 @@ class RuntimeEngine:
                 "scene_title": state.player.scene_title,
                 "scene_text": state.player.scene_text,
                 "caption": state.player.caption,
+                "caption_speaker": chars.get(current.caption_speaker, {}).get("identity", "") if (current := state.branch(state.player.branch_id)) and current.caption_speaker else "",
+                "location_name": _scenario_location_names(state).get(state.world.location, ""),
                 "video_url": state.player.video_url,
                 "duration": state.player.duration,
                 "lead": state.player.lead,
                 "decision_open_at": state.player.decision_open_at,
                 "position": min(pos, state.player.duration),
             },
+            "presentation": {"error_message": "这个行动暂时没有生成成功。" if state.player.status in ("FAILED", "FAILED_RECOVERABLE") else "",
+                "recovery_actions": ["retry", "modify", "text_continue", "exit"] if state.player.status in ("FAILED", "FAILED_RECOVERABLE") else [],
+                "state": "GENERATING_MEDIA" if state.player.status in ("GENERATING_NEXT", "OPENING_PREPARING") else state.player.status},
+            "action_pending": state.player.status == "GENERATING_NEXT" or bool(state.pending_freeform_id and (pending := state.branch(state.pending_freeform_id)) and pending.status not in (BranchStatus.CANONICAL, BranchStatus.FAILED, BranchStatus.CANCELLED, BranchStatus.INVALIDATED, BranchStatus.EXPIRED)),
             "recommendations": recommendations,
             "selected": selected,
             "generating": [{"branch_id": b.id, "label": b.label,
@@ -2098,12 +2303,12 @@ class RuntimeEngine:
             # G27：最近一次失败的自由输入，供玩家重试/修改/放弃
             "last_failed_action": (
                 {"branch_id": b.id, "label": b.label,
-                 "raw_text": b.intent.raw_text, "error": b.last_error or "",
+                 "raw_text": b.intent.raw_text, "error": "这个行动暂时没有生成成功。",
                  "fail_stage": b.fail_stage or ""}
                 if (b := next(
                     (x for x in reversed(state.branches[-10:])
                      if x.status == BranchStatus.FAILED
-                     and x.source == BranchSource.FREE), None)) else None),
+                     and x.source == BranchSource.FREE and x.id == state.pending_freeform_id), None)) else None),
             "known": {"inventory": state.world.inventory, "relationships": relationships,
                       "clues": clues, "knowledge": knowledge},
             "messages": state.messages[-20:],

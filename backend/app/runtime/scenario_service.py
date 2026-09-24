@@ -12,6 +12,7 @@ from ..domain.ids import uid
 from ..domain.schemas import ScenarioDraft, now_ms
 from ..providers.router import ProviderRouter
 from ..runtime.tracer import tracer
+from .structured_output import decode_object
 
 
 def _row_to_draft(row: ScenarioRow) -> ScenarioDraft:
@@ -34,6 +35,8 @@ class ScenarioService:
             return _row_to_draft(row) if row else None
 
     async def save_draft(self, draft: ScenarioDraft) -> ScenarioDraft:
+        from ..domain.mechanic_spec import validate_mechanics
+        draft.mechanics = validate_mechanics(draft.mechanics)
         draft.updated_at = now_ms()
         async with SessionLocal() as db:
             async with db.begin():
@@ -50,42 +53,65 @@ class ScenarioService:
         return draft
 
     async def create_empty(self, title: str = "未命名 Scenario") -> ScenarioDraft:
-        draft = ScenarioDraft(id=uid("scn"), title=title)
+        from ..domain.mechanic_spec import validate_mechanics, CONFIGS
+        draft = ScenarioDraft(id=uid("scn"), title=title, mechanics=validate_mechanics({k: {"enabled": False} for k in CONFIGS}))
         await self.save_draft(draft)
         return draft
 
     async def create_from_idea(self, idea: str) -> ScenarioDraft:
-        """Scenario Authoring Skill：从创作想法生成完整草案。"""
-        _, rec, resp = await self.router.call_text(
-            "authoring",
-            messages=[{"role": "user", "content": f"idea: {idea}"}],
-            output_contract={"purpose": "authoring_draft"})
-        content = json.loads(resp.content)
-        draft = ScenarioDraft(
-            id=uid("scn"),
-            title=content.get("title", "未命名 Scenario"),
-            description=content.get("description", idea),
-            genre=content.get("genre", ""),
-            tone=content.get("tone", ""),
-            play_style=content.get("play_style", ""),
+        """Model proposes a draft; schema/skill validation precedes persistence."""
+        from ..domain.mechanic_spec import validate_mechanics
+        prompt = (
+            "为用户生成完整中文故事草案，只返回 JSON，每个文本字段尽量不超过60字。description 是面向玩家的公开简介，不能泄露 truth_model/secrets 中的隐藏真相。"
+            "字段：title,description,genre,tone,play_style,player_character(角色ID),"
+            "world:{rules,lore,locations(每行id｜名称),constraints},"
+            "drama:{core_question,central_conflict,truth_model(每行fact_id：真相),secrets,misbeliefs,"
+            "pressures(名称｜来源｜故事时间推进),anchors,ending_families(id｜描述),foreshadows,"
+            "forbidden_outcomes,timed_interactions},"
+            "characters:[{id,identity,personality,desire,fear,secrets,knowledge,relationship,visual_state}]。"
+            "角色至少包含player和一位具名NPC，勿照搬其他故事。"
+            "未明确玩法时 mechanics 留空对象 {}。只允许 relationship/clue-system/inventory/qte，"
+            "如需启用则值为 {enabled:true,config:{}}，绝不创造其他 Skill。"
+            "保留用户已经明确的真相、冲突、压力与限制，不擅自反转。所有 world/drama 子字段都是字符串，不是数组。pressure 的驱动只能是行动触发或故事时间推进。timed_interactions 默认为空字符串，故事时间的期限不是现实倒计时；如果启用 qte 才使用 id｜qte｜秒｜超时结果。"
         )
-        from ..domain.schemas import DramaSpec, WorldSpec
-        if content.get("world"):
-            draft.world = WorldSpec(**{k: v for k, v in content["world"].items()
-                                       if k in WorldSpec.model_fields})
-        if content.get("drama"):
-            draft.drama = DramaSpec(**{k: v for k, v in content["drama"].items()
-                                       if k in DramaSpec.model_fields})
-        if content.get("characters"):
-            from ..domain.schemas import ScenarioCharacter
-            draft.characters = [
-                ScenarioCharacter(**{k: v for k, v in c.items()
-                                     if k in ScenarioCharacter.model_fields})
-                for c in content["characters"] if isinstance(c, dict) and c.get("id")
-            ]
-        await tracer.emit("authoring.draft", "success",
-                          input_={"idea": idea[:120]}, output={"title": draft.title},
-                          provider=rec.selected or "")
+        messages = [{"role": "system", "content": prompt}, {"role": "user", "content": f"idea: {idea}"}]
+        for attempt in range(2):
+            _, rec, resp = await self.router.call_text("authoring", messages=messages,
+                output_contract={"purpose": "authoring_draft"}, budget={"max_tokens": 4096, "reasoning_effort": "low"})
+            try:
+                content = decode_object(resp.content)
+                # Lossless representation repair: string arrays become newline text.
+                for section in (content.get("world"), content.get("drama"), *(content.get("characters") or [])):
+                    if isinstance(section, dict):
+                        for key, value in section.items():
+                            if isinstance(value, list) and all(isinstance(v, str) for v in value):
+                                section[key] = "\n".join(value)
+                keys = ("title", "description", "genre", "tone", "play_style", "player_character", "world", "drama", "characters", "mechanics", "theme")
+                draft = ScenarioDraft.model_validate({**{k: v for k, v in content.items() if k in keys}, "id": uid("scn"), "authoring_intent": idea})
+                if draft.characters and draft.player_character not in {c.id for c in draft.characters}:
+                    draft.player_character = draft.characters[0].id
+                from ..domain.mechanic_spec import CONFIGS
+                draft.mechanics = validate_mechanics({**{k: {"enabled": False} for k in CONFIGS}, **draft.mechanics})
+                for line in draft.drama.timed_interactions.splitlines():
+                    parts = line.split("｜")
+                    if line.strip() and (len(parts) < 4 or parts[1] not in ("qte", "urgent_dialogue") or not parts[2].isdigit()):
+                        raise ValueError("timed_interactions 必须为空字符串，或 id｜qte｜秒｜超时结果。普通故事时间期限不是现实倒计时。")
+                if not (draft.description.strip() and draft.world.rules.strip() and draft.world.locations.strip()
+                        and draft.characters and draft.drama.core_question.strip() and draft.drama.truth_model.strip()
+                        and draft.drama.pressures.strip() and draft.drama.ending_families.strip()):
+                    raise ValueError("草案缺少必要的故事描述、世界、角色、核心问题、真相、压力或结局。不得返回空对象。")
+                break
+            except (ValueError, TypeError, AttributeError) as error:
+                await tracer.emit("authoring.draft_schema", "failed", input_={"idea": idea},
+                    output={"raw_output": resp.content, "error": str(error), "attempt": attempt + 1},
+                    provider=rec.selected or "", model=resp.model)
+                if attempt:
+                    raise
+                messages += [{"role": "assistant", "content": resp.content}, {"role": "user", "content": "仅修复格式并保留故事语义。校验错误：" + str(error)}]
+        await tracer.emit("authoring.draft", "success", input_={"idea": idea},
+                          output={"scenario_id": draft.id, "title": draft.title, "raw_output": resp.content},
+                          provider=rec.selected or "", model=resp.model, duration_ms=resp.latency_ms,
+                          skill_id="scenario-authoring", skill_version="1.0.0")
         await self.save_draft(draft)
         return draft
 
@@ -109,8 +135,7 @@ class ScenarioService:
             if not path or any(path == lock or path.startswith(lock + ".")
                                or path.startswith(lock + "[") for lock in draft.locks):
                 continue
-            if not (path.startswith(self._PATCHABLE_PREFIXES)
-                    or path.startswith("characters[")):
+            if not (path in ("description", "title", "genre", "tone", "play_style") or path.startswith(("drama.", "world.", "theme.", "characters.", "mechanics.", "characters["))):
                 continue
             before = self._get_path(draft, path)
             ok = self._set_path(draft, path, after)
@@ -125,51 +150,50 @@ class ScenarioService:
 
     @staticmethod
     def _get_path(draft: ScenarioDraft, path: str):
-        """读取点路径：drama.core_question / world.rules / characters[0].desire / title。"""
         try:
-            obj: object = draft
+            obj = draft.model_dump(mode="json")
             for part in ScenarioService._split_path(path):
-                if isinstance(part, int):
-                    obj = obj[part]  # type: ignore[index]
-                else:
-                    obj = getattr(obj, part)
+                obj = obj[part]
             return obj
-        except Exception:
+        except (KeyError, IndexError, TypeError, ValueError):
             return None
 
     @staticmethod
-    def _set_path(draft: ScenarioDraft, path: str, value) -> bool:
-        parts = ScenarioService._split_path(path)
-        if not parts:
-            return False
-        try:
-            obj: object = draft
-            for part in parts[:-1]:
-                obj = obj[part] if isinstance(part, int) else getattr(obj, part)
-            last = parts[-1]
-            if isinstance(last, int):
-                obj[last] = value  # type: ignore[index]
-            else:
-                if not hasattr(obj, last):
-                    return False
-                setattr(obj, last, value)
-            return True
-        except Exception:
-            return False
+    def _split_path(path: str) -> list:
+        import re
+        if not re.fullmatch(r"[a-z_][a-z_0-9-]*(?:\[\d+\])?(?:\.[a-z_][a-z_0-9-]*(?:\[\d+\])?)*", path):
+            raise ValueError("无效字段路径")
+        return [int(p) if p.isdigit() else p for p in re.findall(r"[a-z_][a-z_0-9-]*|\d+", path)]
 
     @staticmethod
-    def _split_path(path: str) -> list:
-        """"characters[0].desire" → ["characters", 0, "desire"]。"""
-        import re as _re
-        out: list = []
-        for seg in path.split("."):
-            m = _re.match(r"^(\w+)(?:\[(\d+)\])?$", seg)
-            if not m:
-                continue
-            out.append(m.group(1))
-            if m.group(2) is not None:
-                out.append(int(m.group(2)))
-        return out
+    def validate_patch(draft, path, value):
+        data = draft.model_dump(mode="json")
+        parts = ScenarioService._split_path(path)
+        obj = data
+        for part in parts[:-1]:
+            obj = obj[part]
+        if isinstance(obj, dict) and parts[-1] not in obj and parts[0] != "mechanics":
+            raise ValueError("未知字段")
+        obj[parts[-1]] = value
+        candidate = ScenarioDraft.model_validate(data)
+        if path == "drama.timed_interactions":
+            for line in candidate.drama.timed_interactions.splitlines():
+                parts = line.split("｜")
+                if line.strip() and (len(parts) != 4 or parts[1] not in ("qte", "urgent_dialogue") or not parts[2].isdigit() or not 1 <= int(parts[2]) <= 120 or not parts[3].strip()):
+                    raise ValueError("限时事件必须为 id｜qte 或 urgent_dialogue｜1至120秒｜明确超时结果。第二段必须是 qte 或 urgent_dialogue，不能用中文场景名。")
+        from ..domain.mechanic_spec import validate_mechanics
+        candidate.mechanics = validate_mechanics(candidate.mechanics)
+        return candidate
+
+    @staticmethod
+    def _set_path(draft, path, value):
+        try:
+            candidate = ScenarioService.validate_patch(draft, path, value)
+            root = ScenarioService._split_path(path)[0]
+            setattr(draft, root, getattr(candidate, root))
+            return True
+        except (ValueError, KeyError, TypeError, IndexError):
+            return False
 
     async def apply_instruction(self, scenario_id: str, instruction: str) -> ScenarioDraft:
         """Scenario Authoring Skill 修改路径：指令 → typed patches → 校验应用（G16）。"""
@@ -178,11 +202,11 @@ class ScenarioService:
             raise KeyError(scenario_id)
         _, rec, resp = await self.router.call_text(
             "authoring",
-            messages=[{"role": "user", "content":
+            messages=[{"role": "system", "content": '输出 JSON {"patches":[{"path":"drama.core_question","after":"新内容","reason":"原因"}]}。只修改指令明确要求且未被 locks 锁定的字段。'}, {"role": "user", "content":
                        f"instruction: {instruction}\n"
-                       f"draft_summary: {json.dumps({'title': draft.title, 'description': draft.description, 'drama': draft.drama.model_dump(), 'world': draft.world.model_dump()}, ensure_ascii=False)[:2000]}"}],
-            output_contract={"purpose": "authoring_patch"})
-        content = json.loads(resp.content)
+                       f"draft_summary: {json.dumps(draft.model_dump(exclude={"changes", "creator_projection"}), ensure_ascii=False)}"}],
+            output_contract={"purpose": "authoring_patch"}, budget={"max_tokens": 4096, "reasoning_effort": "low"})
+        content = decode_object(resp.content)
         patches = content.get("patches")
         applied: list[dict] = []
         if isinstance(patches, list) and patches:
@@ -190,7 +214,7 @@ class ScenarioService:
         if not applied:
             # 兼容旧 contract：after 只写 description
             after = content.get("after", "")
-            if after:
+            if after and "description" not in draft.locks:
                 entry = {"path": "description", "before": draft.description,
                          "after": after, "reason": instruction[:120],
                          "source": "instruct", "at": now_ms()}
@@ -247,8 +271,12 @@ class ScenarioService:
             "绑定全局角色需记录版本号")
         add("char_assets", "角色 Canonical 资产", True,
             "绑定全局角色必须存在 Canonical 主资产")
-        mechanics_ok = all(isinstance(k, str) and hasattr(v, "enabled")
-                           for k, v in draft.mechanics.items())
+        try:
+            from ..domain.mechanic_spec import validate_mechanics
+            validate_mechanics(draft.mechanics)
+            mechanics_ok = True
+        except ValueError:
+            mechanics_ok = False
         add("mechanics", "玩法机制", mechanics_ok,
             "玩法机制配置格式无效" if not mechanics_ok else "")
         return checks
@@ -280,14 +308,17 @@ class ScenarioService:
                             select(CharacterVersionRow).where(CharacterVersionRow.character_id.in_(bound_ids))
                         )).scalars().all()
                         version_ids = {v.id for v in versions}
+                        pinned_missing = [c.global_character_id for c in draft.characters if c.global_character_id and not any(v.character_id == c.global_character_id and v.version == c.global_character_version for v in versions)]
                         invalid_snapshot = [g.id for g in globals_ if not g.data.get("current_version_id")
-                                            or g.data.get("current_version_id") not in version_ids]
+                                            or g.data.get("current_version_id") not in version_ids] + pinned_missing
                         canonical = (await db.execute(
                             select(CharacterAssetRow).where(
                                 CharacterAssetRow.character_id.in_(bound_ids),
                                 CharacterAssetRow.status == "CANONICAL")
                         )).scalars().all()
-                        invalid_assets = [g.id for g in globals_ if not any(a.character_id == g.id for a in canonical)]
+                        invalid_assets = [c.global_character_id for c in draft.characters if c.global_character_id and not any(
+                            v.character_id == c.global_character_id and v.version == c.global_character_version
+                            and any(v.data.get("canonical_asset_refs", {}).values()) for v in versions)]
                     for check in checks:
                         if check["id"] == "char_snapshot" and invalid_snapshot:
                             check["ok"] = False
@@ -410,7 +441,13 @@ class CharacterService:
                 row = await db.get(GlobalCharacterRow, character_id)
                 if row is None:
                     raise KeyError(character_id)
+                from ..domain.schemas import GlobalCharacter
+                editable = set(GlobalCharacter.model_fields) - {"id", "version", "current_version_id", "created_at", "updated_at"}
+                patch = {k: v for k, v in patch.items() if k in editable}
                 data = {**row.data, **patch, "id": character_id, "updated_at": now_ms()}
+                validated = GlobalCharacter.model_validate(data)
+                if not validated.name.strip() or not validated.bio.strip():
+                    raise ValueError("请填写名字和一句话角色定义")
                 row.data = data
                 row.name = data.get("name", row.name)
                 row.version += 1          # 版本递增；已绑定 Scenario 不自动更新（快照隔离）

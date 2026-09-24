@@ -28,6 +28,8 @@ class Arc(BaseModel):
     seq: int
     status: str = "ACTIVE"                    # ACTIVE / CLOSED
     ending_family: Optional[str] = None
+    question: str = ""
+    conflict: str = ""
     started_at: int = Field(default_factory=now_ms)
     closed_at: Optional[int] = None
 
@@ -96,6 +98,7 @@ class SessionState(BaseModel):
     wishes: list[Wish] = Field(default_factory=list)
     wish_seq: int = 0
 
+    text_mode: bool = False
     player: PlayerState = Field(default_factory=PlayerState)
     budget: BudgetLedger = Field(default_factory=BudgetLedger)
     timed: TimedState = Field(default_factory=TimedState)

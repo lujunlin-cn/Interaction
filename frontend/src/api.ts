@@ -35,6 +35,13 @@ export const api = {
     req<ScenarioDraft>(`/api/scenarios/${draft.id}`, { method: "PUT", body: JSON.stringify(draft) }),
   instructScenario: (id: string, instruction: string) =>
     req<ScenarioDraft>(`/api/scenarios/${id}/instruct`, { method: "POST", body: JSON.stringify({ instruction }) }),
+  creatorUnderstanding: (id: string, scope: string, instruction = "", characterId = "") =>
+    req<any>(`/api/scenarios/${id}/understanding`, { method: "POST", body: JSON.stringify({ scope, instruction, character_id: characterId }) }),
+  confirmUnderstanding: (id: string, projectionId: string, answers: Record<string, unknown>) =>
+    req<ScenarioDraft>(`/api/scenarios/${id}/understanding/confirm`, { method: "POST", body: JSON.stringify({ projection_id: projectionId, answers }) }),
+  promoteStoryCharacter: (sid: string, cid: string) => req<CharacterVersion>(`/api/scenarios/${sid}/characters/${cid}/promote`, { method: "POST" }),
+  characterUnderstanding: (cid: string) => req<Record<string, string>>(`/api/characters/${cid}/understanding`, { method: "POST" }),
+  describeCharacter: (cid: string) => req<{appearance: string}>(`/api/characters/${cid}/ai-describe`, { method: "POST" }),
   publishScenario: (id: string, opts: { reviewed: boolean; play?: boolean }) =>
     req<{ version_id: string; version: string; session_id?: string; checklist?: PublishCheck[] }>(
       `/api/scenarios/${id}/publish`,
@@ -136,7 +143,7 @@ export const api = {
   cancelGeneration: (sid: string) =>
     req<{ status: string; count?: number }>(`/api/sessions/${sid}/cancel`, { method: "POST" }),
   playerCommand: (sid: string, command: string) =>
-    req<{ position: number; status: string }>(`/api/sessions/${sid}/player`, { method: "POST", body: JSON.stringify({ command }) }),
+    req<{ position: number; status: string; needs_action?: boolean; raw_text?: string }>(`/api/sessions/${sid}/player`, { method: "POST", body: JSON.stringify({ command }) }),
   commitReceipt: (sid: string) => req(`/api/sessions/${sid}/receipt`, { method: "POST" }),
   addWish: (sid: string, text: string) =>
     req(`/api/sessions/${sid}/wishes`, { method: "POST", body: JSON.stringify({ text }) }),

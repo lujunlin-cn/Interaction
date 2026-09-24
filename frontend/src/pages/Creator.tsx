@@ -1,7 +1,9 @@
 /** Creator：概览（AI 创作）/ 世界 / 角色 / 戏剧结构 / 玩法机制 / 主题 / 发布 / 变更记录。 */
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { api } from "../api";
 import { setState, toast, useUi } from "../store";
+import StoryUnderstanding, { DRAMA_GROUPS, FIELD_LABELS, readable, typedText } from "../components/StoryUnderstanding";
+import CharacterProfile from "../components/CharacterProfile";
 import type { GlobalCharacter, PublishCheck, ScenarioCharacter, ScenarioDraft } from "../types";
 
 const MECHANIC_LABELS: Record<string, string> = {
@@ -23,8 +25,10 @@ const DRAMA_FIELDS: Array<[keyof ScenarioDraft["drama"], string, string]> = [
 
 export default function Creator() {
   const ui = useUi();
+  const saveQueue = useRef<Promise<unknown>>(Promise.resolve());
+  const saveSequence = useRef(0);
   const [draft, setDraft] = useState<ScenarioDraft | null>(null);
-  const [idea, setIdea] = useState("创建一个发生在雨夜公寓里的悬疑故事，玩家可以调查、关心 Alice，也可以选择离开。");
+  const [idea, setIdea] = useState("");
   const [authoring, setAuthoring] = useState(false);
   const [globals, setGlobals] = useState<GlobalCharacter[]>([]);
   const [versions, setVersions] = useState<{ version_id: string; version: string; created_at: number }[]>([]);
@@ -42,8 +46,12 @@ export default function Creator() {
 
   const save = async (next: ScenarioDraft, note?: string) => {
     setDraft(next);
+    const sequence = ++saveSequence.current;
+    const request = saveQueue.current.catch(() => {}).then(() => api.saveScenario(next));
+    saveQueue.current = request;
     try {
-      await api.saveScenario(next);
+      const saved = await request;
+      if (sequence === saveSequence.current) setDraft(saved);
       if (note) toast(note);
     } catch (e: any) {
       toast(`保存失败：${e.message}`);
@@ -56,7 +64,7 @@ export default function Creator() {
       {ui.creatorTab === "overview" && (
         <>
           <div className="card">
-            <h3>AI Scenario Creation</h3>
+            <h3>让 AI 帮你完善故事</h3>
             <label>
               <span>用一句话描述你的故事</span>
               <textarea value={idea} onChange={(e) => setIdea(e.target.value)} />
@@ -66,20 +74,22 @@ export default function Creator() {
                 setAuthoring(true);
                 try {
                   const created = await api.createScenario(idea);
-                  toast("草案已生成。已上传素材、手工编辑及锁定字段均保留。");
+                  setDraft(created);
+                  toast("已生成新的故事草案，请确认 AI 的理解。");
                   setState({ editId: created.id, creatorTab: "drama" });
                 } catch (e: any) {
                   toast(`生成失败：${e.message}`);
                 } finally {
                   setAuthoring(false);
                 }
-              }}>Generate Scenario</button>
+              }}>理解我的故事</button>
               {authoring && <span className="muted">正在生成草案…</span>}
               <span className="muted">生成可编辑草案，不预生成整个分支树。</span>
             </div>
           </div>
-          <div className="card">
-            <h3>Overview</h3>
+          {draft.description && <StoryUnderstanding key={draft.id} draft={draft} onDraft={setDraft} />}
+          <details><summary>故事基本信息</summary><div className="card">
+            <h3>故事概览</h3>
             <label><span>Title / 标题</span>
               <input value={draft.title} onChange={(e) => patch({ title: e.target.value })} /></label>
             <label><span>Description / 简介</span>
@@ -98,6 +108,7 @@ export default function Creator() {
                 {draft.characters.map((c) => <option key={c.id} value={c.id}>{c.identity}</option>)}
               </select></label>
           </div>
+          </details>
           <InstructCard draft={draft} onDraft={setDraft} />
         </>
       )}
@@ -107,9 +118,9 @@ export default function Creator() {
           <h3>世界</h3>
           {(["rules", "lore", "locations", "constraints"] as const).map((k) => (
             <label key={k}><span>{({ rules: "World Rules / 世界规则", lore: "Lore / 背景设定",
-              locations: "Locations / 地点（每行：id｜名称）", constraints: "Constraints / 约束" } as const)[k]}</span>
-              <textarea value={draft.world[k]}
-                onChange={(e) => patch({ world: { ...draft.world, [k]: e.target.value } })} /></label>
+              locations: ui.mode === "developer" ? "Locations / 地点（每行：id｜名称）" : "故事发生的地点", constraints: "Constraints / 约束" } as const)[k]}</span>
+              <textarea value={ui.mode === "standard" && k === "locations" ? readable(draft.world[k]) : draft.world[k]}
+                onChange={(e) => patch({ world: { ...draft.world, [k]: ui.mode === "standard" && k === "locations" ? e.target.value.split("\n").map((v, i) => `${draft.world.locations.split("\n")[i]?.split("｜")[0] || `location_${i}`}｜${v}`).join("\n") : e.target.value } })} /></label>
           ))}
         </div>
       )}
@@ -119,47 +130,30 @@ export default function Creator() {
           selectedId={ui.characterId} onSelect={(id) => setState({ characterId: id })} />
       )}
 
-      {ui.creatorTab === "drama" && (
-        <div className="card">
-          <h3>戏剧结构</h3>
-          {DRAMA_FIELDS.map(([k, label, hint]) => (
-            <label key={k}><span>{label}</span>
-              <textarea value={draft.drama[k]} placeholder={hint}
-                onChange={(e) => patch({ drama: { ...draft.drama, [k]: e.target.value } })} /></label>
-          ))}
-        </div>
-      )}
+      {ui.creatorTab === "drama" && (ui.mode === "developer" ? <div className="card"><h3>DramaSpec</h3>
+        {DRAMA_FIELDS.map(([k, label, hint]) => <label key={k}><span>{label}</span><textarea value={draft.drama[k]} placeholder={hint} onChange={e => patch({ drama: { ...draft.drama, [k]: e.target.value } })} /></label>)}
+      </div> : <>
+        <StoryUnderstanding key={draft.id} draft={draft} onDraft={setDraft} />
+        {DRAMA_GROUPS.map(([title, fields]) => <section className="card" key={title}><h3>{title}</h3>
+          {fields.map(k => draft.drama[k] ? <NaturalField key={k} label={FIELD_LABELS[k]} value={draft.drama[k]} path={`drama.${k}`} onSave={v => patch({ drama: { ...draft.drama, [k]: v } })} /> : null)}
+        </section>)}
+        <details><summary>高级戏剧控制</summary><div>{(["foreshadows", "timed_interactions"] as const).map(k => <p key={k}><b>{FIELD_LABELS[k]}：</b>{readable(draft.drama[k]) || "尚未设置，可通过补充想法让 AI 建议。"}</p>)}</div></details>
+      </>)}
 
-      {ui.creatorTab === "mechanics" && (
-        <div className="card">
-          <h3>玩法机制</h3>
-          <p className="muted">只有已审核的四种机制可选；它们在游玩中以「{Object.values(MECHANIC_LABELS).join(" / ")}」的自然名称出现。</p>
-          {(["relationship", "clue-system", "inventory", "qte"] as const).map((k) => {
-            const m = draft.mechanics[k] ?? { enabled: false, config: {} };
-            return (
-              <div key={k} className="notice">
-                <label style={{ display: "flex", gap: 8, alignItems: "center", margin: 0 }}>
-                  <input type="checkbox" style={{ width: "auto" }} checked={m.enabled}
-                    onChange={(e) => patch({
-                      mechanics: { ...draft.mechanics, [k]: { ...m, enabled: e.target.checked } },
-                    })} />
-                  <b>{MECHANIC_LABELS[k]}</b>
-                </label>
-                {m.enabled && (
-                  <textarea style={{ marginTop: 8 }} rows={2}
-                    value={JSON.stringify(m.config)}
-                    onChange={(e) => {
-                      try {
-                        const config = JSON.parse(e.target.value || "{}");
-                        patch({ mechanics: { ...draft.mechanics, [k]: { ...m, config } } });
-                      } catch { /* 等用户输完合法 JSON */ }
-                    }} />
-                )}
-              </div>
-            );
-          })}
+      {ui.creatorTab === "mechanics" && <>
+        <StoryUnderstanding key={`${draft.id}:mechanics`} draft={draft} scope="mechanics" onDraft={setDraft} />
+        <div className="understanding-grid">
+          {Object.entries(draft.mechanics).filter(([, m]) => m.enabled).map(([k, m]) => <section key={k} className="card">
+            <h3>{m.title || MECHANIC_LABELS[k]}</h3><p>{m.tutorial || "这项玩法已启用，可通过上方描述调整规则。"}</p>
+            <div className="toolbar"><button onClick={() => document.querySelector<HTMLTextAreaElement>('[aria-label="补充创作想法"]')?.focus()}>调整</button>
+              <button onClick={() => patch({ mechanics: { ...draft.mechanics, [k]: { ...m, enabled: false } } })}>移除</button></div>
+            {ui.mode === "developer" && <details><summary>Skill / version / config / trigger / StatePatch</summary><pre>{JSON.stringify(m, null, 2)}</pre><textarea defaultValue={JSON.stringify(m.config)} onBlur={e => {
+              try { const config = JSON.parse(e.target.value); void patch({ mechanics: { ...draft.mechanics, [k]: { ...m, config } } }); } catch { toast("JSON 格式无效"); }
+            }} /></details>}
+          </section>)}
         </div>
-      )}
+        <button onClick={() => document.querySelector<HTMLTextAreaElement>('[aria-label="补充创作想法"]')?.focus()}>＋ 添加一种玩法</button>
+      </>}
 
       {ui.creatorTab === "theme" && (
         <div className="card">
@@ -237,12 +231,12 @@ export default function Creator() {
               <tbody>
                 {[...draft.changes].reverse().map((c, i) => (
                   <tr key={i}>
-                    <td className="mono">{c.path}</td>
+                    <td>{ui.mode === "developer" ? c.path : FIELD_LABELS[c.path.split(".").slice(-1)[0]] || "故事设定"}</td>
                     <td style={{ maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis" }}>
-                      {String(c.before ?? "—").slice(0, 80)}</td>
+                      {readable(c.before ?? "—").slice(0, 80)}</td>
                     <td style={{ maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis" }}>
-                      {String(c.after ?? "—").slice(0, 80)}</td>
-                    <td>{c.source === "instruct" ? "AI 指令" : "人工编辑"}{c.reason ? `：${c.reason}` : ""}</td>
+                      {readable(c.after ?? "—").slice(0, 80)}</td>
+                    <td>{c.source === "confirmed_ai" ? "AI 建议·已确认" : c.source === "instruct" ? "AI 指令" : "人工编辑"}{c.reason ? `：${c.reason}` : ""}</td>
                     <td>{new Date(c.at).toLocaleString()}</td>
                   </tr>
                 ))}
@@ -250,7 +244,7 @@ export default function Creator() {
             </table>
           )}
           <p className="muted" style={{ marginTop: 10 }}>
-            锁定字段：{draft.locks.length ? draft.locks.join("、") : "无"}；锁定字段 AI 指令不会改写。
+            锁定内容：{draft.locks.length ? ui.mode === "developer" ? draft.locks.join("、") : `${draft.locks.length} 项` : "无"}；锁定字段 AI 指令不会改写。
           </p>
         </div>
       )}
@@ -295,6 +289,7 @@ function PublishTab({ draft, versions, onPublished }: {
   versions: { version_id: string; version: string; created_at: number }[];
   onPublished: () => Promise<void>;
 }) {
+  const developer = useUi().mode === "developer";
   const [checklist, setChecklist] = useState<PublishCheck[] | null>(null);
   const [reviewed, setReviewed] = useState(false);
   const [err, setErr] = useState("");
@@ -316,7 +311,7 @@ function PublishTab({ draft, versions, onPublished }: {
       // 422 detail 含 checklist
       const detail = e?.detail || e?.message || String(e);
       if (e?.detail?.checklist) setChecklist(e.detail.checklist);
-      setErr(typeof detail === "string" ? detail : (detail.message || "发布被 Gate 拦截"));
+      setErr(typeof detail === "string" ? detail : (detail.message || "发布检查未通过"));
     }
   };
 
@@ -330,7 +325,7 @@ function PublishTab({ draft, versions, onPublished }: {
             <div key={c.id} className="row" style={{ gap: 6 }}>
               <span className={`badge ${c.ok ? "ok" : "err"}`}>{c.ok ? "PASS" : "FIX"}</span>
               <span className="grow">{c.label}</span>
-              {c.detail && <span className="muted">{c.detail}</span>}
+              {c.detail && !c.ok && <span className="muted">{developer ? c.detail : "请补充或检查这项内容"}</span>}
             </div>
           ))}
         </div>
@@ -343,7 +338,7 @@ function PublishTab({ draft, versions, onPublished }: {
       {err && <div className="notice warn">{err}</div>}
       <div className="toolbar">
         <button className="primary" disabled={!reviewed || !allOk}
-          onClick={() => publish(false)}>发布 v{nextVersion(versions)}</button>
+          onClick={() => publish(false)}>发布新版本</button>
         <button disabled={!reviewed || !allOk}
           onClick={() => publish(true)}>发布并试玩</button>
         <span className="muted">发布后形成不可变版本；已有会话不受影响。</span>
@@ -352,13 +347,13 @@ function PublishTab({ draft, versions, onPublished }: {
       <h4>版本历史</h4>
       {versions.length === 0 ? <div className="empty">尚未发布。</div> : (
         <table className="dev">
-          <thead><tr><th>版本</th><th>发布时间</th><th>版本 ID</th></tr></thead>
+          <thead><tr><th>版本</th><th>发布时间</th>{developer && <th>版本 ID</th>}</tr></thead>
           <tbody>
             {versions.map((v) => (
               <tr key={v.version_id}>
                 <td>v{v.version}</td>
                 <td>{new Date(v.created_at).toLocaleString()}</td>
-                <td className="mono">{v.version_id}</td>
+                {developer && <td className="mono">{v.version_id}</td>}
               </tr>
             ))}
           </tbody>
@@ -380,8 +375,17 @@ function CharactersTab({ draft, globals, onSave, selectedId, onSelect }: {
   selectedId: string | null; onSelect: (id: string) => void;
 }) {
   const [pickGlobal, setPickGlobal] = useState("");
+  const [inherited, setInherited] = useState<Record<string, any>>({});
   const selected = draft.characters.find((c) => c.id === selectedId) ?? draft.characters[0];
 
+  useEffect(() => {
+    setInherited({});
+    if (selected?.global_character_id) api.characterVersions(selected.global_character_id).then(({ items }) => {
+      const core = items.find(v => v.version === selected.global_character_version)?.identity_spec;
+      if (core) setInherited({ identity: core.name, personality: core.personality, visual_state: core.appearance,
+        ...Object.fromEntries(["desire", "fear", "secrets", "knowledge", "relationship"].map(k => [k, core[`default_${k}`]])) });
+    });
+  }, [selected?.id, selected?.global_character_version]);
   const updateChar = (patch: Partial<ScenarioCharacter>) => {
     const chars = draft.characters.map((c) => (c.id === selected?.id ? { ...c, ...patch } : c));
     onSave({ ...draft, characters: chars });
@@ -399,10 +403,12 @@ function CharactersTab({ draft, globals, onSave, selectedId, onSelect }: {
           <button className="small" disabled={!pickGlobal} onClick={() => {
             const g = globals.find((x) => x.id === pickGlobal);
             if (!g) return;
+            const bound = draft.characters.find(c => c.global_character_id === g.id);
+            if (bound) { onSelect(bound.id); return; }
             const instance: ScenarioCharacter = {
               id: `char_${g.id.slice(-6)}`, identity: g.name, personality: g.personality,
-              desire: "", fear: "", secrets: "", knowledge: "", relationship: "",
-              visual_state: "", global_character_id: g.id, global_character_version: g.version,
+              desire: g.default_desire || "", fear: g.default_fear || "", secrets: g.default_secrets || "", knowledge: g.default_knowledge || "", relationship: g.default_relationship || "",
+              visual_state: g.appearance || "", global_character_id: g.id, global_character_version: g.version,
             };
             onSave({ ...draft, characters: [...draft.characters, instance] }, "已按角色库快照创建故事角色。");
           }}>添加</button>
@@ -428,16 +434,11 @@ function CharactersTab({ draft, globals, onSave, selectedId, onSelect }: {
         <div className="card">
           <h3>{selected.identity}</h3>
           <GlobalBindingPanel character={selected} globals={globals} onUpdate={updateChar} />
-          <div className="two">
-            {([["identity", "本故事身份"], ["personality", "人格表现"], ["desire", "Desire / 欲望"],
-              ["fear", "Fear / 恐惧"], ["secrets", "Secrets / 秘密"], ["knowledge", "Knowledge / 已知"],
-              ["relationship", "Relationships / 关系"], ["visual_state", "当前 Visual State"],
-            ] as Array<[keyof ScenarioCharacter, string]>).map(([k, label]) => (
-              <label key={k}><span>{label}</span>
-                <textarea rows={2} value={String(selected[k] ?? "")}
-                  onChange={(e) => updateChar({ [k]: e.target.value } as any)} /></label>
-            ))}
-          </div>
+          <StoryUnderstanding key={`${draft.id}:${selected.id}`} draft={draft} scope="character" characterId={selected.id} onDraft={onSave} />
+          <CharacterProfile scope="scenario" values={selected} inherited={inherited} onChange={updateChar}
+            onPromote={selected.global_character_id ? async () => {
+              try { const v = await api.promoteStoryCharacter(draft.id, selected.id); toast(`已保存为全局角色 v${v.version}；本故事仍保留原版本。`); } catch (e: any) { toast(e.message); }
+            } : undefined} extras={{ "声音与动作": selected.global_character_id ? <button onClick={() => setState({ page: "characterLibrary", globalCharacterId: selected.global_character_id! })}>在角色库查看声音与动作</button> : <p className="muted">绑定全局角色后可继承声音与动作参考。</p> }} />
           <button className="danger small" onClick={() => {
             onSave({ ...draft, characters: draft.characters.filter((c) => c.id !== selected.id) });
           }}>删除这个角色</button>
@@ -451,12 +452,16 @@ function GlobalBindingPanel({ character, globals, onUpdate }: {
   character: ScenarioCharacter; globals: GlobalCharacter[];
   onUpdate: (patch: Partial<ScenarioCharacter>) => void;
 }) {
+  const [diff, setDiff] = useState<any>(null);
   const g = globals.find((x) => x.id === character.global_character_id);
   if (!g) {
     return (
       <div className="character-origin-panel">
         <div className="row"><b className="grow">故事角色</b><span className="badge">未绑定角色库</span></div>
-        <p className="muted">这个角色只存在于当前故事。你可以保留它，也可以从全局角色库选择一个角色创建新的故事实例。</p>
+        <p className="muted">这个角色只存在于当前故事。绑定角色库后，故事内的动机、秘密和外观仍只属于本故事。</p>
+        <select aria-label="绑定全局角色" value="" onChange={e => { const picked = globals.find(x => x.id === e.target.value); if (picked) onUpdate({ global_character_id: picked.id, global_character_version: picked.version }); }}>
+          <option value="">选择要继承的全局角色…</option>{globals.map(item => <option value={item.id} key={item.id}>{item.name} · v{item.version}</option>)}
+        </select>
       </div>
     );
   }
@@ -473,21 +478,27 @@ function GlobalBindingPanel({ character, globals, onUpdate }: {
           {hasUpdate ? "角色库存在新版本" : "角色快照已固定"}
         </span>
       </div>
+      {diff && <div className="notice">{Object.entries(diff.field_diffs || {}).map(([k, v]: [string, any]) => <p key={k}>{FIELD_LABELS[k.replace("default_", "")] || (k === "appearance" ? "外观" : "角色资料")}：{readable(v.before) || "未设置"} → {readable(v.after) || "未设置"}</p>)}<p>参考图变化：{Object.keys(diff.asset_diffs || {}).length} 项</p></div>}
       {hasUpdate && (
         <div className="row" style={{ marginTop: 12 }}>
-          <button className="small" onClick={() =>
-            alert(`角色库当前版本：v${g.version}\n简介：${g.bio}\n人格：${g.personality}`)}>
+          <button className="small" onClick={() => api.characterVersionDiff(g.id, character.global_character_version || 1, g.version).then(setDiff).catch(e => toast(e.message))}>
             查看变化
           </button>
           <button className="primary small" onClick={() =>
-            onUpdate({ global_character_version: g.version, personality: g.personality || character.personality })}>
+            onUpdate({ global_character_version: g.version })}>
             更新到新版本
           </button>
-          <button className="small" onClick={() => onUpdate({ global_character_version: g.version })}>
+          <button className="small" onClick={() => toast("继续使用当前版本，本故事没有更新。")}>
             继续使用当前版本
           </button>
         </div>
       )}
     </div>
   );
+}
+
+function NaturalField({ label, value, path, onSave }: {label: string; value: string; path: string; onSave: (s: string) => void}) {
+  const [editing, setEditing] = useState(false);
+  const [text, setText] = useState("");
+  return <div className="character-understanding"><b>{label}</b>{editing ? <><textarea value={text} onChange={e => setText(e.target.value)} /><button onClick={() => { onSave(typedText(path, text, value)); setEditing(false); }}>保存</button></> : <><p>{readable(value)}</p><button className="small" onClick={() => { setText(readable(value)); setEditing(true); }}>修改</button></>}</div>;
 }

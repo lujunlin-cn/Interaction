@@ -117,6 +117,7 @@ export function setDisplay(patch: Partial<DisplayPrefs>) {
 }
 
 export function toast(msg: string) {
+  if (state.mode === "standard" && /pydantic|traceback|validationerror|exception|provider|request[_ ]?id|branch[_ ]?id|schema|https?:|\bJSON\b|\b502\b|\b500\b/i.test(msg)) msg = "这个操作暂时没有完成，请保留输入后重试。";
   setState({ toast: msg });
   window.setTimeout(() => {
     if (getState().toast === msg) setState({ toast: null });
@@ -132,3 +133,5 @@ export function useUi(): UiState {
     () => state,
   );
 }
+
+window.addEventListener("hashchange", () => setState(pageFromHash()));

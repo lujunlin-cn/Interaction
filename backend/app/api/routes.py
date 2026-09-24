@@ -106,7 +106,17 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
     @api.post("/scenarios")
     async def create_scenario(req: IdeaReq | None = None):
         if req and req.idea.strip():
-            draft = await scenarios.create_from_idea(req.idea.strip())
+            try:
+                draft = await scenarios.create_from_idea(req.idea.strip())
+            except Exception as error:
+                await tracer.emit("authoring.draft", "failed", input_={"idea": req.idea}, output={"error": repr(error)})
+                raise HTTPException(502, "故事草案暂时没有生成成功，你的描述可保留后重试。")
+            from ..runtime.creator_projection import propose
+            try:
+                await propose(scenarios, draft.id, "drama")
+                draft = await scenarios.get(draft.id)
+            except Exception as error:
+                await tracer.emit("authoring.projection", "failed", input_={"scenario_id": draft.id}, output={"error": str(error)})
         else:
             draft = await scenarios.create_empty()
         return draft.model_dump(mode="json")
@@ -122,9 +132,15 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
     async def save_scenario(sid: str, draft: dict):
         from ..domain.schemas import ScenarioDraft
         incoming = ScenarioDraft(**{**draft, "id": sid})
+        from ..domain.mechanic_spec import validate_mechanics
+        try:
+            incoming.mechanics = validate_mechanics(incoming.mechanics)
+        except ValueError:
+            raise HTTPException(422, "玩法配置不符合已安装玩法的类型或权限，请检查后保存。")
         # G17：对比旧草案，把人工编辑写入结构化 changes
         old = await scenarios.get(sid)
         if old is not None:
+            incoming.changes = list(old.changes)
             for path in ("title", "description", "genre", "tone", "play_style",
                          "player_character",
                          "world.rules", "world.lore", "world.locations", "world.constraints",
@@ -140,6 +156,12 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
                     incoming.changes.append({
                         "path": path, "before": before, "after": after,
                         "reason": "", "source": "manual", "at": now_ms()})
+            for key in set(old.mechanics) | set(incoming.mechanics):
+                before = old.mechanics[key].model_dump(mode="json") if key in old.mechanics else None
+                after = incoming.mechanics[key].model_dump(mode="json") if key in incoming.mechanics else None
+                if before != after:
+                    incoming.changes.append({"path": f"mechanics.{key}", "before": before,
+                        "after": after, "reason": "", "source": "manual", "at": now_ms()})
             # 角色级差异（按 id 对齐逐字段对比）
             old_chars = {c.id: c for c in old.characters}
             for c in incoming.characters:
@@ -156,7 +178,10 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
                         incoming.changes.append({
                             "path": f"characters[{c.id}].{f}", "before": bv, "after": av,
                             "reason": "", "source": "manual", "at": now_ms()})
-        await scenarios.save_draft(incoming)
+        try:
+            await scenarios.save_draft(incoming)
+        except ValueError:
+            raise HTTPException(422, "玩法配置不符合已安装玩法的类型或权限，请检查后保存。")
         return incoming.model_dump(mode="json")
 
     @api.post("/scenarios/{sid}/instruct")
@@ -166,6 +191,44 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
         except KeyError:
             raise HTTPException(404, "scenario not found")
         return draft.model_dump(mode="json")
+
+    @api.post("/scenarios/{sid}/understanding")
+    async def creator_understanding(sid: str, data: dict):
+        from ..runtime.creator_projection import propose
+        try:
+            return await propose(scenarios, sid, data.get("scope", "drama"),
+                                 data.get("instruction", ""), data.get("character_id", ""))
+        except KeyError:
+            raise HTTPException(404, "故事不存在")
+        except Exception as e:
+            await tracer.emit("authoring.projection", "failed", output={"error": str(e)})
+            raise HTTPException(422, "这次理解暂时没有完成，请保留描述后重试。")
+
+    @api.post("/scenarios/{sid}/understanding/confirm")
+    async def confirm_understanding(sid: str, data: dict):
+        from ..runtime.creator_projection import accept
+        try:
+            draft = await accept(scenarios, sid, data["projection_id"], data.get("answers", {}))
+            return draft.model_dump(mode="json")
+        except (ValueError, KeyError) as e:
+            await tracer.emit("authoring.confirm", "failed", output={"error": str(e)})
+            message = str(e) if any(word in str(e) for word in ("已锁定", "已被修改", "建议已更新")) else "这项建议与故事设置不一致，请更新理解后重试。"
+            raise HTTPException(409, message)
+
+    @api.post("/scenarios/{sid}/characters/{cid}/promote")
+    async def promote_story_character(sid: str, cid: str):
+        draft = await scenarios.get(sid)
+        sc = next((c for c in draft.characters if c.id == cid), None) if draft else None
+        if not sc or not sc.global_character_id:
+            raise HTTPException(422, "请先绑定全局角色")
+        # Explicit promotion only. Existing published snapshots remain unchanged.
+        patch = {"personality": sc.personality, "appearance": sc.visual_state,
+                 **{"default_" + k: getattr(sc, k) for k in ("desire", "fear", "secrets", "knowledge", "relationship")}}
+        await characters.update(sc.global_character_id, patch)
+        version = await char_assets._new_version(sc.global_character_id, "METADATA")
+        await tracer.emit("character.overlay_promote", "success", input_={"scenario": sid, "character": cid},
+                          output={"version": version.version, "changes": patch})
+        return version.model_dump(mode="json")
 
     @api.get("/scenarios/{sid}/publish-check")
     async def publish_check(sid: str):
@@ -190,7 +253,9 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
                     continue
                 try:
                     snap = await char_assets.snapshot_for_scenario(
-                        result["version_id"], sc.global_character_id)
+                        result["version_id"], sc.global_character_id,
+                        version=sc.global_character_version,
+                        overrides={k: getattr(sc, k) for k in ("identity", "personality", "desire", "fear", "secrets", "knowledge", "relationship", "visual_state")})
                     snapshot_ids.append(snap.id)
                 except KeyError:
                     raise HTTPException(422, f"global character not found: {sc.global_character_id}")
@@ -225,12 +290,20 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
 
     @api.post("/characters")
     async def create_character(data: dict):
-        return await characters.create(data)
+        if not str(data.get("name", "")).strip() or not str(data.get("bio", "")).strip():
+            raise HTTPException(422, "请填写名字和一句话角色定义")
+        result = await characters.create(data)
+        await char_assets._new_version(result["id"], "IDENTITY")
+        return await char_assets.get_character(result["id"])
 
     @api.patch("/characters/{cid}")
     async def update_character(cid: str, patch: dict):
         try:
-            return await characters.update(cid, patch)
+            await characters.update(cid, patch)
+            await char_assets._new_version(cid, "METADATA")
+            return await char_assets.get_character(cid)
+        except ValueError:
+            raise HTTPException(422, "请检查角色资料；名字和一句话角色定义不能为空。")
         except KeyError:
             raise HTTPException(404, "character not found")
 
@@ -326,6 +399,27 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
         return asset.model_dump(mode="json")
 
     # ---------------- v0.6 Character Asset System ----------------
+    @api.post("/characters/{cid}/understanding")
+    async def global_character_understanding(cid: str):
+        import json
+        ch = await char_assets.get_character(cid)
+        if not ch:
+            raise HTTPException(404, "角色不存在")
+        allowed = {"personality", "appearance", "default_desire", "default_fear", "default_secrets", "default_knowledge", "default_relationship"}
+        try:
+            _, rec, response = await router.call_text("authoring", messages=[
+                {"role": "system", "content": "为这个跨故事角色提出可选的稳定默认信息。返回 JSON 对象，值为自然中文字符串，只包含以下字段：" + ",".join(sorted(allowed)) + "。不引入具体故事的秘密或情节。"},
+                {"role": "user", "content": json.dumps(ch, ensure_ascii=False)}], output_contract={"purpose": "character_understanding"}, budget={"max_tokens": 2048, "reasoning_effort": "low"})
+            from ..runtime.structured_output import decode_object
+            result = decode_object(response.content)
+            if not isinstance(result, dict) or not result or any(k not in allowed or not isinstance(v, str) for k, v in result.items()):
+                raise ValueError("invalid character proposal")
+            await tracer.emit("character.understanding", "success", input_={"character_id": cid}, output=result, provider=rec.selected or "", model=response.model)
+            return result
+        except Exception as e:
+            await tracer.emit("character.understanding", "failed", output={"error": str(e), "raw_output": response.content if "response" in locals() else ""})
+            raise HTTPException(502, "角色建议暂时没有生成成功，请重试。")
+
     @api.post("/characters/{cid}/ai-describe")
     async def character_ai_describe(cid: str):
         """FR-096：AI 补全外观描述草案（用户确认后才写入，不自动落库/不生图）。"""

@@ -55,7 +55,7 @@ export default function Home() {
             const draft = await api.createScenario();
             setState({ editId: draft.id, page: "creator", creatorTab: "overview" });
           }}>创建故事</button>
-          <button onClick={() => setImporting(true)}>导入故事</button>
+          {ui.mode === "developer" && <button onClick={() => setImporting(true)}>导入故事</button>}
           {ui.sessionId && (
             <button onClick={() => setState({ page: "player" })}>继续当前游玩</button>
           )}

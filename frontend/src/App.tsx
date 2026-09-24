@@ -36,7 +36,7 @@ export default function App() {
     b.dataset.subtitleSize = ui.display.subtitleSize;
     b.dataset.subtitlePos = ui.display.subtitlePos;
   }, [ui.display]);
-  const inspector = isPlayer && ui.inspectorOpen;
+  const inspector = false;
 
   let content: React.ReactNode;
   switch (ui.page) {
@@ -45,7 +45,7 @@ export default function App() {
     case "characterLibrary": content = <CharacterLibrary />; break;
     case "assets": content = <Assets />; break;
     case "player": content = <Player />; break;
-    case "developer": content = <Developer />; break;
+    case "developer": content = ui.mode === "developer" ? <Developer /> : <Settings />; break;
     case "settings": content = <Settings />; break;
     case "feedback": content = <Feedback />; break;
     case "notes": content = <Notes />; break;

@@ -38,8 +38,9 @@ class TestVerticalSlice:
 
         # 选择 → CANONICAL → 播放
         bid = recs[0]["branch_id"]
-        assert client.post(f"/api/sessions/{sid}/select",
-                           json={"branch_id": bid}).json()["status"] == "CANONICAL"
+        response = client.post(f"/api/sessions/{sid}/select", json={"branch_id": bid})
+        assert response.status_code == 200, response.text
+        assert response.json()["status"] == "CANONICAL"
         view = client.get(f"/api/sessions/{sid}/view").json()
         assert view["player"]["status"] in ("PLAYING", "READY")
         assert view["player"]["video_url"].startswith("/media/scenes/")

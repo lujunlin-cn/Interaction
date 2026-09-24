@@ -1,0 +1,31 @@
+/** Continue validation of a real session (including after a recoverable provider failure). */
+const {chromium}=require('../frontend/node_modules/playwright');const fs=require('node:fs');
+const out='docs/acceptance/prd_v06_latest/',base=process.env.BASE_URL||'http://127.0.0.1:9002';
+const sid=process.env.SESSION_ID||fs.readFileSync(out+'live_session_id.txt','utf8').trim();
+const result={session_id:sid,started_at:new Date().toISOString(),checks:[],errors:[]};
+const save=()=>fs.writeFileSync(out+'player_browser_validation.json',JSON.stringify(result,null,2));
+const record=(name,data)=>{result.checks.push({name,at:new Date().toISOString(),...data});save();console.log(name,data.status||'');};
+(async()=>{const browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_PATH?{executablePath:process.env.CHROMIUM_PATH}:{})});const p=await browser.newPage({viewport:{width:1920,height:1080}});p.on('pageerror',e=>result.errors.push(String(e)));
+await p.addInitScript(id=>{localStorage.setItem('drama.mode','standard');localStorage.setItem('drama.sessionId',id)},sid);await p.goto(base+'/#/player');
+const get=async route=>(await p.request.get(base+route)).json();const shot=async n=>p.screenshot({path:out+n+'.png',fullPage:true});
+await p.waitForFunction(()=>!!document.querySelector('video')?.getAttribute('src'),{},{timeout:600000});
+await p.locator('video').evaluate(v=>v.play().catch(()=>{}));await p.waitForFunction(()=>document.querySelector('video')?.readyState>=2,{},{timeout:30000});
+let state=await get(`/api/dev/sessions/${sid}/state`);const opening=state.branches.find(b=>b.source==='opening');
+if(opening.status!=='CANONICAL'||!opening.artifact||!opening.routes.some(r=>r.selected==='h3_max')||opening.routes.some(r=>r.selected==='mock_video'))throw Error('Opening is not real H3');
+record('Real opening and retry',{status:'PASS',branch_id:opening.id,artifact:opening.artifact});
+await shot('normal_player');
+await p.getByRole('button',{name:'沉浸全屏',exact:true}).click();const full=await p.evaluate(()=>({target:document.fullscreenElement?.dataset.testid,video:!!document.fullscreenElement?.querySelector('video'),subtitle:!!document.fullscreenElement?.querySelector('.scene-caption'),agency:!!document.fullscreenElement?.querySelector('[data-layer="agency"]'),hud:!!document.fullscreenElement?.querySelector('[data-layer="hud"]')}));
+if(full.target!=='player-shell'||!full.video||!full.agency||!full.hud||!full.subtitle)throw Error('Fullscreen missing layers');await shot('player_fullscreen');record('AT-84',{status:'PASS',...full});
+await p.getByRole('button',{name:'故事随身册'}).hover();await p.locator('.hud-drawer').waitFor();await shot('hud_expanded');
+await p.getByRole('button',{name:'故事随身册'}).click();await p.mouse.move(1700,50);if(await p.locator('.hud-drawer').count()!==1)throw Error('HUD pin failed');await p.getByRole('button',{name:'故事随身册'}).click();await p.mouse.move(1700,50);if(await p.locator('.hud-drawer').count())throw Error('HUD unpin failed');record('AT-87',{status:'PASS',hover:true,pin:true,unpin:true});
+await p.getByRole('button',{name:'退出全屏'}).click();
+await p.locator('.rec-card').first().waitFor({timeout:600000});const view=await get(`/api/sessions/${sid}/view`);record('AT-85',{status:view.player.position>=view.player.decision_open_at?'PASS':'FAIL',position:view.player.position,lead:view.player.decision_open_at,recommendations:view.recommendations});await shot('ready_recommendations');
+const order=await p.evaluate(()=>document.querySelector('[data-layer="decision"]').compareDocumentPosition(document.querySelector('[data-layer="agency"]')));if(!(order&4))throw Error('Agency before recommendations');
+await p.getByLabel('描述你想做的事').fill('我绕到灯塔背面查看备用入口');await shot('free_input');
+const actionResponse=p.waitForResponse(r=>r.url().endsWith('/action'),{timeout:180000});await p.getByRole('button',{name:'行动',exact:true}).click();const action=await(await actionResponse).json();record('AT-86 input accepted',{status:'TRIGGERED',ready_count:view.recommendations.length,response:action});
+if(['INTENT_ECHO','CLARIFICATION_REQUIRED'].includes(action.status))await p.getByRole('button',{name:/按这个意思继续|确认并继续/}).click();
+const started=Date.now();let free;
+while(Date.now()-started<600000){state=await get(`/api/dev/sessions/${sid}/state`);free=state.branches.filter(b=>b.source==='free').at(-1);if(free&&['CANONICAL','FAILED'].includes(free.status))break;await p.waitForTimeout(1000)}
+record('AT-86 FREE branch',{status:free?.status==='CANONICAL'?'PASS':'FAIL',branch:free,world:state.world});fs.writeFileSync(out+'live_play_state.json',JSON.stringify(state,null,2));fs.writeFileSync(out+'live_play_traces.json',JSON.stringify(await get('/api/dev/traces?limit=2000'),null,2));
+await p.goto(base+'/#/settings');await p.getByRole('button',{name:'开发者模式',exact:true}).click();await p.goto(base+'/#/player');await p.getByRole('button',{name:'Inspector',exact:true}).click();await p.locator('.developer-inspector pre').waitFor();await shot('developer_inspector');record('Browser',{status:result.errors.length?'FAIL':'PASS',errors:result.errors});
+await browser.close();})().catch(e=>{result.failure=String(e);save();console.error(e);process.exit(1)});

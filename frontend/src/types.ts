@@ -3,6 +3,7 @@
 export interface MechanicConfig {
   enabled: boolean;
   config: Record<string, any>;
+  skill_id?: string; version?: string; tutorial?: string; title?: string; trigger?: string; state_patch_contract?: string[];
 }
 
 export interface ScenarioCharacter {
@@ -64,6 +65,9 @@ export interface ScenarioDraft {
   drama: DramaSpec;
   mechanics: Record<string, MechanicConfig>;
   theme: ThemeConfig;
+  authoring_intent?: string;
+  mechanic_authoring_intent?: string;
+  creator_projection?: Record<string, any>;
   reviewed: boolean;
   manual_edits: string[];
   locks: string[];
@@ -98,6 +102,8 @@ export interface GlobalCharacter {
   name: string;
   bio: string;
   personality: string;
+  appearance?: string;
+  default_desire?: string; default_fear?: string; default_secrets?: string; default_knowledge?: string; default_relationship?: string;
   tags: string[];
   ref_front_asset?: string | null;
   ref_side_asset?: string | null;

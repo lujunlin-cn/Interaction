@@ -25,7 +25,14 @@ class OpenAICompatTextProvider:
     async def generate(self, messages, output_contract=None, tools=None, budget=None) -> TextResponse:
         t0 = time.time()
         payload: dict = {"model": self.model, "messages": messages, "temperature": 0.7}
-        if output_contract:
+        if budget and budget.get("max_tokens"):
+            payload["max_tokens"] = int(budget["max_tokens"])
+        if budget and budget.get("reasoning_effort") and self.name.startswith("step_"):
+            payload["reasoning_effort"] = budget["reasoning_effort"]
+        # Step Plan / Step 5 currently corrupts object keys with json_object
+        # (see step_format_probe_*.json). Keep schema instructions in messages
+        # and validate the response at the authoring/director boundary.
+        if output_contract and self.name != "step_5":
             payload["response_format"] = {"type": "json_object"}
         if self.name == "nemotron_local":
             payload["chat_template_kwargs"] = {"enable_thinking": False}
@@ -109,8 +116,12 @@ class FalH3MaxProvider:
                 kind = ref.get("type") or role_to_kind.get(ref.get("role", ""), "image")
             if not path:
                 continue
-            url = path if path.startswith(("http://", "https://")) else \
-                f"{settings.public_base_url.rstrip('/')}/files/{path.lstrip('/')}"
+            if path.startswith(("http://", "https://")):
+                url = path
+            elif path.startswith(("/files/", "/media/")):
+                url = settings.public_base_url.rstrip("/") + path
+            else:
+                url = f"{settings.public_base_url.rstrip('/')}/files/{path.lstrip('/')}"
             if kind == "image":
                 out["reference_image_urls"].append(url)
             elif kind == "audio":

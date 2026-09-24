@@ -46,6 +46,15 @@ class MockTextProvider:
             return self._narrative(user, contract)
         if purpose == "production_shots":
             return self._shots(user)
+        if purpose == "mechanic_projection":
+            from ..domain.mechanic_spec import CONTRACTS
+            data = json.loads(user)
+            words = {"relationship": ["人物", "角色", "撒谎", "关系"], "clue-system": ["调查", "线索", "询问"], "inventory": ["物品", "道具", "背包"], "qte": ["追逐", "快速", "紧张"]}
+            return json.dumps({"summary": data["intent"], "mechanics": {k: {"enabled": any(w in data["intent"] for w in words[k]), "config": {}, "tutorial": v[1]} for k, v in CONTRACTS.items()}, "timed_event": {"id": "urgent_choice", "kind": "qte", "timeout_seconds": 10, "fallback": "没有及时选择，错过眼前的机会"}}, ensure_ascii=False)
+        if purpose == "creator_projection":
+            return self._projection(json.loads(user))
+        if purpose == "character_understanding":
+            return json.dumps({"personality": "谨慎而细心", "default_desire": "找到值得信赖的伙伴", "appearance": "实用的日常外套"}, ensure_ascii=False)
         if purpose == "authoring_draft":
             return self._authoring(user)
         if purpose == "authoring_patch":
@@ -171,6 +180,33 @@ class MockTextProvider:
             {"title": "人物回应与关键细节", "prompt": f"{title}。{text[:60]}。保持连续性与克制语气。",
              "subtitle": text[:60], "duration": 5},
         ]}, ensure_ascii=False)
+
+    def _projection(self, request):
+        draft = request["draft"]
+        scope = request["scope"]
+        items = []
+        if scope == "mechanics":
+            from ..domain.mechanic_spec import CONTRACTS
+            instruction = request["instruction"]
+            words = {"relationship": ["人物", "角色", "撒谎", "关系"], "clue-system": ["调查", "线索", "询问"], "inventory": ["物品", "道具", "背包"], "qte": ["追逐", "快速", "紧张"]}
+            for key, (title, tutorial, _, _) in CONTRACTS.items():
+                enabled = any(w in instruction for w in words[key])
+                items.append({"path": "mechanics." + key, "summary": tutorial, "value": {"enabled": enabled, "config": {}, "tutorial": tutorial}})
+            if any(w in instruction for w in words["qte"]):
+                items.append({"path": "drama.timed_interactions", "summary": "紧张时刻限时决定，超时错过机会", "value": "urgent_choice｜qte｜10｜没有及时决定，错过眼前的机会"})
+        else:
+            for path in request["allowed_paths"]:
+                if scope == "drama":
+                    value = draft["drama"].get(path.split(".")[-1], "")
+                else:
+                    m = re.match(r"characters\[(\d+)\]\.(.*)", path)
+                    value = draft["characters"][int(m[1])].get(m[2], "") or f"围绕{draft['title']}，谨慎寻找事情的答案"
+                item = {"path": path, "value": value, "summary": re.sub(r"\b[a-z_]+[：｜]", "", value) or "可选内容，暂时留白"}
+                if scope == "drama" and path in ("drama.truth_model", "drama.central_conflict") and len(request["original_story"]) < 40:
+                    item["question"] = f"{draft['title']}中，你更希望故事朝哪个方向发展？"
+                    item["suggestions"] = [{"label": f"{draft['title']}：{choice}", "value": ("fact_main：" if path.endswith("truth_model") else "") + choice} for choice in ("失踪者在保护某个人", "关键证人隐瞒了一段过去", "大家对同一件事有不同理解")]
+                items.append(item)
+        return json.dumps({"summary": f"故事围绕{draft['title']}展开。{request['original_story']}", "items": items}, ensure_ascii=False)
 
     def _authoring(self, user: str) -> str:
         idea = _extract_from_user(user, "idea") or user.strip()

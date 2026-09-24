@@ -1,419 +1,174 @@
-/** Player：视频场景 + Ready 推荐 + 限时互动 + 自由输入 + 意图回显 + Wish。
- *
- * 术语隔离：普通玩家只看到自然中文状态（“正在生成画面”），
- * PROVISIONAL / CANONICAL 等技术词只在开发者视图出现。
- */
+/** Player presentation; runtime contracts remain on the server. */
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { api, sessionSocket } from "../api";
 import { setState, toast, useUi } from "../store";
 import type { PendingIntent, PlayerView, Wish } from "../types";
 
 const WISH_STATUS_LABEL: Record<string, string> = {
-  ACTIVE: "生效中", DEFERRED: "已延期", CONFLICTED: "与规则冲突",
-  FULFILLED: "已实现", PARTIALLY_FULFILLED: "部分实现", FAILED: "未能实现",
-  SUPERSEDED: "被替换", WITHDRAWN: "已撤回",
+  ACTIVE: "生效中", DEFERRED: "已延期", CONFLICTED: "与规则冲突", FULFILLED: "已实现",
+  PARTIALLY_FULFILLED: "部分实现", FAILED: "未能实现", SUPERSEDED: "被替换", WITHDRAWN: "已撤回",
 };
+function publicLabel(value: string, fallback: string) { return /^(?:fact|clue|item|obj)_[a-z0-9_]+$/i.test(value) ? fallback : value; }
+function relationshipLabel(value: number) { return value >= 70 ? "信任你" : value >= 50 ? "愿意与你交流" : value >= 30 ? "有所戒备" : "暂时保持距离"; }
 
 export default function Player() {
-  const ui = useUi();
-  const sid = ui.sessionId;
+  const ui = useUi(), sid = ui.sessionId, developer = ui.mode === "developer";
   const [view, setView] = useState<PlayerView | null>(null);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [ack, setAck] = useState<string | null>(null);
   const [wishOpen, setWishOpen] = useState(false);
-  const [popover, setPopover] = useState<string | null>(null);
+  const [hudHover, setHudHover] = useState(false);
+  const [hudPinned, setHudPinned] = useState(false);
   const [replay, setReplay] = useState<string | null>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const receiptSent = useRef<string>("");
-  // 倒计时本地基线：以服务端 remaining_ms 为准，本地只做渲染插值
-  const [timedBase, setTimedBase] = useState<{ remaining: number; at: number } | null>(null);
+  const [media, setMedia] = useState<"loading" | "playing" | "failed">("loading");
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  const [titleVisible, setTitleVisible] = useState(true);
+  const [controlActivity, setControlActivity] = useState(0);
+  const [showControls, setShowControls] = useState(true);
+  const [fullscreen, setFullscreen] = useState(false);
+  const [connectionFailed, setConnectionFailed] = useState(false);
+  const [devState, setDevState] = useState<any>(null);
   const [now, setNow] = useState(Date.now());
+  const [timedBase, setTimedBase] = useState<{remaining: number; at: number} | null>(null);
+  const shellRef = useRef<HTMLDivElement>(null), videoRef = useRef<HTMLVideoElement>(null);
+  const requestInFlight = useRef(false);
+  const receiptSent = useRef("");
+  const error = (e: any) => toast(developer ? e.message : "这个操作暂时没有完成，请重试。");
+  const command = (c: string) => sid ? api.playerCommand(sid, c).catch(error) : Promise.resolve();
 
   useEffect(() => {
     if (!sid) return;
     let closed = false;
-    api.sessionView(sid).then((v) => !closed && setView(v)).catch(() => {});
-    const ws = sessionSocket(sid, (msg) => {
-      if (msg.type === "state") setView(msg.view);
-    });
-    // WS 断线兜底轮询
-    const timer = window.setInterval(() => {
-      if (ws.readyState !== WebSocket.OPEN) {
-        api.sessionView(sid).then(setView).catch(() => {});
-      }
-    }, 2500);
-    return () => {
-      closed = true;
-      window.clearInterval(timer);
-      ws.close();
-    };
+    const refresh = () => api.sessionView(sid).then(v => { if (!closed) { setView(v); setConnectionFailed(false); } }).catch(() => !closed && setConnectionFailed(true));
+    void refresh();
+    const ws = sessionSocket(sid, msg => { if (!closed && msg.type === "state") setView(msg.view); });
+    // Playback position / Lead visibility must also refresh when a healthy WS has no new state event.
+    const t = window.setInterval(refresh, 1000);
+    return () => { closed = true; clearInterval(t); ws.close(); };
   }, [sid]);
-
-  // 倒计时插值时钟
-  useEffect(() => {
-    if (!view?.timed?.active) return;
-    const t = window.setInterval(() => setNow(Date.now()), 200);
-    return () => window.clearInterval(t);
-  }, [view?.timed?.active]);
-
   useEffect(() => {
     const t = view?.timed;
-    if (t?.active && t.remaining_ms != null) {
-      setTimedBase({ remaining: t.remaining_ms, at: Date.now() });
-    } else {
-      setTimedBase(null);
-    }
-    // 只在服务端值刷新时重置基线
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setTimedBase(t?.active && t.remaining_ms != null ? {remaining: t.remaining_ms, at: Date.now()} : null);
   }, [view?.timed?.remaining_ms, view?.timed?.active]);
-
-  // 场景播完：上报 receipt（只上报一次）
+  useEffect(() => { const t = setInterval(() => setNow(Date.now()), 200); return () => clearInterval(t); }, []);
   useEffect(() => {
-    if (!sid || !view) return;
-    const p = view.player;
-    const key = `${sid}:${p.scene_title}:${p.duration}`;
-    if (p.status === "READY" && p.video_url && receiptSent.current !== key) {
-      receiptSent.current = key;
-      api.commitReceipt(sid).catch(() => {});
-    }
-  }, [sid, view]);
+    setMedia("loading"); setTitleVisible(true);
+  }, [view?.player.video_url, replay, loadAttempt]);
+  useEffect(() => {
+    if (media !== "playing") return;
+    const t = setTimeout(() => setTitleVisible(false), 3500); return () => clearTimeout(t);
+  }, [media, view?.player.video_url]);
+  useEffect(() => {
+    if (media !== "loading" || !view?.player.video_url) return;
+    const t = setTimeout(() => setMedia("failed"), 20000); return () => clearTimeout(t);
+  }, [media, view?.player.video_url, loadAttempt]);
+  useEffect(() => {
+    setShowControls(true);
+    if (media !== "playing" || view?.player.status !== "PLAYING") return;
+    const t = setTimeout(() => setShowControls(false), 3000);
+    return () => clearTimeout(t);
+  }, [controlActivity, media, view?.player.status]);
+  useEffect(() => {
+    const fn = () => setFullscreen(document.fullscreenElement === shellRef.current);
+    document.addEventListener("fullscreenchange", fn); return () => document.removeEventListener("fullscreenchange", fn);
+  }, []);
+  useEffect(() => {
+    if (sid && developer && ui.inspectorOpen) void api.devState(sid).then(setDevState).catch(error);
+  }, [sid, developer, ui.inspectorOpen, view?.player.status]);
 
-  const timedRemaining = useMemo(() => {
-    if (!view?.timed?.active || !timedBase) return null;
-    return Math.max(0, timedBase.remaining - (now - timedBase.at));
-  }, [view?.timed?.active, timedBase, now]);
-
-  if (!sid) {
-    return (
-      <div className="player-shell">
-        <div className="empty" style={{ marginTop: 60 }}>
-          还没有进行中的游玩。请从「故事库」选择一个世界开始。
-        </div>
-      </div>
-    );
-  }
-  if (!view) {
-    return <div className="player-shell"><div className="player-placeholder">正在连接故事…</div></div>;
-  }
-
-  const p = view.player;
-  const progress = p.duration > 0 ? Math.min(100, (p.position / p.duration) * 100) : 0;
-  const leadReached = p.lead <= 0 || p.position >= p.lead;
-  const wishesActive = view.wishes.filter((w) => w.status === "ACTIVE");
-
-  const submitAction = async (preset?: string) => {
-    const text = (preset ?? input).trim();
-    if (!text || busy) return;
-    setBusy(true);
-    setAck(null);
+  const submitAction = async () => {
+    if (!sid || !input.trim() || requestInFlight.current) return;
+    requestInFlight.current = true; setBusy(true); setAck(null);
     try {
-      const r = await api.freeAction(sid, text);
-      if (r.status === "QUICK_ACK") setAck(r.ack ?? "好的。");
-      // INTENT_ECHO / CLARIFICATION_REQUIRED 由 view.pending_intent 渲染（WS 推送）
-      setInput("");
-    } catch (e: any) {
-      toast(e.message);
-    } finally {
-      setBusy(false);
-    }
+      const r = await api.freeAction(sid, input.trim());
+      if (r.status === "QUICK_ACK") setAck(r.ack || "好的。");
+      setInput(""); setView(await api.sessionView(sid));
+    } catch (e) { error(e); } finally { requestInFlight.current = false; setBusy(false); }
   };
-
   const choose = async (branchId: string) => {
-    try {
-      await api.selectBranch(sid, branchId);
-    } catch (e: any) {
-      toast(e.message);
-    }
+    if (!sid || requestInFlight.current) return;
+    requestInFlight.current = true; setBusy(true);
+    try { await api.selectBranch(sid, branchId); setView(await api.sessionView(sid)); }
+    catch (e) { error(e); } finally { requestInFlight.current = false; setBusy(false); }
   };
-
-  const cancelGeneration = async () => {
-    try {
-      const r = await api.cancelGeneration(sid);
-      toast(r.status === "CANCELLED" ? "已取消当前生成。" : "当前没有正在生成的内容。");
-    } catch (e: any) {
-      toast(e.message);
-    }
+  if (!sid) return <div className="player-shell"><div className="empty">请从故事库选择一个世界开始。</div></div>;
+  if (!view) return <div className="player-shell"><div className="card">{connectionFailed ? "暂时无法连接故事，请稍后重试。" : "正在连接故事…"}<button onClick={() => setState({page: "home"})}>返回故事库</button></div></div>;
+  const p = view.player;
+  const failed = p.status === "FAILED_RECOVERABLE" || p.status === "FAILED";
+  const generating = p.status === "OPENING_PREPARING" || p.status === "GENERATING_NEXT";
+  const accepted = busy || Boolean((view as any).action_pending) || Boolean(view.pending_intent);
+  const remaining = timedBase ? Math.max(0, timedBase.remaining - (now - timedBase.at)) : null;
+  const hudOpen = hudPinned || hudHover;
+  const source = replay || p.video_url;
+  const finished = async () => {
+    if (replay) { setReplay(null); return; }
+    await command("skip");
+    if (receiptSent.current !== p.video_url) { await api.commitReceipt(sid); receiptSent.current = p.video_url; }
   };
-
-  return (
-    <div className="player-shell">
-      {/* 头部：标题 + 扮演角色 + 篇章 + 退出 */}
-      <div className="player-head">
-        <div className="grow">
-          <b>{view.scenario.title}</b>
-          <span className="player-head-sub">
-            你扮演：{view.scenario.player_identity.split(" / ")[0]} · 第 {view.arc.seq} 篇章
-          </span>
-        </div>
-        <button className="small" onClick={() => setState({ page: "home", sessionId: null })}>
-          退出
-        </button>
-      </div>
-
-      {/* 工具栏：背包 / 信任值 / 线索 / 愿望 */}
-      <div className="player-tools">
-        <ToolButton icon="🎒" label="背包" count={view.known.inventory.length}
-          open={popover === "bag"} onToggle={() => setPopover(popover === "bag" ? null : "bag")}>
-          {view.known.inventory.length === 0
-            ? <div className="muted">还没有拿到任何物品。</div>
-            : view.known.inventory.map((it) => <div key={it} className="tool-line">{it}</div>)}
-        </ToolButton>
-        <ToolButton icon="♡" label="信任值" count={view.known.relationships.length}
-          open={popover === "rel"} onToggle={() => setPopover(popover === "rel" ? null : "rel")}>
-          {view.known.relationships.length === 0
-            ? <div className="muted">还没有建立关系变化。</div>
-            : view.known.relationships.map((r) => (
-              <div key={r.id} className="tool-line">
-                {r.name}<span className="muted">　信任 {r.value} / 100</span>
-                <span className="rel-bar"><span style={{ width: `${Math.min(100, r.value)}%` }} /></span>
-              </div>
-            ))}
-        </ToolButton>
-        <ToolButton icon="🔎" label="线索" count={view.known.clues.length}
-          open={popover === "clue"} onToggle={() => setPopover(popover === "clue" ? null : "clue")}>
-          {view.known.clues.length === 0 && view.known.knowledge.length === 0
-            ? <div className="muted">还没有发现线索。</div>
-            : [...view.known.clues, ...view.known.knowledge]
-              .filter((c, i, arr) => arr.findIndex((x) => x.id === c.id) === i)
-              .map((c) => <div key={c.id} className="tool-line">{c.label}</div>)}
-        </ToolButton>
-        <ToolButton icon="✨" label="愿望" count={wishesActive.length}
-          open={popover === "wish"} onToggle={() => setPopover(popover === "wish" ? null : "wish")}>
-          {wishesActive.length === 0
-            ? <div className="muted">还没有愿望。愿望会影响未来，但不保证实现。</div>
-            : wishesActive.map((w) => <div key={w.id} className="tool-line">{w.raw}</div>)}
-          <button className="small" style={{ marginTop: 8 }}
-            onClick={() => { setPopover(null); setWishOpen(true); }}>许下新愿望</button>
-        </ToolButton>
-      </div>
-
+  const recover = <div className="toolbar recovery-actions">
+    {media === "failed" && <button onClick={() => { setMedia("loading"); setLoadAttempt(x => x + 1); }}>重新载入</button>}
+    <button onClick={() => command(failed ? "retry" : "regenerate")}>重新生成</button>
+    <button onClick={() => { setInput(view.last_failed_action?.raw_text || ""); document.querySelector<HTMLInputElement>('.free-input-row input')?.focus(); }}>修改行动</button>
+    <button onClick={async () => { const r = await command("text_continue"); if (r?.needs_action) setInput(r.raw_text || ""); else setInput(""); }}>文字模式继续</button>
+    <button onClick={() => setState({page: "home", sessionId: null})}>退出故事</button>
+  </div>;
+  return <div className="player-shell immersive-player" ref={shellRef} data-testid="player-shell" onPointerMove={() => setControlActivity(Date.now())} onPointerDown={() => setControlActivity(Date.now())} onKeyDown={() => setControlActivity(Date.now())}>
+    <header className="player-head"><b className="grow">{view.scenario.title}</b><span className="muted">第 {view.arc.seq} 篇章</span><button className="small" onClick={() => setState({page: "home", sessionId: null})}>退出</button></header>
+    <div className="immersion-layer" data-layer="immersion">
       <div className="player-stage">
-        {replay ? (
-          <video key={replay} src={replay} autoPlay controls
-            onEnded={() => setReplay(null)} />
-        ) : p.video_url ? (
-          <video
-            key={p.video_url}
-            ref={videoRef}
-            src={p.video_url}
-            autoPlay
-            onPlay={() => api.playerCommand(sid, "play").catch(() => {})}
-            onPause={() => api.playerCommand(sid, "pause").catch(() => {})}
-            onEnded={() => api.playerCommand(sid, "skip").catch(() => {})}
-          />
-        ) : (
-          <div className="player-placeholder">
-            <div style={{ fontSize: 40 }}>▶</div>
-            <div>
-                {p.status === "OPENING_PREPARING" ? "正在准备开场场景…"
-                : view.generating.length > 0 ? "正在为你准备接下来的故事…"
-                : p.status === "FAILED_RECOVERABLE" || p.status === "FAILED" ? "这一幕生成遇到问题，可以重试或用文字继续。"
-                : p.scene_text ? "" : "场景将在准备好后播放"}
-            </div>
-            {p.scene_text && <div className="player-textonly">{p.scene_text}</div>}
-            {(p.status === "FAILED_RECOVERABLE" || p.status === "FAILED") && (
-              <div className="toolbar" style={{ marginTop: 12 }}>
-                <button className="primary" onClick={() => api.playerCommand(sid, "retry").catch((e) => toast(e.message))}>重新生成</button>
-                <button onClick={() => api.playerCommand(sid, "skip").catch((e) => toast(e.message))}>文本模式继续</button>
-                <button onClick={() => setState({ page: "home", sessionId: null })}>退出故事</button>
-              </div>
-            )}
-          </div>
-        )}
-        {!replay && (p.scene_title || p.scene_text) && p.video_url && (
-          <div className="scene-caption">
-            <div className="scene-title">{p.scene_title}</div>
-            <div className="scene-text">{p.scene_text}</div>
-          </div>
-        )}
-        {replay && (
-          <button className="small replay-close" onClick={() => setReplay(null)}>返回当前场景</button>
-        )}
+        {source && <video key={`${source}:${loadAttempt}`} ref={videoRef} src={source} autoPlay playsInline
+          onLoadStart={() => { setMedia("loading"); if (!replay) void command("pause"); }}
+          onCanPlay={() => { setMedia("playing"); videoRef.current?.play().catch(() => setAck("点击播放，开始观看这一幕。")); }}
+          onPlaying={() => { setMedia("playing"); setAck(a => a === "点击播放，开始观看这一幕。" ? null : a); if (!replay) void command("play"); }}
+          onWaiting={() => { setMedia("loading"); if (!replay) void command("pause"); }}
+          onPause={() => !replay && void command("pause")}
+          onError={() => { setMedia("failed"); if (!replay) void command("pause"); }}
+          onEnded={finished} />}
+        {(generating || failed || (source && media !== "playing") || (!source && !p.scene_text)) && <div className={`media-status ${failed || media === "failed" ? "failed" : ""}`} role="status"
+          data-media-state={failed || (source && media === "failed") ? "FAILED" : generating ? "GENERATING" : "LOADING"}>
+          <div className="media-status-symbol">{failed || media === "failed" ? "↻" : "◌"}</div>
+          <h3>{failed ? "这个行动暂时没有生成成功。" : source && media === "failed" ? "这一幕暂时无法播放。" : generating ? "正在生成这一幕……" : "正在载入场景……"}</h3>
+          <p>{failed || media === "failed" ? "你的行动已保留，可以重新尝试或继续阅读故事。" : "故事准备好后将在这里播放。"}</p>
+          {(failed || (source && media === "failed")) && recover}
+        </div>}
+        {!source && p.scene_text && !generating && !failed && <div className="text-scene"><p>{p.scene_text}</p></div>}
+        {!replay && source && <div className={`scene-intro ${titleVisible ? "visible" : ""}`}><b>{p.scene_title}</b><span>{(p as any).location_name || ""}</span></div>}
+        <aside className={`player-hud ${hudOpen ? "open" : ""}`} data-layer="hud" onMouseEnter={() => setHudHover(true)} onMouseLeave={() => setHudHover(false)}>
+          <button className="hud-toggle" aria-label="故事随身册" aria-expanded={hudOpen} aria-pressed={hudPinned} onClick={() => { setHudPinned(v => !v); setHudHover(false); }}>☰ {hudPinned ? "收回" : "随身册"}</button>
+          {hudOpen && <div className="hud-drawer">
+            <h4>背包</h4>{view.known.inventory.map(it => <p key={it}>{developer ? it : publicLabel(it, "随身物品")}</p>)}{!view.known.inventory.length && <p className="muted">暂时没有物品</p>}
+            <h4>人物关系</h4>{view.known.relationships.map(r => <p key={r.id}>{r.name}：{developer ? `${r.value} / 100` : relationshipLabel(r.value)}</p>)}
+            <h4>线索</h4>{[...view.known.clues, ...view.known.knowledge].filter((c,i,a) => a.findIndex(x => x.id === c.id) === i).map(c => <p key={c.id}>{developer ? c.label : publicLabel(c.label, "新发现的线索")}</p>)}
+            <h4>愿望</h4>{view.wishes.filter(w => w.status === "ACTIVE").map(w => <p key={w.id}>{w.raw}</p>)}
+            <button onClick={() => setWishOpen(true)}>许下或查看愿望</button>
+          </div>}
+        </aside>
       </div>
-      <div className="player-progress"><div style={{ width: `${progress}%` }} /></div>
-      <div className="player-controls">
-        <button className="small" onClick={() => {
-          const v = videoRef.current;
-          if (v) v.paused ? v.play() : v.pause();
-        }}>播放 / 暂停</button>
-        <button className="small" onClick={() => api.playerCommand(sid, "skip").catch(() => {})}>
-          跳过当前场景
-        </button>
-        <span className="muted player-muted-text">
-          {p.status === "PLAYING" ? "正在播放" :
-            p.status === "OPENING_PREPARING" ? "正在准备开场" :
-            p.status === "WAITING_DECISION" || p.status === "READY" ? "场景已播完，选择下一步" :
-            p.status === "ENDED" ? "本篇已结束" :
-            p.status === "FAILED_RECOVERABLE" || p.status === "FAILED" ? "生成遇到问题" : "正在准备"}
-        </span>
-        <span style={{ flex: 1 }} />
-        {view.generating.length > 0 && (
-          <button className="small" onClick={cancelGeneration}>取消生成</button>
-        )}
-        <button className="small" onClick={() => setState({ inspectorOpen: !ui.inspectorOpen })}>
-          {ui.inspectorOpen ? "收起检查器" : "检查器"}
-        </button>
-      </div>
-
-      {ack && <div className="ack-toast">{ack}</div>}
-
-      {/* G27：自由输入失败恢复——重试 / 修改后重发 / 放弃 */}
-      {view.last_failed_action && (
-        <div className="notice" style={{ borderColor: "#7a4a4a", marginTop: 8 }}>
-          <div className="row">
-            <span className="grow">
-              上一次行动「{view.last_failed_action.label}」没有成功
-              {view.last_failed_action.error ? `（${view.last_failed_action.error}）` : "。"}
-            </span>
-            <button className="small" onClick={() => {
-              setInput(view.last_failed_action!.raw_text || "");
-            }}>修改后重发</button>
-            <button className="small" disabled={busy} onClick={async () => {
-              const text = view.last_failed_action!.raw_text;
-              if (!text) return;
-              setBusy(true);
-              try {
-                const r = await api.freeAction(sid, text);
-                if (r.status === "QUICK_ACK") setAck(r.ack ?? "好的。");
-              } catch (e: any) { toast(e.message); }
-              finally { setBusy(false); }
-            }}>重试</button>
-          </div>
-        </div>
-      )}
-
-      {/* 小动作反馈流 */}
-      {view.messages.length > 0 && (
-        <div className="msg-list">
-          {view.messages.slice(-4).map((m, i) => (
-            <div key={`${m.at}-${i}`} className={`msg-line ${m.kind}`}>{m.text}</div>
-          ))}
-        </div>
-      )}
-
-      {/* 意图回显 / 澄清卡（FR-046：玩家确认或修改理解后才会生成） */}
-      {view.pending_intent && <IntentCard sid={sid} intent={view.pending_intent} />}
-
-      {view.ended && view.ending ? (
-        <EndingPanel sid={sid} view={view} onReplay={(url) => setReplay(url)} />
-      ) : (
-        <>
-          {/* 限时互动（TIMED）：倒计时 + 选项 + 确定性结果提示 */}
-          {view.timed?.active && (
-            <div className="qte-composer">
-              <div className="qte-count">
-                {timedRemaining != null ? Math.ceil(timedRemaining / 1000) : "…"}
-              </div>
-              <div className="qte-body">
-                <b>需要立刻作出反应</b>
-                <div className="muted player-warning-text">
-                  {view.timed.fallback_hint}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 已选收起 */}
-          {view.selected && view.selected.status !== "CANONICAL" ? (
-            <div className="notice" style={{ marginTop: 14 }}>
-              ✓ 你已选择「{view.selected.label}」，其他选项已收起。故事正在为你生成…
-            </div>
-          ) : (
-            <>
-              <div className="player-section-title">
-                {view.timed?.active ? "在倒计时结束前选择——" : "接下来，你可以——"}
-              </div>
-              {view.recommendations.length > 0 ? (
-                view.timed?.active && !view.timed.selection_open ? (
-                  <div className="muted player-muted-text">选项正在准备中…</div>
-                ) : (
-                  <div className="rec-row">
-                    {view.recommendations.map((r) => (
-                      <button key={r.branch_id} className="rec-card" onClick={() => choose(r.branch_id)}>
-                        <div className="rec-label">{r.label}</div>
-                        <div className="rec-summary">{r.summary}</div>
-                      </button>
-                    ))}
-                  </div>
-                )
-              ) : (
-                <div className="muted player-muted-text">
-                  {view.generating.length > 0
-                    ? "推荐正在准备中…"
-                    : leadReached
-                      ? "暂无推荐，试试自由输入。"
-                      : "继续观看，临近分岔点时会出现可选行动。"}
-                </div>
-              )}
-              {!leadReached && view.recommendations.length === 0 && view.generating.length === 0 && (
-                <button className="small" style={{ marginTop: 6 }}
-                  onClick={() => api.playerCommand(sid, "skip").catch(() => {})}>
-                  重新准备建议
-                </button>
-              )}
-            </>
-          )}
-
-          {view.generating.length > 0 && (
-            <div className="generating-row">
-              {view.generating.map((g) => (
-                <span key={g.branch_id} className="generating-chip">
-                  {g.phase_label || "正在准备"} · {g.label}
-                </span>
-              ))}
-            </div>
-          )}
-
-          {!view.timed?.active && (
-            <>
-              <div className="player-section-title">或者，按你自己的想法行动</div>
-              {view.hint_chips.length > 0 && (
-                <div className="chips-row">
-                  <span className="muted player-muted-text">试试这些输入：</span>
-                  {view.hint_chips.map((c) => (
-                    <button key={c} className="chip" onClick={() => submitAction(c)}>{c}</button>
-                  ))}
-                </div>
-              )}
-              <div className="free-input-row">
-                <input
-                  value={input}
-                  placeholder="描述你想做的事，例如：我绕到后院去看看"
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") submitAction(); }}
-                  disabled={busy}
-                />
-                <button className="primary" onClick={() => submitAction()} disabled={busy || !input.trim()}>
-                  {busy ? "正在理解…" : "行动"}
-                </button>
-              </div>
-            </>
-          )}
-        </>
-      )}
-
-      <button className="wish-fab" onClick={() => setWishOpen(true)}>许愿</button>
-      {wishOpen && (
-        <WishDrawer sid={sid} wishes={view.wishes} onClose={() => setWishOpen(false)} />
-      )}
+      {!replay && source && media === "playing" && p.caption && <div className="scene-caption"><div className="scene-text">{(p as any).caption_speaker && <b>{(p as any).caption_speaker}： </b>}{p.caption}</div></div>}
     </div>
-  );
-}
-
-/** 工具栏按钮 + 弹出面板 */
-function ToolButton({ icon, label, count, open, onToggle, children }: {
-  icon: string; label: string; count: number; open: boolean;
-  onToggle: () => void; children: React.ReactNode;
-}) {
-  return (
-    <span className="tool-wrap">
-      <button className={`tool-btn ${open ? "active" : ""}`} onClick={onToggle}>
-        {icon} {label} <b>{count}</b>
-      </button>
-      {open && <div className="tool-popover" onClick={(e) => e.stopPropagation()}>{children}</div>}
-    </span>
-  );
+    <div className="player-controls" data-visible={showControls}>
+      <button className="small" onClick={() => { const v = videoRef.current; if (v) v.paused ? v.play().catch(error) : v.pause(); }}>播放 / 暂停</button>
+      <div className="player-progress grow"><div style={{width: `${p.duration ? Math.min(100, p.position / p.duration * 100) : 0}%`}} /></div>
+      <details className="player-more"><summary>更多</summary><div><button onClick={finished}>跳过当前场景</button>{view.generating.length > 0 && <button onClick={() => api.cancelGeneration(sid).catch(error)}>取消生成</button>}{replay && <button onClick={() => setReplay(null)}>返回当前场景</button>}</div></details>
+      <button className="small" onClick={async () => { try { document.fullscreenElement ? await document.exitFullscreen() : await shellRef.current?.requestFullscreen(); } catch (e) { error(e); } }}>{fullscreen ? "退出全屏" : "沉浸全屏"}</button>
+      {developer && <button className="small" onClick={() => setState({inspectorOpen: !ui.inspectorOpen})}>Inspector</button>}
+    </div>
+    {connectionFailed && <p role="status">连接暂时中断，正在重新连接。你的行动草稿仍在这里。</p>}
+    {ack && <div className="ack-toast">{ack}</div>}
+    {view.last_failed_action && !failed && <div className="notice"><p>这个行动暂时没有生成成功。</p>{recover}</div>}
+    {view.messages.length > 0 && <div className="msg-list">{view.messages.slice(-2).map((m,i) => <p key={i}>{m.text}</p>)}</div>}
+    {view.pending_intent && <IntentCard key={view.pending_intent.raw_text} sid={sid} intent={view.pending_intent} />}
+    {view.ended && view.ending && <EndingPanel sid={sid} view={view} onReplay={setReplay} />}
+    {!view.ended && <div className="interaction-dock">
+      {view.timed?.active && <div className="qte-composer"><b>{remaining == null ? "准备快速决定" : `${Math.ceil(remaining / 1000)} 秒`}</b><p>{view.timed.fallback_hint}</p></div>}
+      {view.selected && view.selected.status !== "CANONICAL" ? <div className="decision-layer" data-layer="decision">✓ {view.selected.label} · 正在继续故事……</div>
+        : !accepted && view.recommendations.length > 0 && (!view.timed?.active || view.timed.selection_open) && <section className="decision-layer" data-layer="decision"><div className="rec-row">{view.recommendations.map(r => <button className="rec-card" key={r.branch_id} disabled={busy} onClick={() => choose(r.branch_id)}><b>{r.label}</b><p>{r.summary}</p></button>)}</div></section>}
+      <section className="agency-layer" data-layer="agency"><p className="muted">推荐只是快捷行动，你仍然可以做自己的选择。</p><div className="free-input-row"><input aria-label="描述你想做的事" placeholder="描述你想做的事……" value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && !accepted) void submitAction(); }} /><button className="primary" disabled={accepted || !input.trim()} onClick={submitAction}>{accepted ? "正在继续故事…" : "行动"}</button></div></section>
+    </div>}
+    {developer && ui.inspectorOpen && <section className="card developer-inspector"><h3>Developer Inspector</h3><pre>{JSON.stringify(devState, null, 2)}</pre><button onClick={() => setState({page: "developer", devTab: "trace"})}>查看完整 Trace</button></section>}
+    {wishOpen && <WishDrawer sid={sid} wishes={view.wishes} onClose={() => setWishOpen(false)} />}
+  </div>;
 }
 
 /** 意图回显 / 澄清卡（FR-046 / AT-30）：玩家原文保留，可修改理解后确认 */
@@ -474,6 +229,7 @@ function IntentCard({ sid, intent }: { sid: string; intent: PendingIntent }) {
 function EndingPanel({ sid, view, onReplay }: {
   sid: string; view: PlayerView; onReplay: (url: string) => void;
 }) {
+  const developer = useUi().mode === "developer";
   const e = view.ending!;
   return (
     <div className="ending-panel">
@@ -483,7 +239,7 @@ function EndingPanel({ sid, view, onReplay }: {
         <div className="ending-card">
           <h3>会继续保留</h3>
           {e.carried.relationships.map((r) => (
-            <div key={r.id} className="tool-line">{r.name}　<span className="muted">信任 {r.value}</span></div>
+            <div key={r.id} className="tool-line">{r.name}　<span className="muted">{developer ? `信任 ${r.value}` : relationshipLabel(r.value)}</span></div>
           ))}
           {e.carried.inventory.map((it) => (
             <div key={it} className="tool-line">🎒 {it}</div>
@@ -534,7 +290,7 @@ function EndingPanel({ sid, view, onReplay }: {
           <h3>篇章历史</h3>
           {e.arcs.map((a) => (
             <div key={a.seq} className="tool-line">
-              第 {a.seq} 篇章 <span className="muted">{a.ending_family ?? ""}</span>
+              第 {a.seq} 篇章 <span className="muted">{developer ? a.ending_family : "已完成"}</span>
             </div>
           ))}
         </div>
