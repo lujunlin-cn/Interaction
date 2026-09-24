@@ -195,7 +195,9 @@ class ProviderRouter:
             if provider is None:
                 continue               # mock 注册表无真实本地服务，跳过
             ok = False
-            for _ in range(60 if settings.profile_lifecycle_enabled else 1):
+            # Nemotron NVFP4 cold start on Spark takes ~2 minutes to load 52
+            # shards before CUDA graph capture; allow a full five-minute boot.
+            for _ in range(150 if settings.profile_lifecycle_enabled else 1):
                 try:
                     ok = await asyncio.wait_for(provider.health(), timeout=10)
                     if ok and settings.profile_lifecycle_enabled:
