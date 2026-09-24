@@ -91,7 +91,7 @@ class ScenarioService:
 
     # G16：指令补丁允许写入的路径前缀（locks 与任意路径拒绝）
     _PATCHABLE_PREFIXES = ("description", "title", "genre", "tone", "play_style",
-                           "drama.", "world.", "theme.")
+                           "drama.", "world.", "theme.", "mechanics.")
 
     def _apply_typed_patch(self, draft: ScenarioDraft, patches: list[dict],
                            source: str) -> list[dict]:
@@ -105,7 +105,8 @@ class ScenarioService:
         for p in patches:
             path = str(p.get("path", ""))
             after = p.get("after")
-            if not path or path in draft.locks:
+            if not path or any(path == lock or path.startswith(lock + ".")
+                               or path.startswith(lock + "[") for lock in draft.locks):
                 continue
             if not (path.startswith(self._PATCHABLE_PREFIXES)
                     or path.startswith("characters[")):
@@ -243,7 +244,10 @@ class ScenarioService:
             all((not c.global_character_id) or c.global_character_version
                 for c in draft.characters),
             "绑定全局角色需记录版本号")
-        add("mechanics", "玩法机制", True, "")
+        mechanics_ok = all(isinstance(k, str) and hasattr(v, "enabled")
+                           for k, v in draft.mechanics.items())
+        add("mechanics", "玩法机制", mechanics_ok,
+            "玩法机制配置格式无效" if not mechanics_ok else "")
         return checks
 
     async def publish(self, scenario_id: str, reviewed: bool = False) -> dict:
@@ -252,6 +256,18 @@ class ScenarioService:
         if draft is None:
             raise KeyError(scenario_id)
         checks = self.publish_checklist(draft)
+        bound_ids = {c.global_character_id for c in draft.characters
+                     if c.global_character_id}
+        if bound_ids:
+            async with SessionLocal() as db:
+                rows = (await db.execute(
+                    select(GlobalCharacterRow.id).where(
+                        GlobalCharacterRow.id.in_(bound_ids)))).all()
+            missing = bound_ids - {r[0] for r in rows}
+            for check in checks:
+                if check["id"] == "char_snapshot" and missing:
+                    check["ok"] = False
+                    check["detail"] = "无效全局角色引用：" + ", ".join(sorted(missing))
         failed = [c for c in checks if not c["ok"]]
         if failed:
             from fastapi import HTTPException
@@ -263,9 +279,17 @@ class ScenarioService:
                                              "checklist": checks})
         draft.status = "PUBLISHED"
         draft.reviewed = True
-        version_id = uid("ver")
         async with SessionLocal() as db:
             async with db.begin():
+                latest = (await db.execute(
+                    select(ScenarioVersionRow)
+                    .where(ScenarioVersionRow.scenario_id == scenario_id)
+                    .order_by(ScenarioVersionRow.created_at.desc()).limit(1))
+                ).scalars().first()
+                version_id = uid("ver")
+                if latest:
+                    major, minor, _patch = (int(x) for x in latest.version.split("."))
+                    draft.version = f"{major}.{minor + 1}.0"
                 row = await db.get(ScenarioRow, scenario_id)
                 row.draft = draft.model_dump(mode="json")
                 row.status = "PUBLISHED"

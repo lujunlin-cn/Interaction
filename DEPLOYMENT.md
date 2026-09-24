@@ -61,7 +61,7 @@ tar czf - . | sshpass -p "$PW" ssh -p 22222 hajimi2025@139.199.69.46 \
 | 变量 | 用途 |
 | --- | --- |
 | `DATABASE_URL` | `postgresql+asyncpg://…@127.0.0.1:5433/…` |
-| `PROVIDER_MODE` | `mock` / `live` / `hybrid`（默认 hybrid：文本真实、视频 mock） |
+| `PROVIDER_MODE` | `mock` / `live` / `hybrid`（hybrid：真实 H3 Max，失败显式降级 Mock） |
 | `RUNTIME_PROFILE` | `AGENT_LOCAL_PROFILE` / `VIDEO_LOCAL_PROFILE` |
 | `STEP_API_KEY` | StepFun step_37 / step_5 |
 | `JEV_API_KEY` | Jev 决策 |
@@ -75,7 +75,7 @@ tar czf - . | sshpass -p "$PW" ssh -p 22222 hajimi2025@139.199.69.46 \
 | 模式 | 文本 | 视频 | 决策 |
 | --- | --- | --- | --- |
 | `mock` | MockText 确定性规则 | MockVideo FFmpeg 占位 | MockDecision |
-| `hybrid` | 真实（本地/StepFun），失败显式降级 | MockVideo（安全起步） | Jev |
+| `hybrid` | 真实（本地/StepFun），失败显式降级 | H3 Max → Mock | Jev |
 | `live` | 完整冻结矩阵 | 真实 h3_max / sol_h3_local | Jev |
 
 冻结矩阵（live/hybrid 文本）：

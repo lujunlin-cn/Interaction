@@ -32,6 +32,7 @@ export default function App() {
     b.dataset.appearance = ui.display.appearance;
     b.dataset.density = ui.display.density;
     b.dataset.fontsize = ui.display.fontSize;
+    b.dataset.uisize = ui.display.uiSize;
     b.dataset.subtitleSize = ui.display.subtitleSize;
     b.dataset.subtitlePos = ui.display.subtitlePos;
   }, [ui.display]);

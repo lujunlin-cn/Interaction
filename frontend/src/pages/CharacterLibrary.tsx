@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { api } from "../api";
 import { setState, toast, useUi } from "../store";
-import type { Asset, GlobalCharacter } from "../types";
+import type { Asset, CharacterAsset, CharacterVersion, GlobalCharacter } from "../types";
 
 export default function CharacterLibrary() {
   const ui = useUi();
@@ -66,10 +66,30 @@ function CharacterDetail({ ch, onBack, onSaved }: {
 }) {
   const [draft, setDraft] = useState(ch);
   const [assets, setAssets] = useState<Asset[]>([]);
+  const [studioAssets, setStudioAssets] = useState<CharacterAsset[]>([]);
+  const [versions, setVersions] = useState<CharacterVersion[]>([]);
+  const [prompt, setPrompt] = useState("");
+  const [editInstruction, setEditInstruction] = useState("");
+  const [busy, setBusy] = useState("");
+  const [confirmViews, setConfirmViews] = useState<string | null>(null);
+  const [outfitName, setOutfitName] = useState("");
+  const [outfits, setOutfits] = useState<any[]>([]);
   useEffect(() => setDraft(ch), [ch.id, ch.version]);
   const loadAssets = () =>
     api.listCharacterAssets(ch.id).then((r) => setAssets(r.items)).catch(() => {});
-  useEffect(() => { void loadAssets(); }, [ch.id, ch.version]);
+  const loadStudio = () => {
+    void api.listCharacterStudioAssets(ch.id).then((r) => setStudioAssets(r.items)).catch(() => {});
+    void api.characterVersions(ch.id).then((r) => setVersions(r.items)).catch(() => {});
+    void api.listCharacterOutfits(ch.id).then((r) => setOutfits(r.items)).catch(() => {});
+  };
+  useEffect(() => { void loadAssets(); loadStudio(); }, [ch.id, ch.version]);
+
+  const run = async (label: string, action: () => Promise<unknown>) => {
+    setBusy(label);
+    try { await action(); toast(label); loadStudio(); onSaved(); }
+    catch (e: any) { toast(`${label}失败：${e.message}`); }
+    finally { setBusy(""); }
+  };
 
   const save = async () => {
     try {
@@ -127,6 +147,71 @@ function CharacterDetail({ ch, onBack, onSaved }: {
         </div>
         <span className="avatar large">{ch.name.slice(0, 1)}</span>
       </div>
+      <section className="focus-section">
+        <h3>Outfit 管理</h3>
+        <div className="row">
+          <input value={outfitName} onChange={(e) => setOutfitName(e.target.value)} placeholder="造型名称，例如：黄色雨衣" />
+          <button disabled={!outfitName || !!busy} onClick={() => run("Outfit 已创建", async () => {
+            await api.createCharacterOutfit(ch.id, outfitName); setOutfitName("");
+            const next = await api.listCharacterOutfits(ch.id); setOutfits(next.items);
+          })}>添加 Outfit</button>
+        </div>
+        <div className="pillrow">{outfits.map((o) => <span className="soft-tag" key={o.id}>{o.name}</span>)}</div>
+      </section>
+      <section className="focus-section">
+        <h3>Character Studio</h3>
+        <p className="muted">AI 生图和编辑都生成新的 Candidate，不会覆盖原始资产。选定主图后再确认生成标准视图。</p>
+        <div className="two">
+          <label><span>AI 创建 / 外观补充</span>
+            <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)}
+              placeholder="例如：深色雨衣、短发、疲惫但警觉" /></label>
+          <div className="row" style={{ alignItems: "end" }}>
+            <button className="primary" disabled={!!busy}
+              onClick={() => run("已生成 2 张 Candidate", () => api.aiGenerateCharacter(ch.id, prompt, 2))}>
+              {busy === "已生成 2 张 Candidate" ? "生成中…" : "AI 生成 2 张 Candidate"}
+            </button>
+            <button disabled={!!busy || !studioAssets.find((a) => a.status === "CANONICAL" && a.role === "front")}
+              onClick={() => setConfirmViews(studioAssets.find((a) => a.status === "CANONICAL" && a.role === "front")?.id ?? null)}>
+              选择主图并生成标准视图
+            </button>
+          </div>
+        </div>
+        <div className="studio-asset-grid">
+          {studioAssets.map((a) => <article className="studio-asset" key={a.id}>
+            <img src={a.url.startsWith("/") ? a.url : a.url} alt={a.role} />
+            <div className="row"><b className="grow">{a.role}</b><span className="status-pill">{a.status}</span></div>
+            <div className="row">
+              {a.status === "CANDIDATE" && <button className="small" onClick={() => run("Candidate 已批准", () => api.setCharacterAssetStatus(a.id, "APPROVED"))}>批准</button>}
+              {(a.status === "APPROVED" || a.status === "CANDIDATE") && <button className="small" onClick={() => run("已设为 Canonical", () => api.approveCharacterAsset(ch.id, a.id))}>设为主资产</button>}
+            </div>
+          </article>)}
+        </div>
+        {confirmViews && <div className="notice">
+          <b>二次确认：生成 four-view 标准参考组？</b>
+          <div className="row">
+            <button className="primary" onClick={() => run("标准视图已生成", async () => {
+              await api.standardCharacterViews(ch.id, confirmViews); setConfirmViews(null);
+            })}>确认生成</button>
+            <button onClick={() => setConfirmViews(null)}>取消</button>
+          </div>
+        </div>}
+        <div className="two">
+          <label><span>非破坏式编辑（换装 / 背景 / 姿势 / 视角 / 自由文本）</span>
+            <textarea value={editInstruction} onChange={(e) => setEditInstruction(e.target.value)}
+              placeholder="例如：保持身份不变，换成黄色雨衣，背景改为楼梯间" /></label>
+          <div className="row" style={{ alignItems: "end" }}>
+            <button disabled={!!busy || !editInstruction || !studioAssets.length}
+              onClick={() => run("编辑 Candidate 已生成", () => api.editCharacterImage(ch.id, studioAssets[0].id, editInstruction))}>生成编辑 Candidate</button>
+          </div>
+        </div>
+      </section>
+      <section className="focus-section">
+        <h3>Character Version / Diff</h3>
+        {versions.length === 0 ? <p className="muted">保存元数据或 Canonical 资产后会形成版本。</p> : <table className="dev"><thead><tr><th>版本</th><th>变更</th><th>时间</th></tr></thead><tbody>
+          {versions.map((v) => <tr key={v.id}><td>v{v.version}</td><td>{v.change_type}</td><td>{new Date(v.created_at).toLocaleString()}</td></tr>)}
+        </tbody></table>}
+        <p className="muted">Scenario Snapshot、Local Override、Promote 与 Production Reference Resolver 已由 API 提供，发布/开发者页面可继续查看。</p>
+      </section>
       <section className="focus-section">
         <h3>角色基础信息</h3>
         <div className="two">

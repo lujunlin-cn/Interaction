@@ -1,6 +1,7 @@
 /** API 客户端：前端只与后端 REST/WS 通信，绝不直连模型 Provider。 */
 import type {
-  Asset, DevState, Fixtures, GlobalCharacter, PlayerView, ProfileStatus,
+  Asset, CharacterAsset, CharacterReferenceSelection, CharacterSnapshot, CharacterVersion,
+  DevState, Fixtures, GlobalCharacter, PlayerView, ProfileStatus,
   ProviderHealth, PublishCheck, ScenarioDraft, ScenarioVersion, SkillsRegistry,
 } from "./types";
 
@@ -59,6 +60,44 @@ export const api = {
     fd.append("role", role);
     return req<Asset>(`/api/characters/${cid}/assets`, { method: "POST", body: fd });
   },
+  aiGenerateCharacter: (cid: string, prompt = "", numImages = 2) =>
+    req<{ items: CharacterAsset[] }>(`/api/characters/${cid}/ai-generate`, {
+      method: "POST", body: JSON.stringify({ prompt, num_images: numImages }),
+    }),
+  standardCharacterViews: (cid: string, frontAssetId: string) =>
+    req<{ items: CharacterAsset[] }>(`/api/characters/${cid}/standard-views`, {
+      method: "POST", body: JSON.stringify({ front_asset_id: frontAssetId }),
+    }),
+  editCharacterImage: (cid: string, sourceAssetId: string, instruction: string,
+                       role = "derived", outfitId?: string) =>
+    req<{ items: CharacterAsset[] }>(`/api/characters/${cid}/edit-image`, {
+      method: "POST", body: JSON.stringify({ source_asset_id: sourceAssetId,
+        instruction, role, outfit_id: outfitId }),
+    }),
+  listCharacterStudioAssets: (cid: string, status?: string) =>
+    req<{ items: CharacterAsset[] }>(`/api/characters/${cid}/character-assets${status ? `?status=${encodeURIComponent(status)}` : ""}`),
+  approveCharacterAsset: (cid: string, aid: string) =>
+    req<CharacterAsset>(`/api/characters/${cid}/assets/${aid}/approve`, { method: "POST" }),
+  setCharacterAssetStatus: (aid: string, status: CharacterAsset["status"]) =>
+    req<CharacterAsset>(`/api/character-assets/${aid}`, { method: "PATCH", body: JSON.stringify({ status }) }),
+  characterVersions: (cid: string) => req<{ items: CharacterVersion[] }>(`/api/characters/${cid}/versions`),
+  listCharacterOutfits: (cid: string) => req<{ items: any[] }>(`/api/characters/${cid}/outfits`),
+  createCharacterOutfit: (cid: string, name: string, description = "") =>
+    req<any>(`/api/characters/${cid}/outfits`, { method: "POST", body: JSON.stringify({ name, description }) }),
+  characterVersionDiff: (cid: string, from: number, to: number) =>
+    req<any>(`/api/characters/${cid}/versions/diff?from_v=${from}&to_v=${to}`),
+  characterSnapshot: (scenarioVersionId: string, cid: string) =>
+    req<CharacterSnapshot>(`/api/scenarios/${scenarioVersionId}/character-snapshots/${cid}`, { method: "POST" }),
+  listCharacterSnapshots: (scenarioVersionId: string) =>
+    req<{ items: CharacterSnapshot[] }>(`/api/scenarios/${scenarioVersionId}/character-snapshots`),
+  overrideCharacterSnapshot: (snapshotId: string, overrides: Record<string, any>) =>
+    req<CharacterSnapshot>(`/api/character-snapshots/${snapshotId}/override`, { method: "POST", body: JSON.stringify(overrides) }),
+  promoteCharacterSnapshot: (snapshotId: string) =>
+    req<CharacterVersion>(`/api/character-snapshots/${snapshotId}/promote`, { method: "POST" }),
+  resolveCharacterReferences: (snapshotId: string, sceneId: string, providerLimits?: Record<string, number>) =>
+    req<CharacterReferenceSelection>(`/api/character-snapshots/${snapshotId}/resolve-references`, {
+      method: "POST", body: JSON.stringify({ scene_or_shot_id: sceneId, provider_limits: providerLimits }),
+    }),
 
   listAssets: (sid: string) => req<{ items: Asset[] }>(`/api/scenarios/${sid}/assets`),
   uploadAsset: (sid: string, file: File, meta: { binding?: string; role?: string; entity?: string }) => {

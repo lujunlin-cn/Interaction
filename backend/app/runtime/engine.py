@@ -1136,27 +1136,37 @@ class RuntimeEngine:
                      for s in branch.shots]
             references = branch.references
         provider, rec = self.router.video_provider(branch_id)
-        handle = await provider.submit({"job_id": branch_id, "shots": shots,
-                                        "references": references,
-                                        "prompt": " / ".join(s["title"] for s in shots)})
-        for _ in range(240):
-            result = await provider.status(handle)
-            if result.status == "READY":
-                async with self._lock(session_id):
-                    state = await self.load_session(session_id)
-                    branch = state.branch(branch_id)
-                    branch.media_clips = (result.raw or {}).get("clips", [])
-                    branch.routes.append(rec)
-                    await tracer.emit("video.generate", "success",
-                                      output={"clips": len(branch.media_clips)},
-                                      provider=rec.selected or "",
-                                      session_id=session_id, branch_id=branch_id)
-                    await self._persist(state)
-                return
-            if result.status == "FAILED":
-                raise EngineError(f"video generation failed: {result.error}")
-            await asyncio.sleep(0.5)
-        raise EngineError("video generation timeout")
+        # Real providers receive one request per Shot.  The previous code sent
+        # the whole ShotPlan as one request, which produced one clip and made a
+        # concatenated artifact look like multi-shot generation.
+        async def submit_one(shot: dict):
+            return await provider.submit({
+                "job_id": f"{branch_id}_{shot['id']}", "shots": [shot],
+                "references": references, "prompt": shot.get("title", "")})
+        handles = await asyncio.gather(*(submit_one(shot) for shot in shots))
+        clips: list[str] = []
+        for shot, handle in zip(shots, handles):
+            for _ in range(240):
+                result = await provider.status(handle)
+                if result.status == "READY":
+                    clips.extend((result.raw or {}).get("clips", []))
+                    break
+                if result.status == "FAILED":
+                    raise EngineError(f"video generation failed ({shot['id']}): {result.error}")
+                await asyncio.sleep(0.5)
+            else:
+                raise EngineError(f"video generation timeout ({shot['id']})")
+        async with self._lock(session_id):
+            state = await self.load_session(session_id)
+            branch = state.branch(branch_id)
+            branch.media_clips = clips
+            branch.routes.append(rec)
+            await tracer.emit("video.generate", "success",
+                              output={"clips": len(clips), "jobs": len(handles),
+                                      "shot_ids": [s["id"] for s in shots]},
+                              provider=rec.selected or "",
+                              session_id=session_id, branch_id=branch_id)
+            await self._persist(state)
 
     async def _assemble_branch(self, state: SessionState, branch: Branch) -> None:
         """确定性装配：FFmpeg concat → 受控媒体目录（Assembly 不走生成模型）。"""
@@ -1862,7 +1872,11 @@ class RuntimeEngine:
     def player_view(self, state: SessionState) -> dict:
         """玩家视图：只含 READY 分支与自然语言状态（术语隔离，I05 Ready Gate）。"""
         recommendations = []
-        if state.epoch and state.epoch.published:
+        position = state.player.position()
+        lead_open = (not state.player.video_url
+                     or state.player.status in ("READY", "ENDED")
+                     or position >= state.player.lead)
+        if lead_open and state.epoch and state.epoch.published:
             for bid in state.epoch.ready_ids:
                 b = state.branch(bid)
                 if b and self.valid_branch(state, b):
@@ -1870,7 +1884,7 @@ class RuntimeEngine:
                         "branch_id": b.id, "label": b.label,
                         "summary": b.summary, "confidence": b.probability,
                         "source": b.source.value})
-        pos = state.player.position()
+        pos = position
         if pos >= state.player.duration and state.player.status == "PLAYING":
             state.player.status = "READY"
             state.player.playing = False

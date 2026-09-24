@@ -15,11 +15,12 @@ export type DevTab =
 
 /** G13：全局显示设置（持久化 localStorage，CSS 变量档位生效） */
 export interface DisplayPrefs {
-  appearance: "light" | "dark";
+  appearance: "system" | "light" | "dark";
   density: "comfortable" | "compact" | "roomy";
   fontSize: "small" | "medium" | "large" | "xlarge";
-  subtitleSize: "small" | "medium" | "large";
-  subtitlePos: "bottom" | "top";
+  uiSize: "standard" | "large" | "xlarge";
+  subtitleSize: "standard" | "large" | "xlarge" | "auto" | "small" | "medium";
+  subtitlePos: "bottomInside" | "bottomOutside" | "bottom" | "top";
 }
 
 export interface UiState {
@@ -41,11 +42,11 @@ export interface UiState {
 function loadDisplay(): DisplayPrefs {
   try {
     const raw = localStorage.getItem("drama.display");
-    if (raw) return { appearance: "light", density: "comfortable", fontSize: "medium",
-      subtitleSize: "medium", subtitlePos: "bottom", ...JSON.parse(raw) };
+    if (raw) return { appearance: "system", density: "comfortable", uiSize: "standard", fontSize: "medium",
+      subtitleSize: "standard", subtitlePos: "bottomInside", ...JSON.parse(raw) };
   } catch { /* ignore */ }
-  return { appearance: "light", density: "comfortable", fontSize: "medium",
-    subtitleSize: "medium", subtitlePos: "bottom" };
+  return { appearance: "system", density: "comfortable", uiSize: "standard", fontSize: "medium",
+    subtitleSize: "standard", subtitlePos: "bottomInside" };
 }
 
 /** 深链：#/<page>[/<tab>] 直达页面（验收脚本与可分享链接用）。 */

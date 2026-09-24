@@ -346,6 +346,28 @@ class CharacterAssetService:
                 .order_by(CharacterVersionRow.version.desc()))).scalars().all()
         return [CharacterVersion(**r.data) for r in rows]
 
+    async def list_outfits(self, character_id: str) -> list[CharacterOutfit]:
+        ch = await self.get_character(character_id)
+        if ch is None:
+            raise KeyError(character_id)
+        return [CharacterOutfit(**o) for o in ch.get("outfits", [])]
+
+    async def add_outfit(self, character_id: str, name: str,
+                         description: str = "") -> CharacterOutfit:
+        async with SessionLocal() as db:
+            async with db.begin():
+                row = await self._row(db, character_id)
+                data = dict(row.data)
+                outfit = CharacterOutfit(id=uid("outfit"), name=name,
+                                         description=description,
+                                         is_default=not bool(data.get("outfits")))
+                data["outfits"] = [*data.get("outfits", []), outfit.model_dump(mode="json")]
+                row.data = data
+                row.version += 1
+                row.updated_at = now_ms()
+        await self._new_version(character_id, CHANGE_METADATA)
+        return outfit
+
     async def diff_versions(self, character_id: str,
                             from_v: int, to_v: int) -> CharacterVersionDiff:
         versions = {v.version: v for v in await self.list_versions(character_id)}

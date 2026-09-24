@@ -4,11 +4,21 @@ PRD v0.6 §17「验收用例与完成定义」。按实测证据填写——只�
 外部依赖（真实 Provider 配额 / 用户试玩 / 人工判断）标 BLOCKED，未跑完的标
 NOT_RUN，**不伪造**。
 
-## 测试基线
+## 测试基线（Final Closure）
 
 - 单元/集成：`cd backend && PROVIDER_MODE=mock pytest tests/` — **44/44 绿**
   （含 vertical_slice 端到端、generalization、skills、two-phase commit）。
 - 部署：DGX Spark `:9000`，`provider_mode=hybrid`，`profile=AGENT_LOCAL_PROFILE`。
+
+本地复核命令：`DATABASE_URL=sqlite+aiosqlite:///./itest.db PROVIDER_MODE=mock SOL_H3_BASE_URL= .venv/bin/python -m pytest tests/ -q`。
+置空 `SOL_H3_BASE_URL` 是为了让 Profile Switch 测试验证真实回滚分支；目标机若配置服务，应使用显式测试夹具。
+
+### Final Closure 增量结论
+
+- Character Studio 正式 React 操作已接入 AI Candidate、Canonical、标准视图、非破坏编辑、Outfit、版本读取。
+- Runtime 已按 `ShotPlan N → N 个 Provider Job → N 个 clip → FFmpeg concat` 执行；Trace 的 `video.generate` 记录 `jobs`、`clips`、`shot_ids`。
+- `hybrid` 云视频路由为 `h3_max → mock_video`。本次没有外部 H3 Max 新任务产物，真实链路保持 PARTIAL。
+- Nemotron 3.5 Lightning NVFP4 未在本次会话启动，保持 BLOCKED；`gemma3:27b` 不计入 PASS。
 - 真实链路冒烟：`sess_00003_fef0ad` → 自由输入「我找到那段录音」→ Jev
   `CLARIFICATION_REQUIRED`(0.44) → confirm → `br_00051_ff2a3d` CANONICAL →
   真实 mp4 `/media/scenes/scene_00083_00ca24.mp4` + 真实 LLM 叙事 +
@@ -129,6 +139,8 @@ NOT_RUN，**不伪造**。
 ---
 
 ## 汇总
+
+以下汇总是上一轮 DGX 证据快照，保留用于追溯；Final Closure 增量结论不把未重跑的真实 Provider 证据升级为 PASS。
 
 | 状态 | 数量 | 占比 |
 | --- | --- | --- |

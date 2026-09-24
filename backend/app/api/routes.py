@@ -193,7 +193,7 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
                         result["version_id"], sc.global_character_id)
                     snapshot_ids.append(snap.id)
                 except KeyError:
-                    continue  # 绑定的全局角色已被删 → 跳过不阻塞发布
+                    raise HTTPException(422, f"global character not found: {sc.global_character_id}")
         if snapshot_ids:
             result["character_snapshots"] = snapshot_ids
         if req and req.play:
@@ -392,6 +392,22 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
     async def character_versions(cid: str):
         items = await char_assets.list_versions(cid)
         return {"items": [v.model_dump(mode="json") for v in items]}
+
+    @api.get("/characters/{cid}/outfits")
+    async def character_outfits(cid: str):
+        try:
+            return {"items": [o.model_dump(mode="json") for o in await char_assets.list_outfits(cid)]}
+        except KeyError:
+            raise HTTPException(404, "character not found")
+
+    @api.post("/characters/{cid}/outfits")
+    async def character_outfit_create(cid: str, data: dict):
+        try:
+            outfit = await char_assets.add_outfit(cid, str(data.get("name", "新造型")),
+                                                  str(data.get("description", "")))
+            return outfit.model_dump(mode="json")
+        except KeyError:
+            raise HTTPException(404, "character not found")
 
     @api.get("/characters/{cid}/versions/diff")
     async def character_version_diff(cid: str, from_v: int, to_v: int):

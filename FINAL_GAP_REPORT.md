@@ -1,6 +1,9 @@
 # FINAL GAP REPORT — 互动短剧封版审计
 
-审计基线：PRD v0.5（唯一 SoT）+ `interactive_drama_prototype.html`（UI 参考）+ 当前后端/前端全量代码 + DGX Spark 实测（2026-09-23）。
+审计基线：PRD v0.6（唯一业务 SoT）+ `interactive_drama_prototype.html`（UI 参考）+ 当前后端/前端全量代码 + DGX Spark 历史实测（2026-09-24 更新）。
+
+> 前一版 v0.5 / Sol-H3 “无服务”结论已过期。当前 Sol-H3 adapter 已实现；本轮未重新取得 DGX 产物，
+> 因此保持 PARTIAL。Nemotron 3.5 Lightning NVFP4 未启动，保持 BLOCKED。
 判定标准：「类/接口/字段存在」≠ 完成。完成 = 用户可操作 + Runtime 真执行 + Provider/状态真变化 + Trace 可查 + 正常/失败路径可复现。
 
 ## DGX 实测快照（2026-09-23 19:47 CST）
@@ -10,7 +13,7 @@
 - Nemotron Lightning：127.0.0.1:8001 **无服务**（/v1/models 空响应）→ Director primary 实际熔断降级到 step_5。
 - Ollama：gemma3:27b 在跑（可作本地 OpenAI 兼容端点替代验证）。
 - PG：`interaction-drama-db` @127.0.0.1:5433 正常。
-- Sol-H3 本地视频：无任何服务，`SolH3LocalProvider.submit` 是 `raise RuntimeError` 占位。
+- Sol-H3 本地视频：adapter 已实现真实 submit/status/cancel/health；本轮未重新取得目标机出片产物，结论为 PARTIAL。
 - ComfyUI @8188 在跑（与本案无关）。
 
 ## Gap Checklist

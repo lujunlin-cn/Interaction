@@ -47,7 +47,7 @@ HYBRID_ROUTES: dict[str, list[str]] = {
     "production": ["nemotron_local", "step_37", "mock_text"],
     "authoring": ["step_5", "mock_text"],
     "decision": ["jev", "mock_decision"],
-    "cloud_video": ["mock_video"],
+    "cloud_video": ["h3_max", "mock_video"],
     "local_video": ["sol_h3_local", "mock_video"],
 }
 

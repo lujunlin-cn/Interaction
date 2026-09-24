@@ -1,6 +1,6 @@
 # Interactive Drama · 互动短剧平台
 
-基于 PRD v0.5 的可运行实现：React+TypeScript 前端 + FastAPI + PostgreSQL 后端，
+基于 PRD v0.6 的可运行实现：React+TypeScript 前端 + FastAPI + PostgreSQL 后端，
 部署目标为 DGX Spark（`/home/hajimi2025/interaction`）。
 
 ## 架构
@@ -33,7 +33,7 @@ bash deploy/start.sh                    # 起库 + 依赖 + 构建 + 服务于 :
 | --- | --- | --- | --- |
 | mock | MockTextProvider（确定性规则） | MockVideoProvider（FFmpeg 字幕卡） | MockDecisionProvider |
 | live | PRD 冻结矩阵（Lightning 本地 → Step5 / Step3.7 → Lightning / Step5） | fal H3 Max / Sol-H3 本地 | Jev API |
-| hybrid | 同 live 矩阵，失败显式降级并记录路由事件 | 同 live | 同 live |
+| hybrid | 同 live 矩阵，失败显式降级并记录路由事件 | H3 Max → Mock | 同 live |
 
 冻结矩阵（live）：director→[nemotron_local, step_5]，narrative→[step_37, nemotron_local]，
 production→[nemotron_local, step_37]，authoring→[step_5]，decision→[jev]，

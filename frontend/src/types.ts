@@ -110,6 +110,30 @@ export interface GlobalCharacter {
   updated_at: number;
 }
 
+export type CharacterAssetStatus = "GENERATED" | "CANDIDATE" | "APPROVED" | "CANONICAL" | "ARCHIVED";
+export interface CharacterAsset {
+  id: string; character_id: string; role: string; status: CharacterAssetStatus;
+  url: string; source_asset_refs: string[]; outfit_id?: string | null;
+  generation_job_id?: string | null; provenance: Record<string, any>; created_at: number;
+}
+export interface CharacterVersion {
+  id: string; character_id: string; version: number; change_type: string;
+  identity_spec: Record<string, any>; canonical_asset_refs: Record<string, string | null>;
+  outfits: Array<{ id: string; name: string; description: string; reference_assets: string[]; is_default: boolean }>;
+  created_at: number;
+}
+export interface CharacterSnapshot {
+  id: string; scenario_version_id: string; global_character_id: string;
+  character_version_id: string; character_version: number;
+  frozen_identity: Record<string, any>; frozen_asset_refs: Record<string, string>;
+  local_overrides: Record<string, any>;
+}
+export interface CharacterReferenceSelection {
+  scene_or_shot_id: string; character_snapshot_id: string;
+  selected_image_refs: string[]; voice_ref?: string | null; motion_ref?: string | null;
+  selection_reason: string; developer_override: boolean;
+}
+
 export interface Asset {
   id: string;
   scenario_id: string;

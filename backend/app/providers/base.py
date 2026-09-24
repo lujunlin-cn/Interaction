@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any, Optional, Protocol
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class TextResponse(BaseModel):
@@ -61,6 +61,7 @@ class VideoJobHandle(BaseModel):
     status_url: Optional[str] = None
     response_url: Optional[str] = None
     cancel_url: Optional[str] = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class VideoJobResult(BaseModel):
