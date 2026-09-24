@@ -42,6 +42,7 @@ class PlayerState(BaseModel):
     branch_id: Optional[str] = None
     duration: float = 0.0                     # 秒
     lead: float = 0.0                         # Decision Lead（秒）：进度越过 lead 即可发布下一批
+    decision_open_at: float = 0.0             # 服务端推荐暴露闸门（绝不由前端决定）
     position_base: float = 0.0                # 最近一次推进到的进度
     playing: bool = False
     clock_started_at: Optional[int] = None    # 开始/恢复播放的墙钟

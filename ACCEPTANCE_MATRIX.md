@@ -11,13 +11,13 @@ NOT_RUN，**不伪造**。
 - 部署：DGX Spark `:9000`，`provider_mode=hybrid`，`profile=AGENT_LOCAL_PROFILE`。
 
 本地复核命令：`DATABASE_URL=sqlite+aiosqlite:///./itest.db PROVIDER_MODE=mock SOL_H3_BASE_URL= .venv/bin/python -m pytest tests/ -q`。
-置空 `SOL_H3_BASE_URL` 是为了让 Profile Switch 测试验证真实回滚分支；目标机若配置服务，应使用显式测试夹具。
+DGX Spark 已配置 `SOL_H3_BASE_URL=http://127.0.0.1:8790`；单元测试使用显式夹具隔离外部服务。
 
 ### Final Closure 增量结论
 
-- Character Studio 正式 React 操作已接入 AI Candidate、Canonical、标准视图、非破坏编辑、Outfit、版本读取。
+- Character Studio 正式 React 操作已接入 AI 双 Candidate、Canonical、标准视图二次确认、非破坏编辑、Outfit、版本/Diff、Snapshot Override/Promote 与 Resolver。
 - Runtime 已按 `ShotPlan N → N 个 Provider Job → N 个 clip → FFmpeg concat` 执行；Trace 的 `video.generate` 记录 `jobs`、`clips`、`shot_ids`。
-- `hybrid` 云视频路由为 `h3_max → mock_video`。本次没有外部 H3 Max 新任务产物，真实链路保持 PARTIAL。
+- `hybrid` 云视频路由为 `h3_max → mock_video`；Mock 仅显式降级。Real Multi-Shot 必须由真实 Provider N Job + N clip + FFmpeg concat 证明。
 - Nemotron 3.5 Lightning NVFP4 已在 DGX Spark 通过 vLLM 0.27.1-aarch64 启动；`:8001/v1/models` 与中文 Director JSON 冒烟均通过。`gemma3:27b` 不计入 Nemotron PASS。
 - 真实链路冒烟：`sess_00003_fef0ad` → 自由输入「我找到那段录音」→ Jev
   `CLARIFICATION_REQUIRED`(0.44) → confirm → `br_00051_ff2a3d` CANONICAL →
@@ -134,7 +134,7 @@ NOT_RUN，**不伪造**。
 | AT-73 | 改文字描述不点重新生成→不动资产 | ✅ | 保存仅 PATCH 文本字段；Studio 提示「不会自动生图」；`ai-describe` 仅返回草案不落库（FR-096 确认制）。 |
 | AT-74 | 多分辨率 100% Zoom 走四页 | ✅ | `docs/acceptance/shots/`：1366×768 / 1440×900 / 1920×1080 / 2560×1440 / 3840×2160 五档走 home/creator/developer——文字可读、侧边栏与工作区无关键遮挡；4K 合理扩展。新增 `#/<page>[/<tab>]` 深链（store.ts）支撑可分享直达与验收脚本。 |
 | AT-75 | 标准隐藏 Prompt/Provider，开发者可见 | ✅ | 术语隔离：玩家界面自然中文、Provider/model 仅开发者模式；FAL_KEY 不进浏览器/Trace（G28）。 |
-| AT-76 | 封版部署核查 + AGENT↔VIDEO 往返 | 🔶 | Nemotron Lightning 已真实部署并完成 1/2/4 路 Director 验证；h3_max 有历史真实出片，Sol-H3 本轮未重新取得产物，Profile 往返仍保留 PARTIAL。 |
+| AT-76 | 封版部署核查 + AGENT↔VIDEO 往返 | 🔶 | Nemotron Lightning 已真实部署并完成并发验证；Profile API 已接入 drain/persist/stop-release/start/health 生命周期，真实双向切换需在单 GPU 空闲窗口执行，保留 PARTIAL，不以 enum 变化冒充 PASS。 |
 
 ---
 
@@ -153,7 +153,7 @@ NOT_RUN，**不伪造**。
 **BLOCKED / 待外部条件**：
 
 - **AT-44**：需真实用户试玩反馈，不虚构。
-- **AT-76 残项**：Sol-H3 本轮未重新取得任务产物，Profile 往返的 unload/start 过程仍需完整运行证据；Nemotron 部署本身已通过。
+- **AT-76 残项**：真实双向切换会停止 Nemotron 并启动 Sol-H3 容器，需单 GPU 空闲窗口保留 stop/start/health 证据；Nemotron 部署本身已通过。Real Multi-Shot 不能用 Mock 证明。
 - **AT-45/47/51/60/62~65/68/71/72**：路径实现且有结构证据，缺大规模或真实配额下的
   端到端留证，标 PARTIAL 而非 PASS。
 

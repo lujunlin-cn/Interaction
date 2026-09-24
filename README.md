@@ -1,6 +1,6 @@
 # Interactive Drama · 互动短剧平台
 
-基于 PRD v0.6 的可运行实现：React+TypeScript 前端 + FastAPI + PostgreSQL 后端，
+基于 PRD v0.6 Final Closure 的可运行实现：React+TypeScript 前端 + FastAPI + PostgreSQL 后端，
 部署目标为 DGX Spark（`/home/hajimi2025/interaction`）。
 
 ## 架构
@@ -52,6 +52,8 @@ DATABASE_URL=sqlite+aiosqlite:///./itest.db PROVIDER_MODE=mock \
 真实直连并发 1/2/4 路三轮成功率为 3/3、6/6、12/12，8 路单轮为 8/8；业务
 `DIRECTOR_LOCAL_MAX_CONCURRENCY` 默认仍为 2，超时回退 Step 5。详见
 `DIRECTOR_CONCURRENCY_REPORT.md` 与 `G29_MODEL_DEPLOY_AUDIT.md`。
+
+正式 Character Studio 接入 AI 双 Candidate、Canonical、多视图二次确认、非破坏编辑、Outfit、版本 Diff、Scenario Snapshot、Local Override/Promote 与 Reference Resolver。视频 Runtime 按每个 Shot 独立提交 Provider Job，再由 FFmpeg concat 生成 SceneArtifact；Mock 结果不作为 Real Multi-Shot 证据。
 
 ## 关键契约
 

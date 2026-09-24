@@ -1145,11 +1145,18 @@ class RuntimeEngine:
                 "references": references, "prompt": shot.get("title", "")})
         handles = await asyncio.gather(*(submit_one(shot) for shot in shots))
         clips: list[str] = []
+        shot_provenance: list[dict] = []
         for shot, handle in zip(shots, handles):
             for _ in range(240):
                 result = await provider.status(handle)
                 if result.status == "READY":
-                    clips.extend((result.raw or {}).get("clips", []))
+                    shot_clips = (result.raw or {}).get("clips", [])
+                    clips.extend(shot_clips)
+                    shot_provenance.append({"shot_id": shot["id"],
+                                            "provider": handle.provider,
+                                            "request_id": handle.provider_job_id,
+                                            "clips": shot_clips,
+                                            "status": result.status})
                     break
                 if result.status == "FAILED":
                     raise EngineError(f"video generation failed ({shot['id']}): {result.error}")
@@ -1160,10 +1167,14 @@ class RuntimeEngine:
             state = await self.load_session(session_id)
             branch = state.branch(branch_id)
             branch.media_clips = clips
-            branch.routes.append(rec)
+            branch.jobs = [h.provider_job_id for h in handles]
+            branch.pipeline_events.append({"event": "real_multi_shot_jobs",
+                                           "shots": shot_provenance})
+            branch.routes.append(rec.model_copy(update={"phase": "video.multi_shot"}))
             await tracer.emit("video.generate", "success",
                               output={"clips": len(clips), "jobs": len(handles),
-                                      "shot_ids": [s["id"] for s in shots]},
+                                      "shot_ids": [s["id"] for s in shots],
+                                      "jobs_provenance": shot_provenance},
                               provider=rec.selected or "",
                               session_id=session_id, branch_id=branch_id)
             await self._persist(state)
@@ -1188,7 +1199,10 @@ class RuntimeEngine:
             clip_refs=[c.name for c in clips],
             assembled_path=f"scenes/{scene_id}.mp4", quality_status="READY",
             provenance={"assembler": "ffmpeg-concat",
-                        "providers": [r.selected for r in branch.routes]},
+                        "providers": [r.selected for r in branch.routes],
+                        "jobs": branch.jobs,
+                        "shot_provenance": [e.get("shots", []) for e in branch.pipeline_events
+                                             if e.get("event") == "real_multi_shot_jobs"]},
             duration=sum(s.duration for s in branch.shots) or settings.mock_shot_duration)
         await tracer.emit("assembly.concat", "success",
                           output={"scene": scene_id, "clips": len(clips)},
@@ -1399,6 +1413,7 @@ class RuntimeEngine:
         state.player.branch_id = branch.id
         state.player.duration = duration
         state.player.lead = max(0.0, duration - settings.decision_lead_seconds)
+        state.player.decision_open_at = state.player.lead
         state.player.position_base = 0.0
         state.player.playing = True
         state.player.clock_started_at = now_ms()
@@ -1873,9 +1888,11 @@ class RuntimeEngine:
         """玩家视图：只含 READY 分支与自然语言状态（术语隔离，I05 Ready Gate）。"""
         recommendations = []
         position = state.player.position()
-        lead_open = (not state.player.video_url
-                     or state.player.status in ("READY", "ENDED")
-                     or position >= state.player.lead)
+        # Recommendation exposure is a server-side timing contract.  A missing
+        # video never opens the gate early; only the recorded decision_open_at
+        # (or an explicitly ended scene) can expose ready branches.
+        lead_open = (state.player.status in ("READY", "ENDED")
+                     or position >= state.player.decision_open_at)
         if lead_open and state.epoch and state.epoch.published:
             for bid in state.epoch.ready_ids:
                 b = state.branch(bid)
@@ -1936,6 +1953,7 @@ class RuntimeEngine:
                 "video_url": state.player.video_url,
                 "duration": state.player.duration,
                 "lead": state.player.lead,
+                "decision_open_at": state.player.decision_open_at,
                 "position": min(pos, state.player.duration),
             },
             "recommendations": recommendations,

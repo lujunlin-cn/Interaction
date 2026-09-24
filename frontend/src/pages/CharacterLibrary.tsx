@@ -74,6 +74,12 @@ function CharacterDetail({ ch, onBack, onSaved }: {
   const [confirmViews, setConfirmViews] = useState<string | null>(null);
   const [outfitName, setOutfitName] = useState("");
   const [outfits, setOutfits] = useState<any[]>([]);
+  const [scenarioVersionId, setScenarioVersionId] = useState("");
+  const [snapshots, setSnapshots] = useState<any[]>([]);
+  const [resolver, setResolver] = useState<any>(null);
+  const [diff, setDiff] = useState<any>(null);
+  const [overrideJson, setOverrideJson] = useState('{"appearance":""}');
+  const [editSourceId, setEditSourceId] = useState("");
   useEffect(() => setDraft(ch), [ch.id, ch.version]);
   const loadAssets = () =>
     api.listCharacterAssets(ch.id).then((r) => setAssets(r.items)).catch(() => {});
@@ -83,6 +89,9 @@ function CharacterDetail({ ch, onBack, onSaved }: {
     void api.listCharacterOutfits(ch.id).then((r) => setOutfits(r.items)).catch(() => {});
   };
   useEffect(() => { void loadAssets(); loadStudio(); }, [ch.id, ch.version]);
+  const loadSnapshots = () => scenarioVersionId
+    ? api.listCharacterSnapshots(scenarioVersionId).then((r) => setSnapshots(r.items)).catch(() => {})
+    : undefined;
 
   const run = async (label: string, action: () => Promise<unknown>) => {
     setBusy(label);
@@ -186,6 +195,10 @@ function CharacterDetail({ ch, onBack, onSaved }: {
             </div>
           </article>)}
         </div>
+        <label><span>编辑源图</span><select value={editSourceId} onChange={(e) => setEditSourceId(e.target.value)}>
+          <option value="">选择 Candidate / 主图</option>
+          {studioAssets.map((a) => <option value={a.id} key={a.id}>{a.role} · {a.status} · {a.id}</option>)}
+        </select></label>
         {confirmViews && <div className="notice">
           <b>二次确认：生成 four-view 标准参考组？</b>
           <div className="row">
@@ -200,8 +213,8 @@ function CharacterDetail({ ch, onBack, onSaved }: {
             <textarea value={editInstruction} onChange={(e) => setEditInstruction(e.target.value)}
               placeholder="例如：保持身份不变，换成黄色雨衣，背景改为楼梯间" /></label>
           <div className="row" style={{ alignItems: "end" }}>
-            <button disabled={!!busy || !editInstruction || !studioAssets.length}
-              onClick={() => run("编辑 Candidate 已生成", () => api.editCharacterImage(ch.id, studioAssets[0].id, editInstruction))}>生成编辑 Candidate</button>
+            <button disabled={!!busy || !editInstruction || !editSourceId}
+              onClick={() => run("编辑 Candidate 已生成", () => api.editCharacterImage(ch.id, editSourceId, editInstruction))}>生成编辑 Candidate</button>
           </div>
         </div>
       </section>
@@ -210,7 +223,30 @@ function CharacterDetail({ ch, onBack, onSaved }: {
         {versions.length === 0 ? <p className="muted">保存元数据或 Canonical 资产后会形成版本。</p> : <table className="dev"><thead><tr><th>版本</th><th>变更</th><th>时间</th></tr></thead><tbody>
           {versions.map((v) => <tr key={v.id}><td>v{v.version}</td><td>{v.change_type}</td><td>{new Date(v.created_at).toLocaleString()}</td></tr>)}
         </tbody></table>}
-        <p className="muted">Scenario Snapshot、Local Override、Promote 与 Production Reference Resolver 已由 API 提供，发布/开发者页面可继续查看。</p>
+        {versions.length >= 2 && <button onClick={() => api.characterVersionDiff(ch.id, versions[versions.length - 1].version, versions[0].version).then(setDiff)}>查看首末版本 Diff</button>}
+        {diff && <pre className="mono" style={{ whiteSpace: "pre-wrap" }}>{JSON.stringify(diff, null, 2)}</pre>}
+        <div className="two">
+          <label><span>Scenario Version ID</span>
+            <input value={scenarioVersionId} onChange={(e) => setScenarioVersionId(e.target.value)} placeholder="粘贴已发布版本 ID" /></label>
+          <div className="row" style={{ alignItems: "end" }}>
+            <button disabled={!scenarioVersionId || !!busy} onClick={() => run("Scenario Snapshot 已创建", async () => {
+              await api.characterSnapshot(scenarioVersionId, ch.id); loadSnapshots();
+            })}>创建快照</button>
+            <button disabled={!scenarioVersionId} onClick={loadSnapshots}>查看快照</button>
+          </div>
+        </div>
+        {snapshots.map((s) => <div className="notice" key={s.id}>
+          <div className="row"><b className="grow">Snapshot {s.id}</b><span className="status-pill">v{s.character_version}</span></div>
+          <label><span>Local Override JSON</span><textarea value={overrideJson} onChange={(e) => setOverrideJson(e.target.value)} /></label>
+          <div className="row">
+            <button className="small" onClick={() => run("Local Override 已保存", async () => {
+              await api.overrideCharacterSnapshot(s.id, JSON.parse(overrideJson)); loadSnapshots();
+            })}>Local Override</button>
+            <button className="small" onClick={() => run("已提升到全局角色", () => api.promoteCharacterSnapshot(s.id))}>Promote Global</button>
+            <button className="small" onClick={() => api.resolveCharacterReferences(s.id, "studio-preview").then(setResolver).then(() => toast("Resolver 已返回"))}>Resolve References</button>
+          </div>
+        </div>)}
+        {resolver && <pre className="mono" style={{ whiteSpace: "pre-wrap" }}>{JSON.stringify(resolver, null, 2)}</pre>}
       </section>
       <section className="focus-section">
         <h3>角色基础信息</h3>

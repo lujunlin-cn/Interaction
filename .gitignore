@@ -12,6 +12,7 @@ itest.db
 # 运行时数据与生成媒体
 backend/data/
 backend/itest.db
+data/
 
 # 前端
 frontend/node_modules/

@@ -149,12 +149,43 @@ class ProviderRouter:
         mark("DRAINING")
         if drain_check is not None:
             # 等待在途生成排空（超时 15s，强制继续，任务会自然结束）
+            drained = False
             for _ in range(150):
                 if await drain_check():
+                    drained = True
                     break
                 await asyncio.sleep(0.1)
+            if not drained:
+                self.profile_state = "ACTIVE"
+                raise ProviderError("profile_lifecycle", "active jobs did not drain within 15s")
         mark("PERSISTING")     # Session 状态本就每步落库；此处是显式边界
         mark("STOPPING")
+        lifecycle = []
+        if settings.profile_lifecycle_enabled:
+            # Single-GPU Spark: release the currently active model before
+            # starting the target service.  Commands are deliberately explicit
+            # so the transition can be audited from the returned evidence.
+            old_container = (settings.nemotron_container if old == RuntimeProfile.AGENT_LOCAL
+                             else settings.video_local_container)
+            target_container = (settings.nemotron_container if target == RuntimeProfile.AGENT_LOCAL
+                                else settings.video_local_container)
+            lifecycle.append({"action": "stop", "container": old_container})
+            try:
+                await self._docker("stop", old_container)
+            except ProviderError:
+                self.profile_state = "ACTIVE"
+                raise
+            lifecycle.append({"action": "release_resources", "container": old_container})
+            await asyncio.sleep(0.2)
+            lifecycle.append({"action": "start", "container": target_container})
+            try:
+                await self._docker("start", target_container)
+            except ProviderError:
+                # Best effort restore of the old service before surfacing the
+                # failed transition to the caller.
+                await self._docker("start", old_container)
+                self.profile_state = "ACTIVE"
+                raise
         mark("STARTING_TARGET")
         self.profile = target          # 原子切换：后续路由立刻按新 Profile 计算
         mark("HEALTH_CHECK")
@@ -163,26 +194,58 @@ class ProviderRouter:
             provider = self.registry.get(pid)
             if provider is None:
                 continue               # mock 注册表无真实本地服务，跳过
-            try:
-                ok = await asyncio.wait_for(provider.health(), timeout=10)
-            except Exception:          # noqa: BLE001
-                ok = False
+            ok = False
+            for _ in range(60 if settings.profile_lifecycle_enabled else 1):
+                try:
+                    ok = await asyncio.wait_for(provider.health(), timeout=10)
+                    if ok and settings.profile_lifecycle_enabled:
+                        ok = await self._container_running(target_container)
+                except Exception:          # noqa: BLE001
+                    ok = False
+                if ok:
+                    break
+                await asyncio.sleep(2)
             if not ok:
                 failed.append(pid)
         if failed:
             self.profile = old         # 回滚
+            if settings.profile_lifecycle_enabled:
+                await self._docker("stop", target_container)
+                await self._docker("start", old_container)
+                lifecycle.extend([{"action": "stop", "container": target_container},
+                                  {"action": "restore", "container": old_container}])
             mark("FAILED_RECOVERABLE")
             self.profile_state = "ACTIVE"
             self.profile_history.append(
                 {"from": old.value, "to": target.value, "result": "rolled_back",
                  "failed_health": failed, "timeline": _with_durations(timeline)})
             return {"ok": False, "profile": old.value, "restored": True,
-                    "failed_health": failed, "timeline": _with_durations(timeline)}
+                    "failed_health": failed, "timeline": _with_durations(timeline),
+                    "lifecycle": lifecycle}
         mark("ACTIVE")
         self.profile_history.append(
             {"from": old.value, "to": target.value, "result": "switched",
              "timeline": _with_durations(timeline)})
-        return {"ok": True, "profile": target.value, "timeline": _with_durations(timeline)}
+        return {"ok": True, "profile": target.value,
+                "timeline": _with_durations(timeline), "lifecycle": lifecycle}
+
+    @staticmethod
+    async def _docker(action: str, container: str) -> None:
+        """Run a bounded Docker lifecycle command for real local profile switches."""
+        proc = await asyncio.create_subprocess_exec(
+            "docker", action, container,
+            stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+        _out, err = await asyncio.wait_for(proc.communicate(), timeout=45)
+        if proc.returncode != 0:
+            raise ProviderError("profile_lifecycle", err.decode(errors="replace")[-500:])
+
+    @staticmethod
+    async def _container_running(container: str) -> bool:
+        proc = await asyncio.create_subprocess_exec(
+            "docker", "inspect", "--format", "{{.State.Running}}", container,
+            stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+        out, _ = await asyncio.wait_for(proc.communicate(), timeout=10)
+        return proc.returncode == 0 and out.strip() == b"true"
 
     def profile_status(self) -> dict:
         return {"profile": self.profile.value, "state": self.profile_state,

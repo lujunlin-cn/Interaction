@@ -53,6 +53,9 @@ class Settings(BaseSettings):
 
     # --- Runtime Profile（Q53/Q68：单 Spark 显式切换）---
     runtime_profile: str = "AGENT_LOCAL_PROFILE"  # or VIDEO_LOCAL_PROFILE
+    profile_lifecycle_enabled: bool = False       # docker stop/start evidence mode
+    nemotron_container: str = "interaction-nemotron"
+    video_local_container: str = "comfyui-nvidia"
 
     # --- 调度默认值（PRD 12.2，部署配置，非业务常数）---
     budget_total: int = 500

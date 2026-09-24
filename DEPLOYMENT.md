@@ -62,6 +62,8 @@ tar czf - . | sshpass -p "$PW" ssh -p 22222 hajimi2025@139.199.69.46 \
 | --- | --- |
 | `DATABASE_URL` | `postgresql+asyncpg://…@127.0.0.1:5433/…` |
 | `PROVIDER_MODE` | `mock` / `live` / `hybrid`（hybrid：真实 H3 Max，失败显式降级 Mock） |
+| `PROFILE_LIFECYCLE_ENABLED` | 真实 Profile 切换时执行 Docker stop/release/start/health；单 GPU 生产环境建议开启 |
+| `NEMOTRON_CONTAINER` / `VIDEO_LOCAL_CONTAINER` | `interaction-nemotron` / `comfyui-nvidia` |
 | `RUNTIME_PROFILE` | `AGENT_LOCAL_PROFILE` / `VIDEO_LOCAL_PROFILE` |
 | `STEP_API_KEY` | StepFun step_37 / step_5 |
 | `JEV_API_KEY` | Jev 决策 |

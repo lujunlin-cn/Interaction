@@ -2,18 +2,18 @@
 
 审计基线：PRD v0.6（唯一业务 SoT）+ `interactive_drama_prototype.html`（UI 参考）+ 当前后端/前端全量代码 + DGX Spark 历史实测（2026-09-24 更新）。
 
-> 前一版 v0.5 / Nemotron 未部署结论已过期。Nemotron Lightning 已在本机 vLLM 容器真实启动并完成中文 JSON 与 1/2/4 路并发验证；Sol-H3 本轮未重新取得 DGX 产物，因此保持 PARTIAL。
+> v0.5 / Nemotron 未部署结论已过期。Nemotron Lightning 已真实部署；公网服务不属于本轮 Gap。Character Studio、Real Multi-Shot、Profile 生命周期与服务端 Decision Lead 已完成代码闭环，真实 Provider 证据按 provider 可用性单独记录，Mock 不计入 Real Multi-Shot PASS。
 判定标准：「类/接口/字段存在」≠ 完成。完成 = 用户可操作 + Runtime 真执行 + Provider/状态真变化 + Trace 可查 + 正常/失败路径可复现。
 
 ## DGX 实测快照（2026-09-24）
 
-- 服务：uvicorn :9000 运行中，commit `6e8b826`，`PROVIDER_MODE=hybrid`，`AGENT_LOCAL_PROFILE`，/api/health OK。
+- 服务：uvicorn :9000 运行中，当前提交以 Git 最终 SHA 为准，`PROVIDER_MODE=hybrid`，`AGENT_LOCAL_PROFILE`，/api/health OK。
 - 硬件：NVIDIA GB10（CUDA 13.0，driver 580.159.03），内存 121G 已用 102G。
 - Nemotron Lightning：vLLM 0.27.1-aarch64 监听 `127.0.0.1:8001`，`/v1/models` 返回 `nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4`；中文 JSON 冒烟成功，GPU 进程约 80,329 MiB。
 - Director 并发：直连 vLLM 的 1/2/4 路三轮成功率为 3/3、6/6、12/12；4 路未见 OOM/timeout。业务 admission 默认 2，队列超时回退 Step 5。
 - Ollama：可作为显式降级 Provider，但不再冒充 Nemotron。
 - PG：`interaction-drama-db` @127.0.0.1:5433 正常。
-- Sol-H3 本地视频：复用本机 adapter `:8790`、ComfyUI `:8188` 与既有配置完成真实 submit/status/content；`job_00181_bc7c33` 到 READY，5.042s mp4 已落盘。
+- Sol-H3 本地视频：复用本机 adapter `:8790` 与既有配置完成真实 submit/status/content；历史 `job_00181_bc7c33` 到 READY。Real Multi-Shot 运行时现按 Shot 独立 Job 并保存 request/clip provenance；未将 Mock 结果计入 PASS。
 - ComfyUI @8188 在跑（与本案无关）。
 
 ## Gap Checklist
@@ -41,7 +41,7 @@
 | G19 | 发布并试玩 | 按钮一键 | 无 | 发布后手动回故事库 | publish 成功后直接 createSession→跳 Player | 点击即进游玩 |
 | G20 | 素材页 | binding/entity/role/authorization/canonical/trim/时长/用途标记 | 只传 binding/entity；无 role/authorized/canonical/trim UI | schema 字段闲置 | 上传表单+行内编辑补全字段（role 下拉、authorized/canonical 勾选、video trim_start/end、参考用途标记） | 保存后 dev/state 可见字段 |
 | G21 | Developer 隐藏 | 标准模式隐藏 | Sidebar 未读 | 需确认 Sidebar 是否按 mode 过滤 | Sidebar 加 mode gate | 标准模式无 Developer 入口 |
-| G22 | Profile 状态机 | 七态可见 | `switch_profile` 有 DRAINING..ACTIVE 但 history 无时间线/时长；前端只显示当前态 | 过程不可观察 | history 记录每态 at+耗时；前端 RuntimeTab 渲染 timeline | 切换时逐态可见 |
+| G22 | Profile 状态机 | 真实 drain/persist/stop-release/start/health | `switch_profile` 已接入可审计 Docker 生命周期，单 GPU 实切需空闲窗口 | 生产切换会暂时停止当前模型 | `PROFILE_LIFECYCLE_ENABLED=true`，返回 lifecycle + timeline，失败自动恢复 | API 返回逐态 timeline 与容器动作 |
 | G23 | Sol-H3 任务 UI | Job ID/模型/GPU/Profile/起止/status/output/error | ProductionTab 只回显一次提交结果 | 无任务列表/轮询 | JobRow 已有；加 GET /dev/jobs 列表+status 轮询 | 提交后可见状态迁移 |
 | G24 | Skill 审计 | 版本/used_by/最近调用/输入输出 artifact | registry 静态；toggle 有；无调用记录 | 审计链断 | tracer emit 时带 skill_id/skill_version（已支持字段）；SkillsTab 加「最近调用」列（查 TraceSpan） | 禁用后 trace 可查阻塞记录 |
 | G25 | Wish 七态 | ACTIVE/DEFERRED/CONFLICTED/PARTIALLY/FULFILLED/FAILED/WITHDRAWN+reason/evidence | Wish 模型有 8 态但只迁移 ACTIVE→WITHDRAWN；玩家端只显示 ACTIVE | 生命周期只有两态被用 | 提交分支时按 outcome 与 wish scope 评估：fulfilled/partial/conflict；Ledger 记录 reason/evidence/at/branch；玩家端友好文案 | 许愿「希望平安离开」+完成离开结局 → FULFILLED 可断言 |

@@ -7,7 +7,7 @@ from typing import Optional
 from sqlalchemy import select
 
 from ..db import SessionLocal
-from ..db_models import GlobalCharacterRow, ScenarioRow, ScenarioVersionRow
+from ..db_models import CharacterAssetRow, CharacterVersionRow, GlobalCharacterRow, ScenarioRow, ScenarioVersionRow
 from ..domain.ids import uid
 from ..domain.schemas import ScenarioDraft, now_ms
 from ..providers.router import ProviderRouter
@@ -91,7 +91,8 @@ class ScenarioService:
 
     # G16：指令补丁允许写入的路径前缀（locks 与任意路径拒绝）
     _PATCHABLE_PREFIXES = ("description", "title", "genre", "tone", "play_style",
-                           "drama.", "world.", "theme.", "mechanics.")
+                           "drama.", "world.", "theme.", "characters.",
+                           "mechanics.")
 
     def _apply_typed_patch(self, draft: ScenarioDraft, patches: list[dict],
                            source: str) -> list[dict]:
@@ -244,6 +245,8 @@ class ScenarioService:
             all((not c.global_character_id) or c.global_character_version
                 for c in draft.characters),
             "绑定全局角色需记录版本号")
+        add("char_assets", "角色 Canonical 资产", True,
+            "绑定全局角色必须存在 Canonical 主资产")
         mechanics_ok = all(isinstance(k, str) and hasattr(v, "enabled")
                            for k, v in draft.mechanics.items())
         add("mechanics", "玩法机制", mechanics_ok,
@@ -268,6 +271,30 @@ class ScenarioService:
                 if check["id"] == "char_snapshot" and missing:
                     check["ok"] = False
                     check["detail"] = "无效全局角色引用：" + ", ".join(sorted(missing))
+                if not missing:
+                    async with SessionLocal() as db:
+                        globals_ = (await db.execute(
+                            select(GlobalCharacterRow).where(GlobalCharacterRow.id.in_(bound_ids))
+                        )).scalars().all()
+                        versions = (await db.execute(
+                            select(CharacterVersionRow).where(CharacterVersionRow.character_id.in_(bound_ids))
+                        )).scalars().all()
+                        version_ids = {v.id for v in versions}
+                        invalid_snapshot = [g.id for g in globals_ if not g.data.get("current_version_id")
+                                            or g.data.get("current_version_id") not in version_ids]
+                        canonical = (await db.execute(
+                            select(CharacterAssetRow).where(
+                                CharacterAssetRow.character_id.in_(bound_ids),
+                                CharacterAssetRow.status == "CANONICAL")
+                        )).scalars().all()
+                        invalid_assets = [g.id for g in globals_ if not any(a.character_id == g.id for a in canonical)]
+                    for check in checks:
+                        if check["id"] == "char_snapshot" and invalid_snapshot:
+                            check["ok"] = False
+                            check["detail"] = "角色没有有效 Character Version：" + ", ".join(invalid_snapshot)
+                        if check["id"] == "char_assets" and invalid_assets:
+                            check["ok"] = False
+                            check["detail"] = "角色缺少 CANONICAL 资产：" + ", ".join(invalid_assets)
         failed = [c for c in checks if not c["ok"]]
         if failed:
             from fastapi import HTTPException
