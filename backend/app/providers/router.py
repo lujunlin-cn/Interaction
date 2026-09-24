@@ -257,9 +257,18 @@ class ProviderRouter:
     @classmethod
     async def _stop_service(cls, profile: RuntimeProfile, container: str) -> None:
         if profile == RuntimeProfile.VIDEO_LOCAL and settings.video_local_stop_command:
+            # VIDEO_LOCAL is a two-part service: the adapter and the ComfyUI
+            # worker.  Stopping only the adapter leaves H3 weights resident on
+            # the single Spark GPU and makes the Nemotron restart fail.
             await cls._command(settings.video_local_stop_command)
-        else:
-            await cls._docker("stop", container)
+            try:
+                await cls._docker("stop", container)
+            except ProviderError as exc:
+                # A stopped container is already in the desired state.
+                if "is not running" not in str(exc).lower():
+                    raise
+            return
+        await cls._docker("stop", container)
 
     @staticmethod
     def _lifecycle_executor(profile: RuntimeProfile, action: str) -> str:
@@ -271,10 +280,18 @@ class ProviderRouter:
 
     @classmethod
     async def _start_service(cls, profile: RuntimeProfile, container: str) -> None:
-        if profile == RuntimeProfile.VIDEO_LOCAL and settings.video_local_start_command:
-            await cls._command(settings.video_local_start_command)
-        else:
-            await cls._docker("start", container)
+        if profile == RuntimeProfile.VIDEO_LOCAL:
+            # Bring up the worker before the adapter so health means the full
+            # generation stack is ready.  docker start is idempotent here.
+            try:
+                await cls._docker("start", container)
+            except ProviderError as exc:
+                if "already started" not in str(exc).lower():
+                    raise
+            if settings.video_local_start_command:
+                await cls._command(settings.video_local_start_command)
+            return
+        await cls._docker("start", container)
 
     @classmethod
     async def _target_running(cls, profile: RuntimeProfile, container: str) -> bool:

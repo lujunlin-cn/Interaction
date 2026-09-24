@@ -1,5 +1,9 @@
 # 验收矩阵 · AT-01~AT-76
 
+本轮真实 VIDEO_LOCAL / Sol-H3 / Nemotron 回归证据见
+[`FINAL_E2E_ACCEPTANCE.md`](FINAL_E2E_ACCEPTANCE.md)。adapter 健康只有在
+ComfyUI worker 与 websocket 均 ready 时才计入 PASS。
+
 PRD v0.6 §17「验收用例与完成定义」。按实测证据填写——只标真实跑过的用例，
 外部依赖（真实 Provider 配额 / 用户试玩 / 人工判断）标 BLOCKED，未跑完的标
 NOT_RUN，**不伪造**。

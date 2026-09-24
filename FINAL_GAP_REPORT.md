@@ -5,6 +5,12 @@ PRD v0.6 是业务 SoT；线上 :9000 和 Nemotron Lightning 部署已确认，�
 
 ## CLOSED
 
+- VIDEO_LOCAL Sol-H3 live validation：在正式 Profile API 下启动完整 ComfyUI worker
+  与 adapter，真实生成 5.042 秒 MP4；A→V→A 和 Nemotron 中文 JSON smoke 见
+  `FINAL_E2E_ACCEPTANCE.md`。
+- Profile lifecycle resource release：VIDEO_LOCAL 切换现在同时停止/启动 adapter
+  和 ComfyUI，避免 H3 权重残留导致 Nemotron EngineCore 启动失败。
+
 - Play Loop：Opening → 自动播放 → Decision Lead 服务端 Gate → 选择/自由输入 → 下一幕，失败可重试/文字继续/退出。
 - Real Multi-Shot Runtime：N Shot → N 个 Provider Job → N clips → FFmpeg concat；每 Shot 和 SceneArtifact 都记录 provenance。
 - H3 Max 真实双 Shot：两个独立 request ID、两个真实 mp4、ffprobe 与 concat 证据见 `REAL_MULTISHOT_ACCEPTANCE.md`。
@@ -28,4 +34,4 @@ PRD v0.6 是业务 SoT；线上 :9000 和 Nemotron Lightning 部署已确认，�
 - 在有浏览器自动化和可控 nano-banana 配额的验收窗口重拍五档分辨率，并完整执行 Character Studio Flow A～E。
 - 若生产环境要求所有视频都是真实 H3/Sol-H3，将 `PROVIDER_MODE=live` 并确保参考素材和 Provider 配额可用；hybrid 的降级语义需保留。
 
-最终候选 SHA：`9be1d814784d3653e3bdaf62d6afb1a37d90b9b5`。
+最终候选 SHA：见本次 Final E2E 提交。

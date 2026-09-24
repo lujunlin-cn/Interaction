@@ -8,6 +8,10 @@
 - 最终候选 SHA：`9be1d814784d3653e3bdaf62d6afb1a37d90b9b5`
 - 结论：**PARTIAL**。真实 H3 Multi-Shot、真实 Profile 往返、UI 五档响应式截图和离线回归已完成；外部 Character Studio 浏览器 Flow A～E 尚缺本轮完整留证。
 
+本轮新增 `FINAL_E2E_ACCEPTANCE.md`：VIDEO_LOCAL 下真实 Sol-H3 出片、ComfyUI
+worker 健康、V→A 资源释放和 Nemotron 重新启动已完成；完整普通用户故事 E2E
+未重新录制的项目继续保持 PARTIAL。
+
 ## 验收结果
 
 | 项目 | 结果 | 证据 |
