@@ -3,10 +3,10 @@ document_id: interactive-drama-prd
 version: "0.6"
 language: zh-CN
 prepared_on: "2026-09-24"
-status: requirements-baseline-with-character-asset-studio-runtime-and-ai-native-creator-player-ux
+status: requirements-baseline-with-character-asset-studio-runtime-ai-native-creator-player-and-generation-cost-control
 product_name: "AI 原生互动视频／短剧平台（工作名称）"
-source_of_truth: "v0.5 完整基线（Q01–Q70、I01–I05、Dynamic Drama Control、Model/Agent Runtime）+ Q71–Q104 Character Studio 决策 + Q105–Q122 AI 引导式创作/统一角色颗粒度/自然语言玩法/沉浸式 Player 决策 + fal.ai Nano Banana 2 图像 Provider 锁定 + 全局显示/响应式与真实模型部署验收补充"
-supersedes: "PRD v0.5；完整继承既有产品、戏剧控制、模型与 Runtime 基线，增量冻结全局角色资产系统、AI 引导式 Creator、统一角色管理颗粒度、自然语言玩法作者界面、沉浸式 Player、全局显示与响应式验收"
+source_of_truth: "v0.5 完整基线（Q01–Q70、I01–I05、Dynamic Drama Control、Model/Agent Runtime）+ Q71–Q104 Character Studio 决策 + Q105–Q122 AI 引导式创作/统一角色颗粒度/自然语言玩法/沉浸式 Player 决策 + Q123–Q129 媒体生成质量/付费保险丝/Usage Ledger 决策 + fal.ai Nano Banana 2 图像 Provider 锁定 + 全局显示/响应式与真实模型部署验收补充"
+supersedes: "PRD v0.5；完整继承既有产品、戏剧控制、模型与 Runtime 基线，增量冻结全局角色资产系统、AI 引导式 Creator、统一角色管理颗粒度、自然语言玩法作者界面、沉浸式 Player、媒体生成质量控制、付费 Provider 保险丝、Usage Ledger、全局显示与响应式验收"
 artifacts:
   ai: Agent_Skills_Interactive_Drama_PRD_AI_v0.6.md
   latest_alias: Agent_Skills_Interactive_Drama_PRD_AI.md
@@ -14,12 +14,13 @@ artifacts:
 human_artifact_status: "高保真原型独立维护；v0.6 Markdown 为需求权威基线，正式 React 实现不得低于已冻结的关键交互"
 baseline_file: Agent_Skills_Interactive_Drama_PRD_AI_v0.5.md
 baseline_git_blob_sha: "68aa819dc85803b894b68ff7abc34c4518b675ff"
-decision_count: 122
+decision_count: 129
 character_decision_range: [Q71, Q104]
 creator_player_ux_decision_range: [Q105, Q122]
+generation_cost_control_decision_range: [Q123, Q129]
 character_image_provider_lock: "fal.ai: fal-ai/nano-banana-2 + fal-ai/nano-banana-2/edit"
 interaction_amendments: [I01, I02, I03, I04, I05]
-external_evidence_refresh: "2026-09-23：在继承 v0.5 资料基础上，核验 fal.ai Nano Banana 2 文生图与 Edit API；其余模型/运行时来源继承 v0.5，真实部署状态必须以服务器实测为准"
+external_evidence_refresh: "2026-09-24：在继承 v0.5 资料基础上，复核 fal.ai Nano Banana 2 的 resolution 参数与 H3 Max 的 resolution/aspect_ratio；其余模型/运行时来源继承 v0.5，真实部署状态必须以服务器实测为准"
 implementation_status: "需求基线；代码、付费 API、本地模型与线上部署是否完成必须以真实运行、Trace、AT 验收和服务器证据为准"
 priority_semantics:
   P0: "黑客松交付必需；其中新增工程建议仍须按建议身份理解"
@@ -37,7 +38,7 @@ provenance_semantics:
 
 > **创作者定义世界与矛盾，玩家决定行动，系统组织有因果、有递进、可收束也可续玩的故事，Agent Skills 将值得呈现的剧情制作成下一幕。**
 >
-> 本文同时是产品需求基线与 AI 开发代理的工程输入。它不是产品已经实现的声明，也不是对所有模型性能的保证。**v0.6 为合并后的完整 Markdown 基线，不是仅有新增条目的补丁。v0.6 完整继承 Q01–Q70 与 I01–I05，并新增 Q71–Q104 的 Character Studio / Global Character Asset System 决策，以及 Q105–Q122 的 AI 引导式 Creator、统一角色颗粒度、自然语言玩法和沉浸式 Player 决策。角色生图与编图统一锁定 fal.ai Nano Banana 2；应用、模型部署、API 容错、角色一致性与性能仍须真实验收。**
+> 本文同时是产品需求基线与 AI 开发代理的工程输入。它不是产品已经实现的声明，也不是对所有模型性能的保证。**v0.6 为合并后的完整 Markdown 基线，不是仅有新增条目的补丁。v0.6 完整继承 Q01–Q70 与 I01–I05，并新增 Q71–Q104 的 Character Studio / Global Character Asset System 决策、Q105–Q122 的 AI 引导式 Creator / 统一角色颗粒度 / 自然语言玩法 / 沉浸式 Player 决策，以及 Q123–Q129 的媒体生成质量、付费 Provider 保险丝与 Usage Ledger 决策。角色生图与编图统一锁定 fal.ai Nano Banana 2；应用、模型部署、API 容错、角色一致性与性能仍须真实验收。**
 
 ## 00. 文档契约与执行规则
 
@@ -103,6 +104,13 @@ provenance_semantics:
 48. **Q120：背包、关系、线索、愿望退出主布局，进入左上角可滑出的 HUD。** 桌面支持 hover 临时展开、点击固定；触屏用点击抽屉。Standard 默认用叙事性关系描述而非裸数值，Developer 可查看精确状态值。
 49. **Q121–Q122：Standard Player 不暴露 Runtime／Schema／Pydantic／Provider 错误。** 技术详情进入 Developer Inspector；玩家只看到可恢复的自然语言反馈及“重试／修改／文字继续／退出”等动作。生成中、媒体载入中、播放失败必须是不同状态，不能统一成永久黑屏。
 50. **创作端隐藏机器需要的结构，游玩端隐藏机器正在运行的过程。** Standard Mode 以故事意图、角色意图、玩法规则和可玩的选择为中心；Developer Mode 保留完整 Schema、Trace、Provider、版本与原始工件。
+
+51. **Q123–Q124：媒体生成质量使用真实物理参数，不包装成“省钱/标准/豪华”等预算模式。** Standard Settings 可指定图片 resolution、视频 resolution 与视频 aspect ratio；设置只影响之后新建的生成任务，不反写旧 Artifact。当前 Nano Banana 2 支持 0.5K/1K/2K/4K；当前 H3 Max 支持 480P/768P/1080P，Reference-to-Video 的比例支持 adaptive 及常见横竖屏比例。[S03][S26][S27]
+52. **Q125：Developer Test Override 只用于测试缩小真实生成规模。** 可限制测试 Top-K、每分支 Shot 数、单 Shot 时长与 Reference 数量，但不得静默修改已发布 Scenario 的正式语义；Standard 不暴露这些工程旋钮。
+53. **Q126–Q127：所有付费 Provider 必须有总保险丝和错误分类。** FAL_PAID_GENERATION_ENABLED=false 时不得产生新的 fal 付费 generation/edit 请求；403 TOP_UP 等账单锁必须映射为 BILLING_LOCKED 并打开 circuit，禁止 retry storm。
+54. **Q128：Provider 失败恢复不能用 Mock 冒充正式媒体。** Billing/Quota 锁定时，只有在当前 Route/Profile 明确允许且真实可用时才可回退 Sol-H3；否则进入 FAILED_RECOVERABLE，允许文字继续/上传既有素材/稍后重试等真实降级路径。
+55. **Q129：Usage Ledger 与 Paid Preflight 属于可审计基础设施。** 每次实际或被保险丝拦截的付费生成尝试记录 provider/model/task/resolution/aspect_ratio/duration/数量/reference 摘要/status/request_id 与可获得的成本信息；Standard 不显示单次价格，Developer 可查看 job count、requested duration、reference count、状态与成本/额度诊断。
+56. **成本安全不得破坏 Q59 的锁 K 后并行语义。** 若预算、Provider 状态或 Developer 测试限制要求降低 K，必须在锁定 K 之前完成；一旦 K 锁定，仍按 Q59 并行。
 
 ### 00.3 本次交付范围
 
@@ -176,9 +184,9 @@ AI 开发代理不得只读新增章节而忽略三模态素材、双后端、Re
 
  **这些是厂商／项目方特定条件下的数据，不是本产品每轮交互的 SLA。** 参考素材上传、Prompt 扩展、排队、多个 Shot、重试、下载、拼接、播放器缓冲和冷启动均可能增加等待。本产品的目标是利用这些能力改善体验，而不是先宣布任何输入都能 3 秒生成完整短剧。
 
-## 02. 全部 104 项选择与最终解释
+## 02. 全部 129 项选择与最终解释
 
-本节保留 Q01–Q29 原始选择、I01–I05 互动修订、Q30–Q48 动态戏剧控制、Q49–Q70 模型／Agent Runtime，以及 Q71–Q104 Character Studio，共 104 项问答决策。字母保留用户原选项；括号补充优先于助手当时的示例。旧决定与后续选择有冲突时，按 02.4 明确覆盖，不静默保留两套互斥实现。
+本节保留 Q01–Q29 原始选择、I01–I05 互动修订、Q30–Q48 动态戏剧控制、Q49–Q70 模型／Agent Runtime、Q71–Q104 Character Studio、Q105–Q122 Creator/Player UX，以及 Q123–Q129 媒体生成质量与成本安全，共 129 项问答决策。字母保留用户原选项；括号补充优先于助手当时的示例。旧决定与后续选择有冲突时，按后续覆盖说明处理，不静默保留两套互斥实现。
 
 | 决策 ID | 最终选择 | 确认的内容与用户补充 | 对实现和验收的影响 |
 |---|---|---|---|
@@ -430,7 +438,7 @@ Assembly              → FFmpeg / deterministic runtime
 | Q106 | USER | “戏剧结构”定位为对一句／多句话故事描述的深化追问层 | DramaSpec 是 Runtime 数据结构，不是 Standard UI；页面负责帮助用户形成 DramaSpec |
 | Q107 | USER | 缺失内容优先提供与当前故事相关的建议选项，并保留自由修改 | AI 高置信内容可自动补全；中低置信／高影响内容再追问。具体 confidence 阈值为可配置实现细节，不作为不可变产品常数 |
 | Q108 | USER | Standard Drama 按自然语言主题组织，而非逐字段暴露 Core Question/Truth Model 等内部结构 | 至少覆盖“故事真正想问什么／背后真相／推动故事的压力／可能结局／绝对不能发生什么”；伏笔、限时互动等高级项可折叠或 Developer 查看 |
-| Q109 | USER | Global Character 与 Creator Character 使用同一信息架构和管理颗粒度 | 两个入口不能把同一个角色定义成两种互不兼容的对象 |
+| Q109 | USER | “角色库”与 Creator 中的“角色”使用同一信息架构和管理颗粒度 | Standard 产品命名固定为“角色库 / 角色”；Global Character / Scenario Character 只作为内部作用域术语。两个入口不能把同一个角色定义成两种互不兼容的对象 |
 | Q110 | USER | 角色强制必填保持最小化 | Global 最低为名字 + 一句话角色定义；Scenario 至少明确本故事身份/作用，其余人格、动机、秘密、认知、关系、视觉状态允许 AI 建议或选填 |
 | Q111 | USER | Scenario Character 是 Global Character Snapshot 上的故事级 Overlay | Desire/Fear/Secrets/Knowledge/Relationships/Visual State 默认属于当前故事状态，不静默回写 Global |
 | Q112 | USER | 角色编辑也遵循“AI 先理解、用户确认缺失项”的创作方式 | 不要求创作者面对一排空白 Desire/Fear/Secrets 等 textarea；AI 可生成建议，用户确认、修改或忽略 |
@@ -446,6 +454,22 @@ Assembly              → FFmpeg / deterministic runtime
 | Q122 | USER | 字幕、媒体状态与失败恢复都属于播放器产品体验 | 场景标题短暂显示后淡出；对话/旁白使用安全区字幕；Generating/Loading/Failed 分离；结构化输出错误优先在服务端规范化/有限重试，再进入 FAILED_RECOVERABLE，而不是把底层验证报错吐给玩家 |
 
 **统一产品原则（USER）：** Standard Creator 不把“机器需要的结构”交给用户手工维护；Standard Player 不把“机器正在运行的过程”暴露给玩家。结构化 Schema、JSON、ID、Provider、Trace 和精确数值仍完整存在，但属于 Developer Mode 与可审计后台。
+
+### 02.9 Q123–Q129：媒体生成质量、付费保险丝与 Usage Ledger
+
+以下决策来自 2026-09-24 对真实 Fal 消耗、测试成本和账单锁错误恢复的明确补充。它们不改变 Q95/Q96：Standard 仍不显示单次价格，也不提供“节省/标准/豪华”预算档；本节控制的是可解释的真实媒体参数和工程保险丝。
+
+| 决策 ID | 最终选择 | 确认内容 | 对实现与验收的影响 |
+|---|---|---|---|
+| Q123 | USER | Settings 可以直接指定图片/视频生成分辨率和视频比例 | Standard 显示真实物理参数，而不是预算套餐；当前图片档为 0.5K/1K/2K/4K，视频档为 480P/768P/1080P，视频比例至少含 adaptive/16:9/9:16/1:1；Adapter 按 Provider 能力校验 [S03][S26][S27] |
+| Q124 | USER | 生成设置只影响之后的新任务，并写入 provenance | 旧 CharacterAsset/SceneArtifact 不被设置变化反向修改；每个 GenerationJob/Artifact 可追溯实际 resolution/aspect_ratio/duration 等 |
+| Q125 | USER | Developer 可使用测试生成限制降低真实验收成本 | Developer 可覆盖测试 Top-K、每分支最大 Shot、单 Shot 最大时长、测试 Reference 上限；覆盖只作用于明确的测试/验收执行，不静默修改 Scenario 发布配置 |
+| Q126 | USER | 增加 Fal 付费生成总保险丝 | FAL_PAID_GENERATION_ENABLED=false 时所有 H3 Max / Nano Banana 2 generation/edit 在真正 HTTP 提交前本地拒绝；已有 Artifact、Mock、本地 Sol-H3、纯文本链不因此失效 |
+| Q127 | USER | Billing/Quota 错误进入专门 Circuit Breaker | 至少区分 BILLING_LOCKED / QUOTA_EXHAUSTED / AUTH_FAILED / RATE_LIMITED / TRANSIENT_PROVIDER_ERROR / INVALID_REQUEST / TIMEOUT；403 TOP_UP 属 BILLING_LOCKED，首次确认后 circuit OPEN，后续相同付费调用快速失败，不继续重试 |
+| Q128 | USER | 账单锁定时采用真实可解释降级，而不是假成功 | Player/Ending 可在允许时真实回退本地视频，否则进入 FAILED_RECOVERABLE 并允许文字继续；Character Studio 仍可编辑文字、上传图片和使用已有 Canonical，不允许 Mock 图片/视频冒充真实生成 |
+| Q129 | USER | 建立 Usage Ledger 与 Paid Generation Preflight | Developer 在提交前可看到预计 job 数、总 requested duration、resolution 和 reference 数；执行后记录实际请求/拦截/失败/完成。Standard 不显示单次价格；价格变化不能写成永久产品常数 |
+
+**兼容 Q95/Q96：** “允许选择 480P / 768P / 1080P”是输出质量参数，不是“经济/标准/高质量套餐”。Standard 不显示预计美元金额；Developer/后台可为了运维和成本审计记录供应商当时的费率或实际账单信息，但必须带时间和来源，不能把价格硬编码成长期合同。
 
 ## 03. 产品定位、边界与成功闭环
 
@@ -718,12 +742,18 @@ Overview 在生成初稿后应显示“AI 已理解什么／还需要确认几�
 | FR-112 | Player HUD 抽屉；Q120 | P0 | 左上角 HUD 汇总背包/关系/线索/Wish；桌面 hover 临时展开、点击固定，触屏点击展开；Standard 关系默认定性表达 | 精确数值和 State ID 进入 Developer |
 | FR-113 | Standard 错误隔离与 Developer Inspector；Q121 | P0 | Standard 把模型/Schema/Provider 异常转成可恢复的人话与操作；Developer Inspector 保留原始 Trace、错误、Branch/Provider 信息 | Pydantic URL、Python exception、原始 validation dump 不得直出玩家界面 |
 | FR-114 | 字幕、媒体状态与输出修复；Q122 | P0 | Scene Title 短暂淡入淡出；字幕按对话/旁白显示；Generating/Loading/Failed 三态明确；可安全规范化的结构化模型输出先做 deterministic repair 或一次 schema retry | 不把黑屏作为通用加载态；修复不得绕过业务校验或偷偷改世界事实 |
+| FR-115 | 媒体生成质量设置；Q123～124 | P0 | Settings 可选择图片 resolution、视频 resolution、视频 aspect ratio；值经统一 GenerationSettings 进入 CharacterService/Production/Provider Adapter，并写入 job/artifact provenance | 设置只影响未来任务；不得把 Provider 不支持的值静默丢弃 |
+| FR-116 | Developer Test Generation Override；Q125 | P0 | Developer 可在明确测试上下文限制 K、每分支 Shot、单 Shot 时长、Reference 数；UI 清楚标记“测试覆盖” | 不修改 Scenario 正式发布配置；锁 K 后仍遵守 Q59 并行 |
+| FR-117 | Paid Generation Guard；Q126 | P0 | 付费 Fal generation/edit 在 HTTP 提交前统一检查保险丝；关闭时真实付费请求计数为 0，已有 Artifact/本地链仍可用 | 不靠改 API Key 制造失败；不得在业务层散落不同开关 |
+| FR-118 | Billing/Quota Circuit Breaker；Q127～128 | P0 | 403 TOP_UP 等账单锁分类后立即 OPEN circuit；后续调用本地快速失败；Standard 显示可恢复的人话，Developer 显示分类与原始诊断 | Billing/Quota 错误不得按 transient 反复 retry；不得用 Mock 冒充 fallback |
+| FR-119 | Usage Ledger；Q129 | P0 | 记录 provider/model/task/request_id、requested/actual status、resolution、aspect_ratio、duration/num_images、reference 摘要、拦截/失败原因、可获得的 cost metadata | Standard 不展示单次价格；敏感 Key/原始凭据不入 Ledger |
+| FR-120 | Paid Generation Preflight；Q129 | P0-MIN | Developer 在付费提交前看到 jobs、总 requested duration、resolution、reference 数和当前 guard/circuit 状态；可取消尚未投递的批次 | Preflight 是审计/防误烧，不改变已锁定业务语义，不把估算当实际账单 |
 
 ### 05.1 P0 的交付策略
 
 用户已选择较宽的媒体输入范围，因此应以“ **功能真通，界面精简** ”控制范围：素材支持图／声／视频的最小合法上传、预览、用途绑定和生成；编辑器先用表单；只做一个精致故事和一种能闭环的玩法；不建素材市场和大型创作社区。
 
-FR-042–060 是动态戏剧控制的最小可用实现；FR-061–082 是 v0.5 模型／运行时增量；FR-083–102 是 v0.6 Character Studio、显示与真实部署验收增量；FR-103–114 是 2026-09-24 冻结的 AI-native Creator / Character / Mechanics / Player UX 增量，不要求为每项建一个服务或 Skill。Director 持有一个戏剧评估工作流、同库增加结构化记录、在现有 UI 中增加回显与续杯即可起步。具体字段、测试数量和技术实现仍区分 DERIVED／PROPOSED；例如 FR-029 的“两类结局”演示数量依然只是建议。
+FR-042–060 是动态戏剧控制的最小可用实现；FR-061–082 是 v0.5 模型／运行时增量；FR-083–102 是 v0.6 Character Studio、显示与真实部署验收增量；FR-103–114 是 2026-09-24 冻结的 AI-native Creator / Character / Mechanics / Player UX 增量；FR-115–120 是媒体生成质量、付费保险丝与 Usage Ledger 增量，不要求为每项建一个服务或 Skill。Director 持有一个戏剧评估工作流、同库增加结构化记录、在现有 UI 中增加回显与续杯即可起步。具体字段、测试数量和技术实现仍区分 DERIVED／PROPOSED；例如 FR-029 的“两类结局”演示数量依然只是建议。
 
 ## 06. 界面与交互规格
 
@@ -758,15 +788,45 @@ P0 用一套完成度高的主题证明接口，允许 Creator 调整少量 toke
 默认隐藏模型概率、GPU 队列和完整 Trace，把它们放在演示／调试面板中。推荐选项不默认展示未经校准的“你有 82% 概率选择它”。玩家只需要知道能做什么，以及自己的选择是否被接受。
 
 
-### 06.5 Global Character Library 与 Character Studio
+### 06.5 角色库与 Character Studio
 
-Global Character Library 是跨 Scenario 的一级导航，不属于单一 Creator 项目。列表支持搜索 name、bio、tags、personality，并展示角色主图、当前版本与使用范围。点击角色进入 Character Studio。
+Standard 产品只使用两个名称：一级导航叫 **“角色库”**，Creator 内模块叫 **“角色”**。GlobalCharacter / ScenarioCharacterSnapshot / Overlay 是数据与作用域术语，不应让普通用户误以为存在“全局角色”“故事角色”“人物角色”三种不同对象。
+
+角色库是跨 Scenario 的一级导航，不属于单一 Creator 项目。列表支持搜索 name、bio、tags、personality，并展示角色主图、当前版本与使用范围。点击角色进入 Character Studio。
 
 Character Studio 至少提供：概览、身份、造型、姿势/动作、声音、使用记录、版本。身份页管理 Canonical 主图与标准多视图；造型页管理默认造型和 Outfit；姿势/动作页管理静态 Pose 与动作视频；声音页管理 Canonical Voice 与备用 Voice；版本页显示 change_type、before/after、由哪些 Scenario Snapshot 使用。
 
 生成/编辑操作以用户意图为主：普通模式显示“生成角色图片”“编辑形象”“生成参考图”“新建造型”等产品动作，不展示 fal endpoint、temperature 或原始请求 JSON。Developer 模式才显示 Prompt、Provider、模型、request_id、输入引用、输出资产与错误。
 
-角色库与 Creator 的角色页使用同一层级：身份、人格与动机、认知与秘密、关系、外观与造型、声音与动作、使用与版本。角色库呈现 Global Core；Creator 呈现 Scenario Snapshot/Overlay，并在每个可覆盖部分明确“继承全局 / 仅本故事 / 保存为全局新版本”。Standard Mode 以自然语言展示 AI 当前理解，不让用户手工维护版本 ID、Snapshot JSON 或 Resolver 原始输出。
+角色库与 Creator 的角色页使用同一层级：身份、人格与动机、认知与秘密、关系、外观与造型、声音与动作、使用与版本。角色库呈现 Global Core；Creator 呈现 Scenario Snapshot/Overlay，并在每个可覆盖部分明确“继承角色库 / 仅本故事 / 保存为角色库新版本”。**“同一层级”还必须意味着同一管理颗粒度：Outfit、多视图、Pose/Motion、Voice、版本与使用记录不能在角色库可管理，而在 Creator 中退化成一段文字或跳转链接。** Standard Mode 以自然语言展示 AI 当前理解，不让用户手工维护版本 ID、Snapshot JSON 或 Resolver 原始输出。
+
+布局基线如下；两侧复用同一 Character Studio 组件体系，只改变 Scope 与可编辑来源：
+
+~~~text
+角色库 > Alice                           创作 > 角色 > Alice
+┌────────────────────────────────┐      ┌────────────────────────────────┐
+│ Alice · v5                     │      │ Alice · 来自角色库 v3          │
+│ [概览][身份][造型][姿势动作]    │      │ [概览][身份][造型][姿势动作]    │
+│ [声音][使用记录][版本]           │      │ [声音][使用记录][版本]           │
+├────────────────────────────────┤      ├────────────────────────────────┤
+│ 身份                           │      │ 身份                           │
+│ 主身份图 / 标准多视图           │      │ 继承角色库 v3 / 本故事覆盖       │
+├────────────────────────────────┤      ├────────────────────────────────┤
+│ 造型                           │      │ 造型                           │
+│ 默认 / 雨衣 / 工作服            │      │ ● 雨衣（仅本故事）               │
+│ 每套可管理自己的参考图           │      │ ○ 默认 / ○ 工作服 / + 新造型     │
+├────────────────────────────────┤      ├────────────────────────────────┤
+│ 姿势动作 / 声音                 │      │ 姿势动作 / 声音                 │
+│ 多 Pose / 多 Motion / 主+备用声  │      │ 继承 / 覆盖 / 本故事专用         │
+├────────────────────────────────┤      ├────────────────────────────────┤
+│ 使用记录 / 版本                 │      │ 使用记录 / 版本                 │
+│ v1...v5 / 被哪些故事使用         │      │ 固定 v3 / 对比新版 / 选择升级    │
+└────────────────────────────────┘      └────────────────────────────────┘
+                                         [仅本故事保存]
+                                         [保存为角色库新版本]
+~~~
+
+禁止出现以下退化：角色库里有完整 Character Studio，而 Creator 角色只剩 Visual State、一个 ref_voice_asset 或“去角色库查看”的跳转。
 
 ### 06.6 全局显示设置与响应式桌面基线
 
@@ -802,6 +862,91 @@ Browser Fullscreen 仍可保留为播放器“更多”菜单中的二级可选�
 Generating、Loading、Failed、Intent Echo/Clarification 与可恢复错误不得把 Interaction Dock 推离固定层级。优先把媒体状态和恢复动作显示为 Stage 内 Overlay／轻量浮层；用户选择“修改行动”时再把焦点交给 Agency Layer。Standard Mode 不出现 Inspector 按钮、Branch Status、Provider、request ID、Python/Pydantic validation 详情；完整技术错误只进入 Developer Inspector。
 
 播放器必须区分 Generating（尚在生成媒体）、Loading（已有媒体但浏览器正在载入）、Failed（加载或生成失败）。不可把三者统一显示为无解释的黑屏。字幕编码、场景名、人物名必须使用完整 Unicode 路径验证，不接受 tofu 方块或乱码作为已知可忽略问题。
+
+Theater Mode 的桌面布局基线：
+
+~~~text
+浏览器普通窗口；应用 Sidebar / 普通 Header 隐藏
+┌──────────────────────────────────────────────────────────────┐
+│ [☰ HUD]                                           [···]      │
+│                                                              │
+│                                                              │
+│                         VIDEO STAGE                          │
+│                                                              │
+│                      Alice：等等……                           │
+│                                                              │
+│  ▶  ━━━━━━━━━━━━━━━●━━━━━━━━━━━━━━  CC                       │
+├──────────────────────────────────────────────────────────────┤
+│ Decision Layer（仅 Decision Lead + Ready 后出现）            │
+│ [检查门厅]        [继续观察]        [询问 Alice]              │
+├──────────────────────────────────────────────────────────────┤
+│ Agency Layer                                                  │
+│ [ 描述你想做的事……................................ ] [行动] │
+└──────────────────────────────────────────────────────────────┘
+~~~
+
+Stage 内状态 Overlay 不得改变上述三段骨架：
+
+~~~text
+┌──────────────────────── VIDEO STAGE ─────────────────────────┐
+│                                                              │
+│             ┌──────────────────────────┐                     │
+│             │ 这一幕暂时没有生成成功   │                     │
+│             │ [重试] [文字继续]        │                     │
+│             └──────────────────────────┘                     │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
+[Decision Layer]
+[Agency Layer]
+~~~
+
+
+
+### 06.9 Settings：媒体生成质量与成本安全
+
+“媒体生成”是全局生成偏好，独立于某个 Scenario Theme。Standard Mode 可设置真实输出参数；Developer Mode 在此基础上增加测试覆盖、Paid Guard、Circuit 与 Usage/Preflight。Standard 不显示单次价格，也不使用“经济/标准/豪华”档位。
+
+当前 Provider 能力基线：Nano Banana 2 的 resolution 为 0.5K/1K/2K/4K；H3 Max 的 resolution 为 480P/768P/1080P，Reference-to-Video 支持 adaptive 与常见比例。[S03][S26][S27] 若未来 Provider 能力变化，UI 由 capability matrix 驱动，不把已失效枚举硬编码为永久真理。
+
+Standard 布局：
+
+~~~text
+设置
+┌──────────────────────────────────────────────────────────┐
+│ 媒体生成                                                 │
+│                                                          │
+│ 图片分辨率   [0.5K] [1K] [2K] [4K]                      │
+│ 视频分辨率   [480P] [768P] [1080P]                      │
+│ 视频比例     [自适应] [16:9] [9:16] [1:1] [更多…]       │
+│                                                          │
+│ 说明：只影响之后新生成的内容；旧素材和旧场景不会改变。    │
+└──────────────────────────────────────────────────────────┘
+~~~
+
+Developer 扩展：
+
+~~~text
+┌──────────────────── 开发测试覆盖 ────────────────────────┐
+│ Top-K              [1] [2] [3]                          │
+│ 每分支最大 Shot     [1] [2] [3]                          │
+│ 单 Shot 最大时长    [5s] [10s] [15s]                    │
+│ 测试 Reference      图片 ≤ [2]   视频 ≤ [0/1]            │
+│                                                          │
+│ Fal Paid Generation  [ON/OFF]                            │
+│ Circuit              CLOSED / OPEN(BILLING_LOCKED)       │
+└──────────────────────────────────────────────────────────┘
+
+┌──────────────────── Paid Preflight ──────────────────────┐
+│ Provider       H3 Max                                    │
+│ Jobs           6                                         │
+│ Requested      30s                                       │
+│ Resolution     480P                                      │
+│ References     6 images / 0 video / 3 audio              │
+│ [取消]                                      [确认提交]    │
+└──────────────────────────────────────────────────────────┘
+~~~
+
+Developer 测试覆盖必须被明确标识并记录 provenance；退出测试上下文后恢复 Scenario 正式配置。Paid Guard 为 OFF 或 Circuit OPEN 时，Preflight 不得提供“确认提交”并继续向付费 Provider 发 HTTP generation 请求。
 
 ## 07. 叙事引擎与状态正确性
 
@@ -2438,8 +2583,16 @@ Q62 明确选择 **A：现阶段不规定固定延迟等级或硬 P95**。因此
 | AT-88 | Director 返回与 DramaticDirective Schema 不一致的结构 | Standard 不显示 Pydantic/Python 原始错误；安全可修复时规范化或一次 schema retry，仍失败进入 FAILED_RECOVERABLE；Developer 可查原始错误 | FR-113、114 |
 | AT-89 | 播放一个包含中文场景名、人物名和字幕的视频 | 无 tofu 方块/乱码；场景标题短暂显示后淡出；字幕在安全区可读，画内/画外设置正常 | FR-114 |
 | AT-90 | 分别触发视频生成中、媒体载入中和加载失败 | 三种状态视觉/文案可区分；Failed 提供重新载入/重新生成/文字继续等合理恢复，不出现无解释永久黑屏 | FR-113、114 |
+| AT-91 | 修改媒体生成设置后创建新的图片/视频任务 | 新任务 payload/provenance 使用所选 resolution/aspect_ratio；修改设置前已存在的 Artifact 完全不变 | FR-115 |
+| AT-92 | 选择当前 Provider 不支持的 resolution/aspect_ratio | Adapter 在提交前显式 reject 或按已声明 capability 规范化并记录原因；不得静默忽略设置 | FR-115 |
+| AT-93 | Developer 开启测试覆盖 K=1 / 1 Shot / 5s / Reference 限制 | 测试任务按覆盖值执行并留 provenance；Scenario 发布配置与下次正式运行未被改写；Standard 看不到工程旋钮 | FR-116 |
+| AT-94 | FAL_PAID_GENERATION_ENABLED=false 下遍历 H3 Max、Nano Banana Generate/Edit 路径 | 付费 HTTP generation/edit 实际尝试数为 0；已有 Artifact、本地 Sol-H3、Mock 测试与纯文本路径仍按各自语义工作 | FR-117 |
+| AT-95 | 故障注入一次 403 TOP_UP 后继续发起同类 Fal 请求 | 首次分类为 BILLING_LOCKED 并 OPEN circuit；后续请求在本地快速失败，不再产生 provider retry storm；Developer 可查原始诊断 | FR-118 |
+| AT-96 | Billing Locked 时进入 Character Studio | 文字角色编辑、上传已有图片、已有 Canonical/Version/Snapshot 正常；AI 生图/Edit 明确不可用且不生成 Mock Candidate 冒充成功 | FR-118 |
+| AT-97 | Billing Locked 时 Player/Ending 需要新视频 | 仅在路由明确允许且本地视频真实可用时回退；否则 FAILED_RECOVERABLE，可由用户选择文字继续；Mock 不能成为正式 SceneArtifact | FR-118 |
+| AT-98 | Developer 查看一次付费 Preflight 与执行后的 Usage Ledger | Preflight 显示 job count/requested duration/resolution/reference 数和 guard/circuit；Ledger 可追溯 request/status/参数/拦截或失败原因；Standard 不显示单次价格 | FR-119、120 |
 
-所有 AT 用例在本文交付时状态为 `NOT RUN`。v0.6 新增 AT-61～90；其中涉及 fal.ai、H3、Jev、StepFun、Lightning、Sol-H3 的项目必须用真实调用/节点证据，不得由 Mock 测试替代。实现阶段应保存 `PASS / FAIL / BLOCKED`、执行环境、请求配置、输出工件和复核记录。一次成功片段不能代替三类素材及多轮稳定性的验收。
+所有 AT 用例在本文交付时状态为 `NOT RUN`。v0.6 新增 AT-61～98；其中涉及 fal.ai、H3、Jev、StepFun、Lightning、Sol-H3 的项目必须用真实调用/节点证据，不得由 Mock 测试替代。AT-94/95 的“零付费请求/熔断”可用 HTTP spy 与故障注入证明，但不得由此冒充实际生成成功。实现阶段应保存 `PASS / FAIL / BLOCKED`、执行环境、请求配置、输出工件和复核记录。一次成功片段不能代替三类素材及多轮稳定性的验收。
 
 ### 17.2 单项功能完成定义
 
@@ -2472,11 +2625,12 @@ AT-44 验收的是“真实体验与反馈被完成、问题被诚实记录”�
 | 结局／体验 | Director 收束、合法退出结局、主动新 Arc 续杯、真实玩家反馈 | 自动戏剧 Judge、强制盲测或开关对照均非本轮必做 |
 
 
-v0.6 对 P0 再增加三个不可后移的封版面：
+v0.6 对 P0 再增加四个不可后移的封版面：
 
 1. **Character Studio 闭环：** Global Character → Nano Banana 2 生图/Edit → Canonical/Version → Scenario Snapshot → Reference Resolver → H3 实际消费。
 2. **100% Zoom 响应式：** 1080p/2K/4K 及常见较小桌面真实浏览器回归；全局 Appearance/UI Size/字幕设置与 Scenario Theme 分离。
 3. **真实模型部署证据：** 所有固定 Provider 与双 Runtime Profile 必须有可复核工件；配置文件、Mock 和前端状态不能算部署完成。
+4. **付费生成安全：** 媒体 resolution/aspect 参数必须可控、可追溯；Fal 保险丝/Circuit/Usage Ledger 必须阻止账单锁后的 retry storm 和误烧。
 
 ### 18.2 现场演示脚本
 
@@ -2554,8 +2708,11 @@ v0.6 现场演示建议在 D2 前增加“D1b 角色制作”：从一句角色�
 9. 将 Standard Creator 从空白 Schema 表单改为“AI 当前理解 → 缺失追问 → 建议卡/自由修改 → typed patch”，保留 Developer 原始结构；
 10. 统一 Character Library 与 Creator 的角色信息架构，引入明确 Global Core / Scenario Overlay 展示，不改变已有 Snapshot 数据边界；
 11. 将玩法机制 Standard UI 改为自然语言教程卡，补 Authoring Intent → MechanicSpec Proposal → Schema Validate → Runtime Skill 的编译链；
-12. 将 Player 改为视频优先四层架构，支持 PlayerShell 全屏、Decision/Agency Dock、左上 HUD、Standard-safe Error 与媒体状态区分；
-13. 执行新增 AT-77～90，重点验证“创作端不暴露机器结构、游玩端不暴露机器运行过程”。
+12. 将 Player 改为视频优先四层架构，使用应用内 Theater Mode、Decision/Agency Dock、左上 HUD、Standard-safe Error 与媒体状态区分；Browser Fullscreen 仅作为二级能力；
+13. 执行新增 AT-77～90，重点验证“创作端不暴露机器结构、游玩端不暴露机器运行过程”；
+14. 增加 GenerationSettings，把图片/视频 resolution、视频 aspect_ratio 贯通 Character/Production/Provider，并写 provenance；
+15. 增加 Developer Test Override、Paid Generation Guard、Billing/Quota Circuit、Usage Ledger 与 Preflight；
+16. 执行 AT-91～98，尤其证明 Guard OFF 时 Fal 付费 HTTP generation/edit 尝试数为 0、TOP_UP 后无 retry storm。
 
 v0.6 不要求建设 Photoshop 级 Mask 编辑器、固定表情资产库、角色素材市场、复杂预算套餐，也不新增第二个默认图像 API 供应商。
 
@@ -2710,6 +2867,10 @@ v0.6 完整继承 v0.5 的 O01–O11、Q01–Q70、I01–I05、FR-001～082 与 
 
 **Q116 修订说明（USER，2026-09-24）：** “沉浸模式”不是浏览器 Fullscreen API。用户明确要求视频画面在应用内尽可能占满主视图，选项位于视频下方第二层，自由输入位于最底层，背包/关系/线索/Wish 通过视频左上角弹出 HUD 查看。浏览器全屏仅保留为附加能力；此前“PlayerShell requestFullscreen 即代表沉浸模式完成”的解释被本修订覆盖。
 
+**角色命名与布局补充（USER，2026-09-24）：** Standard 产品只叫“角色库”和“角色”。角色库与 Creator 角色必须共享同一 Character Studio 管理颗粒度，不能只共享栏目标题；相关布局基线见 §06.5 ASCII 图。
+
+**Q123–Q129（USER，2026-09-24）：** 因真实 Fal 测试出现高分辨率成本与 TOP_UP 账单锁，用户明确要求把媒体生成分辨率/比例设置、付费 Provider 保险丝、Billing Circuit、Developer 测试限制与 Usage Ledger 正式写入 PRD。其目的不是新增预算套餐，而是让真实生成成本可控、错误可恢复、调用可审计。
+
 ### 19.9 本轮没有自动加入的产品要求
 
 没有强制“每个节点都展示欲望副标题”，没有把所有自由输入变成二次确认，没有禁止在普通节点许愿，没有规定篇章必须 12 或 16 个 Beat，没有以 Drama Debt 代替 Director 自动结局，没有要求第五个 Agent，也没有以另一种名称偷偷加入 Q48 C 的盲测／开关对照／自动戏剧总分。
@@ -2757,7 +2918,7 @@ v0.3 记录：当时官方活动报名页未能打开，赛事信息引用 NVIDI
 
 提交代码或宣称完成前检查：
 
-1. 是否逐项保留 Q01–Q122、I01–I05，尤其 Q40 B、Q48 A、Q59 B、Q62 A、Q65 B，以及 Q71–Q104 的 Character Studio 决策；USER、DERIVED、PROPOSED 是否明确分开。
+1. 是否逐项保留 Q01–Q129、I01–I05，尤其 Q40 B、Q48 A、Q59 B、Q62 A、Q65 B、Q71–Q104 Character Studio、Q105–Q122 Creator/Player UX 与 Q123–Q129 生成成本安全；USER、DERIVED、PROPOSED 是否明确分开。
 2. 图／声／视频三类参考是否真实消费，四 Agent 与双后端是否有真实执行证据。
 3. 自由输入是否保留原意；小动作可轻反馈，关键计划外行动是否仍能产出新视频；欲望不确定时是否适度澄清。
 4. World／Drama／Arc 是否有合法版本、来源和幂等提交；未选分支是否污染事实、伏笔、Wish、债务或玩家知识。
@@ -2789,6 +2950,12 @@ v0.3 记录：当时官方活动报名页未能打开，赛事信息引用 NVIDI
 29. Player Theater Mode 是否在不依赖浏览器 Fullscreen 的情况下隐藏 Sidebar/应用级 Header、让 Stage 占据主要视口，并保持 HUD 左上、Ready 推荐位于 Agency 输入之上、自由输入固定最底层；Browser Fullscreen 是否只作为二级可选功能且不破坏这些层。
 30. 背包/关系/线索/Wish 是否进入可隐藏 HUD；Standard 是否避免把精确关系数值、Branch/Provider/Inspector 暴露为主要玩法。
 31. Player 是否区分 Generating/Loading/Failed；中文字幕是否无乱码；Pydantic/Python 原始错误是否只存在于 Developer Trace。
+32. “角色库/角色”是否为 Standard 的统一命名；Creator 角色是否与角色库在 Outfit、多视图、Pose/Motion、Voice、使用记录与版本上保持同颗粒度，而不是一边完整一边退化。
+33. 图片/视频 generation resolution 与视频 aspect_ratio 是否从 Settings 真实贯通到 Provider payload/provenance；Provider 不支持值是否显式处理而非静默忽略。
+34. Developer Test Override 是否只影响测试上下文且不修改发布配置；是否在锁 K 前完成缩减，避免破坏 Q59。
+35. FAL_PAID_GENERATION_ENABLED=false 时是否能证明付费 generation/edit HTTP 尝试数为 0；Billing Locked 是否 OPEN circuit 并停止 retry storm。
+36. Billing/Quota 降级是否真实：本地 Provider 可用才回退，否则 FAILED_RECOVERABLE/文字继续；是否存在 Mock 冒充正式媒体。
+37. Usage Ledger / Preflight 是否记录 jobs、duration、resolution、references、request/status 与拦截原因；Standard 是否仍不显示单次价格或预算套餐。
 
 **产品价值由可玩的体验证明：玩家作出系统未预制的行动，世界记住它，故事在因果约束下回应并推进；该收束时能自然结束，玩家愿意时可以继续这个世界。**
 
@@ -2805,6 +2972,7 @@ v0.3 记录：当时官方活动报名页未能打开，赛事信息引用 NVIDI
 | 当前项目对全局角色库、Standard/Developer、Appearance/UI Size/Subtitle、100% Zoom 与模型部署检查的明确要求 | v0.6 产品/验收补充 | 不得把原型已有交互在正式 React 中缩水；模型部署以真实服务器证据为准 |
 | 2026-09-24 连续三轮产品讨论：戏剧结构追问、角色/玩法颗粒度、沉浸式 Player | v0.6 Q105–Q122 USER 决策来源 | Standard Creator 隐藏机器结构、Standard Player 隐藏机器运行过程；Developer 保留全部可审计工件 |
 | 2026-09-24 对 Q116 的后续澄清：应用内 Theater Mode ≠ Browser Fullscreen | v0.6 Q116 / FR-110 / AT-84 覆盖性修订 | Theater Mode 隐藏应用导航并占满主视图；视频→推荐→自由输入层级稳定；浏览器 Fullscreen 降为二级可选功能 |
+| 2026-09-24 角色命名/同颗粒度及 Fal 测试成本控制补充 | Q109 澄清 + Q123–Q129 USER 决策来源 | Standard 使用“角色库/角色”；真实 resolution/aspect、Paid Guard、Circuit、Usage Ledger 成为正式 P0；不新增用户预算套餐 |
 
 本次文档加工读取了以上两份本地 Markdown 全文。源文件指纹用于核对基线，不代表模型能力或工程实现通过测试。
 
@@ -2815,7 +2983,7 @@ teammate_draft_sha256:
   ac02be7624b1daf8ee1f05af76ecb8fde1558ac2ddf72363d419b1bed530ac46
 ```
 
-文档状态：**Q01–Q122 与 v0.6 Character Studio / AI-guided Creator / Natural-language Mechanics / Immersive Player / Image Router / Responsive / Deployment Verification 需求合并完成；实现状态不得从本文推断，须以代码、线上部署、真实 Provider/本地模型证据与 AT-01～90 为准。** 后续实现和审阅以本 v0.6 Markdown 为需求权威基线。
+文档状态：**Q01–Q129 与 v0.6 Character Studio / AI-guided Creator / Natural-language Mechanics / Theater Player / Media Generation Quality / Paid Generation Safety / Usage Ledger / Image Router / Responsive / Deployment Verification 需求合并完成；实现状态不得从本文推断，须以代码、线上部署、真实 Provider/本地模型证据与 AT-01～98 为准。** 后续实现和审阅以本 v0.6 Markdown 为需求权威基线。
 
 [S01]: https://fal.ai/learn/devs/introducing-h3-max-by-fal
 [S02]: https://platform.minimax.cn/docs/guides/video-generation
