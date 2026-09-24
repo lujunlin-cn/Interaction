@@ -2,7 +2,7 @@
 
 日期：2026-09-24  
 起始 SHA：`e000fcac71bc399b124b2f6ce740a6d04df33318`  
-候选 SHA：`13c75b26ac46efc09fd30d2f7ad5733229886436`
+候选 SHA：`0c197ecb47398e8e4d2870f347fed3ceb3861691`
 
 ## 1. Profile A→V — PASS
 
