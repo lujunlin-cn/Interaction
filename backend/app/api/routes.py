@@ -757,7 +757,60 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
     async def dev_providers():
         return {"mode": router.mode, "profile": router.profile.value,
                 "health": router.health_snapshot(), "matrix": router.route_matrix(),
-                "events": router.events[-100:]}
+                "events": router.events[-100:],
+                "generation": {"fal_paid_generation_enabled": settings.fal_paid_generation_enabled,
+                               "image_resolution": settings.image_generation_resolution,
+                               "video_resolution": settings.video_generation_resolution,
+                               "aspect_ratio": settings.generation_aspect_ratio}}
+
+    @api.get("/dev/generation-settings")
+    async def dev_generation_settings():
+        return {"fal_paid_generation_enabled": settings.fal_paid_generation_enabled,
+                "image_resolution": settings.image_generation_resolution,
+                "video_resolution": settings.video_generation_resolution,
+                "aspect_ratio": settings.generation_aspect_ratio,
+                "test_top_k": settings.developer_test_top_k,
+                "test_max_shots": settings.developer_test_max_shots,
+                "test_shot_duration": settings.developer_test_shot_duration,
+                "max_test_reference_images": settings.max_test_reference_images,
+                "max_test_reference_videos": settings.max_test_reference_videos}
+
+    @api.post("/dev/generation-settings")
+    async def update_generation_settings(data: dict):
+        allowed = {
+            "image_resolution": ("image_generation_resolution", {"0.5K", "1K", "2K", "4K"}),
+            "video_resolution": ("video_generation_resolution", {"480P", "768P", "1080P"}),
+            "aspect_ratio": ("generation_aspect_ratio", {"16:9", "9:16", "1:1", "auto"}),
+            "test_top_k": ("developer_test_top_k", range(1, 4)),
+            "test_max_shots": ("developer_test_max_shots", range(1, 4)),
+            "test_shot_duration": ("developer_test_shot_duration", None),
+            "max_test_reference_images": ("max_test_reference_images", range(0, 10)),
+            "max_test_reference_videos": ("max_test_reference_videos", range(0, 4)),
+        }
+        for key, (attr, choices) in allowed.items():
+            if key not in data:
+                continue
+            value = data[key]
+            if choices is not None and value not in choices:
+                raise HTTPException(400, f"invalid {key}")
+            if key == "test_shot_duration":
+                value = max(1.0, min(float(value), 15.0))
+            setattr(settings, attr, value)
+        return await dev_generation_settings()
+
+    @api.post("/dev/generation-preflight")
+    async def dev_generation_preflight(data: dict):
+        role = str(data.get("role", "h3_max"))
+        branches = max(1, int(data.get("branches", settings.developer_test_top_k)))
+        shots = max(1, int(data.get("shots", settings.developer_test_max_shots)))
+        duration = float(data.get("duration", settings.developer_test_shot_duration))
+        resolution = data.get("resolution") or settings.video_generation_resolution
+        return {"provider": role, "branches": branches, "shots_per_branch": shots,
+                "jobs": branches * shots, "total_requested_duration": branches * shots * duration,
+                "resolution": resolution, "aspect_ratio": data.get("aspect_ratio") or settings.generation_aspect_ratio,
+                "reference_images": min(int(data.get("reference_images", 0)), settings.max_test_reference_images),
+                "reference_videos": min(int(data.get("reference_videos", 0)), settings.max_test_reference_videos),
+                "fal_request_allowed": bool(settings.fal_paid_generation_enabled)}
 
     @api.post("/dev/providers/recover")
     async def dev_providers_recover():
@@ -823,7 +876,9 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
                                         "shots": [{"id": "shot_1", "title": prompt[:24],
                                                    "subtitle": prompt[:60],
                                                    "duration": settings.mock_shot_duration}],
-                                        "prompt": prompt})
+                                        "prompt": prompt,
+                                        "resolution": settings.video_generation_resolution,
+                                        "aspect_ratio": settings.generation_aspect_ratio})
         job.status = JobStatus.GENERATING
         job.output = {"handle": handle.provider_job_id}
         async with SessionLocal() as db:

@@ -1280,7 +1280,9 @@ class RuntimeEngine:
             try:
                 handle = await provider.submit({
                     "job_id": f"{branch_id}_{shot['id']}", "shots": [shot],
-                    "references": references, "prompt": prompt})
+                    "references": references, "prompt": prompt,
+                    "resolution": settings.video_generation_resolution,
+                    "aspect_ratio": settings.generation_aspect_ratio})
             except Exception as error:
                 await tracer.emit("video.submit", "failed", input_={"shot_id": shot["id"], "prompt": prompt, "references": references},
                     output={"error": repr(error), "submitted_at": submitted_at}, provider=rec.selected or "",

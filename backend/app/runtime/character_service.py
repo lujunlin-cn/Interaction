@@ -161,7 +161,9 @@ class CharacterAssetService:
             raise RuntimeError("image provider not registered")
         job_id = uid("job")
         result = await provider.generate(
-            {"prompt": prompt, "num_images": num_images})
+            {"prompt": prompt, "num_images": num_images,
+             "resolution": settings.image_generation_resolution,
+             "aspect_ratio": settings.generation_aspect_ratio})
         out: list[CharacterAsset] = []
         for img in result.get("images", []):
             url = img.get("url", "")
@@ -170,7 +172,9 @@ class CharacterAssetService:
             out.append(await self.add_asset(
                 character_id, role="front", url=url,
                 status=CharacterAssetStatus.CANDIDATE, job_id=job_id,
-                provenance={"provider": "fal.ai", "model": result.get("model", ""),
+                provenance={"provider": getattr(provider, "name", "nano_banana_2"), "model": result.get("model", ""),
+                            "resolution": result.get("resolution", settings.image_generation_resolution),
+                            "aspect_ratio": result.get("aspect_ratio", settings.generation_aspect_ratio),
                             "prompt_hash": _prompt_hash(prompt),
                             "capability": "IMAGE_GENERATION"}))
         await tracer.emit("character.image_generate", "success",
@@ -202,7 +206,9 @@ class CharacterAssetService:
                       f"same face, same hairstyle, same outfit. "
                       f"{self._build_portrait_prompt(ch, '')[:200]}")
             result = await provider.edit(
-                {"prompt": prompt, "image_urls": [front.url]})
+                {"prompt": prompt, "image_urls": [front.url],
+                 "resolution": settings.image_generation_resolution,
+                 "aspect_ratio": settings.generation_aspect_ratio})
             made: list[CharacterAsset] = []
             for img in result.get("images", [])[:1]:
                 if not img.get("url"):
@@ -211,8 +217,10 @@ class CharacterAssetService:
                     character_id, role=role, url=img["url"],
                     status=CharacterAssetStatus.CANDIDATE, job_id=job_id,
                     source_refs=[front_asset_id],
-                    provenance={"provider": "fal.ai",
+                    provenance={"provider": getattr(provider, "name", "nano_banana_2"),
                                 "model": result.get("model", ""),
+                                "resolution": result.get("resolution", settings.image_generation_resolution),
+                                "aspect_ratio": result.get("aspect_ratio", settings.generation_aspect_ratio),
                                 "prompt_hash": _prompt_hash(prompt),
                                 "capability": "IMAGE_EDIT",
                                 "standard_view": role}))
@@ -251,7 +259,9 @@ class CharacterAssetService:
                  "Only change what the instruction says. Instruction: ")
         prompt = guard + instruction
         job_id = uid("job")
-        result = await provider.edit({"prompt": prompt, "image_urls": [src.url]})
+        result = await provider.edit({"prompt": prompt, "image_urls": [src.url],
+                                      "resolution": settings.image_generation_resolution,
+                                      "aspect_ratio": settings.generation_aspect_ratio})
         out: list[CharacterAsset] = []
         for img in result.get("images", []):
             if not img.get("url"):
@@ -260,8 +270,10 @@ class CharacterAssetService:
                 character_id, role=role, url=img["url"],
                 status=CharacterAssetStatus.CANDIDATE, job_id=job_id,
                 source_refs=[source_asset_id], outfit_id=outfit_id,
-                provenance={"provider": "fal.ai",
+                provenance={"provider": getattr(provider, "name", "nano_banana_2"),
                             "model": result.get("model", ""),
+                            "resolution": result.get("resolution", settings.image_generation_resolution),
+                            "aspect_ratio": result.get("aspect_ratio", settings.generation_aspect_ratio),
                             "prompt_hash": _prompt_hash(prompt),
                             "capability": "IMAGE_EDIT",
                             "instruction": instruction[:200],

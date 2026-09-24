@@ -29,6 +29,8 @@ class Settings(BaseSettings):
     step5_model: str = "step-5-preview"        # 同上
 
     fal_key: str = ""
+    # 付费媒体生成总开关。默认关闭，避免账单锁定时重复提交云任务。
+    fal_paid_generation_enabled: bool = False
     # fal 官方 endpoint id 不带 fal-ai/ 前缀（fal-ai/ 命名空间会 404
     # "Path /h3-max/reference-to-video not found"）。
     fal_h3_model: str = "minimax/h3-max/reference-to-video"
@@ -92,6 +94,16 @@ class Settings(BaseSettings):
     decision_lead_seconds: float = 2.0    # Decision Lead：距场景结束多少秒即可发布下一批推荐
     mock_shot_duration: float = 5.0       # Mock 视频单镜头时长
     timed_timeout_override: float = 0.0   # >0 时覆盖 Scenario 声明的限时秒数（测试用）
+
+    # 新生成任务的媒体参数（旧 Artifact 不受影响）
+    image_generation_resolution: str = "0.5K"
+    video_generation_resolution: str = "480P"
+    generation_aspect_ratio: str = "16:9"
+    developer_test_top_k: int = 1
+    developer_test_max_shots: int = 1
+    developer_test_shot_duration: float = 5.0
+    max_test_reference_images: int = 2
+    max_test_reference_videos: int = 0
 
     @property
     def data_path(self) -> Path:

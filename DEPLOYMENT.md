@@ -73,6 +73,9 @@ npm run build
 | `STEP_BASE_URL` | OpenAI-compatible endpoint: `https://api.stepfun.com/step_plan/v1` |
 | `JEV_API_KEY` | Jev 决策 |
 | `FAL_KEY` | fal h3_max 云视频 |
+| `FAL_PAID_GENERATION_ENABLED` | 付费 H3/Nano Banana 总开关；默认 `false`，充值并完成付费验收前保持关闭 |
+| `IMAGE_GENERATION_RESOLUTION` / `VIDEO_GENERATION_RESOLUTION` | 新任务默认图片/视频分辨率（0.5K / 480P） |
+| `GENERATION_ASPECT_RATIO` | 新任务比例（默认 16:9） |
 | `SOL_H3_*` | Sol-H3 本地 adapter 端点/token |
 | `LOCAL_LLM_*` | 固定 Nemotron Lightning vLLM OpenAI 兼容端点；Gemma 不能占用 nemotron_local 槽位 |
 | `DIRECTOR_LOCAL_MAX_CONCURRENCY` | 本地 Director 同时推理上限（默认 2） |

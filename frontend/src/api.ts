@@ -157,7 +157,11 @@ export const api = {
   devProviders: () => req<{
     mode: string; profile: string;
     health: Record<string, ProviderHealth>; matrix: any[]; events: any[];
+    generation?: Record<string, any>;
   }>("/api/dev/providers"),
+  devGenerationSettings: () => req<Record<string, any>>("/api/dev/generation-settings"),
+  devGenerationPreflight: (data: Record<string, any>) =>
+    req<Record<string, any>>("/api/dev/generation-preflight", { method: "POST", body: JSON.stringify(data) }),
   devRecoverProviders: () => req("/api/dev/providers/recover", { method: "POST" }),
   devInject: (provider: string, kind: string) =>
     req("/api/dev/providers/inject", { method: "POST", body: JSON.stringify({ provider, kind }) }),

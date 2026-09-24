@@ -33,3 +33,9 @@
 - 本轮不扩展账号、多租户或新的模型部署范围。hybrid仍允许显式Mock降级；真实验收使用live，并逐分支核对provenance。
 
 - 运维P1：生产库有2条旧standalone生成记录和2个旧Session的中断分支（约28小时以上未更新），对应旧验收任务；本轮只保留原记录，不用改enum伪造完成。新Session验收与它们隔离。
+
+## 本轮无费用收口（2026-09-25）
+
+- Fal 付费开关默认 `false`，`403 TOP_UP/User is locked` 分类为 `BILLING_LOCKED` 并打开进程熔断；本轮 Fal paid HTTP POST 为 0。
+- 图片/视频 resolution、aspect ratio、Developer 测试限制和 preflight 已贯通；后端 60 passed，前端 build PASS。
+- 充值后的 Paid-01 Character、Paid-02 FREE H3、Paid-03 Video Ending 仍保持 PARTIAL/BLOCKED，见 [NO_COST_E2E_ACCEPTANCE.md](NO_COST_E2E_ACCEPTANCE.md)。

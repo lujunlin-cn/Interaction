@@ -98,6 +98,10 @@ Firefox 156.0.1 实际支持 H.264/AAC。本机 Playwright Chromium 缺这两个
 | 文字Ending / Continue World | PASS | 用户显式文字继续→text SceneArtifact→原有双阶段提交→Arc关闭；真实Step继续生成Arc2，继承事实，保留旧Arc |
 | 全程视频E2E | PARTIAL | 结局视频受外部账单锁阻塞；文字恢复不计作视频成功 |
 
+## 本轮无费用安全回归（2026-09-25）
+
+见 [NO_COST_E2E_ACCEPTANCE.md](NO_COST_E2E_ACCEPTANCE.md)。`FAL_PAID_GENERATION_ENABLED=false`，本轮新增 Fal paid 请求为 0；Billing Locked 熔断与图片/视频 resolution 参数链已验证。充值后的三组真实媒体验收继续保持 PARTIAL/BLOCKED。
+
 真实H3证据生成于本轮实现提交f4c5f29；最终候选的媒体提交/拼接代码相同，后续Director提示与关系初始化修复以真实文字路径和完整回归验证。没有声称在最后一次提交后新增fal视频。
 
 真实Opening视频：[real_h3_opening.mp4](docs/acceptance/prd_v06_latest/real_h3_opening.mp4)。1344×768、H.264/AAC、10.400秒、2,829,853字节。独立H3 request IDs：`01a0d467-f124-7a53-ac75-3148b59314e1`、`01a0d467-f0ff-7933-8c30-bfeae6b9ae63`。各Shot的prompt/references/submit/completion/clip/时长及concat输入顺序见 `real_h3_opening_provenance.json`；本次不将fallback计作真实H3。

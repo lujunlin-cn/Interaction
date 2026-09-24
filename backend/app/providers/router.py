@@ -317,10 +317,13 @@ class ProviderRouter:
 
     # ------------------------------------------------------------------
     def _classify(self, exc: Exception) -> str:
+        custom_kind = getattr(exc, "kind", None)
+        if custom_kind:
+            return str(custom_kind)
         if isinstance(exc, ProviderError):
             return exc.kind
         if isinstance(exc, (httpx.TimeoutException, asyncio.TimeoutError)):
-            return "retryable_transient"
+            return "TIMEOUT"
         if isinstance(exc, httpx.HTTPStatusError):
             code = exc.response.status_code
             if code == 429 or code >= 500:
@@ -398,12 +401,14 @@ class ProviderRouter:
         h = self.health.setdefault(provider_id, _Health())
         h.errors += 1
         h.last_error = kind
-        if kind in ("provider_unhealthy", "retryable_transient") and \
+        if kind in ("provider_unhealthy", "retryable_transient", "RATE_LIMITED", "TRANSIENT_PROVIDER_ERROR", "TIMEOUT") and \
                 h.errors >= settings.provider_circuit_threshold:
             h.circuit = "OPEN"
             h.status = "unhealthy"
-        elif kind in ("policy_rejection", "permanent_request_error"):
+        elif kind in ("policy_rejection", "permanent_request_error", "BILLING_LOCKED", "PAID_GENERATION_DISABLED", "AUTH_FAILED", "INVALID_REQUEST"):
             h.status = "unhealthy"
+            if kind == "BILLING_LOCKED":
+                h.circuit = "OPEN"
 
     def _mark_success(self, provider_id: str) -> None:
         h = self.health.setdefault(provider_id, _Health())
@@ -417,6 +422,11 @@ class ProviderRouter:
             h.errors = 0
             h.circuit = "CLOSED"
             h.last_error = None
+        try:
+            from .real import reset_fal_circuit
+            reset_fal_circuit()
+        except Exception:
+            pass
 
     def inject_failure(self, provider_id: str, kind: str = "retryable_transient") -> None:
         """开发/验收用的故障注入。"""
@@ -480,7 +490,8 @@ class ProviderRouter:
                     if role == "director" and rec.selected == "nemotron_local":
                         self._director_admission_until = time.monotonic() + 1.0
                 last_exc = ProviderError(kind, str(exc), rec.selected)
-                if kind in ("policy_rejection", "permanent_request_error", "schema_failure"):
+                if kind in ("policy_rejection", "permanent_request_error", "schema_failure",
+                            "BILLING_LOCKED", "PAID_GENERATION_DISABLED", "AUTH_FAILED", "INVALID_REQUEST"):
                     break           # 永久错误不重试
                 # 暂时错误：换 fallback 链上的下一个（由 route 重新计算）
             finally:
@@ -517,6 +528,11 @@ class ProviderRouter:
             "queue_rejected": self._director_queue_rejected,
             "queue_timeout_seconds": settings.director_queue_timeout_seconds,
         }
+        try:
+            from .real import fal_circuit_status
+            out["fal_circuit"] = fal_circuit_status()
+        except Exception:
+            out["fal_circuit"] = {"state": "UNKNOWN"}
         return out
 
     def route_matrix(self) -> list[dict]:

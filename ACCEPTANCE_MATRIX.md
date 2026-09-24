@@ -10,6 +10,8 @@
 
 判定：PASS需要实际触发、正式状态/Artifact、Trace、正常与关键失败路径证据；PARTIAL表示有实现/部分验证但不足以完整关闭；BLOCKED有明确外部原因；FAIL表示实测实现不符合。离线pytest验证确定性契约，不能证明真实Provider。缓存回放与故障注入均显式标识。
 
+本轮无费用复验见 [NO_COST_E2E_ACCEPTANCE.md](NO_COST_E2E_ACCEPTANCE.md)：Fal 付费开关关闭，新增 Fal 请求 0；Billing Locked 熔断、Paid Guard、媒体 resolution 参数链通过。Nano Banana 新生图、FREE 新视频和 Video Ending 仍不计 PASS。
+
 | AT | 用例 | 最新判定 | 本轮证据/限制 |
 | --- | --- | --- | --- |
 | AT-01 | 输入新设定，审阅 AI 草案并局部修改角色 | PASS | 真实Step故事→确认→正式字段；at77_79_browser.json |

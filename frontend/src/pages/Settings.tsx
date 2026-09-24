@@ -9,10 +9,12 @@ export default function Settings() {
   const [providers, setProviders] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [switching, setSwitching] = useState(false);
+  const [generation, setGeneration] = useState<any>(null);
   useEffect(() => {
     api.health().then(setHealth).catch(() => {});
     api.devProviders().then(setProviders).catch(() => {});
     api.devProfile().then(setProfile).catch(() => {});
+    api.devGenerationSettings().then(setGeneration).catch(() => {});
   }, []);
   const switchProfile = async (target: string) => {
     setSwitching(true);
@@ -25,6 +27,9 @@ export default function Settings() {
     } finally {
       setSwitching(false);
     }
+  };
+  const updateGeneration = async (patch: Record<string, any>) => {
+    try { setGeneration(await reqGeneration(patch)); } catch { /* settings are best effort */ }
   };
   const d = ui.display;
   return (
@@ -135,6 +140,32 @@ export default function Settings() {
           API Key、Endpoint、模型 ID 全部由部署环境的 .env 注入，不在界面显示、不入库。
         </p>
       </div>}
+
+      <div className="card">
+        <h3>媒体生成</h3>
+        {ui.mode === "standard" ? (
+          <p className="muted">云端媒体生成当前受部署策略控制；已有素材仍可正常播放。</p>
+        ) : (
+          <>
+            <p className="muted">仅影响之后的新任务，旧素材不会改变。当前付费保险丝：{generation?.fal_paid_generation_enabled ? "已开启" : "已暂停"}。</p>
+            <div className="two">
+              <label><span>图片生成分辨率</span><select value={generation?.image_resolution ?? "0.5K"} onChange={e => updateGeneration({ image_resolution: e.target.value })}>{["0.5K", "1K", "2K", "4K"].map(v => <option key={v}>{v}</option>)}</select></label>
+              <label><span>视频生成分辨率</span><select value={generation?.video_resolution ?? "480P"} onChange={e => updateGeneration({ video_resolution: e.target.value })}>{["480P", "768P", "1080P"].map(v => <option key={v}>{v}</option>)}</select></label>
+              <label><span>视频比例</span><select value={generation?.aspect_ratio ?? "16:9"} onChange={e => updateGeneration({ aspect_ratio: e.target.value })}>{["16:9", "9:16", "1:1", "auto"].map(v => <option key={v}>{v}</option>)}</select></label>
+              <label><span>测试 Top-K</span><select value={generation?.test_top_k ?? 1} onChange={e => updateGeneration({ test_top_k: Number(e.target.value) })}>{[1, 2, 3].map(v => <option key={v}>{v}</option>)}</select></label>
+              <label><span>每分支最大 Shot</span><select value={generation?.test_max_shots ?? 1} onChange={e => updateGeneration({ test_max_shots: Number(e.target.value) })}>{[1, 2, 3].map(v => <option key={v}>{v}</option>)}</select></label>
+              <label><span>单 Shot 最大时长</span><select value={generation?.test_shot_duration ?? 5} onChange={e => updateGeneration({ test_shot_duration: Number(e.target.value) })}>{[5, 10, 15].map(v => <option key={v}>{v}s</option>)}</select></label>
+            </div>
+            <p className="muted">测试参考上限：图片 {generation?.max_test_reference_images ?? 2} 张，视频 {generation?.max_test_reference_videos ?? 0} 个。</p>
+          </>
+        )}
+      </div>
     </>
   );
+}
+
+async function reqGeneration(patch: Record<string, any>) {
+  const resp = await fetch("/api/dev/generation-settings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch) });
+  if (!resp.ok) throw new Error(String(resp.status));
+  return resp.json();
 }

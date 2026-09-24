@@ -13,6 +13,53 @@ from ..config import settings
 from .base import DecisionAnswer, TextResponse, VideoJobHandle, VideoJobResult
 
 
+class FalGenerationError(RuntimeError):
+    """分类后的 Fal 错误，供 Router/Runtime 做可审计回退。"""
+    def __init__(self, kind: str, message: str):
+        super().__init__(message)
+        self.kind = kind
+
+
+_fal_circuit = {"state": "CLOSED", "reason": "", "opened_at": None}
+
+
+def fal_circuit_status() -> dict:
+    return dict(_fal_circuit)
+
+
+def reset_fal_circuit() -> None:
+    _fal_circuit.update({"state": "CLOSED", "reason": "", "opened_at": None})
+
+
+def _ensure_fal_paid_allowed() -> None:
+    if not settings.fal_paid_generation_enabled:
+        raise FalGenerationError("PAID_GENERATION_DISABLED", "provider unavailable: paid generation disabled")
+    if _fal_circuit["state"] == "OPEN":
+        raise FalGenerationError(_fal_circuit["reason"] or "BILLING_LOCKED",
+                                 f"provider unavailable: {_fal_circuit['reason'] or 'Fal circuit open'}")
+
+
+def _fal_http_error(exc: httpx.HTTPStatusError) -> FalGenerationError:
+    code = exc.response.status_code
+    body = exc.response.text[:1000]
+    upper = body.upper()
+    if "QUOTA" in upper or "INSUFFICIENT" in upper or code == 402:
+        _fal_circuit.update({"state": "OPEN", "reason": "QUOTA_EXHAUSTED", "opened_at": time.time()})
+        return FalGenerationError("QUOTA_EXHAUSTED", "provider unavailable: quota exhausted")
+    if code == 403 and ("TOP_UP" in upper or "USER IS LOCKED" in upper or "BILLING" in upper):
+        _fal_circuit.update({"state": "OPEN", "reason": "BILLING_LOCKED", "opened_at": time.time()})
+        return FalGenerationError("BILLING_LOCKED", "provider unavailable: billing locked")
+    if code == 403:
+        return FalGenerationError("AUTH_FAILED", "provider authentication failed")
+    if code == 429:
+        return FalGenerationError("RATE_LIMITED", "provider rate limited")
+    if code >= 500:
+        return FalGenerationError("TRANSIENT_PROVIDER_ERROR", f"provider error {code}")
+    if code in (400, 422):
+        return FalGenerationError("INVALID_REQUEST", f"provider rejected request ({code})")
+    return FalGenerationError("TRANSIENT_PROVIDER_ERROR", f"provider HTTP error ({code})")
+
+
 class OpenAICompatTextProvider:
     """Step 3.7 / Step 5 / 本地 Nemotron Lightning 共用（OpenAI chat.completions 兼容）。"""
 
@@ -132,6 +179,7 @@ class FalH3MaxProvider:
         return {k: v[: caps[k]] for k, v in out.items() if v}
 
     async def submit(self, request: dict) -> VideoJobHandle:
+        _ensure_fal_paid_allowed()
         prompt = request.get("prompt", "")
         shots = request.get("shots") or []
         # H3 Max requires duration for each independent Shot request.  Runtime
@@ -140,6 +188,8 @@ class FalH3MaxProvider:
             "prompt": prompt,
             "duration": float(shots[0].get("duration", settings.mock_shot_duration))
             if shots else settings.mock_shot_duration,
+            "resolution": request.get("resolution") or settings.video_generation_resolution,
+            "aspect_ratio": request.get("aspect_ratio") or settings.generation_aspect_ratio,
         }
         for key in ("image_url", "reference_image_urls", "reference_audio_urls", "reference_video_urls"):
             if request.get(key):
@@ -150,8 +200,13 @@ class FalH3MaxProvider:
             payload[key] = list(dict.fromkeys(payload[key] + urls))
         headers = {"Authorization": f"Key {self.api_key}", "Content-Type": "application/json"}
         async with httpx.AsyncClient(timeout=settings.provider_timeout_seconds) as client:
-            resp = await client.post(self.base, json=payload, headers=headers)
-            resp.raise_for_status()
+            try:
+                resp = await client.post(self.base, json=payload, headers=headers)
+                resp.raise_for_status()
+            except httpx.HTTPStatusError as exc:
+                raise _fal_http_error(exc) from exc
+            except httpx.TimeoutException as exc:
+                raise FalGenerationError("TIMEOUT", "provider request timed out") from exc
             data = resp.json()
         return VideoJobHandle(
             provider_job_id=data["request_id"], provider=self.name,
@@ -296,7 +351,9 @@ class SolH3LocalProvider:
         prompt = request.get("prompt") or " / ".join(
             s.get("title") or s.get("subtitle") or "" for s in shots)
         duration = float(shots[0].get("duration", settings.mock_shot_duration)) if shots else 5.0
-        payload: dict = {"prompt": prompt, "duration": duration}
+        payload: dict = {"prompt": prompt, "duration": duration,
+                         "resolution": request.get("resolution") or settings.video_generation_resolution,
+                         "aspect_ratio": request.get("aspect_ratio") or settings.generation_aspect_ratio}
         payload.update(self._adapt_references(request))
         async with httpx.AsyncClient(timeout=settings.provider_timeout_seconds) as client:
             resp = await client.post(f"{self.base_url}/v1/videos/generations",
@@ -527,12 +584,18 @@ class FalImageProvider:
     async def _submit_and_wait(self, endpoint: str, payload: dict,
                                timeout_s: int = 300) -> dict:
         """提交 queue 任务并轮询到 COMPLETED；返回 result JSON。"""
+        _ensure_fal_paid_allowed()
         headers = {"Authorization": f"Key {self.api_key}",
                    "Content-Type": "application/json"}
         base = f"https://queue.fal.run/{endpoint}"
         async with httpx.AsyncClient(timeout=settings.provider_timeout_seconds) as client:
-            resp = await client.post(base, json=payload, headers=headers)
-            resp.raise_for_status()
+            try:
+                resp = await client.post(base, json=payload, headers=headers)
+                resp.raise_for_status()
+            except httpx.HTTPStatusError as exc:
+                raise _fal_http_error(exc) from exc
+            except httpx.TimeoutException as exc:
+                raise FalGenerationError("TIMEOUT", "provider request timed out") from exc
             sub = resp.json()
             status_url = sub.get("status_url")
             response_url = sub.get("response_url")
@@ -556,17 +619,17 @@ class FalImageProvider:
         raise RuntimeError(f"fal image job timeout after {timeout_s}s")
 
     async def generate(self, request: dict) -> dict:
-        """IMAGE_GENERATION：{prompt, num_images?, image_size?} → {images:[{url,..}], model, job}"""
+        """IMAGE_GENERATION：{prompt, num_images?, resolution?} → images + provenance。"""
         payload = {
             "prompt": request.get("prompt", ""),
             "num_images": min(int(request.get("num_images", 2)), 4),
         }
-        if request.get("image_size"):
-            payload["image_size"] = request["image_size"]
+        payload["resolution"] = request.get("resolution") or settings.image_generation_resolution
         if request.get("aspect_ratio"):
             payload["aspect_ratio"] = request["aspect_ratio"]
         data = await self._submit_and_wait(self.GENERATE_ENDPOINT, payload)
         return {"images": data.get("images", []), "model": self.GENERATE_ENDPOINT,
+                "resolution": payload["resolution"], "aspect_ratio": payload.get("aspect_ratio"),
                 "raw": {k: v for k, v in data.items() if k != "images"}}
 
     async def edit(self, request: dict) -> dict:
@@ -576,9 +639,11 @@ class FalImageProvider:
         if not image_urls:
             raise RuntimeError("IMAGE_EDIT requires image_urls")
         payload = {"prompt": request.get("prompt", ""),
-                   "image_urls": image_urls[:4]}
+                   "image_urls": image_urls[:4],
+                   "resolution": request.get("resolution") or settings.image_generation_resolution}
         data = await self._submit_and_wait(self.EDIT_ENDPOINT, payload)
         return {"images": data.get("images", []), "model": self.EDIT_ENDPOINT,
+                "resolution": payload["resolution"], "aspect_ratio": payload.get("aspect_ratio"),
                 "raw": {k: v for k, v in data.items() if k != "images"}}
 
     async def health(self) -> bool:
