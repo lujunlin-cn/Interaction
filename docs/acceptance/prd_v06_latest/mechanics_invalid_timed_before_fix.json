@@ -1,0 +1,231 @@
+{
+  "status": 200,
+  "elapsed_s": 74.52993702888489,
+  "response": {
+    "id": "projection_00005_7eefab",
+    "summary": "根据调查、角色信任记忆与追逐快速决策的需求，配置关系、线索与快速决定机制，并补充相应的限时互动；物品系统暂不启用。",
+    "items": [
+      {
+        "path": "mechanics.relationship",
+        "summary": "角色会记住玩家是否撒谎，并据此调整信任程度，但不展示具体数值。",
+        "value": {
+          "enabled": true,
+          "config": {
+            "care_delta": 9,
+            "min": 0,
+            "max": 100,
+            "show_values": false,
+            "show_panel": true
+          },
+          "tutorial": "与林岚等人交谈时，隐瞒或谎言会被记住，影响他们后续是否愿意透露关键信息。"
+        },
+        "question": "关系变化幅度是否合适？当谎言被识破时，信任下降多少？",
+        "evidence_quote": "角色记得我是否撒谎，不显示 RPG 数值。",
+        "suggestions": [
+          {
+            "label": "信任波动较小",
+            "value": {
+              "enabled": true,
+              "config": {
+                "care_delta": 5,
+                "min": 0,
+                "max": 100,
+                "show_values": false,
+                "show_panel": true
+              },
+              "tutorial": "与林岚等人交谈时，隐瞒或谎言会被记住，轻微影响他们后续的协助意愿。"
+            }
+          },
+          {
+            "label": "信任标准波动",
+            "value": {
+              "enabled": true,
+              "config": {
+                "care_delta": 9,
+                "min": 0,
+                "max": 100,
+                "show_values": false,
+                "show_panel": true
+              },
+              "tutorial": "与林岚等人交谈时，隐瞒或谎言会被记住，明显影响他们后续是否愿意透露关键信息。"
+            }
+          },
+          {
+            "label": "信任剧烈波动",
+            "value": {
+              "enabled": true,
+              "config": {
+                "care_delta": 15,
+                "min": 0,
+                "max": 100,
+                "show_values": false,
+                "show_panel": true
+              },
+              "tutorial": "与林岚等人交谈时，隐瞒或谎言会被强烈记住，直接决定他们是否继续信任你。"
+            }
+          },
+          {
+            "label": "隐藏关系界面",
+            "value": {
+              "enabled": true,
+              "config": {
+                "care_delta": 9,
+                "min": 0,
+                "max": 100,
+                "show_values": false,
+                "show_panel": false
+              },
+              "tutorial": "与林岚等人交谈时，隐瞒或谎言会被记住，但界面上不会显示关系变化。"
+            }
+          }
+        ],
+        "before": null
+      },
+      {
+        "path": "mechanics.clue-system",
+        "summary": "调查过程中收集的线索可被记录、验证并使用。",
+        "value": {
+          "enabled": true,
+          "config": {
+            "states": [
+              "DISCOVERED",
+              "VERIFIED",
+              "USED"
+            ],
+            "show_panel": true,
+            "allow_review": true
+          },
+          "tutorial": "在码头、灯塔门厅和后门发现的线索会自动归档，你可以随时翻阅并关联证据链。"
+        },
+        "question": "",
+        "evidence_quote": "",
+        "suggestions": [],
+        "before": null
+      },
+      {
+        "path": "mechanics.inventory",
+        "summary": "故事以调查和对话为主，未强调物品收集与管理，暂不启用物品系统。",
+        "value": {
+          "enabled": false,
+          "config": {
+            "capacity": 8,
+            "show_panel": true
+          },
+          "tutorial": "本故事以调查和对话为主，不涉及物品收集与管理。"
+        },
+        "question": "",
+        "evidence_quote": "主要调查和询问角色",
+        "suggestions": [
+          {
+            "label": "不启用物品栏",
+            "value": {
+              "enabled": false,
+              "config": {
+                "capacity": 8,
+                "show_panel": true
+              },
+              "tutorial": "本故事以调查和对话为主，不涉及物品收集与管理。"
+            }
+          },
+          {
+            "label": "启用基础物品栏",
+            "value": {
+              "enabled": true,
+              "config": {
+                "capacity": 8,
+                "show_panel": true
+              },
+              "tutorial": "携带的调查工具和找到的证据会出现在物品栏中。"
+            }
+          },
+          {
+            "label": "启用大容量物品栏",
+            "value": {
+              "enabled": true,
+              "config": {
+                "capacity": 16,
+                "show_panel": true
+              },
+              "tutorial": "你可以携带更多证据和工具，方便在多个地点间转移证物。"
+            }
+          }
+        ],
+        "before": null
+      },
+      {
+        "path": "mechanics.qte",
+        "summary": "追逐或紧急行动时需要快速做出决定，超时会产生危险后果。",
+        "value": {
+          "enabled": true,
+          "config": {
+            "timeout_seconds": 10,
+            "trigger_after_actions": 1,
+            "qte_fallback": "qte_failure",
+            "dialogue_fallback": "silence"
+          },
+          "tutorial": "在被走私团伙追赶或需要立刻行动时，你必须在短时间内做出选择，犹豫会带来危险。"
+        },
+        "question": "",
+        "evidence_quote": "追逐时需要快速决定",
+        "suggestions": [
+          {
+            "label": "五秒极限反应",
+            "value": {
+              "enabled": true,
+              "config": {
+                "timeout_seconds": 5,
+                "trigger_after_actions": 1,
+                "qte_fallback": "qte_failure",
+                "dialogue_fallback": "silence"
+              },
+              "tutorial": "在被走私团伙追赶或需要立刻行动时，你必须在五秒内做出选择，犹豫会带来危险。"
+            }
+          },
+          {
+            "label": "十秒紧迫决定",
+            "value": {
+              "enabled": true,
+              "config": {
+                "timeout_seconds": 10,
+                "trigger_after_actions": 1,
+                "qte_fallback": "qte_failure",
+                "dialogue_fallback": "silence"
+              },
+              "tutorial": "在被走私团伙追赶或需要立刻行动时，你必须在十秒内做出选择，犹豫会带来危险。"
+            }
+          },
+          {
+            "label": "十五秒权衡时间",
+            "value": {
+              "enabled": true,
+              "config": {
+                "timeout_seconds": 15,
+                "trigger_after_actions": 1,
+                "qte_fallback": "qte_failure",
+                "dialogue_fallback": "silence"
+              },
+              "tutorial": "在被走私团伙追赶或需要立刻行动时，你必须在十五秒内做出选择，犹豫会带来危险。"
+            }
+          }
+        ],
+        "before": null
+      },
+      {
+        "path": "drama.timed_interactions",
+        "summary": "为启用快速决定机制，安排一次后门遭遇的限时抉择。",
+        "value": "qte_backdoor_chase｜后门追逐｜10｜你犹豫的瞬间，走私团伙的手电光照进后门通道，他们距离地下维修间的入口更近了一步。",
+        "question": "",
+        "evidence_quote": "",
+        "suggestions": [],
+        "before": ""
+      }
+    ],
+    "scope": "mechanics",
+    "character_id": "",
+    "instruction": "主要调查和询问角色，角色记得我是否撒谎，追逐时需要快速决定，不显示 RPG 数值。",
+    "provider": "step_5",
+    "model": "step-5-preview",
+    "created_at": 1790269128070,
+    "accepted": []
+  }
+}

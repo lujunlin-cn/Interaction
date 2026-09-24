@@ -1,0 +1,14 @@
+{
+  "fixture_session": "acceptance_final_player",
+  "origin_session": "sess_00009_0791da",
+  "purpose": "real artifact replay plus HTTP transport fault injection; not new Provider generation",
+  "branch_ids": [
+    "br_00034_ab6d14",
+    "br_00036_a2b0ea",
+    "br_00038_aec824"
+  ],
+  "initial_position": 1,
+  "decision_open_at": 8.4,
+  "fingerprint": "sha256:1fd2eb26c089900883c36af10f94feb9eb658c1ba0d207619036dd43d5f4b7d6",
+  "expiry_extended_for_paused_inspection": true
+}

@@ -1,0 +1,52 @@
+{
+  "status": 200,
+  "elapsed_s": 71.84570479393005,
+  "response": {
+    "id": "scn_00010_539824",
+    "title": "未命名 Scenario",
+    "description": "",
+    "genre": "",
+    "tone": "",
+    "play_style": "",
+    "player_character": "player",
+    "status": "DRAFT",
+    "version": "0.1.0",
+    "owner": "user",
+    "world": {
+      "rules": "",
+      "lore": "",
+      "locations": "",
+      "constraints": ""
+    },
+    "characters": [],
+    "drama": {
+      "core_question": "",
+      "central_conflict": "",
+      "truth_model": "",
+      "secrets": "",
+      "misbeliefs": "",
+      "pressures": "",
+      "anchors": "",
+      "ending_families": "",
+      "foreshadows": "",
+      "forbidden_outcomes": "",
+      "timed_interactions": ""
+    },
+    "mechanics": {},
+    "theme": {
+      "accent": "#245477",
+      "font": "system",
+      "density": "comfortable",
+      "subtitles": "normal",
+      "background": "plain"
+    },
+    "authoring_intent": "废弃灯塔失踪案。玩家是保险调查员林远，维修员林岚帮助调查。真相是守塔人自愿藏在地下维修间保护遭到走私团伙追踪的姐姐；不是超自然事件。冲突是公开走私证据会暴露姐姐的位置，隐瞒又会让走私者继续害人。压力来自明天早上封港搜查，必须在故事时间天亮前决定是否报案。开场在码头，地点还有灯塔门厅和后门。核心问题是保护亲人是否值得牺牲公共利益。可能结局为安全报警救出姐姐，或选择保护姐姐并离开。禁止凭空复活或改写守塔人自愿失踪的事实。",
+    "mechanic_authoring_intent": "",
+    "creator_projection": {},
+    "reviewed": false,
+    "manual_edits": [],
+    "locks": [],
+    "changes": [],
+    "updated_at": 1790268280849
+  }
+}

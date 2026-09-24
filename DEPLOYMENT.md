@@ -40,27 +40,29 @@ curl -s http://139.199.69.46:9000/api/health
 # {"ok":true,"provider_mode":"hybrid","profile":"AGENT_LOCAL_PROFILE"}
 ```
 
-## 代码同步（本地 → DGX）
+## 在DGX上同步与构建
 
-DGX 上 `npm install` 会 OOM，**只传构建产物**。后端传 `.py`，前端传 `dist/`：
+2026-09-25已在本机验证 `npm ci && npm run build` 成功；旧文档“DGX npm必然OOM、只能传dist”的结论已失效。
 
 ```bash
-# 后端（在 backend/ 下）
-tar czf - app/ | sshpass -p "$PW" ssh -p 22222 hajimi2025@139.199.69.46 \
-  'cd ~/interaction/backend && tar xzf -'
-
-# 前端（本地先 npm run build，在 dist/ 下）
-tar czf - . | sshpass -p "$PW" ssh -p 22222 hajimi2025@139.199.69.46 \
-  'cd ~/interaction/frontend/dist && rm -f assets/index-*.js assets/index-*.css && tar xzf -'
+cd /home/hajimi2025/interaction
+git pull --ff-only
+git rev-parse HEAD
+cd frontend
+npm ci
+npm run build
 ```
 
-清旧 `index-*.js/css` 是关键——`index.html` 只引用当前 hash 产物。
+后端与前端必须来自同一应用代码候选。重启前检查 `/api/dev/jobs`，区分实际活动任务与历史残留记录；等待活动流水线完成后向旧uvicorn发送SIGTERM，再从backend目录用现有.env启动。仅更新应用时不停止Nemotron/Sol-H3容器。重启后核验本地与公网 `/api/health`、新增API的OpenAPI路径和HTML引用的bundle hash。
+
+本轮最新应用代码候选、源码树指纹与构建hash见 `docs/acceptance/prd_v06_latest/verification_summary.json`，实际重启证据见同目录 `deployment_validation.json`。
 
 ## 关键配置（backend/.env，gitignore，不入库不入 Git）
 
 | 变量 | 用途 |
 | --- | --- |
 | `DATABASE_URL` | `postgresql+asyncpg://…@127.0.0.1:5433/…` |
+| `PROVIDER_TIMEOUT_SECONDS` | 实际部署为120秒；真实Step作者请求可能超过旧30秒默认，仍保留有界超时/重试 |
 | `PROVIDER_MODE` | `mock` / `live` / `hybrid`（hybrid：真实 H3 Max，失败显式降级 Mock） |
 | `PROFILE_LIFECYCLE_ENABLED` | 真实 Profile 切换时执行 stop/release/start/health；单 GPU 生产环境开启 |
 | `NEMOTRON_CONTAINER` / `VIDEO_LOCAL_CONTAINER` | `interaction-nemotron` / `comfyui-nvidia` |
@@ -86,14 +88,14 @@ tar czf - . | sshpass -p "$PW" ssh -p 22222 hajimi2025@139.199.69.46 \
 | `hybrid` | 真实（本地/StepFun），失败显式降级 | H3 Max → Mock | Jev |
 | `live` | 完整冻结矩阵 | 真实 h3_max / sol_h3_local | Jev |
 
-冻结矩阵（live/hybrid 文本）：
+hybrid矩阵（live移除每条链末尾Mock，不允许Mock冒充成功）：
 
 - director → `nemotron_local → step_5 → mock_text`
 - narrative → `step_37 → nemotron_local → mock_text`
 - production → `nemotron_local → step_37 → mock_text`
-- authoring → `step_5`
-- decision → `jev`
-- cloud_video → `h3_max`；local_video → `sol_h3_local → mock_video`
+- authoring → `step_5 → mock_text`
+- decision → `jev → mock_decision`
+- cloud_video → `h3_max → mock_video`；local_video → `sol_h3_local → mock_video`
 
 降级由 Router 按 circuit breaker 驱动，`GET /api/dev/providers` 可见
 `skipped[]`（`circuit_open`/`profile_unavailable`）与 `selected`。
@@ -105,7 +107,7 @@ tar czf - . | sshpass -p "$PW" ssh -p 22222 hajimi2025@139.199.69.46 \
 | 分支卡 PLANNING | `tail -f backend.log` 看 provider HTTP 调用；circuit_open 会在 `/dev/providers` 标出；`POST /api/dev/providers/recover` 复位熔断 |
 | `location`/角色 op 不生效 | mock `_director_plan` 的 `scenario_context` 提取——已修 `raw_decode`（2026-09-23），确认 DGX 同步 |
 | 公网 curl POST 返回空 | FRP 间歇丢包：服务端可能已执行。**不要盲重试**，先 `GET /sessions/{sid}/view` 查状态，或走 `ssh … curl 127.0.0.1:9000` 本地回环 |
-| `last_failed_action` 有值 | G27 恢复路径：`POST /sessions/{sid}/action` 重发 `raw_text` |
+| `last_failed_action` 有值 | 正式Player显示重新生成/修改行动/文字模式继续；`POST /sessions/{sid}/player` 的retry/text_continue走原有校验，失败不重复提交 |
 | Nemotron 未部署或满载 | 检查 `:8001/v1/models`、`/api/dev/providers` 的 `director_admission`；Director 回退 Step 5，Gemma 不计为 Nemotron 成功 |
 
 Nemotron 启动入口为 `deploy/start_nemotron_lightning.sh`，使用本机已安装的
@@ -126,7 +128,7 @@ FlashInfer/vLLM 编译缓存持久化到 `/home/hajimi2025/.cache/interaction-vl
 ```bash
 cd backend
 DATABASE_URL="sqlite+aiosqlite:///./itest.db" PROVIDER_MODE=mock \
-  PROFILE_LIFECYCLE_ENABLED=false .venv/bin/python -m pytest tests/ -q     # 45 passed, 6 warnings
+  PROFILE_LIFECYCLE_ENABLED=false .venv/bin/python -m pytest tests/ -q     # 60 passed, 6 warnings（2026-09-25最终应用候选）
 ```
 
 真实双向 Profile 证据见 `PROFILE_SWITCH_ACCEPTANCE.md`；真实 H3 Max 双 Shot 证据见
@@ -137,3 +139,11 @@ DATABASE_URL="sqlite+aiosqlite:///./itest.db" PROVIDER_MODE=mock \
 
 `/media`、`/files`、`/dev/*` 无鉴权；session_id 即访问令牌。内网/演示适用，
 公网需反代签名 URL。FRP 暴露属已知接受风险。
+
+## 本轮真实Provider限制与测试配置
+
+- 真实验收API为本地9002，独立SQLite验收库，PROVIDER_MODE=live；生产9000仍为hybrid、AGENT_LOCAL_PROFILE、PROFILE_LIFECYCLE_ENABLED=true。
+- 为停顿检查，验收BRANCH_TTL_SECONDS=900；生产保持180。媒体回放夹具仅写隔离验收库，不导入生产。
+- Step Plan的step_5采用提示约束JSON并在服务端验证/最多一次格式修复；本机对照显示强制response_format=json_object会破坏输出。key与endpoint未更换。
+- fal返回403 `User is locked. Reason: TOP_UP.` 时保留错误和job信息，使用显式文字恢复。hybrid可能显式降级Mock，不能把该视频视为真实Provider验收PASS。
+- 本轮没有重启/重新部署已验证的Nemotron或重复Profile往返；仅更新应用与前端。

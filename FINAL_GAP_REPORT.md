@@ -1,37 +1,35 @@
-# Final Gap Report — PRD v0.6
+# Final Gap Report · PRD v0.6
 
-审计基线：本轮最新 `main`（起始 SHA `8e7eb048397555ab7fb993025c48a42bc6f905a5`）。
-PRD v0.6 是业务 SoT；线上 :9000 和 Nemotron Lightning 部署已确认，不再列为 Gap。
+最终应用代码候选：`2e548769d0960d901075eca46ac2f7ec63409512`。需求冻结/起点：`881dd66cb8585b51c0a3c8ff5c47160a000c737c`。
+本报告取代此前旧SHA和“旧现状→新修复”混合结论。详细验收见 [LATEST_PRD_UX_ACCEPTANCE.md](LATEST_PRD_UX_ACCEPTANCE.md)。
 
 ## CLOSED
 
-- VIDEO_LOCAL Sol-H3 live validation：在正式 Profile API 下启动完整 ComfyUI worker
-  与 adapter，真实生成 5.042 秒 MP4；A→V→A 和 Nemotron 中文 JSON smoke 见
-  `FINAL_E2E_ACCEPTANCE.md`。
-- Profile lifecycle resource release：VIDEO_LOCAL 切换现在同时停止/启动 adapter
-  和 ComfyUI，避免 H3 权重残留导致 Nemotron EngineCore 启动失败。
-
-- Play Loop：Opening → 自动播放 → Decision Lead 服务端 Gate → 选择/自由输入 → 下一幕，失败可重试/文字继续/退出。
-- Real Multi-Shot Runtime：N Shot → N 个 Provider Job → N clips → FFmpeg concat；每 Shot 和 SceneArtifact 都记录 provenance。
-- H3 Max 真实双 Shot：两个独立 request ID、两个真实 mp4、ffprobe 与 concat 证据见 `REAL_MULTISHOT_ACCEPTANCE.md`。
-- Profile lifecycle：DGX Spark 实际 A→V→A，真实 stop/release/start/health/cold-start/Director smoke 见 `PROFILE_SWITCH_ACCEPTANCE.md`。
-- Decision Lead 服务端暴露条件、后端 SemVer、Publish Gate、typed patch（含 characters/mechanics）。
-- UI Size 不再使用整体 `zoom`/`transform: scale`；三档 token 和 4K 工作区已落地，并在 Chromium 100% Browser Zoom 下重新生成五档截图。
-- Character Studio 正式 React/API：AI、图片 Baseline、手动三入口以及 Candidate/Canonical/多视图/Edit/Outfit/Version/Snapshot/Override/Promote/Resolver。
+- Q105–Q122：AI引导式Drama、统一角色Core/Overlay、自然语言玩法编译与教程、Player四层/容器全屏、HUD、Standard错误隔离、字幕与三种媒体状态。
+- 本轮AT-77–90为13 PASS / 1 PARTIAL，包含真实Step/Jev/Nemotron/H3，以及明确标注的真实媒体回放/故障注入。没有用Mock视频证明真实Provider。
+- 本轮真实H3两Shot Opening、3个Ready候选及自由输入FREE视频；正式角色固定版本参考进入Production。
+- 真实玩法行动发现并修正缺失Skill提案与初始关系缺失问题；重试经relationship Skill/StateManager写入关系55，World版本仅增1，失败恢复可用。
+- 原始Schema错误仅Developer可见；失败重试、媒体重新载入、明确文字恢复、文字Ending和真实Step Continue World完成。
+- 最新应用候选全量离线回归60 passed / 0 failed / 0 skipped / 6 warnings，124.62秒；npm ci与tsc/Vite build exit 0。
+- Firefox 100% Browser Zoom下五档分辨率×五页，1920三档UI Size，共35/35响应式检查；中文真实视频字幕与全屏截图均已更新。
+- 已确认的公网服务、Nemotron部署和历史Sol-H3/Profile双向切换保持既有成果，不列为部署Gap。历史证据与本轮UX实测范围分开记录。
 
 ## PARTIAL
 
-- Character Studio 外部 nano-banana-2 AI 生图、多视图和编辑的完整浏览器 Flow A～E 本轮没有重新消耗外部配额；本轮只实测了图片 Baseline → Candidate → Canonical API。
-- 默认 hybrid 运行时云视频仍允许 `h3_max → mock_video` 显式降级；Real Multi-Shot PASS 只引用真实 H3 证据，不引用该 fallback。
-- 全量测试在显式离线验收环境 `PROVIDER_MODE=mock PROFILE_LIFECYCLE_ENABLED=false` 下为 `45 passed, 6 warnings`；直接使用线上 hybrid `.env` 会因外部真实视频任务时序导致 1 个 timed 用例不稳定，因此不宣称 hybrid pytest 全绿。
+- AT-86最终候选新FREE视频：本轮较早的真实FREE视频成功，最后Director/关系修复后文字FREE成功；fal锁阻止再次验证新视频。
+- 全视频用户E2E：Opening/推荐/FREE真实H3成功，视频Ending未完成；文字Ending成功不替代视频Ending。
+- Character Studio新Nano Banana双Candidate、多视图、非破坏Edit完整外部生图流程本轮未重跑；本轮验证的是文字AI理解、复用真实图片上传基线、Overlay/Promote及Production引用。
+- AT-01–76只重跑相关路径和完整离线契约测试；未覆盖的真实语义、边界、多模态或Profile用例没有沿用旧PASS作最新HEAD证明。
 
 ## BLOCKED
 
-- AT-44 需要真实用户试玩反馈，本机无法替代真实体验者。
+- fal账单锁：真实视频Ending请求 `01a0d481-3949-7f32-8d42-0ffed6de7010` 返回403 `User is locked. Reason: TOP_UP.`。保留 `fal_ending_failure.json`，不再重复提交付费视频请求。
+- 独立真实体验者反馈（AT-44）尚无。自动化和开发者验收不能伪装真实用户反馈。
 
 ## REMAINING
 
-- 在有浏览器自动化和可控 nano-banana 配额的验收窗口重拍五档分辨率，并完整执行 Character Studio Flow A～E。
-- 若生产环境要求所有视频都是真实 H3/Sol-H3，将 `PROVIDER_MODE=live` 并确保参考素材和 Provider 配额可用；hybrid 的降级语义需保留。
+- P0：fal恢复后补视频Ending及连续视频完整回归；补Character Studio外部生图完整浏览器Flow。
+- P1：补本轮范围外的AT-01–76语义/多模态/边界样本与独立试玩。矩阵中PARTIAL包含“本轮未全面复测”，不等于已实现能力丢失。
+- 本轮不扩展账号、多租户或新的模型部署范围。hybrid仍允许显式Mock降级；真实验收使用live，并逐分支核对provenance。
 
-最终候选 SHA：`13c75b26ac46efc09fd30d2f7ad5733229886436`。
+- 运维P1：生产库有2条旧standalone生成记录和2个旧Session的中断分支（约28小时以上未更新），对应旧验收任务；本轮只保留原记录，不用改enum伪造完成。新Session验收与它们隔离。

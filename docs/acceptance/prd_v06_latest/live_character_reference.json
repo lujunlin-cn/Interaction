@@ -1,0 +1,40 @@
+{
+  "source": "existing fal image reused as explicit test baseline",
+  "source_url": "https://v3b.fal.media/files/b/0aab993e/LCfYPEb27SulXww8kNpdM_XFK2efgg.png",
+  "candidate": {
+    "id": "ca_00003_bf98fe",
+    "character_id": "chr_00002_a6a94f",
+    "character_version_id": null,
+    "asset_id": null,
+    "role": "front",
+    "status": "CANDIDATE",
+    "outfit_id": null,
+    "source_asset_refs": [],
+    "generation_job_id": null,
+    "provenance": {
+      "source": "upload",
+      "filename": "linlan-reference.png",
+      "capability": "IDENTITY_BASELINE"
+    },
+    "url": "/files/assets/__global__/asset_00002_e15dfd.png",
+    "created_at": 1790267991769
+  },
+  "canonical": {
+    "id": "ca_00003_bf98fe",
+    "character_id": "chr_00002_a6a94f",
+    "character_version_id": null,
+    "asset_id": null,
+    "role": "front",
+    "status": "CANONICAL",
+    "outfit_id": null,
+    "source_asset_refs": [],
+    "generation_job_id": null,
+    "provenance": {
+      "source": "upload",
+      "filename": "linlan-reference.png",
+      "capability": "IDENTITY_BASELINE"
+    },
+    "url": "/files/assets/__global__/asset_00002_e15dfd.png",
+    "created_at": 1790267991769
+  }
+}

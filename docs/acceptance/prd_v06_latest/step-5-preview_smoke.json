@@ -1,0 +1,32 @@
+{
+  "model": "step-5-preview",
+  "elapsed_s": 2.8934061527252197,
+  "status": 200,
+  "response": {
+    "id": "557b50b4f5f4715eafca7dad2427aacd.ae440eb2d06c1b8751e21053b3cc298d",
+    "object": "chat.completion",
+    "created": 1790267886,
+    "model": "step-5-preview",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "{\"ok\":true,\"说明\":\"中文连接验证\"}"
+        },
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 26,
+      "completion_tokens": 127,
+      "total_tokens": 153,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0
+      }
+    }
+  }
+}

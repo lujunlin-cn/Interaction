@@ -1,0 +1,35 @@
+{
+  "source_candidate_sha": "2e548769d0960d901075eca46ac2f7ec63409512",
+  "prd_sha": "881dd66cb8585b51c0a3c8ff5c47160a000c737c",
+  "git_tree_backend": "dc540a30a3e6ce0eedb76bbd27ce83bf587f52e5",
+  "git_tree_frontend": "766afa46d6e05f63ea67d82ebf5a020600c2ec1f",
+  "backend": {
+    "command": "PROVIDER_MODE=mock PROFILE_LIFECYCLE_ENABLED=false .venv/bin/python -m pytest tests/ -q",
+    "passed": 60,
+    "failed": 0,
+    "skipped": 0,
+    "warnings": 6,
+    "duration_seconds": 124.62,
+    "exit_code": 0,
+    "scope": "offline contracts; not live Provider proof"
+  },
+  "frontend": {
+    "command": "npm ci && npm run build",
+    "typescript": "PASS",
+    "vite": "6.4.3",
+    "modules": 41,
+    "exit_code": 0,
+    "assets": {
+      "index-CfRTihTj.css": "f97ebe9101489429f86c8bc9fb68a41d4951bdfe294c3fa08f5e3d781a2d5f8f",
+      "index-BUpI9x27.js": "c44be41c360844b6b79df31f18fc32e1f140a5934bd453f3baad796ac8a39207"
+    }
+  },
+  "responsive": {
+    "passed": 35,
+    "total": 35,
+    "browser": "Firefox 156.0.1",
+    "browser_zoom": 1
+  },
+  "full_video_e2e": "PARTIAL; fal TOP_UP blocks video ending",
+  "text_ending_continue": "PASS"
+}

@@ -1,0 +1,27 @@
+{
+  "items": [
+    {
+      "id": "span_00006_55be8c",
+      "trace_id": "trace_00007_7f8397",
+      "session_id": null,
+      "branch_id": null,
+      "name": "authoring.draft",
+      "status": "failed",
+      "input": {
+        "idea": "一座灯塔里发生了奇怪的事"
+      },
+      "output": {
+        "error": "ValueError('不支持的玩法：light_pattern_decoding')"
+      },
+      "provider": "runtime",
+      "model": "",
+      "model_version": "",
+      "profile": "",
+      "downstream_target": "",
+      "duration_ms": 0,
+      "skill_id": null,
+      "skill_version": null,
+      "at": 1790268030673
+    }
+  ]
+}

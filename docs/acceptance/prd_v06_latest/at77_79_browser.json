@@ -1,0 +1,18 @@
+{
+  "scenario_id": "scn_00002_6d6d15",
+  "proposal_provider": "step_5",
+  "choice": "保持不可名状",
+  "confirmed_path": "drama.truth_model",
+  "after": "古神只有低语与投影，永不露出完整形态，真名仅K1知晓但说出即疯。",
+  "changes": [
+    {
+      "path": "drama.truth_model",
+      "before": "F1：灯塔燃料是历任看守人的记忆。\nF2：海底之物以光为食，以记忆为饵。\nF3：前任并未失踪，已成为灯芯一部分。\nF4：每月大潮是海底之物的进食期。",
+      "after": "古神只有低语与投影，永不露出完整形态，真名仅K1知晓但说出即疯。",
+      "reason": "用户确认 AI 当前理解",
+      "source": "confirmed_ai",
+      "at": 1790268317310
+    }
+  ],
+  "developer_shows_same_value": true
+}

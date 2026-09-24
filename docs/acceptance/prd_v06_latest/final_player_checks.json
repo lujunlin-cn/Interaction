@@ -1,0 +1,41 @@
+{
+  "source": "Current UI/API over recorded real H3 clips in isolated fixture; no new Provider generation",
+  "session_id": "acceptance_final_player",
+  "video": {
+    "width": 1344,
+    "height": 768,
+    "ready": 4,
+    "paused": false
+  },
+  "title_initial": {
+    "text": "灯塔失踪案 · 开场\n码头",
+    "visible": true
+  },
+  "title_faded": true,
+  "fullscreen": {
+    "target": "player-shell",
+    "video": true,
+    "caption": true,
+    "hud": true,
+    "ready": 3,
+    "agency": true
+  },
+  "standard_hud": "背包\n\n暂时没有物品\n\n人物关系\n线索\n愿望\n许下或查看愿望",
+  "captions": {
+    "bottomInside": {
+      "text": "封港前夜废弃灯塔守塔人失踪，调查员林远与维修员林岚登门追查，发现守塔人常去的维修通道被人从外撬开，线索直指灯塔地下的封闭维修间。",
+      "font": "system-ui, Noto Sans CJK SC, Microsoft YaHei, sans-serif",
+      "position": "absolute",
+      "inViewport": true
+    },
+    "bottomOutside": {
+      "text": "封港前夜废弃灯塔守塔人失踪，调查员林远与维修员林岚登门追查，发现守塔人常去的维修通道被人从外撬开，线索直指灯塔地下的封闭维修间。",
+      "font": "system-ui, Noto Sans CJK SC, Microsoft YaHei, sans-serif",
+      "position": "relative",
+      "inViewport": true
+    }
+  },
+  "developer_hud": "背包\n\n暂时没有物品\n\n人物关系\n\n维修员：55 / 100\n\n线索\n愿望\n许下或查看愿望",
+  "developer_inspector": true,
+  "status": "PASS"
+}

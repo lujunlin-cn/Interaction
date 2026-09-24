@@ -3,7 +3,7 @@
 基于 PRD v0.6 Final Closure 的可运行实现：React+TypeScript 前端 + FastAPI + PostgreSQL 后端，
 部署目标为 DGX Spark（`/home/hajimi2025/interaction`）。
 
-Final Acceptance Candidate：`9be1d814784d3653e3bdaf62d6afb1a37d90b9b5`（结论 PARTIAL，详见 `FINAL_CLOSURE_REPORT.md`）。
+最新应用代码候选：`2e548769d0960d901075eca46ac2f7ec63409512`。PRD冻结基线包含Q01–Q122、FR-001–114、AT-01–90。整体结论 **PARTIAL**，详见 [最新UX验收](LATEST_PRD_UX_ACCEPTANCE.md) 与 [封版报告](FINAL_CLOSURE_REPORT.md)。
 
 ## 架构
 
@@ -28,7 +28,7 @@ bash deploy/start.sh                    # 起库 + 依赖 + 构建 + 服务于 :
 
 打开 `http://<spark-ip>:9000`。离线开发可设置 `PROVIDER_MODE=mock`；线上验收使用
 `PROVIDER_MODE=hybrid` 或 `live`，不会把 Mock 结果计入真实 Provider 证据。
-（确定性规则 + FFmpeg 真实生成占位视频），业务 Runtime 完全真实。
+mock模式使用确定性规则和FFmpeg占位视频，不能证明真实模型/视频Provider。
 
 ## Provider 模式
 
@@ -46,7 +46,7 @@ cloud_video→[h3_max]，local_video→[sol_h3_local]。
 
 ```bash
 cd backend
-DATABASE_URL=sqlite+aiosqlite:///./itest.db PROVIDER_MODE=mock \
+DATABASE_URL=sqlite+aiosqlite:///./itest.db PROVIDER_MODE=mock PROFILE_LIFECYCLE_ENABLED=false \
   .venv/bin/python -m pytest tests/ -q
 ```
 
@@ -59,6 +59,14 @@ DATABASE_URL=sqlite+aiosqlite:///./itest.db PROVIDER_MODE=mock \
 正式 Character Studio 接入 AI/图片/手动三入口、AI 双 Candidate、Canonical、多视图二次确认、非破坏编辑、Outfit、版本 Diff、Scenario Snapshot、Local Override/Promote 与 Reference Resolver。视频 Runtime 按每个 Shot 独立提交 Provider Job，再由 FFmpeg concat 生成 SceneArtifact；Mock 结果不作为 Real Multi-Shot 证据。真实双 Shot 证据见 [`REAL_MULTISHOT_ACCEPTANCE.md`](REAL_MULTISHOT_ACCEPTANCE.md)，真实 Profile 往返见 [`PROFILE_SWITCH_ACCEPTANCE.md`](PROFILE_SWITCH_ACCEPTANCE.md)。
 
 StepFun 的 OpenAI-compatible endpoint 固定为 `https://api.stepfun.com/step_plan/v1`；key 只从 `backend/.env` 注入。UI Size 使用标准/大/特大设计 token，不使用 `zoom` 或整体 `transform: scale`。
+
+## 本轮UX与验收
+
+Standard Creator先展示AI理解与建议，确认后写正式Drama/Character/Mechanic数据；Developer保留原始结构。角色库与Creator共用七组信息架构，故事Overlay不会静默改Global。自然语言玩法编译为受验证的Typed Config，Runtime仍由已安装Skill提出状态变更。
+
+Player支持整个容器全屏、隐藏HUD、Lead后Ready快捷行动与持续自由输入；生成、加载、失败可区分，原始错误只进Developer。用户选择文字恢复后生成明确的text artifact，通过原有状态提交，不把它计作视频成功。
+
+最新离线回归60 passed / 0 failed / 6 warnings；npm ci与build通过；AT-77–90为13 PASS / 1 PARTIAL（最后修复后的新FREE视频因fal锁未重测），35项响应式检查通过。真实H3开场、推荐与FREE视频成功；视频Ending被fal `403 TOP_UP`阻塞，文字Ending与继续世界已实测。Nano Banana新生图完整Flow本轮未重跑。
 
 ## 关键契约
 
