@@ -5,7 +5,7 @@
 ## Final Candidate
 
 - 起始 SHA：`8e7eb048397555ab7fb993025c48a42bc6f905a5`
-- 最终候选 SHA：`9be1d814784d3653e3bdaf62d6afb1a37d90b9b5`
+- 最终候选 SHA：`13c75b26ac46efc09fd30d2f7ad5733229886436`
 - 结论：**PARTIAL**。真实 H3 Multi-Shot、真实 Profile 往返、UI 五档响应式截图和离线回归已完成；外部 Character Studio 浏览器 Flow A～E 尚缺本轮完整留证。
 
 本轮新增 `FINAL_E2E_ACCEPTANCE.md`：VIDEO_LOCAL 下真实 Sol-H3 出片、ComfyUI

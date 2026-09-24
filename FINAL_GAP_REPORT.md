@@ -34,4 +34,4 @@ PRD v0.6 是业务 SoT；线上 :9000 和 Nemotron Lightning 部署已确认，�
 - 在有浏览器自动化和可控 nano-banana 配额的验收窗口重拍五档分辨率，并完整执行 Character Studio Flow A～E。
 - 若生产环境要求所有视频都是真实 H3/Sol-H3，将 `PROVIDER_MODE=live` 并确保参考素材和 Provider 配额可用；hybrid 的降级语义需保留。
 
-最终候选 SHA：见本次 Final E2E 提交。
+最终候选 SHA：`13c75b26ac46efc09fd30d2f7ad5733229886436`。

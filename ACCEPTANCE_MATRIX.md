@@ -10,7 +10,7 @@ NOT_RUN，**不伪造**。
 
 ## 测试基线（Final Closure）
 
-Final Candidate SHA：`9be1d814784d3653e3bdaf62d6afb1a37d90b9b5`
+Final Candidate SHA：`13c75b26ac46efc09fd30d2f7ad5733229886436`
 
 - 单元/集成：`cd backend && PROVIDER_MODE=mock pytest tests/` — **45/45 绿**
   （含 vertical_slice 端到端、generalization、skills、two-phase commit）。
