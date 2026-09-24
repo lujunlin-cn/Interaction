@@ -99,7 +99,7 @@ provenance_semantics:
 44. **Q105–Q108：Standard Creator 不再把内部 Schema 直接等价成用户表单。** 一句话／多句话故事描述之后，AI 先给出当前理解，只对高影响且缺失或低置信的内容追问；追问优先给出与当前故事相关的建议选项，并始终保留“其他／自己修改”。完整 DramaSpec 字段属于 Developer／高级编辑面。
 45. **Q109–Q112：角色库与 Creator 中的角色必须使用同一管理颗粒度。** Global Character 表达跨故事稳定身份，Scenario Character 表达该故事中的身份、动机、认知、关系与视觉状态 Overlay；两处信息架构一致，只是编辑作用域不同。普通创作不得要求用户手填所有 Desire/Fear/Secrets/Knowledge/Relationships。
 46. **Q113–Q115：玩法机制的 Standard UI 是自然语言“怎么玩”说明，不是勾选 Skill 后暴露 JSON。** 创作者用一句话描述玩法，Authoring 将其编译成受验证的 MechanicSpec；Runtime 仍消费确定性 Typed Config。Developer 才显示 Skill ID、版本、触发器和原始配置。
-47. **Q116–Q120：Player 是视频优先的沉浸式播放器。** 全屏对象是整个 Player 容器而不是裸 video，使字幕、HUD、Ready 推荐和自由输入仍可使用；Jev/Top-K 推荐位于视频下方第二层，自由输入是最底层且持续可用的 Agency Layer，不能把产品呈现成固定三选一。
+47. **Q116–Q120：Player 是视频优先的沉浸式播放器。** 主沉浸形态是应用内 Theater Mode：Player 独占应用主内容区、隐藏 Sidebar/应用级导航，浏览器本身保持普通窗口；视频舞台占据绝大多数可用空间，Jev/Top-K 推荐固定在视频下方第二层，自由输入固定在最底层且持续可用，HUD 覆盖在视频左上角。Browser Fullscreen 仅作为可选二级播放功能，不能把它等价成产品的“沉浸模式”。
 48. **Q120：背包、关系、线索、愿望退出主布局，进入左上角可滑出的 HUD。** 桌面支持 hover 临时展开、点击固定；触屏用点击抽屉。Standard 默认用叙事性关系描述而非裸数值，Developer 可查看精确状态值。
 49. **Q121–Q122：Standard Player 不暴露 Runtime／Schema／Pydantic／Provider 错误。** 技术详情进入 Developer Inspector；玩家只看到可恢复的自然语言反馈及“重试／修改／文字继续／退出”等动作。生成中、媒体载入中、播放失败必须是不同状态，不能统一成永久黑屏。
 50. **创作端隐藏机器需要的结构，游玩端隐藏机器正在运行的过程。** Standard Mode 以故事意图、角色意图、玩法规则和可玩的选择为中心；Developer Mode 保留完整 Schema、Trace、Provider、版本与原始工件。
@@ -437,7 +437,7 @@ Assembly              → FFmpeg / deterministic runtime
 | Q113 | USER | Standard Mode 的玩法机制显示为自然语言“游戏教程／玩法规则” | 不以“勾选关系变化／线索调查／道具系统／限时互动 + JSON 参数”作为默认创作界面 |
 | Q114 | USER | 创作者可以一句话描述希望故事“怎么玩” | Authoring AI 将自然语言编译成 MechanicSpec Proposal，经 Schema/权限校验后形成 Runtime Typed Config；自然语言不是 Runtime 配置格式 |
 | Q115 | USER | 玩法以可读规则卡管理 | Standard 可查看、调整、移除、添加玩法；Developer 才显示 Skill ID/version、Typed Config、Trigger、StatePatch Contract |
-| Q116 | USER | Player 的视觉中心是视频，并支持整个互动播放器容器全屏 | 不以裸 video.requestFullscreen 破坏字幕、推荐、自由输入和 HUD；全屏后这些互动层仍存在 |
+| Q116 | USER | Player 的视觉中心是视频；主沉浸形态为应用内 Theater Mode，而不是浏览器 Fullscreen | Theater Mode 隐藏 Sidebar/应用级导航并让 Player 独占主内容区；浏览器仍保持普通窗口。视频占绝对主体，推荐与自由输入固定在下方，HUD 位于视频左上角；Browser Fullscreen 仅作为二级可选功能 |
 | Q117 | USER | Player 信息架构固定为 Immersion / Decision / Agency / HUD 四层 | Immersion=视频与字幕；Decision=Ready 推荐；Agency=自由输入；HUD=背包/关系/线索/愿望 |
 | Q118 | USER | Jev/Top-K 推荐是视频下方的第二层快捷行动 | 只在 Decision Lead 到达且分支 Ready 后出现；未 Ready 时不显示“暂无推荐”等系统噪声；选中后其余推荐收起 |
 | Q119 | USER | 自由输入是最底层、持续可用的主行动入口 | 即使有推荐也必须保留自由输入，避免产品退化成固定三选一；行动已被接受执行时可以临时锁提交但不隐藏入口 |
@@ -713,7 +713,7 @@ Overview 在生成初稿后应显示“AI 已理解什么／还需要确认几�
 | FR-107 | Scenario Character Overlay；Q111 | P0 | Desire/Fear/Secrets/Knowledge/Relationships/Visual State 默认写入 Scenario Snapshot/Override，可查看继承/覆盖来源 | 不静默污染 Global Character；提升全局必须显式操作 |
 | FR-108 | 自然语言玩法作者界面；Q113～114 | P0 | 用户用自然语言描述“怎么玩”，Authoring AI 生成 MechanicSpec Proposal，经 Schema/权限校验后保存 Typed Config | 自然语言不直接在 Runtime 中作为任意代码/JSON 执行 |
 | FR-109 | 玩法教程卡；Q113～115 | P0 | Standard 以“调查与线索/人物关系/道具/紧张时刻”等自然语言规则卡显示，可调整/移除/添加；Developer 显示 Skill/Version/Trigger/Config | Standard 不暴露空 JSON textarea |
-| FR-110 | 沉浸式 Player Fullscreen；Q116～117 | P0 | 整个 PlayerShell 可进入/退出全屏；全屏仍保留视频、字幕、Decision Layer、Agency Layer、HUD | 不仅对裸 video 元素请求全屏导致互动 UI 消失 |
+| FR-110 | Player Theater Mode；Q116～117 | P0 | Standard Player 可进入/退出应用内 Theater Mode：隐藏 Sidebar/应用级 Header/Creator 导航，Player 占满应用可用视口；Stage 使用剩余最大空间，Decision Layer 固定在 Stage 下方，Agency Layer 固定为最底层，HUD 覆盖左上；Browser Fullscreen 作为“更多”中的可选二级功能 | 不得把 `requestFullscreen()` 本身当作 Theater Mode 完成；不得因 Runtime 状态改变把 Decision/Agency Dock 挤离固定层级 |
 | FR-111 | Decision / Agency Interaction Dock；Q117～119 | P0 | Ready 推荐位于自由输入上方，仅在 Decision Lead 后出现；自由输入始终存在；选中推荐后其余卡片收起并显示正在继续故事 | 未 Ready 不展示；不能用推荐取代自由行动 |
 | FR-112 | Player HUD 抽屉；Q120 | P0 | 左上角 HUD 汇总背包/关系/线索/Wish；桌面 hover 临时展开、点击固定，触屏点击展开；Standard 关系默认定性表达 | 精确数值和 State ID 进入 Developer |
 | FR-113 | Standard 错误隔离与 Developer Inspector；Q121 | P0 | Standard 把模型/Schema/Provider 异常转成可恢复的人话与操作；Developer Inspector 保留原始 Trace、错误、Branch/Provider 信息 | Pydantic URL、Python exception、原始 validation dump 不得直出玩家界面 |
@@ -784,18 +784,22 @@ Standard Creator 的第一屏是“AI 当前理解”，而不是内部字段列
 
 玩法机制顶部提供“你希望这个故事怎么玩？”自然语言入口。AI 编译后，以类似游戏教程的卡片呈现，例如“调查环境可以发现线索”“人物会记住你如何对待他们”“重要物品可以保存并再次使用”“紧张场景可能需要快速决定”。Standard 可调整、移除、新增规则；不得直接暴露 {} JSON 参数框。Developer 才允许检查对应 Mechanic Skill、版本、Typed Config、Trigger 与 StatePatch Contract。
 
-### 06.8 Player：沉浸式视频、Interaction Dock 与 HUD
+### 06.8 Player：Theater Mode、Interaction Dock 与 HUD
 
 Player 采用四层信息架构：
 
 1. Immersion Layer：视频、场景标题、字幕。视频是页面绝对视觉中心；场景标题在新场景开始时短暂显示后淡出，对话与旁白使用视频安全区字幕。
 2. Decision Layer：Jev/Top-K 已 Ready 推荐。它位于视频下方、自由输入上方，在 Decision Lead 到达后轻量出现；未 Ready 时不显示“暂无推荐”占位。用户选中后其余卡收起，保留“已选择／正在继续故事”的轻反馈。
 3. Agency Layer：自由输入位于最底层，是持续存在的主行动入口。有无推荐都可输入，不把体验退化成固定三选一。
-4. HUD Layer：背包、关系、线索、Wish 收入左上角隐藏式抽屉。桌面 hover 临时展开、点击固定；移动端点击展开。Standard 默认用“信任／戒备／关系改善”等叙事性描述，不要求显示 0–100 数值。
+4. HUD Layer：背包、关系、线索、Wish 收入视频左上角隐藏式抽屉。桌面 hover 临时展开、点击固定；移动端点击展开。Standard 默认用“信任／戒备／关系改善”等叙事性描述，不要求显示 0–100 数值。
 
-全屏模式对整个 PlayerShell 请求 fullscreen，使视频、字幕、HUD、Decision、Agency 与播放控制仍属于同一沉浸界面；不以裸 video 全屏作为主交互模式。播放控制在鼠标/触摸唤起时显示，低频“跳过当前场景”等动作进入次级菜单。
+**Theater Mode 是 Standard Player 的主沉浸模式。** 进入 Theater Mode 后，应用级 Sidebar、Creator/Library 导航与普通页面 Header 隐藏，Player 自身占满应用可用视口（建议以 100dvh/可用容器高度布局），但浏览器保持普通窗口状态，不要求触发 Fullscreen API，也不出现必须按 Esc 才能退出的浏览器全屏提示。视频 Stage 使用除交互区之外的最大剩余空间；Decision Layer 固定在 Stage 下方；Agency Layer 固定在最底层，因此无论视频播放、生成、失败或 Intent 状态如何，玩家都能形成稳定的“视频 → 推荐 → 自由输入”空间认知。
 
-Standard Mode 不出现 Inspector 按钮、Branch Status、Provider、request ID、Python/Pydantic validation 详情。若生成失败，玩家看到“这一幕暂时没有生成成功”以及重试、修改行动、文字继续、退出等可恢复操作；完整技术错误只进入 Developer Inspector。
+Browser Fullscreen 仍可保留为播放器“更多”菜单中的二级可选功能；它可以让整个 PlayerShell 请求 fullscreen，但不得成为 Theater Mode 的前置条件，也不得作为 FR-110 / AT-84 的通过依据。
+
+播放控制应覆盖在视频下缘并在鼠标/触摸唤起时显示，闲置时淡出；低频“跳过当前场景／浏览器全屏／字幕设置／退出故事”等动作进入次级菜单。普通模式下不应在视频与 Decision Layer 之间长期占据一整行网页式工具栏。
+
+Generating、Loading、Failed、Intent Echo/Clarification 与可恢复错误不得把 Interaction Dock 推离固定层级。优先把媒体状态和恢复动作显示为 Stage 内 Overlay／轻量浮层；用户选择“修改行动”时再把焦点交给 Agency Layer。Standard Mode 不出现 Inspector 按钮、Branch Status、Provider、request ID、Python/Pydantic validation 详情；完整技术错误只进入 Developer Inspector。
 
 播放器必须区分 Generating（尚在生成媒体）、Loading（已有媒体但浏览器正在载入）、Failed（加载或生成失败）。不可把三者统一显示为无解释的黑屏。字幕编码、场景名、人物名必须使用完整 Unicode 路径验证，不接受 tofu 方块或乱码作为已知可忽略问题。
 
@@ -2427,7 +2431,7 @@ Q62 明确选择 **A：现阶段不规定固定延迟等级或硬 P95**。因此
 | AT-81 | Scenario 给角色修改 Desire/Secret/Visual State | 只改变当前 Snapshot/Override；Global Character 不变；用户显式“保存为全局新版本”后才产生全局版本 | FR-107 |
 | AT-82 | 输入“主要靠调查和询问角色，角色记得我是否撒谎，追逐时要快速决定” | Standard 生成可读玩法教程卡；后台产生受验证 MechanicSpec 并绑定对应 Skills | FR-108、109 |
 | AT-83 | Standard / Developer 查看同一玩法机制 | Standard 无空 JSON textarea；Developer 可查 skill_id/version/typed config/trigger，二者修改走同一验证链 | FR-108、109 |
-| AT-84 | Player 进入沉浸全屏 | 全屏对象为 PlayerShell；视频、字幕、HUD、Ready 推荐和自由输入均仍可使用，退出全屏后状态不丢失 | FR-110 |
+| AT-84 | Player 进入/退出 Theater Mode | 浏览器保持普通窗口（进入 Theater Mode 本身不要求 `document.fullscreenElement`）；Sidebar/应用级 Header 隐藏，Player 占满应用可用视口；视频 Stage 为视觉主体，HUD 位于左上，Ready 推荐在 Stage 下方，自由输入固定最底层；退出后 Session/播放/输入状态不丢失。另测 Browser Fullscreen 时不得影响这些层，但 Browser Fullscreen 不是本 AT 的主通过条件 | FR-110 |
 | AT-85 | 视频尚未进入 Decision Lead，再到达 Lead | 到达前不出现系统推荐；到达后只显示完整 Ready 推荐，位置位于自由输入上方 | FR-111 |
 | AT-86 | 有 3 个 Ready 推荐时玩家坚持自由输入 | 自由输入始终可操作并形成 FREE branch；系统不强迫三选一；一旦行动接受，重复提交被锁/幂等 | FR-111 |
 | AT-87 | Player 查看背包/关系/线索/Wish | 左上 HUD 可 hover 临时展开、点击固定；Standard 关系为定性文案，Developer 可查原始数值 | FR-112 |
@@ -2704,6 +2708,8 @@ v0.6 完整继承 v0.5 的 O01–O11、Q01–Q70、I01–I05、FR-001～082 与 
 
 角色库与 Creator 的差异只允许来自作用域：前者编辑 Global Character Core，后者编辑 Scenario Snapshot/Overlay；不得再因页面入口不同而拥有不一致的角色定义颗粒度。玩法机制同理：Standard 显示可理解的游戏教程规则，Runtime 仍使用受验证的 MechanicSpec。
 
+**Q116 修订说明（USER，2026-09-24）：** “沉浸模式”不是浏览器 Fullscreen API。用户明确要求视频画面在应用内尽可能占满主视图，选项位于视频下方第二层，自由输入位于最底层，背包/关系/线索/Wish 通过视频左上角弹出 HUD 查看。浏览器全屏仅保留为附加能力；此前“PlayerShell requestFullscreen 即代表沉浸模式完成”的解释被本修订覆盖。
+
 ### 19.9 本轮没有自动加入的产品要求
 
 没有强制“每个节点都展示欲望副标题”，没有把所有自由输入变成二次确认，没有禁止在普通节点许愿，没有规定篇章必须 12 或 16 个 Beat，没有以 Drama Debt 代替 Director 自动结局，没有要求第五个 Agent，也没有以另一种名称偷偷加入 Q48 C 的盲测／开关对照／自动戏剧总分。
@@ -2780,7 +2786,7 @@ v0.3 记录：当时官方活动报名页未能打开，赛事信息引用 NVIDI
 26. AI 是否只追问真正缺失或高影响不确定项，并提供上下文相关建议与自由修改，而不是机械逐字段问卷。
 27. Character Library 与 Creator 的角色信息架构是否一致；Scenario Desire/Fear/Secrets/Knowledge/Relationships/Visual State 是否错误回写 Global。
 28. Standard 玩法是否是自然语言教程卡；任意用户自然语言是否先编译/验证成 MechanicSpec，而不是直接执行 JSON/代码。
-29. Player 全屏是否作用于 PlayerShell 并保留字幕/HUD/推荐/自由输入；Ready 推荐是否位于 Agency 输入之上且未 Ready 不显示。
+29. Player Theater Mode 是否在不依赖浏览器 Fullscreen 的情况下隐藏 Sidebar/应用级 Header、让 Stage 占据主要视口，并保持 HUD 左上、Ready 推荐位于 Agency 输入之上、自由输入固定最底层；Browser Fullscreen 是否只作为二级可选功能且不破坏这些层。
 30. 背包/关系/线索/Wish 是否进入可隐藏 HUD；Standard 是否避免把精确关系数值、Branch/Provider/Inspector 暴露为主要玩法。
 31. Player 是否区分 Generating/Loading/Failed；中文字幕是否无乱码；Pydantic/Python 原始错误是否只存在于 Developer Trace。
 
@@ -2798,6 +2804,7 @@ v0.3 记录：当时官方活动报名页未能打开，赛事信息引用 NVIDI
 | 当前对话 Q71–Q104 与“fal.ai Nano Banana 2 统一生图/编图”明确锁定 | v0.6 USER Character Studio 决策来源 | 用户最终选项优先于助手推荐；Q82=A 不做固定表情资产库，Q95/Q96=A 不显示费用/预算档 |
 | 当前项目对全局角色库、Standard/Developer、Appearance/UI Size/Subtitle、100% Zoom 与模型部署检查的明确要求 | v0.6 产品/验收补充 | 不得把原型已有交互在正式 React 中缩水；模型部署以真实服务器证据为准 |
 | 2026-09-24 连续三轮产品讨论：戏剧结构追问、角色/玩法颗粒度、沉浸式 Player | v0.6 Q105–Q122 USER 决策来源 | Standard Creator 隐藏机器结构、Standard Player 隐藏机器运行过程；Developer 保留全部可审计工件 |
+| 2026-09-24 对 Q116 的后续澄清：应用内 Theater Mode ≠ Browser Fullscreen | v0.6 Q116 / FR-110 / AT-84 覆盖性修订 | Theater Mode 隐藏应用导航并占满主视图；视频→推荐→自由输入层级稳定；浏览器 Fullscreen 降为二级可选功能 |
 
 本次文档加工读取了以上两份本地 Markdown 全文。源文件指纹用于核对基线，不代表模型能力或工程实现通过测试。
 
