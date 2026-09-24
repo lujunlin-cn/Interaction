@@ -13,7 +13,7 @@
 - Director 并发：直连 vLLM 的 1/2/4 路三轮成功率为 3/3、6/6、12/12；4 路未见 OOM/timeout。业务 admission 默认 2，队列超时回退 Step 5。
 - Ollama：可作为显式降级 Provider，但不再冒充 Nemotron。
 - PG：`interaction-drama-db` @127.0.0.1:5433 正常。
-- Sol-H3 本地视频：adapter 已实现真实 submit/status/cancel/health；本轮未重新取得目标机出片产物，结论为 PARTIAL。
+- Sol-H3 本地视频：复用本机 adapter `:8790`、ComfyUI `:8188` 与既有配置完成真实 submit/status/content；`job_00181_bc7c33` 到 READY，5.042s mp4 已落盘。
 - ComfyUI @8188 在跑（与本案无关）。
 
 ## Gap Checklist
@@ -29,7 +29,7 @@
 | G07 | Mock Director | Mock 也应 Scenario 泛化 | `rule_based_outcome` 全雨夜公寓语义（alice/recording/backyard） | 灯塔案 Mock 模式下行为仍错（但文本通用） | 抽取规则保留但按 snapshot 参数化：角色名/location/物品从 snapshot 读；无法命中时通用 outcome | Mock 模式灯塔案不产出 alice 相关内容 |
 | G08 | Mock Narrative | — | `_narrative` 返回 `speaker: "alice"` 写死 | 角色库第一人名应为在场 NPC | speaker 用 snapshot 首个非玩家角色 id | 断言无 "alice" |
 | G09 | 三模态 references | references→provider adapter 不静默丢 | `_bound_references` 产 refs 进 `submit({"references":...})`；FalH3 adapter 只转发 `image_url/reference_*_urls` 而 engine 给的是 `references` | **真实 H3 调用 references 静默丢失** | Provider 侧加 request adapter：`references[]`（按 type image/voice/video + path）→ fal 的 `reference_image_urls`/`reference_audio_urls`/`reference_video_urls`；Sol-H3 同契约；request.json 落盘可审计 | 上传绑定 alice 图片 → 生成 request.json 含 reference_image_urls |
-| G10 | Sol-H3 Adapter | 真实 submit/status/cancel/health | 全部占位 raise | VIDEO_LOCAL_PROFILE 不可用 | 实现基于本地推理服务的 adapter（Spark 无 Sol-H3 运行实例 → 实现代码 + 标 BLOCKED 实测） | 代码实现 + capabilities 实测记录 |
+| G10 | Sol-H3 Adapter | 真实 submit/status/cancel/health | adapter `:8790` 与 ComfyUI `:8188` 已运行 | 无持续运行监控/自动拉起 | 复用本机配置完成真实任务，补充前端 Profile 开关 | `h3_973ad...` done + `job_00181...` READY + ffprobe |
 | G11 | 角色库 | 搜索覆盖 name/bio/tags/personality；资产上传/绑定/预览；snapshot 三选一 | `CharacterService.list` 搜索不含 personality；前端 CharacterDetail 的 ref_* 只读 chip，无上传/选择/删除/预览/绑定 UI | 资产链断 | PATCH 已支持字段；前端加资产选择器（列出 assets + 预览 + 绑定到 ref_*） | 绑定 asset→角色 ref_front → snapshot 隔离验证 |
 | G12 | 角色 snapshot→Production | snapshot references 真进生产 | `_bound_references` 只扫 asset_manifest（Scenario assets），不读角色 ref_* | 角色绑定图不进视频请求 | `_bound_references` 合并：在场角色的 global ref assets（经 snapshot 版本固定） | 灯塔案角色绑图 → request.json references 含该 asset |
 | G13 | 全局显示设置 | Appearance/UI Size/Subtitle 四档+位置+预览 | Settings 页只有模式切换+运行信息 | 整块缺失 | store 加 display 配置（localStorage）+ CSS 变量档位；设置页三组控件+实时预览 | 切深色/大字号全组件生效 |

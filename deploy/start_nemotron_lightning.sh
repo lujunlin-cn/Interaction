@@ -30,7 +30,8 @@ if [ "$ACTUAL_SHARDS" -ne "$EXPECTED_SHARDS" ]; then
   exit 2
 fi
 
-exec docker run --rm --name interaction-nemotron --gpus all --ipc host --network host \
+docker rm -f interaction-nemotron >/dev/null 2>&1 || true
+exec docker run --name interaction-nemotron --gpus all --ipc host --network host \
   -v "$MODEL_DIR:/models/nemotron:ro" \
   "$IMAGE" /models/nemotron \
   --served-model-name "$MODEL_ID" \

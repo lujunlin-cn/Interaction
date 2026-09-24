@@ -6,9 +6,26 @@ import { setDisplay, setState, useUi } from "../store";
 export default function Settings() {
   const ui = useUi();
   const [health, setHealth] = useState<any>(null);
+  const [providers, setProviders] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
+  const [switching, setSwitching] = useState(false);
   useEffect(() => {
     api.health().then(setHealth).catch(() => {});
+    api.devProviders().then(setProviders).catch(() => {});
+    api.devProfile().then(setProfile).catch(() => {});
   }, []);
+  const switchProfile = async (target: string) => {
+    setSwitching(true);
+    try {
+      const result = await api.devProfileSwitch(target);
+      setProfile(result);
+      setProviders(await api.devProviders());
+    } catch (e: any) {
+      setProfile({ state: "FAILED", error: e.message });
+    } finally {
+      setSwitching(false);
+    }
+  };
   const d = ui.display;
   return (
     <>
@@ -22,6 +39,27 @@ export default function Settings() {
             onClick={() => setState({ mode: "standard" })}>标准模式</button>
           <button className={ui.mode === "developer" ? "active" : ""}
             onClick={() => setState({ mode: "developer" })}>开发者模式</button>
+        </div>
+      </div>
+
+      <div className="card">
+        <h3>本地运行模式</h3>
+        <p className="muted">
+          视频本地模式使用本机 Sol-H3 生成视频；切换会排空当前任务、保存状态、切换 Provider 并执行健康检查，失败会自动回滚。
+        </p>
+        <div className="toolbar">
+          {([["AGENT_LOCAL_PROFILE", "Agent 本地"], ["VIDEO_LOCAL_PROFILE", "Sol-H3 视频本地"]] as const).map(([target, label]) => (
+            <button key={target} className={providers?.profile === target ? "active" : ""}
+              disabled={switching || providers?.profile === target || profile?.state !== "ACTIVE"}
+              onClick={() => switchProfile(target)}>
+              {providers?.profile === target ? `✓ ${label}` : label}
+            </button>
+          ))}
+        </div>
+        <div className="kv" style={{ marginTop: 12 }}>
+          <b>当前 Profile</b><span className="mono">{providers?.profile ?? "正在载入…"}</span>
+          <b>Sol-H3</b><span className="mono">{providers?.health?.sol_h3_local?.status ?? "未检查"}</span>
+          <b>切换状态</b><span>{profile?.state ?? "ACTIVE"}{profile?.error ? `：${profile.error}` : ""}</span>
         </div>
       </div>
 

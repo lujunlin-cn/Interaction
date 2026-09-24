@@ -9,7 +9,7 @@
 | step_37 / step_5 | StepFun `api.stepfun.com` | env 已配 `STEP_API_KEY`/`STEP37_MODEL`/`STEP5_MODEL` | 就绪（真实调用待验收 #29） | HYBRID narrative→step_37 首位 |
 | jev（decision）| TypeSafe `api.typesafe.ai` | env 已配 `JEV_API_KEY`/`JEV_MODEL=jev-latest` | 就绪 | decision 路由首位 |
 | h3_max（cloud_video）| fal.ai `minimax/h3-max/reference-to-video` | env 已配 `FAL_KEY` | **已实测出片** | job `01a0ceef-d403-78c2-b737-7aa3cccb8f05` → COMPLETED → 下载 `clip_1.mp4`（6.9MB, ffprobe 5.184s）。endpoint id 已修正（原 `fal-ai/` 前缀 404）；reference-to-video 必须带≥1 参考图。 |
-| sol_h3_local（local_video，VIDEO_LOCAL_PROFILE）| Sol-H3 本地 | 适配器已实现；本次会话未重新取得 DGX 任务产物 | PARTIAL（历史任务证据仍保留） | `SOL_H3_BASE_URL` 由目标机注入 |
+| sol_h3_local（local_video，VIDEO_LOCAL_PROFILE）| Sol-H3 本地 | `127.0.0.1:8790` 健康；真实任务 `h3_973ad3430ed34721890d26eb490981f0` 与后端任务 `job_00181_bc7c33` 均 `done/READY`；mp4 713KB，H.264/AAC，1344x768，5.042s | **PASS（真实出片）** | 复用 `/home/hajimi2025/h3-adapter`、既有 `H3_ADAPTER_TOKEN` 和 ComfyUI `:8188` |
 | 其他本地服务 | — | ComfyUI `8188` 在线；h3-object3d-worker `8792`（TRELLIS.2-4B）在线 | 非本系统槽位 | 不接 |
 
 ## h3-adapter 8790 实测协议（SolH3LocalProvider 实现依据）
