@@ -9,6 +9,7 @@ HOST="${LOCAL_LLM_HOST:-127.0.0.1}"
 GPU_UTIL="${LOCAL_LLM_GPU_MEMORY_UTILIZATION:-0.65}"
 MAX_MODEL_LEN="${LOCAL_LLM_MAX_MODEL_LEN:-8192}"
 MODEL_DIR="${LOCAL_LLM_MODEL_DIR:-/home/hajimi2025/.cache/interaction-nemotron}"
+VLLM_CACHE_DIR="${LOCAL_LLM_VLLM_CACHE_DIR:-/home/hajimi2025/.cache/interaction-vllm}"
 IMAGE="${LOCAL_LLM_VLLM_IMAGE:-vllm/vllm-openai:v0.27.1-aarch64}"
 
 command -v docker >/dev/null || { echo "BLOCKED: docker not found" >&2; exit 2; }
@@ -29,10 +30,12 @@ if [ "$ACTUAL_SHARDS" -ne "$EXPECTED_SHARDS" ]; then
   echo "BLOCKED: only $ACTUAL_SHARDS/$EXPECTED_SHARDS model shards downloaded" >&2
   exit 2
 fi
+mkdir -p "$VLLM_CACHE_DIR"
 
 docker rm -f interaction-nemotron >/dev/null 2>&1 || true
-exec docker run --name interaction-nemotron --gpus all --ipc host --network host \
+exec docker run --name interaction-nemotron --restart unless-stopped --gpus all --ipc host --network host \
   -v "$MODEL_DIR:/models/nemotron:ro" \
+  -v "$VLLM_CACHE_DIR:/root/.cache/vllm" \
   "$IMAGE" /models/nemotron \
   --served-model-name "$MODEL_ID" \
   --host "$HOST" \

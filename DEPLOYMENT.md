@@ -106,6 +106,10 @@ tar czf - . | sshpass -p "$PW" ssh -p 22222 hajimi2025@139.199.69.46 \
 Nemotron 启动入口为 `deploy/start_nemotron_lightning.sh`，使用本机已安装的
 `vllm/vllm-openai:v0.27.1-aarch64` 容器。模型目录默认为
 `/home/hajimi2025/.cache/interaction-nemotron`；脚本会先检查 52 个权重分片。
+FlashInfer/vLLM 编译缓存持久化到 `/home/hajimi2025/.cache/interaction-vllm`，
+容器使用 `restart=unless-stopped`；重启时日志应出现 `Loaded 32 configs`，而不是
+重新执行完整自动调优。这样可以避免首次重启阶段因临时 autotune cache 或容器被
+删除导致的启动崩溃。
 本机与其他 GPU 进程共用内存，旧值 `LOCAL_LLM_GPU_MEMORY_UTILIZATION=0.75`
 启动失败，实测可用值 `0.65` 已成为脚本默认值。启动后以
 `curl http://127.0.0.1:8001/v1/models` 核对模型 ID，再用

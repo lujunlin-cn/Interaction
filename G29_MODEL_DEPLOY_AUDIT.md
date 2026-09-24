@@ -29,4 +29,5 @@
 ## 当前 BLOCKED / 待办
 
 - **Nemotron 并发边界**：直连 vLLM 的 1/2/4 路三轮分别 3/3、6/6、12/12；4 路短请求无 OOM/timeout。业务 admission 仍保守设为 2，详见 `DIRECTOR_CONCURRENCY_REPORT.md`。
+- **Nemotron 重启稳定性**：首次启动完成 FlashInfer autotune 并保存 32 configs；随后容器重启日志显示 `Loaded 32 configs`、CUDA Graph 捕获完成、`:8001/v1/models` 正常，持久缓存路径为 `/home/hajimi2025/.cache/interaction-vllm`。
 - **sol_h3_local 真实出片**：本次 Final Closure 未重新取得任务产物，保持 PARTIAL，不升级为 PASS。
