@@ -18,7 +18,7 @@ export interface DisplayPrefs {
   appearance: "system" | "light" | "dark";
   density: "comfortable" | "compact" | "roomy";
   fontSize: "small" | "medium" | "large" | "xlarge";
-  uiSize: "standard" | "large" | "xlarge";
+  uiSize: "100" | "125" | "150";
   subtitleSize: "standard" | "large" | "xlarge" | "auto" | "small" | "medium";
   subtitlePos: "bottomInside" | "bottomOutside" | "bottom" | "top";
 }
@@ -42,10 +42,14 @@ export interface UiState {
 function loadDisplay(): DisplayPrefs {
   try {
     const raw = localStorage.getItem("drama.display");
-    if (raw) return { appearance: "system", density: "comfortable", uiSize: "standard", fontSize: "medium",
-      subtitleSize: "standard", subtitlePos: "bottomInside", ...JSON.parse(raw) };
+    if (raw) {
+      const saved = JSON.parse(raw);
+      const uiSize = saved.uiSize === "large" ? "125" : saved.uiSize === "xlarge" ? "150" : saved.uiSize === "standard" ? "100" : saved.uiSize;
+      return { appearance: "system", density: "comfortable", fontSize: "medium",
+        subtitleSize: "standard", subtitlePos: "bottomInside", ...saved, uiSize };
+    }
   } catch { /* ignore */ }
-  return { appearance: "system", density: "comfortable", uiSize: "standard", fontSize: "medium",
+  return { appearance: "system", density: "comfortable", uiSize: "100", fontSize: "medium",
     subtitleSize: "standard", subtitlePos: "bottomInside" };
 }
 

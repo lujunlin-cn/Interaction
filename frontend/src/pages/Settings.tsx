@@ -40,9 +40,9 @@ export default function Settings() {
           </label>
           <label><span>UI Size</span>
             <div className="toolbar" style={{ marginTop: 0 }}>
-              {([["standard", "标准"], ["large", "大"], ["xlarge", "特大"]] as const).map(([v, l]) => (
+              {([["100", "100%"], ["125", "125%"], ["150", "150%"]] as const).map(([v, l]) => (
                 <button key={v} className={d.uiSize === v ? "active" : ""}
-                  onClick={() => setDisplay({ uiSize: v, fontSize: v === "standard" ? "medium" : v })}>{l}</button>
+                  onClick={() => setDisplay({ uiSize: v })}>{l}</button>
               ))}
             </div>
           </label>
