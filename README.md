@@ -57,6 +57,10 @@ DATABASE_URL=sqlite+aiosqlite:///./itest.db PROVIDER_MODE=mock \
 
 ## 关键契约
 
+- **Play Loop**：`Start Session → Opening Scene → 自动播放 → 后台预生成 → Decision Lead
+  暴露选项 → 选择/自由输入 → 下一幕`。首幕准备期间显示明确状态；生成失败可重试、
+  切换文字模式继续或退出，不会永久停留在载入画面。
+
 - **Ready Gate**：只有媒体 READY 的分支显示给玩家（I05）；Top-K 锁定后并行生成；
   单分支失败快速重试 1 次后 K-1 原子发布（记录 effective_k）。
 - **Two-Phase Canonicalization**：SELECTED → PROVISIONAL（媒体确认）→ CANONICAL；

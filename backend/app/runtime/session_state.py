@@ -34,7 +34,7 @@ class Arc(BaseModel):
 
 class PlayerState(BaseModel):
     """播放器呈现状态：服务器以墙钟推导进度，前端只发命令（play/pause/skip/report）。"""
-    status: str = "LOADING"                   # LOADING / PLAYING / READY / ENDED / FAILED
+    status: str = "OPENING_PREPARING"         # OPENING_PREPARING / PLAYING / WAITING_DECISION / GENERATING_NEXT / FAILED_RECOVERABLE / ENDED
     scene_title: str = ""
     scene_text: str = ""
     caption: str = ""

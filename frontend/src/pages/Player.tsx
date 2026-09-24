@@ -94,7 +94,7 @@ export default function Player() {
     );
   }
   if (!view) {
-    return <div className="player-shell"><div className="player-placeholder">正在载入…</div></div>;
+    return <div className="player-shell"><div className="player-placeholder">正在连接故事…</div></div>;
   }
 
   const p = view.player;
@@ -206,12 +206,19 @@ export default function Player() {
           <div className="player-placeholder">
             <div style={{ fontSize: 40 }}>▶</div>
             <div>
-              {view.generating.length > 0
-                ? "正在为你准备接下来的故事…"
-                : p.status === "LOADING" ? "正在载入场景…"
+                {p.status === "OPENING_PREPARING" ? "正在准备开场场景…"
+                : view.generating.length > 0 ? "正在为你准备接下来的故事…"
+                : p.status === "FAILED_RECOVERABLE" || p.status === "FAILED" ? "这一幕生成遇到问题，可以重试或用文字继续。"
                 : p.scene_text ? "" : "场景将在准备好后播放"}
             </div>
             {p.scene_text && <div className="player-textonly">{p.scene_text}</div>}
+            {(p.status === "FAILED_RECOVERABLE" || p.status === "FAILED") && (
+              <div className="toolbar" style={{ marginTop: 12 }}>
+                <button className="primary" onClick={() => api.playerCommand(sid, "retry").catch((e) => toast(e.message))}>重新生成</button>
+                <button onClick={() => api.playerCommand(sid, "skip").catch((e) => toast(e.message))}>文本模式继续</button>
+                <button onClick={() => setState({ page: "home", sessionId: null })}>退出故事</button>
+              </div>
+            )}
           </div>
         )}
         {!replay && (p.scene_title || p.scene_text) && p.video_url && (
@@ -235,9 +242,10 @@ export default function Player() {
         </button>
         <span className="muted" style={{ color: "#9fb0c0" }}>
           {p.status === "PLAYING" ? "正在播放" :
-            p.status === "READY" ? "场景已播完，选择下一步" :
+            p.status === "OPENING_PREPARING" ? "正在准备开场" :
+            p.status === "WAITING_DECISION" || p.status === "READY" ? "场景已播完，选择下一步" :
             p.status === "ENDED" ? "本篇已结束" :
-            p.status === "FAILED" ? "生成遇到问题" : "正在准备"}
+            p.status === "FAILED_RECOVERABLE" || p.status === "FAILED" ? "生成遇到问题" : "正在准备"}
         </span>
         <span style={{ flex: 1 }} />
         {view.generating.length > 0 && (

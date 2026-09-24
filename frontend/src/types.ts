@@ -156,7 +156,7 @@ export interface Asset {
 }
 
 export interface PlayerInfo {
-  status: "LOADING" | "PLAYING" | "READY" | "ENDED" | "FAILED";
+  status: "OPENING_PREPARING" | "PLAYING" | "WAITING_DECISION" | "GENERATING_NEXT" | "FAILED_RECOVERABLE" | "LOADING" | "READY" | "ENDED" | "FAILED";
   scene_title: string;
   scene_text: string;
   caption: string;

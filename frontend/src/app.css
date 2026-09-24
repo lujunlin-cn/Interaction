@@ -111,6 +111,7 @@ pre { background: #0f1418; color: #d7e0e8; padding: 10px; border-radius: 6px; ov
   width: 224px; flex: none; background: #10151a; color: #d7dde4;
   display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh;
 }
+.sidebar-nav { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
 .sidebar-brand { display: flex; align-items: center; gap: 8px; padding: 14px 14px 10px; font-weight: 700; }
 .sidebar-mark {
   width: 24px; height: 24px; border-radius: 6px; background: var(--accent); color: #fff;
@@ -132,7 +133,7 @@ pre { background: #0f1418; color: #d7e0e8; padding: 10px; border-radius: 6px; ov
 .sidebar-item:disabled { opacity: 0.4; }
 .nav-ico { width: 16px; text-align: center; opacity: 0.85; }
 .sidebar-subitems { padding-left: 12px; }
-.sidebar-spacer { flex: 1; }
+.sidebar-spacer { display: none; }
 .sidebar-bottom { border-top: 1px solid #232c35; padding: 8px 0 12px; }
 .mode-label { padding: 8px 14px 0; font-size: var(--font-xs); color: #7c8794; }
 .recent-project { display: flex; gap: 8px; align-items: center; width: 100%; background: none; border: none; color: #c9d2db; padding: 6px 14px; text-align: left; }

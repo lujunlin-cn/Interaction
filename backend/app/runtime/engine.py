@@ -281,9 +281,38 @@ class RuntimeEngine:
         await self._persist(state)
         await tracer.emit("session.create", "success", output={"session_id": state.id},
                           session_id=state.id)
-        # 开场：为当前幕准备第一批推荐
-        asyncio.get_running_loop().create_task(self._safe_prepare(state.id))
+        # 首幕先走正式媒体管线，播放开始后 _present 再启动推荐预生成。
+        asyncio.get_running_loop().create_task(self._start_opening(state.id))
         return state
+
+    async def _start_opening(self, session_id: str) -> None:
+        """建立首幕分支，复用 Narrative -> Production -> Video -> Assembly。"""
+        async with self._lock(session_id):
+            state = await self.load_session(session_id)
+            if not state or state.ended or state.branches:
+                return
+            snapshot = state.scenario_snapshot
+            world = snapshot.get("world", {})
+            premise = snapshot.get("premise") or snapshot.get("description") or snapshot.get("title", "故事开场")
+            branch = Branch(
+                id=uid("opening"), trace_id=uid("trace"), session_id=state.id,
+                arc_id=state.current_arc().id if state.current_arc() else "",
+                epoch_id=uid("opening_epoch"), source=BranchSource.OPENING,
+                label=f"{state.world.location}的开场", summary=str(premise)[:180],
+                intent=ResolvedIntent(raw_text="opening", action="opening", confidence=1.0,
+                                      desire_source="SCENARIO"),
+                base_versions=self._branch_base_versions(state),
+                read_set=self.build_read_set(state), fingerprint=self.compute_fingerprint(state),
+                expires_at=now_ms() + settings.branch_ttl_seconds * 1000,
+            )
+            state.branches.append(branch)
+            state.epoch = RecommendationEpoch(id=branch.epoch_id, k=1, target_k=1,
+                                              status="PLANNING", branch_ids=[branch.id])
+            state.player.status = "OPENING_PREPARING"
+            self._event(state, "opening_started", f"开始准备开场：{state.world.location}", branch_id=branch.id)
+            await self._persist(state)
+            await self._push(state)
+        self._spawn_pipeline(session_id, branch.id)
 
     def _bootstrap(self, version_id: str, scenario_id: str, snapshot: dict) -> SessionState:
         drama_spec = snapshot.get("drama", {})
@@ -631,7 +660,9 @@ class RuntimeEngine:
         if not state.scenario_snapshot.get("mechanics", {}).get("qte", {}).get("enabled", True):
             return None
         arc = state.current_arc()
-        turns_done = len([t for t in state.turns if arc and t.get("arc_seq") == arc.seq])
+        turns_done = len([t for t in state.turns
+                          if arc and t.get("arc_seq") == arc.seq
+                          and not t.get("opening")])
         if turns_done < 1:
             return None   # 至少完成一个关键行动后才可能进入限时节点
         raw = state.scenario_snapshot.get("drama", {}).get("timed_interactions", "")
@@ -736,6 +767,8 @@ class RuntimeEngine:
                     if branch and branch.status != BranchStatus.READY:
                         branch.status = BranchStatus.FAILED
                         branch.last_error = str(e)
+                        if branch.source == BranchSource.OPENING:
+                            state.player.status = "FAILED_RECOVERABLE"
                         self._release_budget(state, branch)
                         self._event(state, "branch_failed", f"生成失败：{branch.label}",
                                     branch_id=branch_id, error=str(e))
@@ -810,6 +843,8 @@ class RuntimeEngine:
                             branch_id=branch.id, error=gen_error)
                 await self._persist(state)
                 await self._maybe_publish(state)
+                if branch.source == BranchSource.OPENING:
+                    state.player.status = "FAILED_RECOVERABLE"
                 await self._push(state)
                 return
             await self._set_phase(state, branch, BranchStatus.ASSEMBLING)
@@ -831,6 +866,10 @@ class RuntimeEngine:
             self._event(state, "branch_ready", f"候选已就绪：{branch.label}", branch_id=branch.id)
             await self._persist(state)
             await self._maybe_publish(state)
+            if branch.source == BranchSource.OPENING and branch.status == BranchStatus.READY:
+                # 首幕是系统启动动作：媒体可播放后自动呈现，不暴露为推荐。
+                await self._commit_selected(state, branch)
+                return
             # 自由输入分支：玩家已通过输入作出选择，就绪且仍然有效 → 自动选中播放
             if branch.source == BranchSource.FREE \
                     and state.pending_freeform_id == branch.id \
@@ -844,6 +883,20 @@ class RuntimeEngine:
     # 各阶段实现（Provider 调用经 Router，Agent 不直接绑 SDK）
     # ------------------------------------------------------------------
     async def _plan_branch(self, state: SessionState, branch: Branch) -> None:
+        if branch.source == BranchSource.OPENING:
+            snapshot = state.scenario_snapshot
+            world = snapshot.get("world", {})
+            premise = snapshot.get("premise") or snapshot.get("description") or snapshot.get("title", "故事开场")
+            branch.directive = DramaticDirective(
+                id=uid("dir"), primary_function="ESTABLISH_OPENING",
+                player_input=branch.label,
+                hard_constraints=["不修改正式世界状态", "建立人物、地点与核心冲突"])
+            branch.outcome = OutcomeSpec(
+                title=f"{snapshot.get('title', '故事')} · 开场",
+                text=f"{world.get('opening_location') or state.world.location}。{premise}",
+                ops=[], evidence=[], kind="opening")
+            branch.packet = self._build_scene_packet(state, branch)
+            return
         mechanics = state.scenario_snapshot.get("mechanics", {})
         if branch.source == BranchSource.FALLBACK and branch.outcome is not None:
             # 确定性超时结果：不经过 Director 生成，直接构建提交工件
@@ -1136,6 +1189,19 @@ class RuntimeEngine:
                      for s in branch.shots]
             references = branch.references
         provider, rec = self.router.video_provider(branch_id)
+        # H3 Max reference-to-video requires at least one reference asset. A
+        # scenario may intentionally start without assets; in hybrid mode use
+        # the explicit Mock fallback for the Opening so the player still gets
+        # a playable first scene. Real asset-backed shots remain H3/Sol-H3.
+        if (not references and getattr(provider, "name", "") == "h3_max"
+                and settings.provider_mode == "hybrid"):
+            fallback = self.router.registry.get("mock_video")
+            if fallback is not None:
+                provider = fallback
+                rec = rec.model_copy(update={
+                    "selected": "mock_video", "status": "fallback",
+                    "reason": [*rec.reason, {"provider": "h3_max", "reason": "no_reference_assets"}],
+                    "phase": "video.opening_fallback"})
         # Real providers receive one request per Shot.  The previous code sent
         # the whole ShotPlan as one request, which produced one clip and made a
         # concatenated artifact look like multi-shot generation.
@@ -1428,6 +1494,7 @@ class RuntimeEngine:
             "artifact_id": branch.artifact.id if branch.artifact else None,
             "video_url": state.player.video_url, "duration": duration,
             "timed": branch.interaction_mode == InteractionMode.TIMED,
+            "opening": branch.source == BranchSource.OPENING,
         })
         state.turns = state.turns[-100:]
         # 预生成下一批（预测式）：播放开始即可后台准备
@@ -1477,6 +1544,33 @@ class RuntimeEngine:
             if not state:
                 raise EngineError("session not found")
             player = state.player
+            if command == "retry":
+                if player.status not in ("FAILED", "FAILED_RECOVERABLE"):
+                    raise EngineError("当前没有可恢复的生成失败")
+                failed = next((b for b in reversed(state.branches)
+                               if b.status == BranchStatus.FAILED), None)
+                player.status = "OPENING_PREPARING" if not player.branch_id else "GENERATING_NEXT"
+                if failed:
+                    failed.status = BranchStatus.RETRYING
+                    failed.last_error = None
+                    self._spawn_pipeline(session_id, failed.id)
+                else:
+                    asyncio.get_running_loop().create_task(self._safe_prepare(session_id))
+                await self._persist(state)
+                await self._push(state)
+                return {"position": player.position(), "status": player.status}
+            if command == "skip" and player.status in ("FAILED", "FAILED_RECOVERABLE"):
+                player.status = "WAITING_DECISION"
+                player.video_url = ""
+                player.duration = 0.0
+                player.position_base = 0.0
+                player.playing = False
+                state.messages.append({"kind": "system", "text": "已切换文字模式，你可以继续行动。", "at": now_ms()})
+                state.messages = state.messages[-50:]
+                asyncio.get_running_loop().create_task(self._safe_prepare(session_id))
+                await self._persist(state)
+                await self._push(state)
+                return {"position": 0, "status": player.status}
             if command == "pause":
                 player.position_base = player.position()
                 player.playing = False
@@ -1488,7 +1582,7 @@ class RuntimeEngine:
                 player.playing = False
             pos = player.position()
             if pos >= player.duration and player.status == "PLAYING":
-                player.status = "READY"   # 场景播完，等待玩家选择下一步
+                player.status = "WAITING_DECISION"   # 场景播完，等待玩家选择下一步
             await self._persist(state)
             await self._push(state)
             return {"position": pos, "status": player.status}
@@ -1846,7 +1940,7 @@ class RuntimeEngine:
             state.arcs.append(Arc(id=uid("arc"), seq=seq))
             state.ended = False
             state.pending_continuation = False
-            state.player.status = "READY"
+            state.player.status = "WAITING_DECISION"
             state.drama.phase = PhaseHint.SETUP
             self._event(state, "arc_opened",
                         f"新篇章开启：{content.get('question', '')}")
@@ -1891,7 +1985,7 @@ class RuntimeEngine:
         # Recommendation exposure is a server-side timing contract.  A missing
         # video never opens the gate early; only the recorded decision_open_at
         # (or an explicitly ended scene) can expose ready branches.
-        lead_open = (state.player.status in ("READY", "ENDED")
+        lead_open = (state.player.status in ("WAITING_DECISION", "READY", "ENDED")
                      or position >= state.player.decision_open_at)
         if lead_open and state.epoch and state.epoch.published:
             for bid in state.epoch.ready_ids:
@@ -1903,7 +1997,7 @@ class RuntimeEngine:
                         "source": b.source.value})
         pos = position
         if pos >= state.player.duration and state.player.status == "PLAYING":
-            state.player.status = "READY"
+            state.player.status = "WAITING_DECISION"
             state.player.playing = False
             state.player.position_base = state.player.duration
         snapshot = state.scenario_snapshot

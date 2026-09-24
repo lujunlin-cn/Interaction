@@ -5,6 +5,14 @@
 > v0.5 / Nemotron 未部署结论已过期。Nemotron Lightning 已真实部署；公网服务不属于本轮 Gap。Character Studio、Real Multi-Shot、Profile 生命周期与服务端 Decision Lead 已完成代码闭环，真实 Provider 证据按 provider 可用性单独记录，Mock 不计入 Real Multi-Shot PASS。
 判定标准：「类/接口/字段存在」≠ 完成。完成 = 用户可操作 + Runtime 真执行 + Provider/状态真变化 + Trace 可查 + 正常/失败路径可复现。
 
+## 本轮 Play Loop 收口（2026-09-24）
+
+创建会话不再直接落入空播放器：后端先建立 `OPENING` 分支并走正式
+`Narrative → Production → Video → FFmpeg Assembly`，就绪后自动呈现；播放期间
+后台准备下一批分支，Decision Lead 到达后才暴露选项。播放器状态包括
+`OPENING_PREPARING`、`PLAYING`、`WAITING_DECISION`、`FAILED_RECOVERABLE`、`ENDED`。
+失败路径提供重新生成、文字模式继续和退出故事，且保留 branch/trace 错误来源。
+
 ## DGX 实测快照（2026-09-24）
 
 - 服务：uvicorn :9000 运行中，当前提交以 Git 最终 SHA 为准，`PROVIDER_MODE=hybrid`，`AGENT_LOCAL_PROFILE`，/api/health OK。

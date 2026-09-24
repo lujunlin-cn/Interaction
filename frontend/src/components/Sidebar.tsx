@@ -49,6 +49,8 @@ export default function Sidebar() {
         setState({ editId: draft.id, page: "creator", creatorTab: "overview" });
       }}>＋ 创建故事</button>
 
+      <div className="sidebar-nav">
+
       <div className="sidebar-section">
         <div className="sidebar-section-title">场景</div>
         <NavButton icon="⌂" label="故事库" active={ui.page === "home"} onClick={() => setState({ page: "home" })} />
@@ -99,6 +101,7 @@ export default function Sidebar() {
             <span className="nav-label">{sc.title}</span>
           </button>
         ))}
+      </div>
       </div>
 
       <div className="sidebar-spacer" />

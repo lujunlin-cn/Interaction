@@ -122,7 +122,14 @@ class FalH3MaxProvider:
 
     async def submit(self, request: dict) -> VideoJobHandle:
         prompt = request.get("prompt", "")
-        payload: dict = {"prompt": prompt}
+        shots = request.get("shots") or []
+        # H3 Max requires duration for each independent Shot request.  Runtime
+        # deliberately submits one-shot payloads for real multi-shot assembly.
+        payload: dict = {
+            "prompt": prompt,
+            "duration": float(shots[0].get("duration", settings.mock_shot_duration))
+            if shots else settings.mock_shot_duration,
+        }
         for key in ("image_url", "reference_image_urls", "reference_audio_urls", "reference_video_urls"):
             if request.get(key):
                 payload[key] = request[key]
@@ -165,6 +172,12 @@ class FalH3MaxProvider:
             if not result_url:
                 raise RuntimeError("fal handle missing response_url")
             result = await client.get(result_url, headers=headers)
+            if result.status_code == 422:
+                # fal queue versions differ: some expose the response at
+                # /response while newer ones return the request URL. Retry
+                # the documented response suffix before failing the job.
+                fallback_url = result_url.rstrip("/") + "/response"
+                result = await client.get(fallback_url, headers=headers)
             result.raise_for_status()
             data = result.json()
         video_url = (data.get("video") or {}).get("url") or data.get("video_url")

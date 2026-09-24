@@ -51,6 +51,7 @@ BRANCH_TERMINAL = {
 
 
 class BranchSource(str, Enum):
+    OPENING = "opening"
     RECOMMENDATION = "recommendation"   # 系统推荐（投机预生成）
     FREE = "free"                       # 自由输入（demand）
     TIMED = "timed"                     # 限时互动候选

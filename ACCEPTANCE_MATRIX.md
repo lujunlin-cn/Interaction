@@ -6,7 +6,7 @@ NOT_RUN，**不伪造**。
 
 ## 测试基线（Final Closure）
 
-- 单元/集成：`cd backend && PROVIDER_MODE=mock pytest tests/` — **44/44 绿**
+- 单元/集成：`cd backend && PROVIDER_MODE=mock pytest tests/` — **45/45 绿**
   （含 vertical_slice 端到端、generalization、skills、two-phase commit）。
 - 部署：DGX Spark `:9000`，`provider_mode=hybrid`，`profile=AGENT_LOCAL_PROFILE`。
 
@@ -14,6 +14,11 @@ NOT_RUN，**不伪造**。
 DGX Spark 已配置 `SOL_H3_BASE_URL=http://127.0.0.1:8790`；单元测试使用显式夹具隔离外部服务。
 
 ### Final Closure 增量结论
+
+- Play Loop 已闭环：创建 Session 后进入 `OPENING_PREPARING`，首幕复用
+  Narrative → Production → Video → Assembly，自动播放并在 `_present()` 后后台预生成推荐；
+  播放结束进入 `WAITING_DECISION`，失败进入 `FAILED_RECOVERABLE`，可重试、切换文字模式或退出。
+- 首幕带 `opening` 标记，不计入限时互动的有效行动计数；限时节点不会在刚进入故事时提前消费。
 
 - Character Studio 正式 React 操作已接入 AI 双 Candidate、Canonical、标准视图二次确认、非破坏编辑、Outfit、版本/Diff、Snapshot Override/Promote 与 Resolver。
 - Runtime 已按 `ShotPlan N → N 个 Provider Job → N 个 clip → FFmpeg concat` 执行；Trace 的 `video.generate` 记录 `jobs`、`clips`、`shot_ids`。
@@ -27,7 +32,7 @@ DGX Spark 已配置 `SOL_H3_BASE_URL=http://127.0.0.1:8790`；单元测试使用
 - 本次发现并修复回归：`schema_hint` 注入使 mock `_director_plan` 的
   `scenario_context` 提取吞入尾部非 JSON 行 → `ctx={}` → location/npc ops 丢失
   （`test_full_flow` 挂 `world.location=='foyer'`）。已改 `raw_decode` 只取首个
-  JSON 对象，44/44 恢复绿，DGX 已同步。
+  JSON 对象，45/45 恢复绿，DGX 已同步。
 
 ## 状态图例
 
