@@ -1,7 +1,7 @@
 # 验收矩阵 · AT-01–AT-90
 
 需求基线：PRD v0.6 / `881dd66cb8585b51c0a3c8ff5c47160a000c737c`。
-最新应用代码候选：`2e548769d0960d901075eca46ac2f7ec63409512`。详细证据：[LATEST_PRD_UX_ACCEPTANCE.md](LATEST_PRD_UX_ACCEPTANCE.md)。
+最新应用代码候选：`afbbe48a086e6d769b6ebc17bd66b0a42ab82b9c`。详细证据：[LATEST_PRD_UX_ACCEPTANCE.md](LATEST_PRD_UX_ACCEPTANCE.md)。
 
 当前统计：**PASS 34 / PARTIAL 55 / BLOCKED 1 / FAIL 0**。
 其中本轮重点 AT-77–90：13 PASS / 1 PARTIAL。PARTIAL包含本轮未完整复测项，不表示已确认的部署能力丢失。
