@@ -2,11 +2,11 @@
 document_id: interactive-drama-prd
 version: "0.6"
 language: zh-CN
-prepared_on: "2026-09-23"
-status: requirements-baseline-with-character-asset-studio-and-runtime-architecture
+prepared_on: "2026-09-24"
+status: requirements-baseline-with-character-asset-studio-runtime-and-ai-native-creator-player-ux
 product_name: "AI 原生互动视频／短剧平台（工作名称）"
-source_of_truth: "v0.5 完整基线（Q01–Q70、I01–I05、Dynamic Drama Control、Model/Agent Runtime）+ Q71–Q104 Character Studio 决策 + fal.ai Nano Banana 2 图像 Provider 锁定 + 全局显示/响应式与真实模型部署验收补充"
-supersedes: "PRD v0.5；完整继承既有产品、戏剧控制、模型与 Runtime 基线，增量冻结全局角色资产系统、角色生图/编图、Character Version/Snapshot/Reference Resolver、全局显示与响应式验收"
+source_of_truth: "v0.5 完整基线（Q01–Q70、I01–I05、Dynamic Drama Control、Model/Agent Runtime）+ Q71–Q104 Character Studio 决策 + Q105–Q122 AI 引导式创作/统一角色颗粒度/自然语言玩法/沉浸式 Player 决策 + fal.ai Nano Banana 2 图像 Provider 锁定 + 全局显示/响应式与真实模型部署验收补充"
+supersedes: "PRD v0.5；完整继承既有产品、戏剧控制、模型与 Runtime 基线，增量冻结全局角色资产系统、AI 引导式 Creator、统一角色管理颗粒度、自然语言玩法作者界面、沉浸式 Player、全局显示与响应式验收"
 artifacts:
   ai: Agent_Skills_Interactive_Drama_PRD_AI_v0.6.md
   latest_alias: Agent_Skills_Interactive_Drama_PRD_AI.md
@@ -14,8 +14,9 @@ artifacts:
 human_artifact_status: "高保真原型独立维护；v0.6 Markdown 为需求权威基线，正式 React 实现不得低于已冻结的关键交互"
 baseline_file: Agent_Skills_Interactive_Drama_PRD_AI_v0.5.md
 baseline_git_blob_sha: "68aa819dc85803b894b68ff7abc34c4518b675ff"
-decision_count: 104
+decision_count: 122
 character_decision_range: [Q71, Q104]
+creator_player_ux_decision_range: [Q105, Q122]
 character_image_provider_lock: "fal.ai: fal-ai/nano-banana-2 + fal-ai/nano-banana-2/edit"
 interaction_amendments: [I01, I02, I03, I04, I05]
 external_evidence_refresh: "2026-09-23：在继承 v0.5 资料基础上，核验 fal.ai Nano Banana 2 文生图与 Edit API；其余模型/运行时来源继承 v0.5，真实部署状态必须以服务器实测为准"
@@ -36,7 +37,7 @@ provenance_semantics:
 
 > **创作者定义世界与矛盾，玩家决定行动，系统组织有因果、有递进、可收束也可续玩的故事，Agent Skills 将值得呈现的剧情制作成下一幕。**
 >
-> 本文同时是产品需求基线与 AI 开发代理的工程输入。它不是产品已经实现的声明，也不是对所有模型性能的保证。**v0.6 为合并后的完整 Markdown 基线，不是仅有新增条目的补丁。v0.6 完整继承 Q01–Q70 与 I01–I05，并新增 Q71–Q104 的 Character Studio / Global Character Asset System 决策。角色生图与编图统一锁定 fal.ai Nano Banana 2；应用、模型部署、API 容错、角色一致性与性能仍须真实验收。**
+> 本文同时是产品需求基线与 AI 开发代理的工程输入。它不是产品已经实现的声明，也不是对所有模型性能的保证。**v0.6 为合并后的完整 Markdown 基线，不是仅有新增条目的补丁。v0.6 完整继承 Q01–Q70 与 I01–I05，并新增 Q71–Q104 的 Character Studio / Global Character Asset System 决策，以及 Q105–Q122 的 AI 引导式 Creator、统一角色颗粒度、自然语言玩法和沉浸式 Player 决策。角色生图与编图统一锁定 fal.ai Nano Banana 2；应用、模型部署、API 容错、角色一致性与性能仍须真实验收。**
 
 ## 00. 文档契约与执行规则
 
@@ -94,6 +95,14 @@ provenance_semantics:
 41. **全局 UI 与故事 Theme 是两个不同层级。** 全局 Appearance 支持跟随系统/浅色/深色，UI Size 支持标准/大/特大，字幕支持字号与画内/画外位置；Scenario Theme 不得覆盖用户的全局可读性设置。
 42. **浏览器 100% Zoom 是桌面设计基准。** 1366×768、1440×900、1920×1080、2560×1440、3840×2160 均须真实浏览器回归；不得依赖用户把 Chrome 缩放到 150%，也不得用整体 transform/zoom 掩盖字号和布局问题。
 43. **模型“写在配置里”不等于已部署。** v0.6 封版必须对 Lightning、Step 3.7、Step 5、Jev、H3 Max、Sol-H3 分别保存真实 health/request/output/model-id/profile 证据；DGX Profile 切换须证明真实服务启停与资源释放，而不是只切枚举。
+
+44. **Q105–Q108：Standard Creator 不再把内部 Schema 直接等价成用户表单。** 一句话／多句话故事描述之后，AI 先给出当前理解，只对高影响且缺失或低置信的内容追问；追问优先给出与当前故事相关的建议选项，并始终保留“其他／自己修改”。完整 DramaSpec 字段属于 Developer／高级编辑面。
+45. **Q109–Q112：角色库与 Creator 中的角色必须使用同一管理颗粒度。** Global Character 表达跨故事稳定身份，Scenario Character 表达该故事中的身份、动机、认知、关系与视觉状态 Overlay；两处信息架构一致，只是编辑作用域不同。普通创作不得要求用户手填所有 Desire/Fear/Secrets/Knowledge/Relationships。
+46. **Q113–Q115：玩法机制的 Standard UI 是自然语言“怎么玩”说明，不是勾选 Skill 后暴露 JSON。** 创作者用一句话描述玩法，Authoring 将其编译成受验证的 MechanicSpec；Runtime 仍消费确定性 Typed Config。Developer 才显示 Skill ID、版本、触发器和原始配置。
+47. **Q116–Q120：Player 是视频优先的沉浸式播放器。** 全屏对象是整个 Player 容器而不是裸 video，使字幕、HUD、Ready 推荐和自由输入仍可使用；Jev/Top-K 推荐位于视频下方第二层，自由输入是最底层且持续可用的 Agency Layer，不能把产品呈现成固定三选一。
+48. **Q120：背包、关系、线索、愿望退出主布局，进入左上角可滑出的 HUD。** 桌面支持 hover 临时展开、点击固定；触屏用点击抽屉。Standard 默认用叙事性关系描述而非裸数值，Developer 可查看精确状态值。
+49. **Q121–Q122：Standard Player 不暴露 Runtime／Schema／Pydantic／Provider 错误。** 技术详情进入 Developer Inspector；玩家只看到可恢复的自然语言反馈及“重试／修改／文字继续／退出”等动作。生成中、媒体载入中、播放失败必须是不同状态，不能统一成永久黑屏。
+50. **创作端隐藏机器需要的结构，游玩端隐藏机器正在运行的过程。** Standard Mode 以故事意图、角色意图、玩法规则和可玩的选择为中心；Developer Mode 保留完整 Schema、Trace、Provider、版本与原始工件。
 
 ### 00.3 本次交付范围
 
@@ -411,6 +420,33 @@ Assembly              → FFmpeg / deterministic runtime
 
 **IMAGE-01（USER）：** 角色 Image Generation 与 Image Edit 统一通过 fal.ai。当前锁定 endpoint 为 fal-ai/nano-banana-2 与 fal-ai/nano-banana-2/edit。Provider 能力升级可以替换 Adapter，但不得在没有用户确认的情况下改变产品层角色工作流或把另一个收费供应商设为默认。
 
+### 02.8 Q105–Q122：AI 引导式 Creator、统一角色颗粒度、自然语言玩法与沉浸式 Player
+
+以下决策来自 2026-09-24 的连续产品讨论，均为 USER 明确认可的产品方向。它们不改变既有 Runtime 的 World/Drama 双域、Ready-only Recommendation、Character Snapshot、Mechanic Skill 与 Provider 架构，而是重新定义 Standard Mode 如何把这些能力呈现给创作者和玩家。
+
+| 决策 ID | 最终选择 | 确认内容 | 对实现与验收的影响 |
+|---|---|---|---|
+| Q105 | USER | Standard Creator 默认不展示一组空白内部 Schema 表单 | 用户先看到 AI 当前理解、缺失项与少量待确认问题；完整原始字段进入高级/Developer 编辑 |
+| Q106 | USER | “戏剧结构”定位为对一句／多句话故事描述的深化追问层 | DramaSpec 是 Runtime 数据结构，不是 Standard UI；页面负责帮助用户形成 DramaSpec |
+| Q107 | USER | 缺失内容优先提供与当前故事相关的建议选项，并保留自由修改 | AI 高置信内容可自动补全；中低置信／高影响内容再追问。具体 confidence 阈值为可配置实现细节，不作为不可变产品常数 |
+| Q108 | USER | Standard Drama 按自然语言主题组织，而非逐字段暴露 Core Question/Truth Model 等内部结构 | 至少覆盖“故事真正想问什么／背后真相／推动故事的压力／可能结局／绝对不能发生什么”；伏笔、限时互动等高级项可折叠或 Developer 查看 |
+| Q109 | USER | Global Character 与 Creator Character 使用同一信息架构和管理颗粒度 | 两个入口不能把同一个角色定义成两种互不兼容的对象 |
+| Q110 | USER | 角色强制必填保持最小化 | Global 最低为名字 + 一句话角色定义；Scenario 至少明确本故事身份/作用，其余人格、动机、秘密、认知、关系、视觉状态允许 AI 建议或选填 |
+| Q111 | USER | Scenario Character 是 Global Character Snapshot 上的故事级 Overlay | Desire/Fear/Secrets/Knowledge/Relationships/Visual State 默认属于当前故事状态，不静默回写 Global |
+| Q112 | USER | 角色编辑也遵循“AI 先理解、用户确认缺失项”的创作方式 | 不要求创作者面对一排空白 Desire/Fear/Secrets 等 textarea；AI 可生成建议，用户确认、修改或忽略 |
+| Q113 | USER | Standard Mode 的玩法机制显示为自然语言“游戏教程／玩法规则” | 不以“勾选关系变化／线索调查／道具系统／限时互动 + JSON 参数”作为默认创作界面 |
+| Q114 | USER | 创作者可以一句话描述希望故事“怎么玩” | Authoring AI 将自然语言编译成 MechanicSpec Proposal，经 Schema/权限校验后形成 Runtime Typed Config；自然语言不是 Runtime 配置格式 |
+| Q115 | USER | 玩法以可读规则卡管理 | Standard 可查看、调整、移除、添加玩法；Developer 才显示 Skill ID/version、Typed Config、Trigger、StatePatch Contract |
+| Q116 | USER | Player 的视觉中心是视频，并支持整个互动播放器容器全屏 | 不以裸 video.requestFullscreen 破坏字幕、推荐、自由输入和 HUD；全屏后这些互动层仍存在 |
+| Q117 | USER | Player 信息架构固定为 Immersion / Decision / Agency / HUD 四层 | Immersion=视频与字幕；Decision=Ready 推荐；Agency=自由输入；HUD=背包/关系/线索/愿望 |
+| Q118 | USER | Jev/Top-K 推荐是视频下方的第二层快捷行动 | 只在 Decision Lead 到达且分支 Ready 后出现；未 Ready 时不显示“暂无推荐”等系统噪声；选中后其余推荐收起 |
+| Q119 | USER | 自由输入是最底层、持续可用的主行动入口 | 即使有推荐也必须保留自由输入，避免产品退化成固定三选一；行动已被接受执行时可以临时锁提交但不隐藏入口 |
+| Q120 | USER | 背包、关系、线索、愿望进入左上角隐藏式 HUD | 桌面 hover 可临时滑出、点击可固定；移动/触屏点击抽屉；Standard 使用定性关系表达，Developer 可见原始数值 |
+| Q121 | USER | Standard Player 隐藏检查器、Branch/Provider/Schema/Pydantic 等技术错误 | 玩家只接收自然语言的可恢复反馈；Developer Inspector 保留原始错误、Trace 与结构化详情 |
+| Q122 | USER | 字幕、媒体状态与失败恢复都属于播放器产品体验 | 场景标题短暂显示后淡出；对话/旁白使用安全区字幕；Generating/Loading/Failed 分离；结构化输出错误优先在服务端规范化/有限重试，再进入 FAILED_RECOVERABLE，而不是把底层验证报错吐给玩家 |
+
+**统一产品原则（USER）：** Standard Creator 不把“机器需要的结构”交给用户手工维护；Standard Player 不把“机器正在运行的过程”暴露给玩家。结构化 Schema、JSON、ID、Provider、Trace 和精确数值仍完整存在，但属于 Developer Mode 与可审计后台。
+
 ## 03. 产品定位、边界与成功闭环
 
 ### 03.1 一句话定义
@@ -538,6 +574,28 @@ AI 创建默认请求 2 张候选。选择主图后只提示是否生成标准�
 
 Scenario 内对角色的改动必须先让用户选作用域：仅本故事，或更新全局。仅本故事产生 Scenario Local Override；如用户认为该造型值得复用，可再显式“保存为全局角色新版本”。
 
+角色在 Global Character Library 与 Scenario Creator 中必须使用相同的信息架构：身份、人格与动机、认知与秘密、关系、外观与造型、声音与动作、使用与版本。Global 页面编辑“这个人长期是谁”；Scenario 页面编辑“这个人在当前故事中是谁、想要什么、知道什么、与谁是什么关系、当前看起来怎样”。Scenario 层通过 Snapshot/Overlay 表达，不复制一套互不兼容的角色 Schema，也不把故事级 Desire/Fear/Secrets/Knowledge/Relationships/Visual State 静默写回全局。
+
+角色强制必填保持克制：Global 至少名字 + 一句话角色定义；Scenario 至少明确本故事身份/作用。其余字段允许 AI 根据故事自动提出建议，用户确认、修改或留空。Standard Mode 不应以一排空白 textarea 迫使用户手工补齐内部字段。
+
+### 04.10 AI 引导式故事深化：从“一句话”到可发布结构
+
+Creator 的默认流程不应是“一句话生成一个待填的大表单”，而应是：
+
+一句／多句话故事描述 → AI 形成当前理解 → 检测高影响缺失项 → 只追问必要问题 → 用户通过建议卡/自然语言确认 → 写入受验证的 Drama/Character/Mechanic 结构 → 发布前统一预览。
+
+对已经描述清楚的内容不重复询问。若用户只写了模糊概念，AI 应优先给出 3～4 个与该故事相关的建议方案，再保留“其他／自己描述”。Standard Mode 中的戏剧结构至少以自然语言呈现为：
+
+- 这个故事真正想问什么；
+- 这个世界／事件背后的真相是什么；
+- 什么会逼着故事向前走；
+- 故事可能走向哪些结局；
+- 有什么绝对不能发生。
+
+Foreshadow、Timed Interaction、内部 ID、Truth Fact Key、Pressure ID 等属于高级控制，Standard 可折叠为自然语言摘要，Developer 才展示原始结构。
+
+Overview 在生成初稿后应显示“AI 已理解什么／还需要确认几件事”，而不是立即把用户送进几十个空字段。用户完成必要确认后可以“直接试玩”或“继续精修”。
+
 ## 05. 功能需求与验收矩阵
 
 本表采用稳定功能 ID。测试和任务分解应引用这些 ID，而不是只引用章节名。`P0-MIN` 表示保留能力但采用最小可用 UI；不得把 Q25 的完整素材链路解释为 MIN 占位。
@@ -648,12 +706,24 @@ Scenario 内对角色的改动必须先让用户选作用域：仅本故事，�
 | FR-100 | 桌面响应式基线；USER | P0 | 1366×768、1440×900、1080p、2K、4K 在浏览器 100% Zoom 下可读可操作；Player 视频区、Creator 表单、Developer 表格合理扩展 | 不用大量 11–12px 核心文字，不靠 transform/zoom 整页放大 |
 | FR-101 | 真实模型部署核查；USER、DERIVED | P0 | Lightning、Step 3.7、Step 5、Jev、H3 Max、Sol-H3 均有实际 health/request/model/output 证据，路由与 Profile 切换可审计 | .env 写了模型名、Mock PASS 或枚举切换均不能替代真实部署证据 |
 | FR-102 | 角色生成成本语义；Q95～097 | P0 | 普通用户不看单次价格和预算档位；多视图批量生成前明确二次确认；后台 Usage Ledger 记录真实消耗 | “不显示费用”不等于不计费、不限额或无预算保护 |
+| FR-103 | AI 引导式 Creator；Q105～108 | P0 | 一句话/多句话输入后先生成“当前理解 + 待确认项”；只有缺失/低置信且高影响内容进入追问，追问有上下文相关建议和自由输入 | Standard 不以空白 DramaSpec 表单作为默认创作起点 |
+| FR-104 | 戏剧结构自然语言投影；Q106～108 | P0 | Standard 把 DramaSpec 投影为核心问题/真相/压力/结局/限制等可读模块；高级字段可折叠，Developer 可见完整结构 | 不删除底层 DramaSpec，也不因隐藏字段跳过 Publish 校验 |
+| FR-105 | 统一角色管理颗粒度；Q109～111 | P0 | Character Library 与 Creator 使用同一信息架构；Global Core 与 Scenario Overlay 的作用域清晰可见 | 同一角色不得在两个入口出现互不兼容的字段模型 |
+| FR-106 | 角色最小必填与 AI 补全；Q110～112 | P0 | 名字+一句话定义即可形成 Global Draft；Scenario 角色至少有本故事身份/作用；AI 可建议动机、恐惧、秘密、认知、关系与 Visual State，用户确认后写入 | 不强制人工填写所有内部角色字段 |
+| FR-107 | Scenario Character Overlay；Q111 | P0 | Desire/Fear/Secrets/Knowledge/Relationships/Visual State 默认写入 Scenario Snapshot/Override，可查看继承/覆盖来源 | 不静默污染 Global Character；提升全局必须显式操作 |
+| FR-108 | 自然语言玩法作者界面；Q113～114 | P0 | 用户用自然语言描述“怎么玩”，Authoring AI 生成 MechanicSpec Proposal，经 Schema/权限校验后保存 Typed Config | 自然语言不直接在 Runtime 中作为任意代码/JSON 执行 |
+| FR-109 | 玩法教程卡；Q113～115 | P0 | Standard 以“调查与线索/人物关系/道具/紧张时刻”等自然语言规则卡显示，可调整/移除/添加；Developer 显示 Skill/Version/Trigger/Config | Standard 不暴露空 JSON textarea |
+| FR-110 | 沉浸式 Player Fullscreen；Q116～117 | P0 | 整个 PlayerShell 可进入/退出全屏；全屏仍保留视频、字幕、Decision Layer、Agency Layer、HUD | 不仅对裸 video 元素请求全屏导致互动 UI 消失 |
+| FR-111 | Decision / Agency Interaction Dock；Q117～119 | P0 | Ready 推荐位于自由输入上方，仅在 Decision Lead 后出现；自由输入始终存在；选中推荐后其余卡片收起并显示正在继续故事 | 未 Ready 不展示；不能用推荐取代自由行动 |
+| FR-112 | Player HUD 抽屉；Q120 | P0 | 左上角 HUD 汇总背包/关系/线索/Wish；桌面 hover 临时展开、点击固定，触屏点击展开；Standard 关系默认定性表达 | 精确数值和 State ID 进入 Developer |
+| FR-113 | Standard 错误隔离与 Developer Inspector；Q121 | P0 | Standard 把模型/Schema/Provider 异常转成可恢复的人话与操作；Developer Inspector 保留原始 Trace、错误、Branch/Provider 信息 | Pydantic URL、Python exception、原始 validation dump 不得直出玩家界面 |
+| FR-114 | 字幕、媒体状态与输出修复；Q122 | P0 | Scene Title 短暂淡入淡出；字幕按对话/旁白显示；Generating/Loading/Failed 三态明确；可安全规范化的结构化模型输出先做 deterministic repair 或一次 schema retry | 不把黑屏作为通用加载态；修复不得绕过业务校验或偷偷改世界事实 |
 
 ### 05.1 P0 的交付策略
 
 用户已选择较宽的媒体输入范围，因此应以“ **功能真通，界面精简** ”控制范围：素材支持图／声／视频的最小合法上传、预览、用途绑定和生成；编辑器先用表单；只做一个精致故事和一种能闭环的玩法；不建素材市场和大型创作社区。
 
-FR-042–060 是动态戏剧控制的最小可用实现；FR-061–082 是 v0.5 模型／运行时增量；FR-083–102 是 v0.6 Character Studio、显示与真实部署验收增量，不要求为每项建一个服务或 Skill。Director 持有一个戏剧评估工作流、同库增加结构化记录、在现有 UI 中增加回显与续杯即可起步。具体字段、测试数量和技术实现仍区分 DERIVED／PROPOSED；例如 FR-029 的“两类结局”演示数量依然只是建议。
+FR-042–060 是动态戏剧控制的最小可用实现；FR-061–082 是 v0.5 模型／运行时增量；FR-083–102 是 v0.6 Character Studio、显示与真实部署验收增量；FR-103–114 是 2026-09-24 冻结的 AI-native Creator / Character / Mechanics / Player UX 增量，不要求为每项建一个服务或 Skill。Director 持有一个戏剧评估工作流、同库增加结构化记录、在现有 UI 中增加回显与续杯即可起步。具体字段、测试数量和技术实现仍区分 DERIVED／PROPOSED；例如 FR-029 的“两类结局”演示数量依然只是建议。
 
 ## 06. 界面与交互规格
 
@@ -662,9 +732,9 @@ FR-042–060 是动态戏剧控制的最小可用实现；FR-061–082 是 v0.5 
 | 页面 | 主要区域 | 用户可见信息 | 不应出现的信息 |
 |---|---|---|---|
 | 故事入口 | 预设卡片、创建按钮、继续游玩 | 类型、简介、扮演角色、机制标签 | 所有隐藏结局条件与未揭露秘密 |
-| 创作工作台 | 对话区、设定表单、素材面板、预览 | 草案状态、变更、缺失素材、发布校验 | 无意义的全部推理参数 |
+| 创作工作台 | AI 当前理解、待确认问题、建议卡、自然语言编辑、素材面板、预览 | 草案状态、缺失内容、用户确认、变更、发布校验 | Standard 默认空白内部 Schema、原始 JSON、无意义的全部推理参数 |
 | 素材面板 | 图／声／视频预览、角色绑定、用途选择 | 文件规格、授权来源、引用编号 | 供应商密钥或永久公开的私密链接 |
-| 游玩页 | 大视频区、字幕、Ready 推荐、自由输入、轻反馈 | 已知状态、可纠正的意图回显、生成阶段 | 未发生投机剧情、秘密、被当作真相的欲望推测 |
+| 游玩页 | 沉浸视频舞台、字幕、Decision Layer、Agency Layer、左上 HUD | Ready 推荐、自由行动、自然语言已知状态、可恢复反馈 | Standard 中的 Inspector、Pydantic/Provider/Branch 错误、未发生投机剧情与秘密 |
 | 许愿抽屉 | 输入、当前愿望、撤回／修改 | 下一幕／后续生效提示，不剧透的反馈 | 把愿望当作保证达成的承诺 |
 | 开发者面板 | Agent／Skill trace、World／Drama 版本、Arc、队列 | Directive、提案、证据引用、工件来源、失败与成本 | 默认暴露私人素材、隐藏推理或向玩家泄露秘密 |
 | 篇章结束页 | 回顾、结局、继续这个世界 | 当前 Arc 已关闭、续杯预览与资源限制 | 旧结局被悄悄撤销或新篇章费用被隐藏 |
@@ -696,6 +766,8 @@ Character Studio 至少提供：概览、身份、造型、姿势/动作、声�
 
 生成/编辑操作以用户意图为主：普通模式显示“生成角色图片”“编辑形象”“生成参考图”“新建造型”等产品动作，不展示 fal endpoint、temperature 或原始请求 JSON。Developer 模式才显示 Prompt、Provider、模型、request_id、输入引用、输出资产与错误。
 
+角色库与 Creator 的角色页使用同一层级：身份、人格与动机、认知与秘密、关系、外观与造型、声音与动作、使用与版本。角色库呈现 Global Core；Creator 呈现 Scenario Snapshot/Overlay，并在每个可覆盖部分明确“继承全局 / 仅本故事 / 保存为全局新版本”。Standard Mode 以自然语言展示 AI 当前理解，不让用户手工维护版本 ID、Snapshot JSON 或 Resolver 原始输出。
+
 ### 06.6 全局显示设置与响应式桌面基线
 
 全局 Settings 提供 Appearance：跟随系统 / 浅色 / 深色；UI Size：标准 / 大 / 特大；字幕字号：标准 / 大 / 特大 / 自动适应屏幕；字幕位置：画面底部·内 / 画面底部·外，并有即时预览。它们作用于整个产品 Shell，与 Scenario Theme 分离。
@@ -703,6 +775,29 @@ Character Studio 至少提供：概览、身份、造型、姿势/动作、声�
 桌面设计以浏览器 100% Zoom 为基准。必须真实测试 1366×768、1440×900、1920×1080、2560×1440、3840×2160；1080p 不应需要 150% Zoom 才舒适阅读。核心正文、Sidebar、按钮、表单、Developer 表格不得长期依赖 11–12px 字号。布局应使用合理 rem/clamp/grid/container/media query；禁止用整页 transform:scale 或 CSS zoom 模拟响应式。
 
 Player 的视频区域是视觉中心并随屏幕扩展；Creator 在 2K/4K 不应仍被锁死在狭窄单列；Developer 表格可横向滚动并保持可读列宽；Sidebar 在小桌面不挤压主操作，在 4K 也不能形成过度空白。
+
+### 06.7 Standard Creator：AI 当前理解、追问与自然语言玩法
+
+Standard Creator 的第一屏是“AI 当前理解”，而不是内部字段列表。每个模块允许三类动作：接受当前理解、从建议中选择、自由修改。只有真正影响故事逻辑且 AI 无法稳定确定的内容才进入待确认队列；用户原始描述越完整，系统询问越少。
+
+戏剧结构使用面向创作者的语言；Developer 才展示 Core Question、Truth Model、Pressure ID、Ending Family ID、Foreshadow ID 等内部结构。角色编辑同样先展示“这个角色在当前故事中是谁／想要什么／知道什么”，并标记哪些来自 Global、哪些属于当前 Scenario。
+
+玩法机制顶部提供“你希望这个故事怎么玩？”自然语言入口。AI 编译后，以类似游戏教程的卡片呈现，例如“调查环境可以发现线索”“人物会记住你如何对待他们”“重要物品可以保存并再次使用”“紧张场景可能需要快速决定”。Standard 可调整、移除、新增规则；不得直接暴露 {} JSON 参数框。Developer 才允许检查对应 Mechanic Skill、版本、Typed Config、Trigger 与 StatePatch Contract。
+
+### 06.8 Player：沉浸式视频、Interaction Dock 与 HUD
+
+Player 采用四层信息架构：
+
+1. Immersion Layer：视频、场景标题、字幕。视频是页面绝对视觉中心；场景标题在新场景开始时短暂显示后淡出，对话与旁白使用视频安全区字幕。
+2. Decision Layer：Jev/Top-K 已 Ready 推荐。它位于视频下方、自由输入上方，在 Decision Lead 到达后轻量出现；未 Ready 时不显示“暂无推荐”占位。用户选中后其余卡收起，保留“已选择／正在继续故事”的轻反馈。
+3. Agency Layer：自由输入位于最底层，是持续存在的主行动入口。有无推荐都可输入，不把体验退化成固定三选一。
+4. HUD Layer：背包、关系、线索、Wish 收入左上角隐藏式抽屉。桌面 hover 临时展开、点击固定；移动端点击展开。Standard 默认用“信任／戒备／关系改善”等叙事性描述，不要求显示 0–100 数值。
+
+全屏模式对整个 PlayerShell 请求 fullscreen，使视频、字幕、HUD、Decision、Agency 与播放控制仍属于同一沉浸界面；不以裸 video 全屏作为主交互模式。播放控制在鼠标/触摸唤起时显示，低频“跳过当前场景”等动作进入次级菜单。
+
+Standard Mode 不出现 Inspector 按钮、Branch Status、Provider、request ID、Python/Pydantic validation 详情。若生成失败，玩家看到“这一幕暂时没有生成成功”以及重试、修改行动、文字继续、退出等可恢复操作；完整技术错误只进入 Developer Inspector。
+
+播放器必须区分 Generating（尚在生成媒体）、Loading（已有媒体但浏览器正在载入）、Failed（加载或生成失败）。不可把三者统一显示为无解释的黑屏。字幕编码、场景名、人物名必须使用完整 Unicode 路径验证，不接受 tofu 方块或乱码作为已知可忽略问题。
 
 ## 07. 叙事引擎与状态正确性
 
@@ -1632,6 +1727,20 @@ CharacterVersion.change_type 至少包含 IDENTITY、APPEARANCE、METADATA、ASS
 
 Image Generation / Edit 的所有任务复用 GenerationJob 与 Asset Registry，保存 provider、model、request_id、input refs、prompt hash、output refs、status、latency、错误与实际费用。前端不保存 FAL_KEY。
 
+### 10.16 Creator Projection / Character Overlay / MechanicSpec / Player Presentation
+
+为避免 Standard UI 与 Runtime Schema 耦合，增加“产品投影层”概念；它不是新的事实状态域，不能绕过 World/Drama/Character/Mechanic 的正式提交。
+
+CreatorProjection 至少包含：AI 对用户原始故事的自然语言 summary、已确定项、待确认问题、每个问题的 contextual suggestions、用户自由修改，以及其对应的目标 typed path。建议项可以由 LLM 生成，但写入正式状态前仍走既有 Authoring patch/lock/validation。
+
+Character 保持两层语义：
+- GlobalCharacterCore：名字、一句话定义、基础人格、稳定身份资产及版本化默认值；
+- ScenarioCharacterOverlay：本故事身份/作用、Desire、Fear、Secrets、Knowledge、Relationships、Visual State 与其他本地覆盖；最终由 ScenarioCharacterSnapshot 冻结。
+
+MechanicAuthoringIntent 保存创作者对“怎么玩”的自然语言；MechanicSpec 是经过 Schema 校验的机器配置，引用 mechanic skill_id/version、enabled、typed config、trigger/visibility 及必要 StatePatch Contract。Runtime 只消费 MechanicSpec，不直接执行任意自然语言或用户 JSON。
+
+PlayerPresentationState 区分至少 GENERATING_MEDIA / LOADING_MEDIA / PLAYING / WAITING_DECISION / FAILED_RECOVERABLE / ENDED，并输出 Standard-safe error_message 与 recovery_actions。raw exception、validation detail、provider diagnostics 只进入 Developer Trace。
+
 ## 11. Jev 与低成本剧情前瞻
 
 ### 11.1 正确分工
@@ -2311,8 +2420,22 @@ Q62 明确选择 **A：现阶段不规定固定延迟等级或硬 P95**。因此
 | AT-74 | 1366×768、1440×900、1920×1080、2560×1440、3840×2160 在 100% Zoom 走 Creator/Character/Player/Developer | 核心文字可读、布局无关键遮挡；1080p 不依赖 150% Zoom；2K/4K 合理扩展 | FR-099、100 |
 | AT-75 | 标准模式与开发者模式查看同一角色生成任务 | 标准模式隐藏 Prompt/Provider；开发者可见真实 model/request/artifact；FAL_KEY 永不出现在浏览器/Trace | FR-097、098 |
 | AT-76 | 封版模型部署核查与一次 AGENT↔VIDEO 往返切换 | 六类模型/Provider 均有真实请求或本地输出证据；Profile 切换证明真实服务启停与资源状态 | FR-101 |
+| AT-77 | 用一句很模糊的故事描述创建 Scenario | Standard 不出现一排空字段；AI 显示当前理解并只针对关键缺失项给出上下文相关建议 + 自由输入 | FR-103、104 |
+| AT-78 | 用一段已经明确真相、冲突、压力的详细描述创建 Scenario | 已明确内容不重复追问；只显示真正缺失/低置信高影响项，用户可直接接受并继续 | FR-103 |
+| AT-79 | 同一 Scenario 在 Standard / Developer 查看戏剧结构 | Standard 为自然语言主题与建议；Developer 能看到对应 DramaSpec 原始结构，二者保存后指向同一正式数据 | FR-104 |
+| AT-80 | 从角色库与 Creator 打开同一 Global Character | 两边信息架构颗粒度一致；Creator 清楚显示 Global 继承项与 Scenario Overlay，不出现两套互不兼容角色定义 | FR-105～107 |
+| AT-81 | Scenario 给角色修改 Desire/Secret/Visual State | 只改变当前 Snapshot/Override；Global Character 不变；用户显式“保存为全局新版本”后才产生全局版本 | FR-107 |
+| AT-82 | 输入“主要靠调查和询问角色，角色记得我是否撒谎，追逐时要快速决定” | Standard 生成可读玩法教程卡；后台产生受验证 MechanicSpec 并绑定对应 Skills | FR-108、109 |
+| AT-83 | Standard / Developer 查看同一玩法机制 | Standard 无空 JSON textarea；Developer 可查 skill_id/version/typed config/trigger，二者修改走同一验证链 | FR-108、109 |
+| AT-84 | Player 进入沉浸全屏 | 全屏对象为 PlayerShell；视频、字幕、HUD、Ready 推荐和自由输入均仍可使用，退出全屏后状态不丢失 | FR-110 |
+| AT-85 | 视频尚未进入 Decision Lead，再到达 Lead | 到达前不出现系统推荐；到达后只显示完整 Ready 推荐，位置位于自由输入上方 | FR-111 |
+| AT-86 | 有 3 个 Ready 推荐时玩家坚持自由输入 | 自由输入始终可操作并形成 FREE branch；系统不强迫三选一；一旦行动接受，重复提交被锁/幂等 | FR-111 |
+| AT-87 | Player 查看背包/关系/线索/Wish | 左上 HUD 可 hover 临时展开、点击固定；Standard 关系为定性文案，Developer 可查原始数值 | FR-112 |
+| AT-88 | Director 返回与 DramaticDirective Schema 不一致的结构 | Standard 不显示 Pydantic/Python 原始错误；安全可修复时规范化或一次 schema retry，仍失败进入 FAILED_RECOVERABLE；Developer 可查原始错误 | FR-113、114 |
+| AT-89 | 播放一个包含中文场景名、人物名和字幕的视频 | 无 tofu 方块/乱码；场景标题短暂显示后淡出；字幕在安全区可读，画内/画外设置正常 | FR-114 |
+| AT-90 | 分别触发视频生成中、媒体载入中和加载失败 | 三种状态视觉/文案可区分；Failed 提供重新载入/重新生成/文字继续等合理恢复，不出现无解释永久黑屏 | FR-113、114 |
 
-所有 AT 用例在本文交付时状态为 `NOT RUN`。v0.6 新增 AT-61～76；其中涉及 fal.ai、H3、Jev、StepFun、Lightning、Sol-H3 的项目必须用真实调用/节点证据，不得由 Mock 测试替代。实现阶段应保存 `PASS / FAIL / BLOCKED`、执行环境、请求配置、输出工件和复核记录。一次成功片段不能代替三类素材及多轮稳定性的验收。
+所有 AT 用例在本文交付时状态为 `NOT RUN`。v0.6 新增 AT-61～90；其中涉及 fal.ai、H3、Jev、StepFun、Lightning、Sol-H3 的项目必须用真实调用/节点证据，不得由 Mock 测试替代。实现阶段应保存 `PASS / FAIL / BLOCKED`、执行环境、请求配置、输出工件和复核记录。一次成功片段不能代替三类素材及多轮稳定性的验收。
 
 ### 17.2 单项功能完成定义
 
@@ -2423,7 +2546,12 @@ v0.6 现场演示建议在 D2 前增加“D1b 角色制作”：从一句角色�
 5. 实现 Production Reference Resolver，把 Snapshot 中选出的实际 image/voice/motion refs 编译进 H3 Provider 请求，不允许 references 静默丢失；
 6. 补全 Standard/Developer、全局 Appearance/UI Size/Subtitle 与 100% Zoom 响应式；
 7. 真实核查 Lightning、Step 3.7、Step 5、Jev、H3 Max、Sol-H3 和双 Profile；形成可复核 deployment report；
-8. 执行 AT-61～76，并与原 AT-01～60 一起形成 PASS/FAIL/BLOCKED 矩阵。
+8. 执行 AT-61～76，并与原 AT-01～60 一起形成 PASS/FAIL/BLOCKED 矩阵；
+9. 将 Standard Creator 从空白 Schema 表单改为“AI 当前理解 → 缺失追问 → 建议卡/自由修改 → typed patch”，保留 Developer 原始结构；
+10. 统一 Character Library 与 Creator 的角色信息架构，引入明确 Global Core / Scenario Overlay 展示，不改变已有 Snapshot 数据边界；
+11. 将玩法机制 Standard UI 改为自然语言教程卡，补 Authoring Intent → MechanicSpec Proposal → Schema Validate → Runtime Skill 的编译链；
+12. 将 Player 改为视频优先四层架构，支持 PlayerShell 全屏、Decision/Agency Dock、左上 HUD、Standard-safe Error 与媒体状态区分；
+13. 执行新增 AT-77～90，重点验证“创作端不暴露机器结构、游玩端不暴露机器运行过程”。
 
 v0.6 不要求建设 Photoshop 级 Mask 编辑器、固定表情资产库、角色素材市场、复杂预算套餐，也不新增第二个默认图像 API 供应商。
 
@@ -2541,7 +2669,7 @@ v0.5 完整继承 v0.4 的 O01–O11、Q01–Q48、I01–I05、FR-001～060 与 
 
 ### 19.7 v0.6 修订记录与追溯
 
-v0.6 完整继承 v0.5 的 O01–O11、Q01–Q70、I01–I05、FR-001～082 与 AT-01～60；新增 O12、Q71–Q104、IMAGE-01、FR-083～102 与 AT-61～76。核心变化不是增加一个“角色页面”，而是把跨 Scenario 角色升级为可生产、可编辑、可版本化、可被 H3 自动消费的稳定身份资产系统。
+v0.6 完整继承 v0.5 的 O01–O11、Q01–Q70、I01–I05、FR-001～082 与 AT-01～60；先新增 O12、Q71–Q104、IMAGE-01、FR-083～102 与 AT-61～76，并在 2026-09-24 继续冻结 Q105–Q122、FR-103～114 与 AT-77～90。核心变化除跨 Scenario 角色资产系统外，还包括 AI 引导式创作、角色颗粒度统一、自然语言玩法作者界面和视频优先的沉浸式 Player。
 
 | 修订主题 | 对应决定 | 主要落点 |
 |---|---|---|
@@ -2560,10 +2688,23 @@ v0.6 完整继承 v0.5 的 O01–O11、Q01–Q70、I01–I05、FR-001～082 与 
 | 不显示单次费用/预算档 | Q95～097 | FR-102 |
 | 标准/开发者、全局显示与响应式 | 用户后续明确要求 | 06.6、FR-098～100、AT-74～75 |
 | 真实模型部署验收 | 用户后续明确要求 | 14.9、FR-101、AT-76 |
+| AI 引导式戏剧结构与缺失追问 | Q105～108 | 04.10、06.7、FR-103～104、AT-77～79 |
+| 角色库/Creator 统一颗粒度与 Scenario Overlay | Q109～112 | 04.9、06.5、10.16、FR-105～107、AT-80～81 |
+| 自然语言玩法教程与 MechanicSpec 编译 | Q113～115 | 06.7、10.16、FR-108～109、AT-82～83 |
+| 沉浸式 Player、全屏、Decision/Agency Dock、HUD | Q116～120 | 06.8、FR-110～112、AT-84～87 |
+| Standard 错误隔离、字幕和媒体状态 | Q121～122 | 06.8、10.16、FR-113～114、AT-88～90 |
 
 **明确未改变：** Ready-only Recommendation、自由输入可真实 miss、World/Drama 双域受控提交、两阶段 Canonicalization、H3 Max 主互动、Sol-H3 本地任务、Lightning/StepFun/Jev 路由与双 Runtime Profile。
 
-### 19.8 本轮没有自动加入的产品要求
+### 19.8 2026-09-24 Creator / Player UX 冻结补充
+
+本轮没有改变 World/Drama 双域提交、四 Agent 职责、Ready-only Recommendation、Top-K、Character Snapshot 或 Mechanic Skill 的底层架构；修改的是“用户如何与这些结构交互”。
+
+统一原则是：**创作端隐藏机器需要的结构，游玩端隐藏机器正在运行的过程。** Standard Creator 从“空白结构化表单”转成 AI 当前理解、缺失追问、建议卡和自然语言修改；Standard Player 从“Runtime Debug UI + 视频”转成视频优先的 Immersion/Decision/Agency/HUD 四层播放器。Developer Mode 继续保留完整 Schema、JSON、ID、Provider、Trace、精确关系值和原始错误，因此本轮不是删除可审计能力，而是建立正确的信息层级。
+
+角色库与 Creator 的差异只允许来自作用域：前者编辑 Global Character Core，后者编辑 Scenario Snapshot/Overlay；不得再因页面入口不同而拥有不一致的角色定义颗粒度。玩法机制同理：Standard 显示可理解的游戏教程规则，Runtime 仍使用受验证的 MechanicSpec。
+
+### 19.9 本轮没有自动加入的产品要求
 
 没有强制“每个节点都展示欲望副标题”，没有把所有自由输入变成二次确认，没有禁止在普通节点许愿，没有规定篇章必须 12 或 16 个 Beat，没有以 Drama Debt 代替 Director 自动结局，没有要求第五个 Agent，也没有以另一种名称偷偷加入 Q48 C 的盲测／开关对照／自动戏剧总分。
 
@@ -2610,7 +2751,7 @@ v0.3 记录：当时官方活动报名页未能打开，赛事信息引用 NVIDI
 
 提交代码或宣称完成前检查：
 
-1. 是否逐项保留 Q01–Q104、I01–I05，尤其 Q40 B、Q48 A、Q59 B、Q62 A、Q65 B，以及 Q71–Q104 的 Character Studio 决策；USER、DERIVED、PROPOSED 是否明确分开。
+1. 是否逐项保留 Q01–Q122、I01–I05，尤其 Q40 B、Q48 A、Q59 B、Q62 A、Q65 B，以及 Q71–Q104 的 Character Studio 决策；USER、DERIVED、PROPOSED 是否明确分开。
 2. 图／声／视频三类参考是否真实消费，四 Agent 与双后端是否有真实执行证据。
 3. 自由输入是否保留原意；小动作可轻反馈，关键计划外行动是否仍能产出新视频；欲望不确定时是否适度澄清。
 4. World／Drama／Arc 是否有合法版本、来源和幂等提交；未选分支是否污染事实、伏笔、Wish、债务或玩家知识。
@@ -2635,6 +2776,13 @@ v0.3 记录：当时官方活动报名页未能打开，赛事信息引用 NVIDI
 22. Production Reference Resolver 是否把真实选中的角色 image/voice/motion refs 发送到 H3；是否存在 generic references 在 Provider Adapter 中被静默忽略。
 23. Standard/Developer、Appearance/UI Size/Subtitle 是否真实生效；1080p/2K/4K 是否在 100% Zoom 可用，而不是靠浏览器 150%。
 24. Lightning、Step 3.7、Step 5、Jev、H3 Max、Sol-H3 是否有真实部署/调用证据；Profile 切换是否真的启停服务与释放资源。
+25. Standard Creator 是否仍以空白 DramaSpec/Character/Mechanic Schema 要求用户手填；若是，则未满足 Q105～115。
+26. AI 是否只追问真正缺失或高影响不确定项，并提供上下文相关建议与自由修改，而不是机械逐字段问卷。
+27. Character Library 与 Creator 的角色信息架构是否一致；Scenario Desire/Fear/Secrets/Knowledge/Relationships/Visual State 是否错误回写 Global。
+28. Standard 玩法是否是自然语言教程卡；任意用户自然语言是否先编译/验证成 MechanicSpec，而不是直接执行 JSON/代码。
+29. Player 全屏是否作用于 PlayerShell 并保留字幕/HUD/推荐/自由输入；Ready 推荐是否位于 Agency 输入之上且未 Ready 不显示。
+30. 背包/关系/线索/Wish 是否进入可隐藏 HUD；Standard 是否避免把精确关系数值、Branch/Provider/Inspector 暴露为主要玩法。
+31. Player 是否区分 Generating/Loading/Failed；中文字幕是否无乱码；Pydantic/Python 原始错误是否只存在于 Developer Trace。
 
 **产品价值由可玩的体验证明：玩家作出系统未预制的行动，世界记住它，故事在因果约束下回应并推进；该收束时能自然结束，玩家愿意时可以继续这个世界。**
 
@@ -2649,6 +2797,7 @@ v0.3 记录：当时官方活动报名页未能打开，赛事信息引用 NVIDI
 
 | 当前对话 Q71–Q104 与“fal.ai Nano Banana 2 统一生图/编图”明确锁定 | v0.6 USER Character Studio 决策来源 | 用户最终选项优先于助手推荐；Q82=A 不做固定表情资产库，Q95/Q96=A 不显示费用/预算档 |
 | 当前项目对全局角色库、Standard/Developer、Appearance/UI Size/Subtitle、100% Zoom 与模型部署检查的明确要求 | v0.6 产品/验收补充 | 不得把原型已有交互在正式 React 中缩水；模型部署以真实服务器证据为准 |
+| 2026-09-24 连续三轮产品讨论：戏剧结构追问、角色/玩法颗粒度、沉浸式 Player | v0.6 Q105–Q122 USER 决策来源 | Standard Creator 隐藏机器结构、Standard Player 隐藏机器运行过程；Developer 保留全部可审计工件 |
 
 本次文档加工读取了以上两份本地 Markdown 全文。源文件指纹用于核对基线，不代表模型能力或工程实现通过测试。
 
@@ -2659,7 +2808,7 @@ teammate_draft_sha256:
   ac02be7624b1daf8ee1f05af76ecb8fde1558ac2ddf72363d419b1bed530ac46
 ```
 
-文档状态：**Q01–Q104 与 v0.6 Character Studio / Image Router / Responsive / Deployment Verification 需求合并完成；实现状态不得从本文推断，须以代码、线上部署、真实 Provider/本地模型证据与 AT-01～76 为准。** 后续实现和审阅以本 v0.6 Markdown 为需求权威基线。
+文档状态：**Q01–Q122 与 v0.6 Character Studio / AI-guided Creator / Natural-language Mechanics / Immersive Player / Image Router / Responsive / Deployment Verification 需求合并完成；实现状态不得从本文推断，须以代码、线上部署、真实 Provider/本地模型证据与 AT-01～90 为准。** 后续实现和审阅以本 v0.6 Markdown 为需求权威基线。
 
 [S01]: https://fal.ai/learn/devs/introducing-h3-max-by-fal
 [S02]: https://platform.minimax.cn/docs/guides/video-generation
