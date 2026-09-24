@@ -3,7 +3,7 @@
 日期：2026-09-25。总体结论：**PARTIAL**，不宣称全量 PRD 完成。
 
 - 需求/起始 SHA：`881dd66cb8585b51c0a3c8ff5c47160a000c737c`。
-- **Final SHA（最终应用代码候选）：`afbbe48a086e6d769b6ebc17bd66b0a42ab82b9c`**。
+- **Final SHA（最终应用代码候选）：`461a3d3ba946720a864cd9278e9acdd74eb3b6e1`**。
 - 最后的交付提交只归档报告、截图、原始证据；交付 SHA 以 main 最新提交和交付回复为准。应用代码树保持与上述候选一致。
 - 修改前审计：[GAP_AUDIT.md](docs/acceptance/prd_v06_latest/GAP_AUDIT.md)。下表是修改后结果，不能用审计中的“已实现”替代运行验收。
 - Backend：**60 passed / 0 failed / 0 skipped / 6 warnings，124.62秒**；命令 `PROVIDER_MODE=mock PROFILE_LIFECYCLE_ENABLED=false pytest tests/ -q`，见[原始日志](docs/acceptance/prd_v06_latest/backend_pytest.log)。
