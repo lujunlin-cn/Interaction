@@ -5,7 +5,7 @@
 ## Final Candidate
 
 - 起始 SHA：`8e7eb048397555ab7fb993025c48a42bc6f905a5`
-- 最终 SHA：提交后回填
+- 最终候选 SHA：`9be1d814784d3653e3bdaf62d6afb1a37d90b9b5`
 - 结论：**PARTIAL**。真实 H3 Multi-Shot、真实 Profile 往返、UI 五档响应式截图和离线回归已完成；外部 Character Studio 浏览器 Flow A～E 尚缺本轮完整留证。
 
 ## 验收结果

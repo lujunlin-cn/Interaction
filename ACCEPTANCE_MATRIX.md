@@ -6,6 +6,8 @@ NOT_RUN，**不伪造**。
 
 ## 测试基线（Final Closure）
 
+Final Candidate SHA：`9be1d814784d3653e3bdaf62d6afb1a37d90b9b5`
+
 - 单元/集成：`cd backend && PROVIDER_MODE=mock pytest tests/` — **45/45 绿**
   （含 vertical_slice 端到端、generalization、skills、two-phase commit）。
 - 部署：DGX Spark `:9000`，`provider_mode=hybrid`，`profile=AGENT_LOCAL_PROFILE`；StepFun OpenAI-compatible base 为 `https://api.stepfun.com/step_plan/v1`。

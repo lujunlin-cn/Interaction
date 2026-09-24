@@ -3,6 +3,8 @@
 基于 PRD v0.6 Final Closure 的可运行实现：React+TypeScript 前端 + FastAPI + PostgreSQL 后端，
 部署目标为 DGX Spark（`/home/hajimi2025/interaction`）。
 
+Final Acceptance Candidate：`9be1d814784d3653e3bdaf62d6afb1a37d90b9b5`（结论 PARTIAL，详见 `FINAL_CLOSURE_REPORT.md`）。
+
 ## 架构
 
 ```
