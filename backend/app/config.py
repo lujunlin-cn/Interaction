@@ -35,6 +35,13 @@ class Settings(BaseSettings):
     # "Path /h3-max/reference-to-video not found"）。
     fal_h3_model: str = "minimax/h3-max/reference-to-video"
 
+    # OpenAI-compatible image relay (preferred when configured). Credentials
+    # stay in .env and are never persisted in provenance/UI.
+    image_provider_base_url: str = ""
+    image_provider_api_key: str = ""
+    image_provider_model: str = "gpt-image-2.5-sunburst"
+    image_provider_fallback_model: str = "gpt-image-2"
+
     jev_api_key: str = ""
     jev_base_url: str = "https://api.typesafe.ai"   # Jev（TypeSafe SystemOne）API
     jev_model: str = "jev-latest"                   # 锁定版本时改为具体 ID（如 jev-1.13.0，PRD S06）

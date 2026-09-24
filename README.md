@@ -30,6 +30,10 @@ bash deploy/start.sh                    # 起库 + 依赖 + 构建 + 服务于 :
 `PROVIDER_MODE=hybrid` 或 `live`，不会把 Mock 结果计入真实 Provider 证据。
 mock模式使用确定性规则和FFmpeg占位视频，不能证明真实模型/视频Provider。
 
+Character Studio 的生图可配置 OpenAI-compatible 中转站：设置
+`IMAGE_PROVIDER_BASE_URL`、`IMAGE_PROVIDER_API_KEY`、`IMAGE_PROVIDER_MODEL`（默认
+`gpt-image-2.5-sunburst`，备用 `gpt-image-2`）。密钥只放在 `backend/.env`，不要提交到 Git。
+
 ## Provider 模式
 
 | 模式 | 文本（Director/Narrative/Authoring） | 视频 | 决策 |

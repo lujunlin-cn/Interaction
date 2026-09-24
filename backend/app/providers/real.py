@@ -553,6 +553,92 @@ class JevDecisionProvider:
         return bool(self.api_key and self.base_url)
 
 
+class OpenAIImageProvider:
+    """OpenAI Images-compatible relay used for Character Studio image tasks.
+
+    The relay accepts Bearer auth and returns the standard ``data[].url``
+    response. It is deliberately registered under ``nano_banana_2`` so the
+    existing CharacterService and provenance contract remain unchanged.
+    """
+
+    name = "image_relay"
+
+    def __init__(self, base_url: str = "", api_key: str = "", model: str = ""):
+        self.base_url = (base_url or "").rstrip("/")
+        self.api_key = api_key
+        self.model = model or settings.image_provider_model
+
+    def capabilities(self) -> dict:
+        return {"image_generation": "openai_compatible", "image_edit": "openai_compatible",
+                "endpoint_generation": f"{self.base_url}/v1/images/generations",
+                "endpoint_edit": f"{self.base_url}/v1/images/edits",
+                "model": self.model, "fallback_model": settings.image_provider_fallback_model}
+
+    @staticmethod
+    def _size(resolution: str) -> str:
+        return {"0.5K": "512x512", "1K": "1024x1024", "2K": "2048x2048", "4K": "4096x4096"}.get(resolution, "1024x1024")
+
+    def _headers(self) -> dict:
+        return {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
+
+    async def _request(self, path: str, payload: dict) -> dict:
+        if not self.base_url or not self.api_key:
+            raise RuntimeError("image relay is not configured")
+        async with httpx.AsyncClient(timeout=settings.provider_timeout_seconds) as client:
+            response = await client.post(f"{self.base_url}/v1/images/{path}",
+                                         json=payload, headers=self._headers())
+            response.raise_for_status()
+            return response.json()
+
+    @staticmethod
+    def _images(data: dict) -> list[dict]:
+        # Standard OpenAI shape: {data:[{url:...}]}.
+        items = data.get("data") or data.get("images") or []
+        return [x if isinstance(x, dict) else {"url": x} for x in items]
+
+    async def generate(self, request: dict) -> dict:
+        resolution = request.get("resolution") or settings.image_generation_resolution
+        payload = {"model": request.get("model") or self.model,
+                   "prompt": request.get("prompt", ""),
+                   "size": self._size(resolution),
+                   "quality": request.get("quality", "standard"),
+                   "style": request.get("style", "vivid"),
+                   "n": max(1, min(int(request.get("num_images", request.get("n", 2))), 10)),
+                   "response_format": "url"}
+        try:
+            data = await self._request("generations", payload)
+        except httpx.HTTPStatusError as exc:
+            # The relay's alternate model is only used for an explicit model
+            # rejection; transient/auth failures are surfaced unchanged.
+            if exc.response.status_code not in (400, 404, 422) or not settings.image_provider_fallback_model \
+                    or payload["model"] == settings.image_provider_fallback_model:
+                raise
+            payload["model"] = settings.image_provider_fallback_model
+            data = await self._request("generations", payload)
+        return {"images": self._images(data), "model": payload["model"],
+                "resolution": resolution, "aspect_ratio": request.get("aspect_ratio"),
+                "raw": {"provider": self.name, "payload": {k: v for k, v in payload.items() if k != "prompt"}}}
+
+    async def edit(self, request: dict) -> dict:
+        resolution = request.get("resolution") or settings.image_generation_resolution
+        payload = {"model": request.get("model") or self.model,
+                   "prompt": request.get("prompt", ""),
+                   "size": self._size(resolution), "quality": request.get("quality", "standard"),
+                   "n": 1, "response_format": "url"}
+        urls = list(request.get("image_urls") or [])
+        if not urls:
+            raise RuntimeError("IMAGE_EDIT requires image_urls")
+        # Many OpenAI-compatible relays accept image[] as URL strings.
+        payload["image"] = urls[:4]
+        data = await self._request("edits", payload)
+        return {"images": self._images(data), "model": payload["model"],
+                "resolution": resolution, "aspect_ratio": request.get("aspect_ratio"),
+                "raw": {"provider": self.name, "payload": {k: v for k, v in payload.items() if k not in ("prompt", "image")}}}
+
+    async def health(self) -> bool:
+        return bool(self.base_url and self.api_key)
+
+
 class FalImageProvider:
     """fal.ai Nano Banana 2 角色生图/编图（v0.6 IMAGE-01 / FR-085/086/097）。
 
@@ -663,7 +749,11 @@ def build_provider_registry(mode: str) -> dict:
         "h3_max": FalH3MaxProvider(),
         "sol_h3_local": SolH3LocalProvider(settings.sol_h3_base_url, settings.sol_h3_api_key),
         "jev": JevDecisionProvider(),
-        "nano_banana_2": FalImageProvider(),
+        "nano_banana_2": (OpenAIImageProvider(settings.image_provider_base_url,
+                                                settings.image_provider_api_key,
+                                                settings.image_provider_model)
+                           if settings.image_provider_base_url and settings.image_provider_api_key
+                           else FalImageProvider()),
     }
     if mode in ("mock", "hybrid"):
         from .mock_decision import MockDecisionProvider
@@ -674,6 +764,7 @@ def build_provider_registry(mode: str) -> dict:
         registry["mock_decision"] = MockDecisionProvider()
         registry["mock_video"] = MockVideoProvider()
         # mock 模式（或 hybrid 缺 FAL_KEY 时）用确定性生图桩，保证角色链路可测
-        if mode == "mock" or not settings.fal_key:
+        if (mode == "mock" and not (settings.image_provider_base_url and settings.image_provider_api_key)) \
+                or (not settings.fal_key and not (settings.image_provider_base_url and settings.image_provider_api_key)):
             registry["nano_banana_2"] = MockImageProvider()
     return registry
