@@ -38,9 +38,9 @@ MOCK_ROUTES: dict[str, list[str]] = {
     "local_video": ["mock_video"],
 }
 
-# 混合部署（PRD Q21）：文本与决策走真实 Provider，视频走 Mock（安全起步）。
+# 混合部署（PRD Q21）：文本与决策走真实 Provider，视频首选真实 H3/Sol。
 # 末位挂 Mock 作为显式降级兜底（degraded mode）：路由记录与开发者矩阵可见，
-# 保证冷启动/外部 API 抖动时不丢玩家输入，但不替代真实接入验收。
+# 保证冷启动/外部 API 抖动时不丢玩家输入；Mock 不替代真实接入验收。
 HYBRID_ROUTES: dict[str, list[str]] = {
     "director": ["nemotron_local", "step_5", "mock_text"],
     "narrative": ["step_37", "nemotron_local", "mock_text"],
@@ -169,21 +169,25 @@ class ProviderRouter:
                              else settings.video_local_container)
             target_container = (settings.nemotron_container if target == RuntimeProfile.AGENT_LOCAL
                                 else settings.video_local_container)
-            lifecycle.append({"action": "stop", "container": old_container})
+            lifecycle.append({"action": "stop", "container": old_container,
+                              "profile": old.value,
+                              "executor": self._lifecycle_executor(old, "stop")})
             try:
-                await self._docker("stop", old_container)
+                await self._stop_service(old, old_container)
             except ProviderError:
                 self.profile_state = "ACTIVE"
                 raise
             lifecycle.append({"action": "release_resources", "container": old_container})
             await asyncio.sleep(0.2)
-            lifecycle.append({"action": "start", "container": target_container})
+            lifecycle.append({"action": "start", "container": target_container,
+                              "profile": target.value,
+                              "executor": self._lifecycle_executor(target, "start")})
             try:
-                await self._docker("start", target_container)
+                await self._start_service(target, target_container)
             except ProviderError:
                 # Best effort restore of the old service before surfacing the
                 # failed transition to the caller.
-                await self._docker("start", old_container)
+                await self._start_service(old, old_container)
                 self.profile_state = "ACTIVE"
                 raise
         mark("STARTING_TARGET")
@@ -201,7 +205,7 @@ class ProviderRouter:
                 try:
                     ok = await asyncio.wait_for(provider.health(), timeout=10)
                     if ok and settings.profile_lifecycle_enabled:
-                        ok = await self._container_running(target_container)
+                        ok = await self._target_running(target, target_container)
                 except Exception:          # noqa: BLE001
                     ok = False
                 if ok:
@@ -212,8 +216,8 @@ class ProviderRouter:
         if failed:
             self.profile = old         # 回滚
             if settings.profile_lifecycle_enabled:
-                await self._docker("stop", target_container)
-                await self._docker("start", old_container)
+                await self._stop_service(target, target_container)
+                await self._start_service(old, old_container)
                 lifecycle.extend([{"action": "stop", "container": target_container},
                                   {"action": "restore", "container": old_container}])
             mark("FAILED_RECOVERABLE")
@@ -240,6 +244,47 @@ class ProviderRouter:
         _out, err = await asyncio.wait_for(proc.communicate(), timeout=45)
         if proc.returncode != 0:
             raise ProviderError("profile_lifecycle", err.decode(errors="replace")[-500:])
+
+    @staticmethod
+    async def _command(command: str) -> None:
+        proc = await asyncio.create_subprocess_exec(
+            "bash", "-lc", command,
+            stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+        _out, err = await asyncio.wait_for(proc.communicate(), timeout=60)
+        if proc.returncode != 0:
+            raise ProviderError("profile_lifecycle", err.decode(errors="replace")[-500:])
+
+    @classmethod
+    async def _stop_service(cls, profile: RuntimeProfile, container: str) -> None:
+        if profile == RuntimeProfile.VIDEO_LOCAL and settings.video_local_stop_command:
+            await cls._command(settings.video_local_stop_command)
+        else:
+            await cls._docker("stop", container)
+
+    @staticmethod
+    def _lifecycle_executor(profile: RuntimeProfile, action: str) -> str:
+        if profile == RuntimeProfile.VIDEO_LOCAL and (
+                settings.video_local_stop_command if action == "stop"
+                else settings.video_local_start_command):
+            return "host_process_command"
+        return "docker"
+
+    @classmethod
+    async def _start_service(cls, profile: RuntimeProfile, container: str) -> None:
+        if profile == RuntimeProfile.VIDEO_LOCAL and settings.video_local_start_command:
+            await cls._command(settings.video_local_start_command)
+        else:
+            await cls._docker("start", container)
+
+    @classmethod
+    async def _target_running(cls, profile: RuntimeProfile, container: str) -> bool:
+        if profile == RuntimeProfile.VIDEO_LOCAL and settings.video_local_process_pattern:
+            proc = await asyncio.create_subprocess_exec(
+                "pgrep", "-f", settings.video_local_process_pattern,
+                stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+            out, _ = await asyncio.wait_for(proc.communicate(), timeout=10)
+            return proc.returncode == 0 and bool(out.strip())
+        return await cls._container_running(container)
 
     @staticmethod
     async def _container_running(container: str) -> bool:

@@ -24,7 +24,7 @@ class Settings(BaseSettings):
 
     # --- Provider 密钥（全部来自环境，禁止入库 / 入代码）---
     step_api_key: str = ""
-    step_base_url: str = "https://api.stepfun.com/v1"
+    step_base_url: str = "https://api.stepfun.com/step_plan/v1"
     step37_model: str = "step-3.7-flash"       # 实际模型 ID 待账号确认（PIN_*）
     step5_model: str = "step-5-preview"        # 同上
 
@@ -56,6 +56,11 @@ class Settings(BaseSettings):
     profile_lifecycle_enabled: bool = False       # docker stop/start evidence mode
     nemotron_container: str = "interaction-nemotron"
     video_local_container: str = "comfyui-nvidia"
+    # Optional host-process lifecycle hooks for Sol-H3 adapters that are not
+    # managed by Docker. Empty values keep the Docker lifecycle above.
+    video_local_stop_command: str = ""
+    video_local_start_command: str = ""
+    video_local_process_pattern: str = ""
 
     # --- 调度默认值（PRD 12.2，部署配置，非业务常数）---
     budget_total: int = 500

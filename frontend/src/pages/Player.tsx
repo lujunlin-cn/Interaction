@@ -240,7 +240,7 @@ export default function Player() {
         <button className="small" onClick={() => api.playerCommand(sid, "skip").catch(() => {})}>
           跳过当前场景
         </button>
-        <span className="muted" style={{ color: "#9fb0c0" }}>
+        <span className="muted player-muted-text">
           {p.status === "PLAYING" ? "正在播放" :
             p.status === "OPENING_PREPARING" ? "正在准备开场" :
             p.status === "WAITING_DECISION" || p.status === "READY" ? "场景已播完，选择下一步" :
@@ -307,7 +307,7 @@ export default function Player() {
               </div>
               <div className="qte-body">
                 <b>需要立刻作出反应</b>
-                <div className="muted" style={{ color: "#c9b06a" }}>
+                <div className="muted player-warning-text">
                   {view.timed.fallback_hint}
                 </div>
               </div>
@@ -326,7 +326,7 @@ export default function Player() {
               </div>
               {view.recommendations.length > 0 ? (
                 view.timed?.active && !view.timed.selection_open ? (
-                  <div className="muted" style={{ color: "#9fb0c0" }}>选项正在准备中…</div>
+                  <div className="muted player-muted-text">选项正在准备中…</div>
                 ) : (
                   <div className="rec-row">
                     {view.recommendations.map((r) => (
@@ -338,7 +338,7 @@ export default function Player() {
                   </div>
                 )
               ) : (
-                <div className="muted" style={{ color: "#9fb0c0" }}>
+                <div className="muted player-muted-text">
                   {view.generating.length > 0
                     ? "推荐正在准备中…"
                     : leadReached
@@ -370,7 +370,7 @@ export default function Player() {
               <div className="player-section-title">或者，按你自己的想法行动</div>
               {view.hint_chips.length > 0 && (
                 <div className="chips-row">
-                  <span className="muted" style={{ color: "#9fb0c0" }}>试试这些输入：</span>
+                  <span className="muted player-muted-text">试试这些输入：</span>
                   {view.hint_chips.map((c) => (
                     <button key={c} className="chip" onClick={() => submitAction(c)}>{c}</button>
                   ))}
@@ -477,7 +477,7 @@ function EndingPanel({ sid, view, onReplay }: {
   const e = view.ending!;
   return (
     <div className="ending-panel">
-      <h2 style={{ color: "#e8edf2" }}>第 {view.arc.seq} 篇章完 · {e.title}</h2>
+      <h2 className="ending-title">第 {view.arc.seq} 篇章完 · {e.title}</h2>
 
       <div className="ending-grid">
         <div className="ending-card">

@@ -24,7 +24,8 @@ cp backend/.env.example backend/.env   # 填入 STEP_API_KEY / FAL_KEY
 bash deploy/start.sh                    # 起库 + 依赖 + 构建 + 服务于 :9000
 ```
 
-打开 `http://<spark-ip>:9000`。默认 `PROVIDER_MODE=mock`：全部 Provider 为正式 Mock
+打开 `http://<spark-ip>:9000`。离线开发可设置 `PROVIDER_MODE=mock`；线上验收使用
+`PROVIDER_MODE=hybrid` 或 `live`，不会把 Mock 结果计入真实 Provider 证据。
 （确定性规则 + FFmpeg 真实生成占位视频），业务 Runtime 完全真实。
 
 ## Provider 模式
@@ -53,7 +54,9 @@ DATABASE_URL=sqlite+aiosqlite:///./itest.db PROVIDER_MODE=mock \
 `DIRECTOR_LOCAL_MAX_CONCURRENCY` 默认仍为 2，超时回退 Step 5。详见
 `DIRECTOR_CONCURRENCY_REPORT.md` 与 `G29_MODEL_DEPLOY_AUDIT.md`。
 
-正式 Character Studio 接入 AI 双 Candidate、Canonical、多视图二次确认、非破坏编辑、Outfit、版本 Diff、Scenario Snapshot、Local Override/Promote 与 Reference Resolver。视频 Runtime 按每个 Shot 独立提交 Provider Job，再由 FFmpeg concat 生成 SceneArtifact；Mock 结果不作为 Real Multi-Shot 证据。
+正式 Character Studio 接入 AI/图片/手动三入口、AI 双 Candidate、Canonical、多视图二次确认、非破坏编辑、Outfit、版本 Diff、Scenario Snapshot、Local Override/Promote 与 Reference Resolver。视频 Runtime 按每个 Shot 独立提交 Provider Job，再由 FFmpeg concat 生成 SceneArtifact；Mock 结果不作为 Real Multi-Shot 证据。真实双 Shot 证据见 [`REAL_MULTISHOT_ACCEPTANCE.md`](REAL_MULTISHOT_ACCEPTANCE.md)，真实 Profile 往返见 [`PROFILE_SWITCH_ACCEPTANCE.md`](PROFILE_SWITCH_ACCEPTANCE.md)。
+
+StepFun 的 OpenAI-compatible endpoint 固定为 `https://api.stepfun.com/step_plan/v1`；key 只从 `backend/.env` 注入。UI Size 使用标准/大/特大设计 token，不使用 `zoom` 或整体 `transform: scale`。
 
 ## 关键契约
 

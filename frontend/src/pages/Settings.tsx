@@ -76,9 +76,9 @@ export default function Settings() {
                 onClick={() => setDisplay({ appearance: "dark" })}>深色</button>
             </div>
           </label>
-          <label><span>UI Size</span>
+          <label><span>界面大小</span>
             <div className="toolbar" style={{ marginTop: 0 }}>
-              {([["100", "100%"], ["125", "125%"], ["150", "150%"]] as const).map(([v, l]) => (
+              {([["standard", "标准"], ["large", "大"], ["xlarge", "特大"]] as const).map(([v, l]) => (
                 <button key={v} className={d.uiSize === v ? "active" : ""}
                   onClick={() => setDisplay({ uiSize: v })}>{l}</button>
               ))}

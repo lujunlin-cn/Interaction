@@ -276,6 +276,27 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
                                 data=asset.model_dump(mode="json"), created_at=now_ms()))
         return asset.model_dump(mode="json")
 
+    @api.post("/characters/{cid}/baseline-image")
+    async def import_character_baseline(cid: str, file: UploadFile):
+        """从图片创建角色的身份 Candidate；原文件仍保存在全局素材池。"""
+        if await char_assets.get_character(cid) is None:
+            raise HTTPException(404, "character not found")
+        suffix = (file.filename or "portrait").rsplit(".", 1)[-1] if file.filename else "bin"
+        asset_id = uid("asset")
+        folder = settings.data_path / "assets" / GLOBAL_ASSET_SCOPE
+        folder.mkdir(parents=True, exist_ok=True)
+        path = folder / f"{asset_id}.{suffix}"
+        async with aiofiles.open(path, "wb") as f:
+            while chunk := await file.read(1 << 20):
+                await f.write(chunk)
+        rel = str(path.relative_to(settings.data_path))
+        asset = await char_assets.add_asset(
+            cid, role="front", url=f"/files/{rel}",
+            status=CharacterAssetStatus.CANDIDATE,
+            provenance={"source": "upload", "filename": file.filename or asset_id,
+                        "capability": "IDENTITY_BASELINE"})
+        return asset.model_dump(mode="json")
+
     # ---------------- 素材 ----------------
     @api.post("/scenarios/{sid}/assets")
     async def upload_asset(sid: str, file: UploadFile, binding: str = Form(""),

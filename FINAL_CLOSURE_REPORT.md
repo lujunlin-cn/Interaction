@@ -2,29 +2,29 @@
 
 日期：2026-09-24
 
-## PASS
+## Final Candidate
 
-- Backend regression: `44 passed, 6 warnings` with `PROVIDER_MODE=mock` and empty `SOL_H3_BASE_URL`.
-- Server-side Decision Lead Gate exposes READY recommendations only after `position >= lead`.
-- Real multi-shot contract submits one Provider Job per Shot and records `jobs`, `clips`, and `shot_ids` in Trace.
-- Publish versions are server-owned and incremented from the latest ScenarioVersion.
-- Missing global character references block publish.
-- Typed AI patches cover world, drama, theme, characters, and mechanics with lock-prefix enforcement.
-- Formal Character Studio actions are available in the React Character Library and `frontend/src/api.ts`.
+- 起始 SHA：`8e7eb048397555ab7fb993025c48a42bc6f905a5`
+- 最终 SHA：提交后回填
+- 结论：**PARTIAL**。真实 H3 Multi-Shot、真实 Profile 往返、UI 五档响应式截图和离线回归已完成；外部 Character Studio 浏览器 Flow A～E 尚缺本轮完整留证。
 
-## PARTIAL
+## 验收结果
 
-- H3 Max real multi-shot was not re-run in this session because external fal task evidence was unavailable. Hybrid routes `h3_max -> mock_video` with provenance.
-- Sol-H3 is implemented and historical output evidence exists, but no new target-machine output was captured.
-- Existing five viewport screenshots remain under `docs/acceptance/shots/`; no new browser capture was possible because npm dependencies could not be installed.
+| 项目 | 结果 | 证据 |
+| --- | --- | --- |
+| Backend | PASS（离线验收） | `PROVIDER_MODE=mock PROFILE_LIFECYCLE_ENABLED=false`：45 passed, 6 warnings |
+| Frontend Build | PASS | `npm ci && npm run build`，tsc + Vite 成功 |
+| Real H3 Multi-Shot | PASS | `REAL_MULTISHOT_ACCEPTANCE.md`，2 jobs/2 clips/FFmpeg/ffprobe |
+| Profile Switch | PASS | `PROFILE_SWITCH_ACCEPTANCE.md`，DGX Spark A→V→A、stop/start/health/cold-start |
+| Character Studio | PARTIAL | 正式 React/API 与图片 Baseline→Canonical 实测；AI 外部 Flow A～E 未重跑 |
+| UI/Responsive | PASS | zoom 已删除、三档 token 已实现；Chromium 100% 下五档截图和 1920 三档截图已留存 |
+| AT-01～76 | 55 PASS / 20 PARTIAL / 1 BLOCKED / 0 NOT_RUN | `ACCEPTANCE_MATRIX.md` |
 
-## BLOCKED
+## 真实证据
 
-- Nemotron 3.5 Lightning 30B-A3B NVFP4 was not running. `gemma3:27b` remains fallback only and is not PASS evidence.
-- `npm run build` could not run because `node_modules` is absent and the environment rejected the required remote npm tarball.
-- Actual model unload/start hooks for AGENT_LOCAL <-> VIDEO_LOCAL require the DGX service supervisor; the API timeline remains an orchestration boundary until connected.
-
-## Evidence
-
-- Existing viewport evidence: `docs/acceptance/shots/home_1366.png`, `home_1920.png`, `home_2560.png`, `creator_1440.png`, `creator_3840.png`.
-- Historical H3 Max and Sol-H3 evidence is documented in `G29_MODEL_DEPLOY_AUDIT.md`; stale v0.5 claims are marked superseded.
+- H3 双 Shot 原始 Provider 回执：`real_h3_multishot_evidence.json`
+- H3 concat 产物：`backend/data/media/scenes/real_acceptance_h3_multishot.mp4`
+- Profile 原始 API、models 和 Director response：`backend/profile_switch_acceptance_runtime.json`
+- Character Baseline API：角色 `chr_00001_4bddcd`，Candidate/Canonical `ca_00003_5cf0fb`
+- Nemotron ID：`nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4`
+- StepFun endpoint：`https://api.stepfun.com/step_plan/v1`

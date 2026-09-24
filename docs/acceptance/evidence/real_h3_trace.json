@@ -1,0 +1,197 @@
+{
+  "provider": "h3_max",
+  "model": "minimax/h3-max/reference-to-video",
+  "started_at": 1790245679455,
+  "shots": [
+    {
+      "shot_id": "shot_1",
+      "provider": "h3_max",
+      "prompt": "Rainy apartment opening, a woman listens beside the window.",
+      "references": [
+        "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=512"
+      ],
+      "duration": 5,
+      "submitted_at": 1790245679455,
+      "provider_job_id": "01a0d2f5-3717-72d1-8667-cbd9e2440d9a",
+      "request_id": "01a0d2f5-3717-72d1-8667-cbd9e2440d9a",
+      "status": "READY",
+      "completed_at": 1790245693121,
+      "output_clips": [
+        "data/media/clips/01a0d2f5-3717-72d1-8667-cbd9e2440d9a/clip_1.mp4"
+      ],
+      "provider_raw": {
+        "clips": [
+          "data/media/clips/01a0d2f5-3717-72d1-8667-cbd9e2440d9a/clip_1.mp4"
+        ],
+        "fal": {
+          "video": {
+            "url": "https://v3b.fal.media/files/b/0aabb2b8/sdvgTB6wweYtZK2Vr74jG_minimax-h3.mp4",
+            "content_type": "video/mp4",
+            "file_name": "sdvgTB6wweYtZK2Vr74jG_minimax-h3.mp4",
+            "file_size": 5716650
+          },
+          "expanded_prompt": "subject_definitions:\n<Subject 1> is the woman from <Picture 1>, featuring long dark hair, wearing a cozy sweater, with a pensive expression.\n<Subject 2> is the medieval stone castle from <Picture 1>, characterized by multiple towers, pointed turrets, and a stone bridge, seen through a misty landscape.\n\nsummary:\n[reference generation + attribute transfer] The target video shows <Subject 1> sitting by a window in a rainy apartment, while the view outside reveals <Subject 2> shrouded in fog and rain, creating a moody and melancholic atmosphere.\n\nretention_analysis:\n<Subject 1> (appears in [Shot 1]): attribute_transfer - her features and clothing are derived from <Picture 1>.\n<Subject 2> (appears in [Shot 1], [Shot 2]): fully_preserved - the architectural style and misty atmosphere of <Picture 1> are maintained.\n\ndetailed_description:\nThe style is cinematic and moody, with a soft-focus aesthetic and a cool color palette that emphasizes a rainy day. \n\n[Shot 1] A close-up shot of <Subject 1> sitting indoors by a large window. She leans her head slightly against the glass, her reflection visible as she watches the rain fall. Water streaks down the window pane, blurring the world outside. The interior lighting is dim and warm, highlighting the texture of her sweater. The sound of rhythmic pattering rain against the glass is the primary audio element.\n\n[Shot 2] At 00:02.500, the camera cuts to a wide shot from inside the apartment looking out at <Subject 2>. The massive stone castle stands partially obscured by thick grey fog and heavy rainfall. The stone bridge and courtyard are slick with moisture, and puddles on the ground reflect the dark silhouette of the castle's turrets. The camera performs a very slow, gentle zoom out, capturing the scale and isolation of the castle in the misty landscape.\n\noverall_soundscape:\nThe consistent, soothing sound of heavy rain hitting windows and stone surfaces. Occasional distant low rumbles of thunder enhance the atmosphere.\n\nnon_diegetic_music:\nN/A",
+          "seed": 2076753761,
+          "timings": {
+            "inference": 2.997369445976801
+          }
+        }
+      },
+      "timings": {},
+      "output_clip": "data/media/clips/01a0d2f5-3717-72d1-8667-cbd9e2440d9a/clip_1.mp4",
+      "ffprobe_duration": 5.184
+    },
+    {
+      "shot_id": "shot_2",
+      "provider": "h3_max",
+      "prompt": "Rainy apartment hallway, the woman turns toward the locked door.",
+      "references": [
+        "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=512"
+      ],
+      "duration": 5,
+      "submitted_at": 1790245693121,
+      "provider_job_id": "01a0d2f5-6c53-73e3-8fd1-15ae7aa4d3b8",
+      "request_id": "01a0d2f5-6c53-73e3-8fd1-15ae7aa4d3b8",
+      "status": "READY",
+      "completed_at": 1790245706315,
+      "output_clips": [
+        "data/media/clips/01a0d2f5-6c53-73e3-8fd1-15ae7aa4d3b8/clip_1.mp4"
+      ],
+      "provider_raw": {
+        "clips": [
+          "data/media/clips/01a0d2f5-6c53-73e3-8fd1-15ae7aa4d3b8/clip_1.mp4"
+        ],
+        "fal": {
+          "video": {
+            "url": "https://v3b.fal.media/files/b/0aabb2b9/GnPfLj-yetobTwUwsvyLL_minimax-h3.mp4",
+            "content_type": "video/mp4",
+            "file_name": "GnPfLj-yetobTwUwsvyLL_minimax-h3.mp4",
+            "file_size": 4176574
+          },
+          "expanded_prompt": "subject_definitions:\n<Subject 1> is the woman from <Image 1>, featuring long dark hair and wearing a neutral-toned casual outfit.\n\nsummary:\n[reference generation + attribute transfer] The target video shows <Subject 1> in a rainy apartment hallway turning toward a locked door, maintaining the visual likeness from <Image 1>.\n\nretention_analysis:\n<Subject 1 (appears in [Shot 1]): attribute_transfer - her facial features, hair, and clothing from <Image 1> are maintained.\n\ndetailed_description:\nThe video is filmed in a cinematic, moody style with a cool color palette and soft lighting, reflecting a melancholic atmosphere. [Shot 1] <Subject 1> is seen from a medium angle, standing in a dimly lit apartment hallway. The hallway walls are damp with moisture, and the sound of rain pattering against a distant window is audible. <Subject 1> starts with her back to the camera, then slowly turns her body toward a heavy wooden door at the end of the corridor. The camera performs a slow tracking push-in on <Subject 1> to capture her expression of slight concern or realization as she approaches the door. The door is visibly locked, with a metallic handle that glints under the flickering overhead light. Light flickers slightly, casting long, soft shadows across the hallway floor.\n\noverall_soundscape:\nThe ambient sound of heavy rain falling outside the building, combined with the muffled echo of footsteps on a hard-surface hallway floor and the faint creak of a door frame as the subject moves.\n\nnon_diegetic_music:\nN/A",
+          "seed": 368350770,
+          "timings": {
+            "inference": 3.0375849239999297
+          }
+        }
+      },
+      "timings": {},
+      "output_clip": "data/media/clips/01a0d2f5-6c53-73e3-8fd1-15ae7aa4d3b8/clip_1.mp4",
+      "ffprobe_duration": 5.184
+    }
+  ],
+  "clips": [
+    "data/media/clips/01a0d2f5-3717-72d1-8667-cbd9e2440d9a/clip_1.mp4",
+    "data/media/clips/01a0d2f5-6c53-73e3-8fd1-15ae7aa4d3b8/clip_1.mp4"
+  ],
+  "finished_at": 1790245706315,
+  "concat_inputs": [
+    "data/media/clips/01a0d2f5-3717-72d1-8667-cbd9e2440d9a/clip_1.mp4",
+    "data/media/clips/01a0d2f5-6c53-73e3-8fd1-15ae7aa4d3b8/clip_1.mp4"
+  ],
+  "final_output": "data/media/scenes/real_acceptance_h3_multishot.mp4",
+  "final_duration": 10.4,
+  "clip_duration_sum": 10.368,
+  "ffmpeg_concat_list": "data/media/scenes/real_acceptance_h3_multishot.txt",
+  "scene_artifact": {
+    "id": "scene_real_acceptance_h3_multishot",
+    "branch_id": "acceptance-real-h3",
+    "clip_refs": [
+      "data/media/clips/01a0d2f5-3717-72d1-8667-cbd9e2440d9a/clip_1.mp4",
+      "data/media/clips/01a0d2f5-6c53-73e3-8fd1-15ae7aa4d3b8/clip_1.mp4"
+    ],
+    "assembled_path": "data/media/scenes/real_acceptance_h3_multishot.mp4",
+    "duration": 10.4,
+    "provenance": {
+      "assembler": "ffmpeg-concat",
+      "provider": "h3_max",
+      "jobs": [
+        "01a0d2f5-3717-72d1-8667-cbd9e2440d9a",
+        "01a0d2f5-6c53-73e3-8fd1-15ae7aa4d3b8"
+      ],
+      "shot_provenance": [
+        {
+          "shot_id": "shot_1",
+          "provider": "h3_max",
+          "prompt": "Rainy apartment opening, a woman listens beside the window.",
+          "references": [
+            "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=512"
+          ],
+          "duration": 5,
+          "submitted_at": 1790245679455,
+          "provider_job_id": "01a0d2f5-3717-72d1-8667-cbd9e2440d9a",
+          "request_id": "01a0d2f5-3717-72d1-8667-cbd9e2440d9a",
+          "status": "READY",
+          "completed_at": 1790245693121,
+          "output_clips": [
+            "data/media/clips/01a0d2f5-3717-72d1-8667-cbd9e2440d9a/clip_1.mp4"
+          ],
+          "provider_raw": {
+            "clips": [
+              "data/media/clips/01a0d2f5-3717-72d1-8667-cbd9e2440d9a/clip_1.mp4"
+            ],
+            "fal": {
+              "video": {
+                "url": "https://v3b.fal.media/files/b/0aabb2b8/sdvgTB6wweYtZK2Vr74jG_minimax-h3.mp4",
+                "content_type": "video/mp4",
+                "file_name": "sdvgTB6wweYtZK2Vr74jG_minimax-h3.mp4",
+                "file_size": 5716650
+              },
+              "expanded_prompt": "subject_definitions:\n<Subject 1> is the woman from <Picture 1>, featuring long dark hair, wearing a cozy sweater, with a pensive expression.\n<Subject 2> is the medieval stone castle from <Picture 1>, characterized by multiple towers, pointed turrets, and a stone bridge, seen through a misty landscape.\n\nsummary:\n[reference generation + attribute transfer] The target video shows <Subject 1> sitting by a window in a rainy apartment, while the view outside reveals <Subject 2> shrouded in fog and rain, creating a moody and melancholic atmosphere.\n\nretention_analysis:\n<Subject 1> (appears in [Shot 1]): attribute_transfer - her features and clothing are derived from <Picture 1>.\n<Subject 2> (appears in [Shot 1], [Shot 2]): fully_preserved - the architectural style and misty atmosphere of <Picture 1> are maintained.\n\ndetailed_description:\nThe style is cinematic and moody, with a soft-focus aesthetic and a cool color palette that emphasizes a rainy day. \n\n[Shot 1] A close-up shot of <Subject 1> sitting indoors by a large window. She leans her head slightly against the glass, her reflection visible as she watches the rain fall. Water streaks down the window pane, blurring the world outside. The interior lighting is dim and warm, highlighting the texture of her sweater. The sound of rhythmic pattering rain against the glass is the primary audio element.\n\n[Shot 2] At 00:02.500, the camera cuts to a wide shot from inside the apartment looking out at <Subject 2>. The massive stone castle stands partially obscured by thick grey fog and heavy rainfall. The stone bridge and courtyard are slick with moisture, and puddles on the ground reflect the dark silhouette of the castle's turrets. The camera performs a very slow, gentle zoom out, capturing the scale and isolation of the castle in the misty landscape.\n\noverall_soundscape:\nThe consistent, soothing sound of heavy rain hitting windows and stone surfaces. Occasional distant low rumbles of thunder enhance the atmosphere.\n\nnon_diegetic_music:\nN/A",
+              "seed": 2076753761,
+              "timings": {
+                "inference": 2.997369445976801
+              }
+            }
+          },
+          "timings": {},
+          "output_clip": "data/media/clips/01a0d2f5-3717-72d1-8667-cbd9e2440d9a/clip_1.mp4",
+          "ffprobe_duration": 5.184
+        },
+        {
+          "shot_id": "shot_2",
+          "provider": "h3_max",
+          "prompt": "Rainy apartment hallway, the woman turns toward the locked door.",
+          "references": [
+            "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=512"
+          ],
+          "duration": 5,
+          "submitted_at": 1790245693121,
+          "provider_job_id": "01a0d2f5-6c53-73e3-8fd1-15ae7aa4d3b8",
+          "request_id": "01a0d2f5-6c53-73e3-8fd1-15ae7aa4d3b8",
+          "status": "READY",
+          "completed_at": 1790245706315,
+          "output_clips": [
+            "data/media/clips/01a0d2f5-6c53-73e3-8fd1-15ae7aa4d3b8/clip_1.mp4"
+          ],
+          "provider_raw": {
+            "clips": [
+              "data/media/clips/01a0d2f5-6c53-73e3-8fd1-15ae7aa4d3b8/clip_1.mp4"
+            ],
+            "fal": {
+              "video": {
+                "url": "https://v3b.fal.media/files/b/0aabb2b9/GnPfLj-yetobTwUwsvyLL_minimax-h3.mp4",
+                "content_type": "video/mp4",
+                "file_name": "GnPfLj-yetobTwUwsvyLL_minimax-h3.mp4",
+                "file_size": 4176574
+              },
+              "expanded_prompt": "subject_definitions:\n<Subject 1> is the woman from <Image 1>, featuring long dark hair and wearing a neutral-toned casual outfit.\n\nsummary:\n[reference generation + attribute transfer] The target video shows <Subject 1> in a rainy apartment hallway turning toward a locked door, maintaining the visual likeness from <Image 1>.\n\nretention_analysis:\n<Subject 1 (appears in [Shot 1]): attribute_transfer - her facial features, hair, and clothing from <Image 1> are maintained.\n\ndetailed_description:\nThe video is filmed in a cinematic, moody style with a cool color palette and soft lighting, reflecting a melancholic atmosphere. [Shot 1] <Subject 1> is seen from a medium angle, standing in a dimly lit apartment hallway. The hallway walls are damp with moisture, and the sound of rain pattering against a distant window is audible. <Subject 1> starts with her back to the camera, then slowly turns her body toward a heavy wooden door at the end of the corridor. The camera performs a slow tracking push-in on <Subject 1> to capture her expression of slight concern or realization as she approaches the door. The door is visibly locked, with a metallic handle that glints under the flickering overhead light. Light flickers slightly, casting long, soft shadows across the hallway floor.\n\noverall_soundscape:\nThe ambient sound of heavy rain falling outside the building, combined with the muffled echo of footsteps on a hard-surface hallway floor and the faint creak of a door frame as the subject moves.\n\nnon_diegetic_music:\nN/A",
+              "seed": 368350770,
+              "timings": {
+                "inference": 3.0375849239999297
+              }
+            }
+          },
+          "timings": {},
+          "output_clip": "data/media/clips/01a0d2f5-6c53-73e3-8fd1-15ae7aa4d3b8/clip_1.mp4",
+          "ffprobe_duration": 5.184
+        }
+      ],
+      "concat_inputs": [
+        "data/media/clips/01a0d2f5-3717-72d1-8667-cbd9e2440d9a/clip_1.mp4",
+        "data/media/clips/01a0d2f5-6c53-73e3-8fd1-15ae7aa4d3b8/clip_1.mp4"
+      ],
+      "final_output": "data/media/scenes/real_acceptance_h3_multishot.mp4"
+    }
+  }
+}

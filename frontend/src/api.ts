@@ -60,6 +60,10 @@ export const api = {
     fd.append("role", role);
     return req<Asset>(`/api/characters/${cid}/assets`, { method: "POST", body: fd });
   },
+  importCharacterBaseline: (cid: string, file: File) => {
+    const fd = new FormData(); fd.append("file", file);
+    return req<CharacterAsset>(`/api/characters/${cid}/baseline-image`, { method: "POST", body: fd });
+  },
   aiGenerateCharacter: (cid: string, prompt = "", numImages = 2) =>
     req<{ items: CharacterAsset[] }>(`/api/characters/${cid}/ai-generate`, {
       method: "POST", body: JSON.stringify({ prompt, num_images: numImages }),

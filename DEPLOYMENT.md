@@ -62,10 +62,13 @@ tar czf - . | sshpass -p "$PW" ssh -p 22222 hajimi2025@139.199.69.46 \
 | --- | --- |
 | `DATABASE_URL` | `postgresql+asyncpg://…@127.0.0.1:5433/…` |
 | `PROVIDER_MODE` | `mock` / `live` / `hybrid`（hybrid：真实 H3 Max，失败显式降级 Mock） |
-| `PROFILE_LIFECYCLE_ENABLED` | 真实 Profile 切换时执行 Docker stop/release/start/health；单 GPU 生产环境建议开启 |
+| `PROFILE_LIFECYCLE_ENABLED` | 真实 Profile 切换时执行 stop/release/start/health；单 GPU 生产环境开启 |
 | `NEMOTRON_CONTAINER` / `VIDEO_LOCAL_CONTAINER` | `interaction-nemotron` / `comfyui-nvidia` |
+| `VIDEO_LOCAL_STOP_COMMAND` / `VIDEO_LOCAL_START_COMMAND` | Sol-H3 adapter 为宿主机进程时的 stop/start hook |
+| `VIDEO_LOCAL_PROCESS_PATTERN` | Profile health 时确认 Sol-H3 进程实际存在 |
 | `RUNTIME_PROFILE` | `AGENT_LOCAL_PROFILE` / `VIDEO_LOCAL_PROFILE` |
 | `STEP_API_KEY` | StepFun step_37 / step_5 |
+| `STEP_BASE_URL` | OpenAI-compatible endpoint: `https://api.stepfun.com/step_plan/v1` |
 | `JEV_API_KEY` | Jev 决策 |
 | `FAL_KEY` | fal h3_max 云视频 |
 | `SOL_H3_*` | Sol-H3 本地 adapter 端点/token |
@@ -123,8 +126,12 @@ FlashInfer/vLLM 编译缓存持久化到 `/home/hajimi2025/.cache/interaction-vl
 ```bash
 cd backend
 DATABASE_URL="sqlite+aiosqlite:///./itest.db" PROVIDER_MODE=mock \
-  .venv/bin/python -m pytest tests/ -q     # 44/44 绿
+  PROFILE_LIFECYCLE_ENABLED=false .venv/bin/python -m pytest tests/ -q     # 45 passed, 6 warnings
 ```
+
+真实双向 Profile 证据见 `PROFILE_SWITCH_ACCEPTANCE.md`；真实 H3 Max 双 Shot 证据见
+`REAL_MULTISHOT_ACCEPTANCE.md`。线上当前服务：`http://139.199.69.46:9000`，不再作为
+本轮 Gap。
 
 ## 已知限制（详见 `SECURITY_KNOWN_LIMITATIONS.md`）
 

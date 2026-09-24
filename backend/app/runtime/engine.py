@@ -1206,23 +1206,41 @@ class RuntimeEngine:
         # the whole ShotPlan as one request, which produced one clip and made a
         # concatenated artifact look like multi-shot generation.
         async def submit_one(shot: dict):
-            return await provider.submit({
+            submitted_at = now_ms()
+            prompt = shot.get("prompt") or shot.get("title", "")
+            handle = await provider.submit({
                 "job_id": f"{branch_id}_{shot['id']}", "shots": [shot],
-                "references": references, "prompt": shot.get("title", "")})
-        handles = await asyncio.gather(*(submit_one(shot) for shot in shots))
+                "references": references, "prompt": prompt})
+            return shot, handle, submitted_at, prompt
+        submitted = await asyncio.gather(*(submit_one(shot) for shot in shots))
         clips: list[str] = []
         shot_provenance: list[dict] = []
-        for shot, handle in zip(shots, handles):
+        handles = []
+        for shot, handle, submitted_at, prompt in submitted:
+            handles.append(handle)
             for _ in range(240):
                 result = await provider.status(handle)
                 if result.status == "READY":
                     shot_clips = (result.raw or {}).get("clips", [])
                     clips.extend(shot_clips)
+                    actual_duration = (self._ffprobe_duration(Path(shot_clips[0]))
+                                       if shot_clips else None)
                     shot_provenance.append({"shot_id": shot["id"],
                                             "provider": handle.provider,
+                                            "provider_job_id": handle.provider_job_id,
                                             "request_id": handle.provider_job_id,
+                                            "prompt": prompt,
+                                            "references": references,
+                                            "submitted_at": submitted_at,
+                                            "completed_at": now_ms(),
+                                            "output_clips": shot_clips,
+                                            "output_clip": shot_clips[0] if shot_clips else None,
                                             "clips": shot_clips,
-                                            "status": result.status})
+                                            "duration": actual_duration or float(shot.get("duration") or 0),
+                                            "declared_duration": float(shot.get("duration") or 0),
+                                            "status": result.status,
+                                            "timings": result.timings,
+                                            "provider_raw": result.raw})
                     break
                 if result.status == "FAILED":
                     raise EngineError(f"video generation failed ({shot['id']}): {result.error}")
@@ -1258,8 +1276,12 @@ class RuntimeEngine:
         out_dir.mkdir(parents=True, exist_ok=True)
         target = out_dir / f"{scene_id}.mp4"
         clips = [Path(c) for c in branch.media_clips if Path(c).exists()]
+        clip_durations = [self._ffprobe_duration(c) for c in clips]
+        clip_durations = [d for d in clip_durations if d is not None]
         await asyncio.get_running_loop().run_in_executor(
             None, self._ffmpeg_concat, clips, target)
+        shot_provenance = [e.get("shots", []) for e in branch.pipeline_events
+                           if e.get("event") == "real_multi_shot_jobs"]
         branch.artifact = SceneArtifact(
             id=scene_id, branch_id=branch.id,
             clip_refs=[c.name for c in clips],
@@ -1267,9 +1289,13 @@ class RuntimeEngine:
             provenance={"assembler": "ffmpeg-concat",
                         "providers": [r.selected for r in branch.routes],
                         "jobs": branch.jobs,
-                        "shot_provenance": [e.get("shots", []) for e in branch.pipeline_events
-                                             if e.get("event") == "real_multi_shot_jobs"]},
-            duration=sum(s.duration for s in branch.shots) or settings.mock_shot_duration)
+                        "shot_provenance": shot_provenance,
+                        "concat_inputs": [str(c) for c in clips],
+                        "clip_durations": clip_durations,
+                        "final_output": str(target),
+                        "final_duration": self._ffprobe_duration(target)},
+            duration=self._ffprobe_duration(target) or sum(clip_durations) or
+                    sum(s.duration for s in branch.shots) or settings.mock_shot_duration)
         await tracer.emit("assembly.concat", "success",
                           output={"scene": scene_id, "clips": len(clips)},
                           provider="runtime", session_id=state.id, branch_id=branch.id)
@@ -1287,8 +1313,20 @@ class RuntimeEngine:
         # 各镜头参数可能有差异，重编码保证拼接稳定
         subprocess.run(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(list_file),
                         "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac",
-                        "-loglevel", "error", str(target)],
+                       "-loglevel", "error", str(target)],
                        check=True, timeout=180, capture_output=True)
+
+    @staticmethod
+    def _ffprobe_duration(path: Path) -> float | None:
+        """Read the actual media duration used in SceneArtifact evidence."""
+        try:
+            out = subprocess.check_output(
+                ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+                 "-of", "default=noprint_wrappers=1:nokey=1", str(path)],
+                text=True, timeout=15)
+            return float(out.strip())
+        except (OSError, subprocess.SubprocessError, ValueError):
+            return None
 
     # ==================================================================
     # 原子发布（ALL_READY_BEFORE_PUBLISH / K-1）

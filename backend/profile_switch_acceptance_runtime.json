@@ -1,0 +1,177 @@
+{
+  "captured_at": "2026-09-24T18:33:40+0800",
+  "a_to_v": {
+    "ok": true,
+    "profile": "VIDEO_LOCAL_PROFILE",
+    "timeline": [
+      {
+        "state": "DRAINING",
+        "at": 1790245821908,
+        "duration_ms": 0
+      },
+      {
+        "state": "PERSISTING",
+        "at": 1790245821908,
+        "duration_ms": 0
+      },
+      {
+        "state": "STOPPING",
+        "at": 1790245821908,
+        "duration_ms": 3142
+      },
+      {
+        "state": "STARTING_TARGET",
+        "at": 1790245825050,
+        "duration_ms": 0
+      },
+      {
+        "state": "HEALTH_CHECK",
+        "at": 1790245825050,
+        "duration_ms": 66
+      },
+      {
+        "state": "ACTIVE",
+        "at": 1790245825116,
+        "duration_ms": 0
+      }
+    ],
+    "lifecycle": [
+      {
+        "action": "stop",
+        "container": "interaction-nemotron",
+        "profile": "AGENT_LOCAL_PROFILE"
+      },
+      {
+        "action": "release_resources",
+        "container": "interaction-nemotron"
+      },
+      {
+        "action": "start",
+        "container": "comfyui-nvidia",
+        "profile": "VIDEO_LOCAL_PROFILE"
+      }
+    ]
+  },
+  "v_to_a": {
+    "ok": true,
+    "profile": "AGENT_LOCAL_PROFILE",
+    "timeline": [
+      {
+        "state": "DRAINING",
+        "at": 1790245853501,
+        "duration_ms": 0
+      },
+      {
+        "state": "PERSISTING",
+        "at": 1790245853501,
+        "duration_ms": 0
+      },
+      {
+        "state": "STOPPING",
+        "at": 1790245853501,
+        "duration_ms": 1069
+      },
+      {
+        "state": "STARTING_TARGET",
+        "at": 1790245854570,
+        "duration_ms": 0
+      },
+      {
+        "state": "HEALTH_CHECK",
+        "at": 1790245854570,
+        "duration_ms": 149021
+      },
+      {
+        "state": "ACTIVE",
+        "at": 1790246003591,
+        "duration_ms": 0
+      }
+    ],
+    "lifecycle": [
+      {
+        "action": "stop",
+        "container": "comfyui-nvidia",
+        "profile": "VIDEO_LOCAL_PROFILE"
+      },
+      {
+        "action": "release_resources",
+        "container": "comfyui-nvidia"
+      },
+      {
+        "action": "start",
+        "container": "interaction-nemotron",
+        "profile": "AGENT_LOCAL_PROFILE"
+      }
+    ]
+  },
+  "nemotron_models": {
+    "object": "list",
+    "data": [
+      {
+        "id": "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4",
+        "object": "model",
+        "created": 1790246020,
+        "owned_by": "vllm",
+        "root": "/models/nemotron",
+        "parent": null,
+        "max_model_len": 8192,
+        "permission": [
+          {
+            "id": "modelperm-8ad907961ff26c2d",
+            "object": "model_permission",
+            "created": 1790246020,
+            "allow_create_engine": false,
+            "allow_sampling": true,
+            "allow_logprobs": true,
+            "allow_search_indices": false,
+            "allow_view": true,
+            "allow_fine_tuning": false,
+            "organization": "*",
+            "group": null,
+            "is_blocking": false
+          }
+        ]
+      }
+    ]
+  },
+  "director_request_ms": 2383,
+  "director_response": {
+    "id": "chatcmpl-89c3d9d4781811a6",
+    "object": "chat.completion",
+    "created": 1790246020,
+    "model": "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": null,
+          "refusal": null,
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "reasoning": "Here's a thinking process:\n\n1.  **Analyze User Input:**\n   - **Context/Scenario:** \"雨夜公寓\" (Rainy Apartment) - an interactive drama scenario\n   - **Current Situation:** Player hears footsteps outside the door\n   - **Task:** Provide a JSON action plan\n   - **Required Fields:** `outcome` and `directive`\n   - **Constraint:** \"只输出 JSON\" (Output only JSON)\n\n2.  **Identify Key Elements:**\n   - Need to create a JSON object\n   - Must include at least `outcome` and `directive` fields\n   - Should fit the \"Rainy Apartment\" interactive drama theme\n   - The player hears footsteps outside the door - this is a tension/choice moment\n\n3.  **Determine JSON Structure:**\n   - Simple object with two required"
+        },
+        "logprobs": null,
+        "finish_reason": "length",
+        "stop_reason": null,
+        "token_ids": null,
+        "routed_experts": null
+      }
+    ],
+    "service_tier": null,
+    "system_fingerprint": "vllm-0.27.1-8320d38f",
+    "usage": {
+      "prompt_tokens": 62,
+      "total_tokens": 242,
+      "completion_tokens": 180,
+      "prompt_tokens_details": null
+    },
+    "prompt_logprobs": null,
+    "prompt_token_ids": null,
+    "prompt_text": null,
+    "kv_transfer_params": null,
+    "ec_transfer_params": null,
+    "metrics": null
+  }
+}

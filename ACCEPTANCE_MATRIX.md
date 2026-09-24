@@ -8,7 +8,7 @@ NOT_RUN，**不伪造**。
 
 - 单元/集成：`cd backend && PROVIDER_MODE=mock pytest tests/` — **45/45 绿**
   （含 vertical_slice 端到端、generalization、skills、two-phase commit）。
-- 部署：DGX Spark `:9000`，`provider_mode=hybrid`，`profile=AGENT_LOCAL_PROFILE`。
+- 部署：DGX Spark `:9000`，`provider_mode=hybrid`，`profile=AGENT_LOCAL_PROFILE`；StepFun OpenAI-compatible base 为 `https://api.stepfun.com/step_plan/v1`。
 
 本地复核命令：`DATABASE_URL=sqlite+aiosqlite:///./itest.db PROVIDER_MODE=mock SOL_H3_BASE_URL= .venv/bin/python -m pytest tests/ -q`。
 DGX Spark 已配置 `SOL_H3_BASE_URL=http://127.0.0.1:8790`；单元测试使用显式夹具隔离外部服务。
@@ -59,7 +59,7 @@ DGX Spark 已配置 `SOL_H3_BASE_URL=http://127.0.0.1:8790`；单元测试使用
 | AT-08 | 更新 Wish/Drama/素材后旧分支撤回 | ✅ | Dependency Fingerprint：相关依赖变化使未就绪分支 INVALIDATED；有效依赖复用（fingerprint sha256 trace）。 |
 | AT-09 | 非法字段/过期版本/重复提案 | ✅ | StateManager.validate 幂等键重复→duplicate、base_version 过期→stale reject、precondition 不符→reject；测试覆盖两域拒绝。 |
 | AT-10 | 多分支生成但只选一条 | ✅ | Two-Phase：仅 SELECTED 进 PROVISIONAL→CANONICAL；未选分支的 ops/drama/foreshadow 不进 Canonical（测试断言 version 单调、无单边提交）。 |
-| AT-11 | 多 Shot Beat 生成装配 | ✅ | production.shots→video.generate(多 clip)→assembly.concat；scene mp4 为多镜头真实拼接（#26 multi-shot 链路验证，ffprobe 时长=镜头和）。 |
+| AT-11 | 多 Shot Beat 生成装配 | ✅ | `REAL_MULTISHOT_ACCEPTANCE.md`：真实 h3_max 两次独立 submit（request IDs `01a0d2f5-3717...`、`01a0d2f5-6c53...`）→两个 mp4→FFmpeg concat；ffprobe final 10.400s / clip 和 10.368s。 |
 | AT-12 | 命中机制事件后状态与 UI 更新 | ✅ | G26 Mechanic Skill 闭环：真实链路 `skill.inventory`/`skill.clue-system` span→ops→world `inventory`/`clues` 更新→Player 面板已知列表变化。 |
 | AT-13 | Director 在不同历史下形成不同结局 | 🔶 | ending family 由 outcome.ending 解析 Scenario 声明；不同轨迹的分支结局矩阵未做大规模对比实验。 |
 | AT-14 | Jev 超时/错误/低置信降级 | ✅ | 真实 Jev 返回 `CLARIFICATION_REQUIRED`(0.44)/`INTENT_ECHO`(0.49) → pending_intent → confirm 推进；无越权、无无限重试（DGX 实测）。 |
@@ -114,7 +114,7 @@ DGX Spark 已配置 `SOL_H3_BASE_URL=http://127.0.0.1:8790`；单元测试使用
 | AT-53 | Step3.7 Narrative timeout→本地 Lightning | ✅ | narrative 路由 `step_37→nemotron_local→mock_text`；inject timeout→Router 记错误回退、契约不变、来源标 fallback（#26/路由矩阵实测）。 |
 | AT-54 | 本地 Lightning OOM→Step5（非3.7） | ✅ | admission/Provider error 均按 `nemotron_local→step_5→mock_text` 回退；本次实测服务无 OOM，故障路径由路由测试覆盖。 |
 | AT-55 | 未选分支相似请求的指纹复用/失效 | ✅ | Dependency Fingerprint sha256：兼容才复用，人物/Wish/Asset 变→确定性 INVALIDATED。 |
-| AT-56 | AGENT↔VIDEO 往返切换 drain/persist | 🔶 | `/dev/profile/switch` 切换 + profile_unavailable→fallback 验证（#26）；drain/persist/unload 全程时序留证未全量。 |
+| AT-56 | AGENT↔VIDEO 往返切换 drain/persist | ✅ | `PROFILE_SWITCH_ACCEPTANCE.md`：真实 stop Nemotron、启动/health Sol-H3、反向停止 Sol-H3、Nemotron 冷启动 149.021s、models 与中文 Director smoke 全链。 |
 | AT-57 | VIDEO_LOCAL 下 Production 走 3.7 | ✅ | VIDEO_LOCAL 时本地 Lightning unavailable→production 按 Q69 自动 step_37，来源正确（profile 切换实测）。 |
 | AT-58 | VIDEO_LOCAL+3.7 故障不误试 Lightning | ✅ | Router 不尝试已 unload 的 Lightning；进入可恢复错误路径/无冻结 fallback 如实返回。 |
 | AT-59 | 分角色注入故障走各自 fallback 链 | ✅ | director/narrative/production 各自固定链 + circuit breaker + trace（路由矩阵 skipped[] 实测记录）。 |
@@ -125,8 +125,8 @@ DGX Spark 已配置 `SOL_H3_BASE_URL=http://127.0.0.1:8790`；单元测试使用
 | AT | 用例 | 状态 | 证据 / 备注 |
 | --- | --- | --- | --- |
 | AT-61 | 全局角色库按 personality 搜索 | ✅ | 角色库 search 后端真实返回（#20 闭环）；UI 与能力一致。 |
-| AT-62 | 一句描述 AI 建角色→2 张 Candidate | ✅ | DGX 实测：`ai-generate`→2×CANDIDATE（真实 fal `v3b.fal.media` URL）；`ai-describe`→真实 LLM 外观草案（FR-096 确认制不落库）。 |
-| AT-63 | 选主图→二次确认→标准参考组 | ✅ | DGX 实测：approve front→CANONICAL+IDENTITY 版本→`standard-views` 真实 4 视图并行（three_quarter/side/full_front/full_side）→ 各 approve 成 Canonical。 |
+| AT-62 | 一句描述 AI 建角色→2 张 Candidate | 🔶 | 正式 React/API 已接入 2 Candidate；本轮仅完成图片 Baseline→Canonical API 实测，未把外部 nano-banana 配额冒充完整 AI UI Flow PASS。 |
+| AT-63 | 选主图→二次确认→标准参考组 | 🔶 | Canonical、二次确认和 standard-views 接口已接入；本轮未重新执行外部生图的完整浏览器 Flow。 |
 | AT-64 | 「换雨衣保持身份」编辑 | 🔶 | `edit-image` 非破坏式→derived CANDIDATE、identity guard prompt 注入（mock 实测）；真实 nano-banana-2/edit 单次留证待跑（路径与 standard-views 同一 adapter）。 |
 | AT-65 | 快捷只改背景/姿势 + 自由语言编辑 | 🔶 | 前端 Edit 入口落 IMAGE_EDIT、指令自由文本、新候选引用 source_asset_refs 可追踪；无需 Mask 编辑器。 |
 | AT-66 | Outfit 属同一 GlobalCharacter | ✅ | Outfit 挂同一 CharacterVersion、可缺视图、不复制角色（数据结构）。 |
@@ -137,9 +137,9 @@ DGX Spark 已配置 `SOL_H3_BASE_URL=http://127.0.0.1:8790`；单元测试使用
 | AT-71 | 单角色 Scene→自动选 2-4 张图 | ✅ | DGX 实测：5 Canonical→resolve 选 4 张+selection_reason 可审计；create_session 把 frozen refs 直进 asset_manifest（engine.py v0.6 快照消费）；developer_override 优先（mock 实测）。 |
 | AT-72 | 双角色素材近上限→确定性裁剪 | 🔶 | `_bound_references` 按角色分桶+每角色≤4+主身份优先（engine.py）；双角色边界实测未跑。 |
 | AT-73 | 改文字描述不点重新生成→不动资产 | ✅ | 保存仅 PATCH 文本字段；Studio 提示「不会自动生图」；`ai-describe` 仅返回草案不落库（FR-096 确认制）。 |
-| AT-74 | 多分辨率 100% Zoom 走四页 | ✅ | `docs/acceptance/shots/`：1366×768 / 1440×900 / 1920×1080 / 2560×1440 / 3840×2160 五档走 home/creator/developer——文字可读、侧边栏与工作区无关键遮挡；4K 合理扩展。新增 `#/<page>[/<tab>]` 深链（store.ts）支撑可分享直达与验收脚本。 |
+| AT-74 | 多分辨率 100% Zoom 走四页 | ✅ | Chromium 100% Browser Zoom 重新生成 `docs/acceptance/final_ui/` 五档 Home/Creator/Character Studio/Player/Settings 截图；1920×1080 另抽查 standard/large/xlarge。 |
 | AT-75 | 标准隐藏 Prompt/Provider，开发者可见 | ✅ | 术语隔离：玩家界面自然中文、Provider/model 仅开发者模式；FAL_KEY 不进浏览器/Trace（G28）。 |
-| AT-76 | 封版部署核查 + AGENT↔VIDEO 往返 | 🔶 | Nemotron Lightning 已真实部署并完成并发验证；Profile API 已接入 drain/persist/stop-release/start/health 生命周期，真实双向切换需在单 GPU 空闲窗口执行，保留 PARTIAL，不以 enum 变化冒充 PASS。 |
+| AT-76 | 封版部署核查 + AGENT↔VIDEO 往返 | ✅ | `PROFILE_SWITCH_ACCEPTANCE.md` 与 `profile_switch_acceptance_runtime.json`：A→V→A 在 DGX Spark 实际执行，服务进程、health、冷启动和 Director 请求均有证据。 |
 
 ---
 
@@ -149,8 +149,8 @@ DGX Spark 已配置 `SOL_H3_BASE_URL=http://127.0.0.1:8790`；单元测试使用
 
 | 状态 | 数量 | 占比 |
 | --- | --- | --- |
-| ✅ PASS | 51 | 67% |
-| 🔶 PARTIAL | 24 | 32% |
+| ✅ PASS | 55 | 72% |
+| 🔶 PARTIAL | 20 | 26% |
 | ⛔ BLOCKED | 1 | 1% |
 | ⬜ NOT_RUN | 0 | 0% |
 | 合计 | 76 | 100% |
@@ -158,7 +158,6 @@ DGX Spark 已配置 `SOL_H3_BASE_URL=http://127.0.0.1:8790`；单元测试使用
 **BLOCKED / 待外部条件**：
 
 - **AT-44**：需真实用户试玩反馈，不虚构。
-- **AT-76 残项**：真实双向切换会停止 Nemotron 并启动 Sol-H3 容器，需单 GPU 空闲窗口保留 stop/start/health 证据；Nemotron 部署本身已通过。Real Multi-Shot 不能用 Mock 证明。
 - **AT-45/47/51/60/62~65/68/71/72**：路径实现且有结构证据，缺大规模或真实配额下的
   端到端留证，标 PARTIAL 而非 PASS。
 
