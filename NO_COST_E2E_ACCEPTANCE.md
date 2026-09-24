@@ -2,7 +2,7 @@
 
 日期：2026-09-25  
 Start SHA：`266520898a296c0b26e25b7cbc79cfbded14b484`  
-Final SHA：`461a3d3ba946720a864cd9278e9acdd74eb3b6e1`
+Final SHA：最新交付提交（见 `git rev-parse HEAD`）
 
 ## 费用边界
 
