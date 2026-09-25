@@ -1,0 +1,44 @@
+{
+  "viewport": "1920x1080",
+  "paid_media_generation_requests": 0,
+  "character_library": {
+    "tabs": [
+      "概览",
+      "身份",
+      "造型",
+      "姿势与动作",
+      "声音",
+      "使用记录",
+      "版本"
+    ],
+    "reference_pack": true,
+    "outfit": true,
+    "pose_motion": true,
+    "voice": true
+  },
+  "creator": {
+    "added_library_character": "Alice",
+    "tabs": [
+      "概览",
+      "身份",
+      "造型",
+      "姿势与动作",
+      "声音",
+      "使用记录",
+      "版本"
+    ],
+    "scenario_overlay": true,
+    "overlay_fields": [
+      "outfit_id",
+      "pose_refs",
+      "motion_refs",
+      "voice_id",
+      "overlay_sources"
+    ]
+  },
+  "scope_rule": "Global Character remains library scope; Creator writes ScenarioCharacter overlay only",
+  "screenshots": [
+    "character_library_granularity.png",
+    "creator_character_granularity.png"
+  ]
+}

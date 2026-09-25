@@ -111,7 +111,10 @@ export interface GlobalCharacter {
   default_desire?: string; default_fear?: string; default_secrets?: string; default_knowledge?: string; default_relationship?: string;
   tags: string[];
   ref_front_asset?: string | null;
+  ref_three_quarter_asset?: string | null;
   ref_side_asset?: string | null;
+  ref_full_front_asset?: string | null;
+  ref_full_side_asset?: string | null;
   ref_back_asset?: string | null;
   ref_other_assets: string[];
   ref_voice_asset?: string | null;

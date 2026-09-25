@@ -30,7 +30,7 @@ bash deploy/start.sh                    # 起库 + 依赖 + 构建 + 服务于 :
 `PROVIDER_MODE=hybrid` 或 `live`，不会把 Mock 结果计入真实 Provider 证据。
 mock模式使用确定性规则和FFmpeg占位视频，不能证明真实模型/视频Provider。
 
-Character Studio 的生图可配置 OpenAI-compatible 中转站：设置
+Character Studio 的 IMAGE_GENERATION / IMAGE_EDIT 使用已批准的 OpenAI-compatible 中转站：设置
 `IMAGE_PROVIDER_BASE_URL`、`IMAGE_PROVIDER_API_KEY`、`IMAGE_PROVIDER_MODEL`（默认
 `gpt-image-2.5-sunburst`，备用 `gpt-image-2`）。密钥只放在 `backend/.env`，不要提交到 Git。
 
@@ -70,7 +70,7 @@ StepFun 的 OpenAI-compatible endpoint 固定为 `https://api.stepfun.com/step_p
 
 Standard Creator先展示AI理解与建议，确认后写正式Drama/Character/Mechanic数据；Developer保留原始结构。角色库与Creator共用七组信息架构，故事Overlay不会静默改Global。自然语言玩法编译为受验证的Typed Config，Runtime仍由已安装Skill提出状态变更。
 
-Player支持整个容器全屏、隐藏HUD、Lead后Ready快捷行动与持续自由输入；生成、加载、失败可区分，原始错误只进Developer。用户选择文字恢复后生成明确的text artifact，通过原有状态提交，不把它计作视频成功。
+Player 默认使用应用内 Theater Mode（Browser Fullscreen 为“更多”中的二级可选能力）、隐藏HUD、Lead后Ready快捷行动与持续自由输入；生成、加载、失败可区分，原始错误只进Developer。用户选择文字恢复后生成明确的text artifact，通过原有状态提交，不把它计作视频成功。
 
 最新离线回归63 passed / 0 failed / 6 warnings；npm ci与build通过；AT-77–90为13 PASS / 1 PARTIAL；AT-91–98为8 PASS（最后修复后的新FREE视频因fal锁未重测），35项响应式检查通过。真实H3开场、推荐与FREE视频成功；视频Ending被fal `403 TOP_UP`阻塞，文字Ending与继续世界已实测。Nano Banana新生图完整Flow本轮未重跑。
 

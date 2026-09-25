@@ -5,7 +5,7 @@ import { setState, toast, useUi } from "../store";
 import CharacterProfile from "../components/CharacterProfile";
 import type { Asset, CharacterAsset, CharacterVersion, GlobalCharacter } from "../types";
 
-const ROLE_LABELS: Record<string,string> = {front:"主身份图",three_quarter:"四分之三视图",side:"侧面视图",back:"背面视图",full_front:"全身正面",full_side:"全身侧面",outfit:"造型参考",pose:"姿势参考",motion:"动作参考",voice:"声音参考",derived:"编辑后的形象"};
+const ROLE_LABELS: Record<string,string> = {front:"主身份图",three_quarter:"四分之三视图",side:"侧面视图",back:"额外背面参考",full_front:"全身正面",full_side:"全身侧面",outfit:"造型参考",pose:"姿势参考",motion:"动作参考",voice:"声音参考",derived:"编辑后的形象"};
 const STUDIO_TABS = [["overview", "概览"], ["identity", "身份"], ["appearance", "造型"], ["motion", "姿势与动作"], ["voice", "声音"], ["usage", "使用记录"], ["versions", "版本"]] as const;
 export default function CharacterLibrary() {
   const ui = useUi();
@@ -130,6 +130,7 @@ function CharacterDetail({ ch, onBack, onSaved }: {
   const [busy, setBusy] = useState("");
   const [confirmViews, setConfirmViews] = useState<string | null>(null);
   const [outfitName, setOutfitName] = useState("");
+  const [outfitDescription, setOutfitDescription] = useState("");
   const [outfits, setOutfits] = useState<any[]>([]);
   const [scenarioVersionId, setScenarioVersionId] = useState("");
   const [scenarioChoices, setScenarioChoices] = useState<{ id: string; title: string; version: string }[]>([]);
@@ -213,8 +214,9 @@ function CharacterDetail({ ch, onBack, onSaved }: {
   /** 上传到角色全局素材池，成功后自动绑定到该槽位 */
   const uploadRef = async (key: string, file: File) => {
     try {
-      const role = key === "ref_voice_asset" ? "voice"
-        : key === "ref_motion_asset" ? "motion" : "identity";
+    const role = key.includes("voice") ? "voice"
+        : key.includes("motion") ? "motion"
+        : key.includes("pose") ? "pose" : "identity";
       const a = await api.uploadCharacterAsset(ch.id, file, role);
       toast(`已上传「${a.name}」。`);
       loadAssets();
@@ -250,12 +252,13 @@ function CharacterDetail({ ch, onBack, onSaved }: {
         <h3>{developer ? "Outfit 管理" : "造型管理"}</h3>
         <div className="row">
           <input value={outfitName} onChange={(e) => setOutfitName(e.target.value)} placeholder="造型名称，例如：黄色雨衣" />
+          <input value={outfitDescription} onChange={(e) => setOutfitDescription(e.target.value)} placeholder="造型描述与使用场景" />
           <button disabled={!outfitName || !!busy} onClick={() => run("造型已创建", async () => {
-            await api.createCharacterOutfit(ch.id, outfitName); setOutfitName("");
+            await api.createCharacterOutfit(ch.id, outfitName, outfitDescription); setOutfitName(""); setOutfitDescription("");
             const next = await api.listCharacterOutfits(ch.id); setOutfits(next.items);
           })}>添加造型</button>
         </div>
-        <div className="pillrow">{outfits.map((o) => <span className="soft-tag" key={o.id}>{o.name}{o.is_default ? " · 默认造型" : ""}</span>)}</div>
+        <div className="pillrow">{outfits.map((o) => <span className="soft-tag" key={o.id}>{o.name}{o.is_default ? " · 默认造型" : ""}{o.description ? ` · ${o.description}` : ""} · 参考 {o.reference_assets?.length ?? 0}</span>)}</div>
         <p className="muted">每套造型可继续上传 front / side / back / full body 参考图。生成按钮遵守当前云端保险丝。</p>
       </section>
       <section className="focus-section">
@@ -356,12 +359,18 @@ function CharacterDetail({ ch, onBack, onSaved }: {
       </section>}
       {tab === "appearance" && <section className="focus-section">
         <h3>视觉身份</h3>
+        <h3>标准身份参考组</h3>
+        <p className="muted">主身份图、四分之三、侧面、全身正面、全身侧面是标准 Reference Pack；背面图作为额外参考。</p>
         <RefSlotGrid ch={ch} assets={assets} onPick={bindRef} onUpload={uploadRef}
           slots={[
-            { key: "ref_front_asset", title: "正面图", accept: "image" },
-            { key: "ref_side_asset", title: "侧面图", accept: "image" },
-            { key: "ref_back_asset", title: "背面图", accept: "image" },
+            { key: "ref_front_asset", title: "主身份图", accept: "image" },
+            { key: "ref_three_quarter_asset", title: "四分之三", accept: "image" },
+            { key: "ref_side_asset", title: "侧面", accept: "image" },
+            { key: "ref_full_front_asset", title: "全身正面", accept: "image" },
+            { key: "ref_full_side_asset", title: "全身侧面", accept: "image" },
           ]} />
+        <RefSlotGrid ch={ch} assets={assets} onPick={bindRef} onUpload={uploadRef}
+          slots={[{ key: "ref_back_asset", title: "额外背面参考", accept: "image" }]} />
         <RefSlotGrid ch={ch} assets={assets} onPick={bindRef} onUpload={uploadRef} multi
           slots={[{ key: "ref_other_assets", title: "其他参考图片", accept: "image" }]} />
         <p className="muted">形象参考绑定后随角色快照固定；上传的素材保存在角色库素材池。</p>
@@ -370,12 +379,12 @@ function CharacterDetail({ ch, onBack, onSaved }: {
         <h3>{tab === "voice" ? "声音" : "姿势与动作"}</h3>
         <RefSlotGrid ch={ch} assets={assets} onPick={bindRef} onUpload={uploadRef}
           slots={tab === "voice" ? [
-            { key: "ref_voice_asset", title: "主声音（Canonical）", accept: "voice" },
-            { key: "alternate_voice_assets", title: "备用声音", accept: "voice" },
+            { key: "ref_voice_asset", title: "主声音（Canonical）", accept: "voice", multi: false },
+            { key: "alternate_voice_assets", title: "备用声音", accept: "voice", multi: true },
           ] : [
-            { key: "ref_pose_assets", title: "静态姿势参考", accept: "image" },
-            { key: "ref_motion_assets", title: "动作视频参考", accept: "video" },
-          ]} multi />
+            { key: "ref_pose_assets", title: "静态姿势参考", accept: "image", multi: true },
+            { key: "ref_motion_assets", title: "动作视频参考", accept: "video", multi: true },
+          ]} />
       </section>}
     </>
   );
@@ -406,7 +415,7 @@ function ReferenceOverrideEditor({ snapshot, onResolved }: { snapshot: any; onRe
 /** ref_* 槽位组：已绑定素材缩略预览 + 从角色素材池选择 / 直接上传 / 解绑 */
 function RefSlotGrid({ ch, assets, slots, onPick, onUpload, multi }: {
   ch: GlobalCharacter; assets: Asset[]; onUpload: (key: string, file: File) => void;
-  slots: { key: string; title: string; accept: "image" | "voice" | "video" }[];
+  slots: { key: string; title: string; accept: "image" | "voice" | "video"; multi?: boolean }[];
   onPick: (key: string, assetId: string | null, multi?: boolean) => void;
   multi?: boolean;
 }) {
@@ -446,13 +455,13 @@ function RefSlotGrid({ ch, assets, slots, onPick, onUpload, multi }: {
                   {a?.type === "video" && <video src={`/files/${a.storage_path}`} style={{ width: 56 }} />}
                   <span className="grow" style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
                     {a?.name || "已绑定参考"}</span>
-                  <button className="small danger" onClick={() => onPick(slot.key, aid, multi)}>解绑</button>
+                  <button className="small danger" onClick={() => onPick(slot.key, aid, slot.multi ?? multi)}>解绑</button>
                 </div>
               );
             })}
             {pool.filter((a) => !bound.includes(a.id)).length > 0 && (
               <select defaultValue="" onChange={(e) => {
-                if (e.target.value) { onPick(slot.key, e.target.value, multi); e.target.value = ""; }
+                if (e.target.value) { onPick(slot.key, e.target.value, slot.multi ?? multi); e.target.value = ""; }
               }}>
                 <option value="" disabled>从素材池选择…</option>
                 {pool.filter((a) => !bound.includes(a.id)).map((a) => (

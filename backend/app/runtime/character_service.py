@@ -322,6 +322,20 @@ class CharacterAssetService:
                 row.version = n
                 data["version"] = n
                 canonical = await self._canonical_refs(db, character_id)
+            # Standard Reference Pack slots are first-class versioned refs even
+            # when they point at uploaded Asset rows rather than CharacterAsset
+            # rows.  Keeping them in the version snapshot makes a pinned
+            # Scenario Character reproducible after the library advances.
+                for slot, key in {
+                "front": "ref_front_asset",
+                "three_quarter": "ref_three_quarter_asset",
+                "side": "ref_side_asset",
+                "full_front": "ref_full_front_asset",
+                "full_side": "ref_full_side_asset",
+                "back": "ref_back_asset",
+            }.items():
+                    if data.get(key):
+                        canonical.setdefault(slot, data[key])
                 ver = CharacterVersion(
                     id=uid("cv"), character_id=character_id, version=n,
                     change_type=change_type,

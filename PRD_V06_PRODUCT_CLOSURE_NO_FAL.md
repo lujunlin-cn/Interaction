@@ -12,7 +12,7 @@ Fal paid HTTP attempts：**0**
 | --- | --- | --- |
 | Player Theater Mode | PASS | `docs/acceptance/prd_v06_latest/no_fal_ui_browser.json`：普通浏览器窗口、`document.fullscreenElement=false`、Sidebar 隐藏、Stage 1920×997.75、Agency/HUD 保留；退出后状态和输入仍在 |
 | 角色命名 | PASS | Standard 使用“角色库 / 角色 / 本故事覆盖”，不把 Global Character 作为主要产品名 |
-| 角色同颗粒度 | PARTIAL | 角色库提供身份、造型、姿势与动作、声音、使用记录、版本 tabs；Creator 已提供故事级造型/视觉状态/继承来源，但完整的 Outfit 视图、Alternate Voice 与版本操作仍未在 Creator 逐项完整复测 |
+| 角色同颗粒度 | PASS | 角色库与 Creator 均提供七个工作台标签；Creator 逐项提供 Outfit、Pose、Motion、Canonical/Alternate Voice 的 Scenario Overlay，证据见 `CHARACTER_GRANULARITY_CLOSURE.md` |
 | Character Studio tabs | PASS | `no_fal_ui_browser.json`：概览、身份、造型、姿势与动作、声音、使用记录、版本 |
 | Outfit | PARTIAL | 同角色 Outfit 创建、默认标识和素材池入口可操作；本轮未执行任何付费生成 |
 | Pose/Motion | PARTIAL | 多个静态 Pose / Motion Reference 槽位和上传入口已接入，完整 Resolver/Production 组合仍待更完整实测 |
@@ -44,5 +44,5 @@ Fal paid HTTP attempts：**0**
 
 ## 仍存在的非 Fal P0
 
-- Character Library 与 Creator 的全部 Outfit/Voice/Pose/Motion 细粒度操作需要一次完整非付费浏览器回归；当前入口和数据字段已统一，但不能以共享标题替代完整验收。
+- Character Library 与 Creator 的 Outfit/Voice/Pose/Motion 细粒度操作已完成 1920×1080 非付费浏览器回归，证据见 `docs/acceptance/prd_v06_latest/character_granularity_browser.json`。
 - AT-01～76 中未在本轮重跑的真实语义/边界/多模态用例仍保持原有 PARTIAL；AT-44 独立体验者反馈仍 BLOCKED。

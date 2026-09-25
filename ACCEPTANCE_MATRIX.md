@@ -3,7 +3,7 @@
 需求基线：PRD v0.6 / `b055674aa0702fc1c1ed50f7c3ee62e4ea43dc88`。
 最新应用代码候选：最新交付提交（见 `git rev-parse HEAD`）。详细证据：[LATEST_PRD_UX_ACCEPTANCE.md](LATEST_PRD_UX_ACCEPTANCE.md)。
 
-当前统计（本轮最新 HEAD）：**PASS 41 / PARTIAL 56 / BLOCKED 1 / FAIL 0**。
+当前统计（本轮最新 HEAD）：**PASS 42 / PARTIAL 55 / BLOCKED 1 / FAIL 0**。
 其中本轮重点 AT-77–90：13 PASS / 1 PARTIAL；本轮新增 AT-91–98：8 PASS。PARTIAL包含本轮未完整复测项，不表示已确认的部署能力丢失。
 
 历史“55 PASS / 20 PARTIAL / 1 BLOCKED”已移入[历史存档](docs/acceptance/prd_v06_latest/AT01_76_HISTORICAL.md)，不再充作最新HEAD结果。历史Sol-H3/Profile真实证据保留在FINAL_E2E_ACCEPTANCE.md和PROFILE_SWITCH_ACCEPTANCE.md；本轮没有重复模型部署或Profile切换。
@@ -93,7 +93,7 @@
 | AT-77 | 模糊故事 | PASS | 真实 Step 5 生成当前理解与三组上下文问题，React 选择建议并正式写入；锁/过期/非法路径由回归验证。 `at77_79_browser.json` |
 | AT-78 | 完整故事 | PASS | 明确真相/冲突/压力的描述没有重复问题（explicit_questions=0）。 `at78_81_browser.json` |
 | AT-79 | Drama 两种模式 | PASS | React 确认 truth_model 后 Changes 留 Before/After/source/time，Developer 显示同一值。 `at77_79_browser.json` |
-| AT-80 | 角色两个入口 | PARTIAL | 角色库 tabs 与 Creator Overlay 已统一作用域；本轮浏览器通过 tabs/Overlay，但完整 Outfit/Voice/Pose/Motion 同颗粒度尚未逐项完成。 `no_fal_ui_browser.json` |
+| AT-80 | 角色两个入口 | PASS | 1920×1080 Playwright 回归：同一个 Alice 在角色库与 Creator 均有七个工作台标签；Creator 可添加 Alice 并操作造型、姿势、动作、主/备用声音的 Scenario Overlay，Global 保持不变。 `character_granularity_browser.json` |
 | AT-81 | 角色 Overlay | PASS | Desire/Secret/Visual State 修改后 Global 不变；点击 Promote 后才产生全局版本，已发布快照继续固定。 `at78_81_browser.json` |
 | AT-82 | 自然语言玩法 | PASS | 真实 Step 5 编译并发布三类玩法；真实 Jev/Nemotron 行动重试调用 relationship Skill 1.0.0，正式关系写入55，World version仅增加1。该次呈现为用户选定的文字模式。 `live_mechanics_proposal.json / live_mechanic_execution.json` |
 | AT-83 | 玩法两种模式 | PASS | Standard 教程卡无 JSON；Developer 查同一 Typed Config/Skill/trigger；确认与手动编辑共用校验。 `natural_language_mechanics.png / developer_mechanics.png` |

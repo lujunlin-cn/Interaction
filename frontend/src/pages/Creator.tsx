@@ -376,6 +376,7 @@ function CharactersTab({ draft, globals, onSave, selectedId, onSelect }: {
 }) {
   const [pickGlobal, setPickGlobal] = useState("");
   const [inherited, setInherited] = useState<Record<string, any>>({});
+  const [studioTab, setStudioTab] = useState("overview");
   const selected = draft.characters.find((c) => c.id === selectedId) ?? draft.characters[0];
 
   useEffect(() => {
@@ -397,7 +398,7 @@ function CharactersTab({ draft, globals, onSave, selectedId, onSelect }: {
         <div className="row">
           <h3 className="grow">角色（{draft.characters.length}）</h3>
           <select value={pickGlobal} onChange={(e) => setPickGlobal(e.target.value)}>
-            <option value="">从角色库创建故事角色…</option>
+            <option value="">从角色库添加角色…</option>
             {globals.map((g) => <option key={g.id} value={g.id}>{g.name}（v{g.version}）</option>)}
           </select>
           <button className="small" disabled={!pickGlobal} onClick={() => {
@@ -410,7 +411,7 @@ function CharactersTab({ draft, globals, onSave, selectedId, onSelect }: {
               desire: g.default_desire || "", fear: g.default_fear || "", secrets: g.default_secrets || "", knowledge: g.default_knowledge || "", relationship: g.default_relationship || "",
               visual_state: g.appearance || "", global_character_id: g.id, global_character_version: g.version,
             };
-            onSave({ ...draft, characters: [...draft.characters, instance] }, "已按角色库快照创建故事角色。");
+            onSave({ ...draft, characters: [...draft.characters, instance] }, "已添加角色库中的角色；当前故事使用固定版本。");
           }}>添加</button>
           <button className="small" onClick={() => {
             const id = `char_${Math.random().toString(36).slice(2, 8)}`;
@@ -433,12 +434,15 @@ function CharactersTab({ draft, globals, onSave, selectedId, onSelect }: {
       {selected && (
         <div className="card">
           <h3>{selected.identity}</h3>
+          <nav className="studio-tabs" aria-label="角色">
+            {[["overview", "概览"], ["identity", "身份"], ["appearance", "造型"], ["motion", "姿势与动作"], ["voice", "声音"], ["usage", "使用记录"], ["versions", "版本"]].map(([id, label]) => <button key={id} className={studioTab === id ? "active" : ""} onClick={() => setStudioTab(id)}>{label}</button>)}
+          </nav>
           <GlobalBindingPanel character={selected} globals={globals} onUpdate={updateChar} />
-          <StoryUnderstanding key={`${draft.id}:${selected.id}`} draft={draft} scope="character" characterId={selected.id} onDraft={onSave} />
-          <CharacterProfile scope="scenario" values={selected} inherited={inherited} onChange={updateChar}
+          {studioTab === "overview" && <StoryUnderstanding key={`${draft.id}:${selected.id}`} draft={draft} scope="character" characterId={selected.id} onDraft={onSave} />}
+          <CharacterProfile scope="scenario" onlySections={studioTab === "overview" ? ["身份", "人格与动机", "认知与秘密", "关系"] : studioTab === "identity" ? ["身份", "人格与动机", "认知与秘密", "关系"] : studioTab === "appearance" ? ["外观与造型"] : studioTab === "motion" || studioTab === "voice" ? ["声音与动作"] : ["使用与版本"]} values={selected} inherited={inherited} onChange={updateChar}
             onPromote={selected.global_character_id ? async () => {
               try { const v = await api.promoteStoryCharacter(draft.id, selected.id); toast(`已保存为角色库 v${v.version}；本故事仍保留原版本。`); } catch (e: any) { toast(e.message); }
-            } : undefined} extras={{ "声音与动作": selected.global_character_id ? <StoryCharacterOverlay character={selected} globalCharacter={globals.find(g => g.id === selected.global_character_id)} onUpdate={updateChar} /> : <p className="muted">先选择角色库中的角色，当前故事再决定自己的造型、姿势和声音。</p> }} />
+            } : undefined} extras={{ "外观与造型": selected.global_character_id ? <StoryCharacterOverlay character={selected} globalCharacter={globals.find(g => g.id === selected.global_character_id)} onUpdate={updateChar} /> : null, "声音与动作": selected.global_character_id ? <StoryCharacterOverlay character={selected} globalCharacter={globals.find(g => g.id === selected.global_character_id)} onUpdate={updateChar} /> : <p className="muted">先选择角色库中的角色，当前故事再决定自己的造型、姿势和声音。</p> }} />
           <button className="danger small" onClick={() => {
             onSave({ ...draft, characters: draft.characters.filter((c) => c.id !== selected.id) });
           }}>删除这个角色</button>
@@ -452,18 +456,30 @@ function StoryCharacterOverlay({ character, globalCharacter, onUpdate }: {
   character: ScenarioCharacter; globalCharacter?: GlobalCharacter; onUpdate: (patch: Partial<ScenarioCharacter>) => void;
 }) {
   const outfits = globalCharacter?.outfits ?? [];
+  const poses = globalCharacter?.ref_pose_assets ?? [];
+  const motions = globalCharacter?.ref_motion_assets?.length
+    ? globalCharacter.ref_motion_assets
+    : (globalCharacter?.ref_motion_asset ? [globalCharacter.ref_motion_asset] : []);
+  const voices = [
+    ...(globalCharacter?.ref_voice_asset ? [{ id: globalCharacter.ref_voice_asset, label: "主声音" }] : []),
+    ...(globalCharacter?.alternate_voice_assets ?? []).map((id, i) => ({ id, label: `备用声音 ${String.fromCharCode(66 + i)}` })),
+  ];
+  const toggle = (key: "pose_refs" | "motion_refs", id: string) => {
+    const current = character[key] ?? [];
+    const next = current.includes(id) ? current.filter(x => x !== id) : [...current, id];
+    onUpdate({ [key]: next, overlay_sources: { ...(character.overlay_sources ?? {}), [key === "pose_refs" ? "pose" : "motion"]: next.length ? "OVERRIDE" : "INHERIT" } });
+  };
   return <div className="character-overlay-card">
     <h4>本故事覆盖</h4>
     <p className="muted">角色库定义继续保留；这里的选择只写入当前故事。</p>
-    <label><span>本故事造型</span><select value={character.outfit_id ?? ""} onChange={e => onUpdate({ outfit_id: e.target.value || null, overlay_sources: { ...(character.overlay_sources ?? {}), outfit: e.target.value ? "OVERRIDE" : "INHERIT" } })}>
+    <label><span>本故事造型</span><select aria-label="本故事造型" value={character.outfit_id ?? ""} onChange={e => onUpdate({ outfit_id: e.target.value || null, overlay_sources: { ...(character.overlay_sources ?? {}), outfit: e.target.value ? "OVERRIDE" : "INHERIT" } })}>
       <option value="">继承默认造型</option>{outfits.map(o => <option value={o.id} key={o.id}>{o.name}</option>)}
     </select></label>
+    {outfits.filter(o => o.id === character.outfit_id).map(o => <div className="notice" key={o.id}><b>{o.name}</b>{o.description && <p>{o.description}</p>}<span className="muted">已有参考素材 {o.reference_assets?.length ?? 0} 项 · 仅本故事选择</span></div>)}
     <label><span>本故事视觉状态</span><textarea value={character.visual_state} onChange={e => onUpdate({ visual_state: e.target.value, overlay_sources: { ...(character.overlay_sources ?? {}), visual_state: e.target.value ? "OVERRIDE" : "INHERIT" } })} placeholder="例如：本故事中穿黄色雨衣，但保持身份不变" /></label>
-    <div className="row">
-      <span className="soft-tag">姿势参考 {globalCharacter?.ref_pose_assets?.length ?? 0} 项可继承</span>
-      <span className="soft-tag">动作参考 {globalCharacter?.ref_motion_assets?.length ?? (globalCharacter?.ref_motion_asset ? 1 : 0)} 项可继承</span>
-      <span className="soft-tag">声音 {globalCharacter?.ref_voice_asset ? "继承主声音" : "未设置"}</span>
-    </div>
+    <fieldset><legend>本故事姿势参考</legend>{poses.length ? poses.map((id, i) => <label className="check-row" key={id}><input type="checkbox" checked={(character.pose_refs ?? []).includes(id)} onChange={() => toggle("pose_refs", id)} /><span>姿势参考 {i + 1}</span><small className="muted">{(character.pose_refs ?? []).includes(id) ? "仅本故事" : "继承角色库"}</small></label>) : <p className="muted">角色库暂未绑定姿势参考。</p>}</fieldset>
+    <fieldset><legend>本故事动作参考</legend>{motions.length ? motions.map((id, i) => <label className="check-row" key={id}><input type="checkbox" checked={(character.motion_refs ?? []).includes(id)} onChange={() => toggle("motion_refs", id)} /><span>动作参考 {i + 1}</span><small className="muted">{(character.motion_refs ?? []).includes(id) ? "仅本故事" : "继承角色库"}</small></label>) : <p className="muted">角色库暂未绑定动作视频。</p>}</fieldset>
+    <fieldset><legend>本故事声音</legend>{voices.length ? voices.map(v => <label className="check-row" key={v.id}><input type="radio" name={`voice-${character.id}`} checked={(character.voice_id ?? globalCharacter?.ref_voice_asset) === v.id} onChange={() => onUpdate({ voice_id: v.id, overlay_sources: { ...(character.overlay_sources ?? {}), voice: v.id === globalCharacter?.ref_voice_asset ? "INHERIT" : "OVERRIDE" } })} /><span>{v.label}</span><small className="muted">{v.id === globalCharacter?.ref_voice_asset ? "继承角色库" : "仅本故事选择"}</small></label>) : <p className="muted">角色库暂未绑定声音。</p>}</fieldset>
     <p className="muted">保存后显示“仅本故事”；使用外层“保存为角色库新版本”才会显式提升全局。</p>
   </div>;
 }

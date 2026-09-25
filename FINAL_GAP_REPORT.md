@@ -43,6 +43,6 @@
 ## 本轮 Product Closure（No-Fal）
 
 - CLOSED：应用内 Theater Mode、媒体设置参数链、Developer Test Override、Paid Guard、Billing Circuit、Usage Ledger/Preflight、纯文字角色 Publish warning。
-- PARTIAL：角色库与 Creator 的完整 Outfit/Voice/Pose/Motion 同颗粒度仍需一次完整非付费浏览器回归；角色外部生图流程不在本轮执行。
+- CLOSED：角色库与 Creator 的 Outfit/Voice/Pose/Motion 同颗粒度已完成非付费浏览器回归；角色外部生图流程仍等待付费验收。
 - BLOCKED：Fal 额度未恢复，Paid-01/02/03 继续等待充值；AT-44 独立体验者反馈仍无外部条件。
 - REMAINING：充值后只执行三个付费路径，不扩展产品范围。详细证据见 `PRD_V06_PRODUCT_CLOSURE_NO_FAL.md`。

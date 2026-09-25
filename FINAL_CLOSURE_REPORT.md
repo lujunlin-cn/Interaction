@@ -33,7 +33,7 @@ Remaining P1：未在本轮完整重跑的历史AT边界/语义/多模态测试�
 ## 本轮 No-Fal Product Closure
 
 - Theater Mode 按应用内布局验收通过；旧的 `fullscreenElement=player-shell` 证据不再作为主证据。
-- 角色同颗粒度保持 PARTIAL；角色库 tabs、故事 Overlay、纯文字角色发布和 Developer Reference Override 已落地。
-- AT-91～AT-98：8 PASS；AT-80：PARTIAL；AT-84：按新 Theater Mode 定义 PASS。
+- 角色同颗粒度已 PASS；角色库与 Creator 的七个工作台标签、Outfit/Pose/Motion/Voice 选择和 Scenario Overlay 已完成零费用浏览器回归。
+- AT-91～AT-98：8 PASS；AT-80：PASS；AT-84：按新 Theater Mode 定义 PASS。
 - Fal paid HTTP attempts：0。付费 Character、FREE H3、Video Ending 继续 PARTIAL/BLOCKED。
 - 详细无费用报告：`PRD_V06_PRODUCT_CLOSURE_NO_FAL.md`。

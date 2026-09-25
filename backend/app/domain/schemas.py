@@ -246,7 +246,10 @@ class GlobalCharacter(BaseModel):
     default_relationship: str = ""
     appearance: str = ""                            # 外观文字描述（AI 可补全，用户确认）
     ref_front_asset: Optional[str] = None     # asset_id
+    ref_three_quarter_asset: Optional[str] = None
     ref_side_asset: Optional[str] = None
+    ref_full_front_asset: Optional[str] = None
+    ref_full_side_asset: Optional[str] = None
     ref_back_asset: Optional[str] = None
     ref_other_assets: list[str] = Field(default_factory=list)
     ref_voice_asset: Optional[str] = None
