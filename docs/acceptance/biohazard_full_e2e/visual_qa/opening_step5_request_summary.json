@@ -1,0 +1,169 @@
+{
+  "mode": "video",
+  "model": "step-5-preview",
+  "reasoning_effort": "high",
+  "max_tokens": 32768,
+  "timeout_seconds": 300,
+  "canonical_asset_id": "",
+  "assets": [
+    {
+      "asset_id": "ca_00016_628682",
+      "role": "front",
+      "status": "CANONICAL",
+      "source": "https://c2a3v6.bilinkai.com/images/2026/09/25/1790304957_c99b59c13db0e9952b4a04171349ddd8.png",
+      "source_sha256": "8e565ee593d4585d42162b970875065542f68886c520fa54e51ec1ee1ace2930",
+      "original_dimensions": [
+        4096,
+        4096
+      ],
+      "qa_dimensions": [
+        2048,
+        2048
+      ],
+      "position_seconds": null
+    },
+    {
+      "asset_id": "ca_00002_921521",
+      "role": "front",
+      "status": "CANONICAL",
+      "source": "https://c2a3v6.bilinkai.com/images/2026/09/25/1790328002_b928c00a86de950a9196957997874de7.png",
+      "source_sha256": "f6703c894c3f18faa580b79e682363307bf4c5914c348235ea9bba35cf125e7c",
+      "original_dimensions": [
+        4096,
+        4096
+      ],
+      "qa_dimensions": [
+        2048,
+        2048
+      ],
+      "position_seconds": null
+    },
+    {
+      "asset_id": "ca_00007_fc3839",
+      "role": "front",
+      "status": "CANONICAL",
+      "source": "https://c2a3v6.bilinkai.com/images/2026/09/25/1790328037_8886562e26455442dfe6dd25fc369f39.png",
+      "source_sha256": "467a3c60564dd88b5168811473d23da71a7db80a4f578f584e493b6020fedf1c",
+      "original_dimensions": [
+        4096,
+        4096
+      ],
+      "qa_dimensions": [
+        2048,
+        2048
+      ],
+      "position_seconds": null
+    },
+    {
+      "asset_id": "video_frame_1",
+      "role": "video_frame",
+      "status": null,
+      "source": "docs/acceptance/biohazard_full_e2e/visual_qa/opening_step5_frames/frame_01_0.500s.jpg",
+      "source_sha256": "a351d3c08b0b9498610c72d36a348c31441578e2720fe8823eb713698afc828a",
+      "original_dimensions": [
+        832,
+        480
+      ],
+      "qa_dimensions": [
+        832,
+        480
+      ],
+      "position_seconds": 0.5
+    },
+    {
+      "asset_id": "video_frame_2",
+      "role": "video_frame",
+      "status": null,
+      "source": "docs/acceptance/biohazard_full_e2e/visual_qa/opening_step5_frames/frame_02_2.000s.jpg",
+      "source_sha256": "dc642d99a55bd131b6b8078135ed7ada847052cdaaf3bf90db0011cb965a66c1",
+      "original_dimensions": [
+        832,
+        480
+      ],
+      "qa_dimensions": [
+        832,
+        480
+      ],
+      "position_seconds": 2.0
+    },
+    {
+      "asset_id": "video_frame_3",
+      "role": "video_frame",
+      "status": null,
+      "source": "docs/acceptance/biohazard_full_e2e/visual_qa/opening_step5_frames/frame_03_4.000s.jpg",
+      "source_sha256": "8cce85a8bcf406178d228bb0fc227d8043d2f6060327b331bc1cbac0b0822a99",
+      "original_dimensions": [
+        832,
+        480
+      ],
+      "qa_dimensions": [
+        832,
+        480
+      ],
+      "position_seconds": 4.0
+    },
+    {
+      "asset_id": "video_frame_4",
+      "role": "video_frame",
+      "status": null,
+      "source": "docs/acceptance/biohazard_full_e2e/visual_qa/opening_step5_frames/frame_04_6.000s.jpg",
+      "source_sha256": "997490affdf87a6839611e78174996a4fe0cc886405218d83674f5d7aa3f7b24",
+      "original_dimensions": [
+        832,
+        480
+      ],
+      "qa_dimensions": [
+        832,
+        480
+      ],
+      "position_seconds": 6.0
+    },
+    {
+      "asset_id": "video_frame_5",
+      "role": "video_frame",
+      "status": null,
+      "source": "docs/acceptance/biohazard_full_e2e/visual_qa/opening_step5_frames/frame_05_7.500s.jpg",
+      "source_sha256": "a9bf08d1acbf4be14f79958d6a75d7a8fe219c5bef11ca8d613f44eb4769b044",
+      "original_dimensions": [
+        832,
+        480
+      ],
+      "qa_dimensions": [
+        832,
+        480
+      ],
+      "position_seconds": 7.5
+    }
+  ],
+  "video": {
+    "file": "docs/acceptance/biohazard_full_e2e/visual_qa/opening.mp4",
+    "duration": 8.0,
+    "probe": {
+      "programs": [],
+      "streams": [
+        {
+          "codec_type": "video",
+          "width": 832,
+          "height": 480
+        },
+        {
+          "codec_type": "audio"
+        }
+      ],
+      "format": {
+        "duration": "8.000000"
+      }
+    }
+  },
+  "context": {
+    "narrative": "昏暗潮湿的地下检疫入口飘着铁锈与消毒水混杂的气味，李昂踏入Umbrella的秘密设施时，正撞见倚着废弃医疗设备的克莱尔。克莱尔掐灭烧到指根的烟，推了推眼镜扫视李昂，转述起Victor重复三遍的广播：要求二人前往医疗观察区核实『样本异常』，协助失踪的幸存者。她语气里带着对Victor的怀疑，尤其对对方提及的病毒抑制剂抱有疑虑。广播系统突然再次咔哒作响，Victor的声音在空荡走廊里回荡：冷藏供电正在恶化，样本库温度逐步失控，被困幸存者与样本都面临风险，他在配电室等候二人前来确认恢复供电。此刻追踪实验体的威胁、未知的样本异常、失踪幸存者的去向、Victor的隐瞒交织，摆在二人面前的是关乎生死与真相的多重抉择。",
+    "shot_prompt": "昏暗潮湿的地下检疫入口，空气中弥漫铁锈与消毒水的气味。李昂身穿RPD执勤装备，带有雨水和污迹，脸上神情警惕。倚靠在废弃医疗设备旁，穿红色机车夹克，棕红色马尾的克莱尔正掐灭烟蒂，目光警觉地扫视李昂。两人背景中隐约可见Umbrella实验设施的结构。\nPinned cast appearance and current visual state: [{\"character_id\": \"leon\", \"identity\": \"李昂·S·肯尼迪（Leon S. Kennedy）· 玩家角色，年轻 RPD 警员\", \"appearance\": \"\", \"visual_state\": \"本故事使用 RPD 执勤装备；保持主身份的脸、年龄、发型与体型，制服带雨水和污迹，没有感染特征。\", \"reference_mode\": \"identity_reference\"}, {\"character_id\": \"char_204d12\", \"identity\": \"克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者\", \"appearance\": \"年轻成年女性，棕红色长发利落束成马尾，脸部年轻自然，身形匀称而矫健，眼神坚定、警觉而温和。常见实用红色机车夹克与便于行动的服装；无伤势、无感染特征。保持独立于李昂与Victor的女性身份、年龄、发型和体型。\", \"visual_state\": \"本故事覆盖：红色夹克沾有雨水与少量灰尘\", \"reference_mode\": \"identity_reference\"}]\nReference identity map: Image 1: leon — 李昂·S·肯尼迪（Leon S. Kennedy）· 玩家角色，年轻 RPD 警员 (front); Image 2: char_204d12 — 克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者 (front); Image 3: leon — 李昂·S·肯尼迪（Leon S. Kennedy）· 玩家角色，年轻 RPD 警员 (wardrobe); Image 4: char_204d12 — 克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者 (three_quarter); Image 5: leon — 李昂·S·肯尼迪（Leon S. Kennedy）· 玩家角色，年轻 RPD 警员 (three_quarter); Image 6: char_204d12 — 克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者 (side); Image 7: leon — 李昂·S·肯尼迪（Leon S. Kennedy）· 玩家角色，年轻 RPD 警员 (side); Image 8: char_204d12 — 克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者 (full_front). Keep each character's face, body and outfit separate.",
+    "expected_characters": [
+      "Leon S. Kennedy",
+      "Claire Redfield"
+    ],
+    "authored_opening": "先在地下检疫入口与克莱尔会合并听到 Victor 广播；通过医疗观察区和实验档案室的实际证据，逐步核实异常时间与撤离延误。进入冷藏样本库或安全控制中心后，T-103突破封锁触发一次限时追逐；玩家可掩护搭档、利用供电与门禁或另寻通道，后果由行动和现有资源决定，不预设固定关系奖励。最后围绕救援、销毁样本、保留证据或封锁设施作取舍。",
+    "expected_action": "Leon enters underground quarantine and reunites with Claire; Victor contacts them remotely by broadcast. Check both characters identity and separation, no face mixing. This is the single allowed major-quality retry of opening."
+  },
+  "instruction": "你是视觉QA评审。只检查提供的真实图片或从同一真实视频抽取的帧，不推断没有观察到的结果。你不决定剧情事实、角色关系分数、分支状态、物品、线索或结局。输出严格JSON对象，不用markdown。只有明显换脸/身份交换/混脸、严重人体畸变、完全错误服装或视角、动作/场景完全不符才是Major Failure。普通光线、构图、锐度、服装小细节不构成重生成理由。证据不足时inspect并说明，不假装看清。所有数值在0到1；recommendation仅accept/retry/inspect。单任务最多一次Major质量Retry，评审本身不触发生图。返回顶层 qa 使用此contract：{\"scene_semantics_match\": \"0..1\", \"character_identity_consistent\": \"boolean\", \"multi_character_identity_swap\": \"boolean\", \"motion_coherence\": \"0..1\", \"shot_continuity\": \"0..1\", \"story_action_visible\": \"boolean\", \"major_visual_artifact\": \"boolean\", \"issues\": [\"string\"], \"recommendation\": \"accept|retry|inspect\"}当前主图ID：未指定。创作上下文：{\"narrative\": \"昏暗潮湿的地下检疫入口飘着铁锈与消毒水混杂的气味，李昂踏入Umbrella的秘密设施时，正撞见倚着废弃医疗设备的克莱尔。克莱尔掐灭烧到指根的烟，推了推眼镜扫视李昂，转述起Victor重复三遍的广播：要求二人前往医疗观察区核实『样本异常』，协助失踪的幸存者。她语气里带着对Victor的怀疑，尤其对对方提及的病毒抑制剂抱有疑虑。广播系统突然再次咔哒作响，Victor的声音在空荡走廊里回荡：冷藏供电正在恶化，样本库温度逐步失控，被困幸存者与样本都面临风险，他在配电室等候二人前来确认恢复供电。此刻追踪实验体的威胁、未知的样本异常、失踪幸存者的去向、Victor的隐瞒交织，摆在二人面前的是关乎生死与真相的多重抉择。\", \"shot_prompt\": \"昏暗潮湿的地下检疫入口，空气中弥漫铁锈与消毒水的气味。李昂身穿RPD执勤装备，带有雨水和污迹，脸上神情警惕。倚靠在废弃医疗设备旁，穿红色机车夹克，棕红色马尾的克莱尔正掐灭烟蒂，目光警觉地扫视李昂。两人背景中隐约可见Umbrella实验设施的结构。\\nPinned cast appearance and current visual state: [{\\\"character_id\\\": \\\"leon\\\", \\\"identity\\\": \\\"李昂·S·肯尼迪（Leon S. Kennedy）· 玩家角色，年轻 RPD 警员\\\", \\\"appearance\\\": \\\"\\\", \\\"visual_state\\\": \\\"本故事使用 RPD 执勤装备；保持主身份的脸、年龄、发型与体型，制服带雨水和污迹，没有感染特征。\\\", \\\"reference_mode\\\": \\\"identity_reference\\\"}, {\\\"character_id\\\": \\\"char_204d12\\\", \\\"identity\\\": \\\"克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者\\\", \\\"appearance\\\": \\\"年轻成年女性，棕红色长发利落束成马尾，脸部年轻自然，身形匀称而矫健，眼神坚定、警觉而温和。常见实用红色机车夹克与便于行动的服装；无伤势、无感染特征。保持独立于李昂与Victor的女性身份、年龄、发型和体型。\\\", \\\"visual_state\\\": \\\"本故事覆盖：红色夹克沾有雨水与少量灰尘\\\", \\\"reference_mode\\\": \\\"identity_reference\\\"}]\\nReference identity map: Image 1: leon — 李昂·S·肯尼迪（Leon S. Kennedy）· 玩家角色，年轻 RPD 警员 (front); Image 2: char_204d12 — 克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者 (front); Image 3: leon — 李昂·S·肯尼迪（Leon S. Kennedy）· 玩家角色，年轻 RPD 警员 (wardrobe); Image 4: char_204d12 — 克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者 (three_quarter); Image 5: leon — 李昂·S·肯尼迪（Leon S. Kennedy）· 玩家角色，年轻 RPD 警员 (three_quarter); Image 6: char_204d12 — 克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者 (side); Image 7: leon — 李昂·S·肯尼迪（Leon S. Kennedy）· 玩家角色，年轻 RPD 警员 (side); Image 8: char_204d12 — 克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者 (full_front). Keep each character's face, body and outfit separate.\", \"expected_characters\": [\"Leon S. Kennedy\", \"Claire Redfield\"], \"authored_opening\": \"先在地下检疫入口与克莱尔会合并听到 Victor 广播；通过医疗观察区和实验档案室的实际证据，逐步核实异常时间与撤离延误。进入冷藏样本库或安全控制中心后，T-103突破封锁触发一次限时追逐；玩家可掩护搭档、利用供电与门禁或另寻通道，后果由行动和现有资源决定，不预设固定关系奖励。最后围绕救援、销毁样本、保留证据或封锁设施作取舍。\", \"expected_action\": \"Leon enters underground quarantine and reunites with Claire; Victor contacts them remotely by broadcast. Check both characters identity and separation, no face mixing. This is the single allowed major-quality retry of opening.\"}"
+}

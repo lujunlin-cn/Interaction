@@ -1,0 +1,93 @@
+{
+  "session_id": "sess_00006_6051ee",
+  "scenario": {
+    "title": "生化危机：黑雨隔离区",
+    "player_identity": "李昂·S·肯尼迪（Leon S. Kennedy）· 玩家角色，年轻 RPD 警员"
+  },
+  "arc": {
+    "seq": 1,
+    "total": 1
+  },
+  "player": {
+    "status": "PLAYING",
+    "scene_title": "潜入样本库",
+    "scene_text": "阴湿的维修通道里散落着破损的医疗废料，消毒水混着铁锈的腐臭往人鼻子里钻，应急灯滋滋闪着，水滴砸在铁皮地面上的回声在空管道里撞得人耳膜发疼。李昂贴着墙根挪到冷藏样本库的后门时，先扫了眼监控的覆盖盲区，刚要示意克莱尔跟上，就发现库门半掩着，里面摆着贴满生化警示标的空货架，半片样本盒的影子都没见着。",
+    "caption": "李昂与克莱尔沿维修通道潜入样本库外围，却未见预期存放的样本",
+    "caption_speaker": "",
+    "location_name": "配电室",
+    "video_url": "/media/scenes/scene_00119_c297a9.mp4",
+    "duration": 5.184,
+    "lead": 3.184,
+    "decision_open_at": 3.184,
+    "position": 0.608
+  },
+  "presentation": {
+    "error_message": "",
+    "recovery_actions": [],
+    "state": "PLAYING"
+  },
+  "action_pending": false,
+  "recommendations": [],
+  "selected": {
+    "branch_id": "br_00016_971354",
+    "label": "从维修通道潜入样本库",
+    "status": "CANONICAL"
+  },
+  "generating": [],
+  "timed": null,
+  "pending_intent": null,
+  "last_failed_action": null,
+  "known": {
+    "inventory": [],
+    "relationships": [
+      {
+        "id": "stalker",
+        "name": "T-103 型追踪实验体 · 高威胁敌对实体",
+        "value": 50
+      },
+      {
+        "id": "char_149758",
+        "name": "Dr. Victor Hale · Umbrella 地下设施研究主管",
+        "value": 50
+      },
+      {
+        "id": "char_204d12",
+        "name": "克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者",
+        "value": 50
+      }
+    ],
+    "clues": [
+      {
+        "id": "clue_repair_path",
+        "label": "clue_repair_path"
+      },
+      {
+        "id": "clue_power_restored",
+        "label": "clue_power_restored"
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "配电室需要恢复供电才能打开相关门禁",
+        "label": "配电室需要恢复供电才能打开相关门禁"
+      },
+      {
+        "id": "维修通道是绕过主通道的替代路线",
+        "label": "维修通道是绕过主通道的替代路线"
+      },
+      {
+        "id": "样本库后方可能藏有未被主通道发现的线索",
+        "label": "样本库后方可能藏有未被主通道发现的线索"
+      }
+    ]
+  },
+  "messages": [],
+  "hint_chips": [
+    "恢复配电与分流电力",
+    "从维修通道潜入样本库",
+    "优先保护幸存者并撤离"
+  ],
+  "ended": false,
+  "pending_continuation": false,
+  "wishes": []
+}

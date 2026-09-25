@@ -1,0 +1,14 @@
+{
+  "active_ids": [
+    "chr_00013_113084",
+    "chr_00018_204d12",
+    "chr_00032_149758"
+  ],
+  "active_library_each_identity_once": true,
+  "duplicate_alias_hint": true,
+  "reuse_existing_claire": true,
+  "archived_developer_count": 2,
+  "viewport": "1920x1080",
+  "new_characters_created": 0,
+  "paid_requests": 0
+}

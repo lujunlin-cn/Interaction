@@ -67,6 +67,20 @@ class GlobalCharacterRow(Base):
     updated_at: Mapped[int] = mapped_column(BigInteger)
 
 
+class CharacterCreationKeyRow(Base):
+    """Durable idempotency mapping for Standard character creation.
+
+    The key is client supplied and scoped to a creation operation. Keeping it
+    in its own table makes retries safe across browser reloads and processes,
+    unlike a React in-flight flag.
+    """
+    __tablename__ = "character_creation_keys"
+    key: Mapped[str] = mapped_column(String(160), primary_key=True)
+    character_id: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    request_hash: Mapped[str] = mapped_column(String(64))
+    created_at: Mapped[int] = mapped_column(BigInteger)
+
+
 class AssetRow(Base):
     __tablename__ = "assets"
     id: Mapped[str] = mapped_column(String(64), primary_key=True)

@@ -16,7 +16,11 @@ def get_character(client, cid):
 
 
 def setup_scope(client):
-    g = client.post('/api/characters', json={'name': 'Alice', 'bio': 'Facilities researcher'}).json()
+    # Each scope fixture intentionally creates a distinct identity sharing the
+    # seeded Alice display name; the product now requires that explicit choice.
+    response = client.post('/api/characters', json={'name': 'Alice', 'bio': 'Facilities researcher', 'confirm_duplicate': True})
+    assert response.status_code == 200, response.text
+    g = response.json()
     url = f"/api/characters/{g['id']}"
     assets = {name: upload(client, url + '/assets', name + '.png') for name in ['front', 'raincoat', 'standing', 'sitting', 'leaning']}
     for name, mime in [('walk', 'video/mp4'), ('run', 'video/mp4'), ('voice_a', 'audio/wav'), ('voice_b', 'audio/wav')]:

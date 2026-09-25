@@ -1,0 +1,29 @@
+{
+  "status": "SUCCEEDED",
+  "source_call": "docs/acceptance/biohazard_full_e2e/visual_qa/opening_attempt1_step5.json",
+  "step_chat_attempts": 0,
+  "new_media_generation_requests": 0,
+  "normalization": "Wrap flat contract in qa and parse numeric scores only; original raw response preserved.",
+  "parsed": {
+    "qa": {
+      "scene_semantics_match": 0.45,
+      "character_identity_consistent": true,
+      "multi_character_identity_swap": false,
+      "motion_coherence": 0.82,
+      "shot_continuity": 0.8,
+      "story_action_visible": false,
+      "major_visual_artifact": false,
+      "issues": [
+        "Authored opening requires Leon and Claire to reunite at the underground quarantine entry; neither character is present in the delivered frames, which constitutes a major scene failure by the stated criteria.",
+        "Authored opening specifies Victor first contacts the protagonists via broadcast, not in person; the frames instead show Victor physically present, conflicting with the authored requirement.",
+        "Metal door appears closed rather than half-open as specified in the shot prompt.",
+        "Victor is standing beside the console rather than leaning against it.",
+        "Victor does not clearly perform the 'look up on hearing footsteps' action, and the hand-held paper does not clearly show half a water-stained registration form."
+      ],
+      "recommendation": "retry"
+    }
+  },
+  "provider": "step_5",
+  "actual_model": "step-5-preview",
+  "completion_id": "11517f61c8d94a6b8ee591b9c51c6a38.b5de009d45aab24fd6a85aef43f187a5"
+}

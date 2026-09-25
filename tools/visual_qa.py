@@ -139,6 +139,27 @@ def review_prompt(mode: str, canonical_id: str, context: dict) -> str:
     )
 
 
+def normalize_review(parsed: dict, mode: str) -> dict:
+    """Normalize transport shape and numeric strings without changing judgments."""
+    import copy
+    normalized = copy.deepcopy(parsed)
+    contract = VIDEO_CONTRACT if mode == "video" else IMAGE_CONTRACT
+    if "qa" not in normalized and all(key in normalized for key in contract):
+        normalized = {"qa": {key: normalized.pop(key) for key in contract}, **normalized}
+    reviews = [normalized.get("qa")]
+    reviews.extend(item.get("qa") for item in normalized.get("candidates", []) if isinstance(item, dict))
+    for review in reviews:
+        if not isinstance(review, dict):
+            continue
+        for field, kind in contract.items():
+            if kind == "0..1" and isinstance(review.get(field), str):
+                try:
+                    review[field] = float(review[field])
+                except ValueError:
+                    pass  # Strict validation still rejects ambiguous values.
+    return normalized
+
+
 def validate_review(parsed: dict, mode: str, asset_ids: list[str], canonical_id: str = "") -> None:
     def check_qa(qa: dict, contract: dict):
         if not isinstance(qa, dict):
@@ -253,7 +274,8 @@ def run(args: argparse.Namespace) -> dict:
         response.raise_for_status()
         choice = raw["choices"][0]
         report["finish_reason"] = choice.get("finish_reason")
-        report["parsed"] = decode_object(choice["message"]["content"])
+        report["parsed_raw"] = decode_object(choice["message"]["content"])
+        report["parsed"] = normalize_review(report["parsed_raw"], args.mode)
         if choice.get("finish_reason") == "length":
             raise ValueError("Vision QA response hit output token limit")
         validate_review(report["parsed"], args.mode, [item.get("id") for item in items], args.canonical_id)

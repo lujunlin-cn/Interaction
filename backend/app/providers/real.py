@@ -170,6 +170,7 @@ def _record_usage(provider: str, model: str, task: str, request: dict,
         "provider": provider, "model": model, "task": task,
         "request_id": request.get("request_id") or request.get("job_id"),
         "resolution": resolution, "size": request.get("size"),
+        "transport": request.get("transport"),
         "aspect_ratio": request.get("aspect_ratio") or ("1:1" if request.get("size") in {
             "512x512", "1024x1024", "2048x2048", "4096x4096"} else None),
         "duration": request.get("duration") or ((request.get("shots") or [{}])[0].get("duration")),
@@ -283,6 +284,12 @@ class OpenAICompatTextProvider:
         # and validate the response at the authoring/director boundary.
         if output_contract and self.name != "step_5":
             payload["response_format"] = {"type": "json_object"}
+        if self.name == "nemotron_local" and output_contract and output_contract.get("json_schema"):
+            payload["response_format"] = {
+                "type": "json_schema",
+                "json_schema": {"name": "runtime_output", "strict": True,
+                                "schema": output_contract["json_schema"]},
+            }
         if self.name == "nemotron_local":
             payload["chat_template_kwargs"] = {"enable_thinking": False}
         headers = {"Content-Type": "application/json"}
@@ -309,6 +316,7 @@ class OpenAICompatTextProvider:
             model=actual_model or self.model,
             provider=self.name,
             latency_ms=int((time.time() - t0) * 1000),
+            request_id=resp.headers.get("x-request-id") or data.get("id"),
             usage=data.get("usage", {}),
         )
 
@@ -868,19 +876,38 @@ class OpenAIImageProvider:
             raise ValueError(f"image provider unsupported resolution: {resolution}")
         return sizes[resolution]
 
-    def _headers(self) -> dict:
+    def _headers(self, multipart: bool = False) -> dict:
+        # httpx must set the multipart boundary itself; sending a JSON content
+        # type with a file body is rejected by a number of OpenAI-compatible
+        # relays. The upstream failure cause must still be verified live.
+        if multipart:
+            return {"Authorization": f"Bearer {self.api_key}"}
         return {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
 
     async def _request(self, path: str, payload: dict) -> dict:
         if not self.base_url or not self.api_key:
             raise RuntimeError("image relay is not configured")
+        multipart_files = payload.get("_multipart_files") or []
+        if path == "edits" and not multipart_files and payload.get("_source_urls"):
+            multipart_files = await self._read_edit_sources(list(payload["_source_urls"]))
+            payload["_multipart_files"] = multipart_files
+        multipart = bool(multipart_files)
+        request_payload = {k: v for k, v in payload.items() if not k.startswith("_")}
         async with httpx.AsyncClient(timeout=settings.provider_timeout_seconds) as client:
-            usage_id = _record_usage(self.name, payload["model"],
+            usage_id = _record_usage(self.name, request_payload["model"],
                                      "image_edit" if path == "edits" else "image_generation",
-                                     payload, "SUBMITTED")
+                                     {**request_payload, "transport": "multipart/form-data" if multipart else "application/json"}, "SUBMITTED")
             try:
-                response = await client.post(f"{self.base_url}/v1/images/{path}",
-                                             json=payload, headers=self._headers())
+                if multipart:
+                    # OpenAI-compatible edit contract: scalar options are form
+                    # fields and each source image is an uploaded file.
+                    form = {k: str(v) for k, v in request_payload.items() if k != "image"}
+                    response = await client.post(
+                        f"{self.base_url}/v1/images/{path}", data=form,
+                        files=multipart_files, headers=self._headers(multipart=True))
+                else:
+                    response = await client.post(f"{self.base_url}/v1/images/{path}",
+                                                 json=request_payload, headers=self._headers())
                 response.raise_for_status()
                 data = response.json()
                 if not isinstance(data, dict) or not any(img.get("url") for img in self._images(data)):
@@ -971,12 +998,14 @@ class OpenAIImageProvider:
             "actual_aspect_ratio": actual_ratio,
             "requested_size": payload["size"],
             "output_dimensions": dimensions,
+            "transport": "multipart/form-data" if payload.get("_source_urls") else "application/json",
+            "source_image_sha256": [hashlib.sha256(part[1][1]).hexdigest() for part in payload.get("_multipart_files", [])],
             "normalization": ({"aspect_ratio": {"requested": requested_ratio,
                                 "submitted": submitted_ratio,
                                 "reason": "OpenAI-compatible relay uses square size presets"}}
                               if normalized else {}),
             "raw": {"provider": self.name,
-                    "payload": {k: v for k, v in payload.items() if k not in ("prompt", "image")}},
+                    "payload": {k: v for k, v in payload.items() if k not in ("prompt", "image") and not k.startswith("_")}},
         }
 
     async def generate(self, request: dict) -> dict:
@@ -991,6 +1020,41 @@ class OpenAIImageProvider:
         data = await self._request_with_model_fallback("generations", payload)
         return self._result(data, payload, request, resolution)
 
+    async def _read_edit_sources(self, urls: list[str]) -> list[tuple[str, tuple[str, bytes, str]]]:
+        files: list[tuple[str, tuple[str, bytes, str]]] = []
+        async with httpx.AsyncClient(timeout=settings.provider_timeout_seconds, follow_redirects=True) as client:
+            for index, url in enumerate(urls[:4]):
+                if url.startswith("/files/"):
+                    from urllib.parse import unquote
+                    relative = Path(unquote(url.removeprefix("/files/")))
+                    local = (settings.data_path / relative).resolve()
+                    if any(part.startswith(".") for part in relative.parts) or not local.is_relative_to(settings.data_path.resolve()):
+                        raise ValueError("IMAGE_EDIT requires a public image asset")
+                    if local.stat().st_size > 50 * 1024 * 1024:
+                        raise ValueError("IMAGE_EDIT source image exceeds 50 MB")
+                    content = local.read_bytes()
+                elif url.startswith("http://") or url.startswith("https://"):
+                    async with client.stream("GET", url) as response:
+                        response.raise_for_status()
+                        content = bytearray()
+                        async for chunk in response.aiter_bytes():
+                            content.extend(chunk)
+                            if len(content) > 50 * 1024 * 1024:
+                                raise ValueError("IMAGE_EDIT source image exceeds 50 MB")
+                        content = bytes(content)
+                else:
+                    raise ValueError("IMAGE_EDIT source must be an http(s) URL or local /files asset")
+                if content.startswith(b"\x89PNG\r\n\x1a\n"):
+                    extension, mime = "png", "image/png"
+                elif content.startswith(b"\xff\xd8\xff"):
+                    extension, mime = "jpg", "image/jpeg"
+                elif content.startswith(b"RIFF") and content[8:12] == b"WEBP":
+                    extension, mime = "webp", "image/webp"
+                else:
+                    raise ValueError("IMAGE_EDIT requires a PNG, JPEG or WebP image")
+                files.append(("image" if len(urls) == 1 else "image[]", (f"reference-{index}.{extension}", content, mime)))
+        return files
+
     async def edit(self, request: dict) -> dict:
         resolution = request.get("resolution") or settings.image_generation_resolution
         payload = {"model": request.get("model") or self.model,
@@ -1000,8 +1064,11 @@ class OpenAIImageProvider:
         urls = list(request.get("image_urls") or [])
         if not urls:
             raise RuntimeError("IMAGE_EDIT requires image_urls")
-        # Many OpenAI-compatible relays accept image[] as URL strings.
         payload["image"] = urls[:4]
+        # Resolve URLs inside the transport adapter, after the provider/model
+        # route has been selected. Tests and offline contract probes can still
+        # stub _request without downloading external media.
+        payload["_source_urls"] = urls[:4]
         data = await self._request_with_model_fallback("edits", payload)
         return self._result(data, payload, request, resolution)
 

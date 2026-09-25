@@ -1,0 +1,65 @@
+{
+  "at": "2026-09-25T11:36:51.442Z",
+  "status": 200,
+  "body": {
+    "items": [
+      {
+        "id": "ca_00006_9ac0e8",
+        "character_id": "chr_00013_113084",
+        "character_version_id": null,
+        "asset_id": null,
+        "role": "derived",
+        "status": "CANDIDATE",
+        "outfit_id": null,
+        "source_asset_refs": [
+          "ca_00016_628682"
+        ],
+        "generation_job_id": "job_00005_f52bff",
+        "provenance": {
+          "provider": "image_relay",
+          "model": "gpt-image-2.5-sunburst",
+          "request_id": "c0f44af6-dce0-410b-8765-1df717dc4d1f",
+          "resolution": "4K",
+          "aspect_ratio": "1:1",
+          "prompt_hash": "a459446809c050f2",
+          "capability": "IMAGE_EDIT",
+          "requested_model": "gpt-image-2.5-sunburst",
+          "requested_resolution": "4K",
+          "requested_aspect_ratio": "16:9",
+          "actual_aspect_ratio": "1:1",
+          "requested_size": "4096x4096",
+          "normalization": {
+            "aspect_ratio": {
+              "requested": "16:9",
+              "submitted": "1:1",
+              "reason": "OpenAI-compatible relay uses square size presets"
+            }
+          },
+          "transport": "multipart/form-data",
+          "source_image_sha256": [
+            "8e565ee593d4585d42162b970875065542f68886c520fa54e51ec1ee1ace2930"
+          ],
+          "output_dimensions": {
+            "width": 4096,
+            "height": 4096
+          },
+          "instruction": "制作同一个李昂的 RPD 执勤装备造型参考。严格保持源图的脸、年轻成年年龄、棕色短发与基本体型；只将服装调整为 RPD 警员制服、防护背心、实用战术装备，衣服有雨水与轻度污迹；没有伤势或感染特征。保持单人、清楚的正面身份与中性背景。",
+          "identity_guard": true
+        },
+        "url": "https://c2a3v6.bilinkai.com/images/2026/09/25/1790336210_1cfe898f8e8330e3e5c1568a4d949f07.png",
+        "created_at": 1790336211430
+      }
+    ]
+  },
+  "mutations": [
+    {
+      "at": "2026-09-25T11:35:59.456Z",
+      "path": "/api/characters/chr_00013_113084/edit-image",
+      "body": {
+        "source_asset_id": "ca_00016_628682",
+        "instruction": "制作同一个李昂的 RPD 执勤装备造型参考。严格保持源图的脸、年轻成年年龄、棕色短发与基本体型；只将服装调整为 RPD 警员制服、防护背心、实用战术装备，衣服有雨水与轻度污迹；没有伤势或感染特征。保持单人、清楚的正面身份与中性背景。",
+        "role": "derived"
+      }
+    }
+  ]
+}

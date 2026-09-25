@@ -1,0 +1,172 @@
+{
+  "start_sha": "9e4e6fdf15753ccbf9fdc978552b6cc19bb94310",
+  "current_character_ids": [
+    "chr_00013_113084",
+    "chr_00018_204d12",
+    "chr_00032_149758"
+  ],
+  "historical_duplicates": {
+    "chr_00001_05d920": {
+      "character": {
+        "id": "chr_00001_05d920",
+        "bio": "为了寻找失踪哥哥而来到浣熊市的年轻女性，在灾难中表现出强烈行动力和保护弱者的意愿。",
+        "name": "克莱尔·雷德菲尔德",
+        "version": 2,
+        "appearance": "红色夹克、深色长裤、背包；年轻、行动敏捷。",
+        "created_at": 1790306664283,
+        "updated_at": 1790306843462,
+        "personality": "勇敢、独立、敏锐，有自己的判断，不会盲从。",
+        "default_fear": "再次与亲人失散，或被迫依赖一个不可信任的引导者。",
+        "default_desire": "寻找失踪的哥哥，并保护地下设施中的幸存者。",
+        "default_secrets": "她已经独自处理过感染者，不会把判断交给别人。",
+        "default_knowledge": "基础急救、机械改造和现场判断。",
+        "current_version_id": "cv_00015_7be8e1",
+        "default_relationship": "愿意合作，但会根据李昂是否救人和分享真相改变信任。"
+      },
+      "references": {
+        "global_characters": [
+          "chr_00001_05d920"
+        ],
+        "character_versions": [
+          "cv_00002_a1d7c4",
+          "cv_00015_7be8e1"
+        ],
+        "scenarios": [],
+        "scenario_versions": [
+          "ver_00017_8f2d1c"
+        ],
+        "scenario_character_snapshots": [
+          "snap_00021_74ba2d"
+        ],
+        "character_assets": [],
+        "assets": []
+      },
+      "outfits": []
+    },
+    "chr_00003_0d75ba": {
+      "character": {
+        "id": "chr_00003_0d75ba",
+        "bio": "Umbrella 地下设施研究主管，冷静、克制、极度功利，为保存实验成果可以合理化他人的牺牲。",
+        "name": "Dr. Victor Hale",
+        "version": 2,
+        "appearance": "中年男性，灰色实验服外罩深色西装，右臂受伤，克制而疲惫。",
+        "created_at": 1790306664320,
+        "updated_at": 1790306843492,
+        "personality": "儒雅、控制欲强、言辞谨慎，习惯用理性包装自利。",
+        "default_fear": "事故真相和自己延迟救援的责任暴露。",
+        "default_desire": "保存实验数据和样本，并带着成果离开。",
+        "default_secrets": "事故前已经知道样本异常，并故意延迟撤离。",
+        "default_knowledge": "设施结构、样本特性和实验体习性。",
+        "current_version_id": "cv_00016_bd9254",
+        "default_relationship": "把李昂和克莱尔当作可操控的临时工具。"
+      },
+      "references": {
+        "global_characters": [
+          "chr_00003_0d75ba"
+        ],
+        "character_versions": [
+          "cv_00004_d820fb",
+          "cv_00016_bd9254"
+        ],
+        "scenarios": [],
+        "scenario_versions": [
+          "ver_00017_8f2d1c"
+        ],
+        "scenario_character_snapshots": [
+          "snap_00022_44390a"
+        ],
+        "character_assets": [],
+        "assets": []
+      },
+      "outfits": []
+    }
+  },
+  "immutable_records": {
+    "character_versions:cv_00008_8d5992": "443a7d98d679082eb87537c721e6d567348cbe62ac5f830a1bf3f5415fe9de47",
+    "character_versions:cv_00001_d63d8d": "5458e856d4f699aae87ae2b1b1ab4e577b2aeae622d4ca6adb7ebf04bc442fed",
+    "character_versions:cv_00001_98e84e": "61f7af93296e3cc17e67887166060764d13f4ab1b5daa74837a5a9099c4c9aa5",
+    "character_versions:cv_00009_3e7385": "9e48e8e004c1f2bb507644f47bb580ebee76147223f0d59c6ee8d128c15ea628",
+    "character_versions:cv_00010_ff5201": "701cc3d4fec64fc398bd4268477905211ef76be3eb2ec16d56dceeede3a54622",
+    "character_versions:cv_00011_b2c0c4": "0ab8fc7efbe9b6cd9d9f98bc65b1d5e3900e85353a285bb6c7061e83ac3a4798",
+    "character_versions:cv_00012_52f4e8": "9574dd0c9c42ca204ccac7eda9d7212b85c3fe9259dbde141cb97968ad2b4554",
+    "character_versions:cv_00004_8b502f": "ccc46015e063214ee8bd575aa9786a9e912836dbda48e86b8a24d914ef520ae3",
+    "character_versions:cv_00014_4330ca": "dc3946d994a9342504cda56bda199e34e5e586d8f4d5b337e75d90f9668f8b69",
+    "character_versions:cv_00025_11e978": "b0a38b8b06bbf87a7a05f4fa90b225fc08c2bc7d244d2c64b9876ee490a673db",
+    "character_versions:cv_00033_794d82": "57872f0249ade2077b656189a826f726c8deba1ae46e378f5e79347768833786",
+    "character_versions:cv_00002_a1d7c4": "5ce09af3d460021caa2dc1328c29b1bd9bc94d3e4fe3ca2a047b6b698769167f",
+    "character_versions:cv_00004_d820fb": "60f05f793106fe6f410f1ea44389fed6f56ecc2b5a085980607954a3e48526f7",
+    "character_versions:cv_00006_722d27": "3e8ad7c25f97debf2934b0142e076e8f1e8b1821d0ca46b7e3d7b55afa0ffc2f",
+    "character_versions:cv_00015_7be8e1": "fa080e2f971376064b44328a2a5630ce76f3d8f47d62a1ad736b169ff153eab7",
+    "character_versions:cv_00016_bd9254": "19743ff59ecb3893eb6349d70a1af028a895f8e68d57ee0ac24757b8f0485705",
+    "character_versions:cv_00019_7cc3b3": "dbcda2db9030ab39af2481e9e6b148f1124f2f47a91d50040006dc81087ce8e6",
+    "character_versions:cv_00026_b34d60": "73d5dc74c900dafa2ce1231367553488d51588c3755da3d4ded838c8af69624a",
+    "character_versions:cv_00027_81d8e0": "cde893ab266b61bcb6e714285f60f6d1a0161efa13fcc8186c82ce8a2d8b3b59",
+    "character_versions:cv_00028_9b49ba": "90256312663202b7359ec3e5258b365485120dc2f6ad849ba904fea62440ddf8",
+    "character_versions:cv_00029_95b905": "ace1107d0caeef7d838b427c989605e4b47b399ffaf214d03653576ad38b6eaa",
+    "character_versions:cv_00030_839d85": "2f7ab5aac69d9114b18ab5d491e62153d41f73683506253fb505d5d6a697c0c8",
+    "character_versions:cv_00031_9545b4": "97401fabc0eabc345079c9a4241fc2da716873037a99e8da51b7e8d7c26b4c76",
+    "character_versions:cv_00042_ad657d": "fac205e4c8ccc4f989618aad6a62173977176cf068e860ca9370c392f268da58",
+    "character_versions:cv_00037_fa8e38": "96eb3887712ebc0500e2be60aa63251406c5670b64e644e13a2d29a9cde581a2",
+    "character_versions:cv_00038_353090": "050ce1aba6456a8a3e609bfd17c845051a63cfb70c26386aea673fd35a96d44f",
+    "character_versions:cv_00039_3e567f": "0f099e79940100dcfdc15ad41819d93cdcf2c2ad585dadb6506dc9bb787a70c6",
+    "character_versions:cv_00040_416550": "6384ddf24dfa5dfba7184a1da2a19e237b4ecc36731a027d8c410d73348b25e2",
+    "character_versions:cv_00041_11a8cb": "7b7ebf9bf659b2636ec1a5ff4d464a55be0afd977d249306a451e7743d1e6b18",
+    "character_versions:cv_00047_75e3d2": "bc893bb5d5eb83914fa2dfb7947cfcdcb9bf1bf5a0fd6fdcc6b3c988a894895a",
+    "character_versions:cv_00048_351cd2": "90a0943da45bd0bfbc5d42e7afe0776465aa4aa5ff127539a03456f9ff936d35",
+    "character_versions:cv_00046_d4d264": "1f031e05b52f3f9086c85698833d4e8855728d6d1f399acbbdf2b7c5ad62c399",
+    "character_versions:cv_00049_0ed36a": "13e7ad275148aed0d5dc226dc6cfca1e9b59fab6b99f09322837dc42a38f752c",
+    "character_versions:cv_00050_2f24a7": "235c4982dd2c1c39eb0d012fb50f3e0f8af98c20f6b8f57ff368345fd9dc0825",
+    "character_versions:cv_00016_df52da": "357aa9a64c660b246e36b0af28512b921cb113abc1da1e6904bb890197508fbb",
+    "character_versions:cv_00018_6c1dca": "300bf79366653f5cf5da86fad7766e7d66673356af9e07714ba6c1007040e1ef",
+    "scenario_versions:ver_00017_8f2d1c": "2d1c55c6c5fb8db7e064e4dde3ea2bc5b890454fc362cce97df1265df484be3d",
+    "scenario_versions:ver_00001_b26e3c": "4cead6d02897835e3f4e2f0aafd5464b232dae93fbe93eb7e9338909cd4ef00f",
+    "scenario_versions:ver_rainy_1_0_0": "62140aa11674f6730a16a81c1ada251bfb4a049e53c1f7ad8e020a1402515eb1",
+    "scenario_character_snapshots:snap_00013_b25b06": "de794fe9d4d0beb78692223ce90af60683af0f1d6166c67e1f7f0baec0b5eae0",
+    "scenario_character_snapshots:snap_00020_bb13e0": "409933b0d275a0fab8975e8eac4fdff70dd6a06e217474cced35f2d08b6d3910",
+    "scenario_character_snapshots:snap_00021_74ba2d": "5fec7c9f1a1335de14f2fc0c186e2c726ed361542b91dfefe4f8fdbb60ac1659",
+    "scenario_character_snapshots:snap_00022_44390a": "8278da1ebed318e20b29a8e07c11367010dcae9d92744a314806ad4c2fc80630",
+    "scenario_character_snapshots:snap_00004_a7cb7f": "ebb98fb70d30b505a5de8478a4ecd35e4351d187d7c45d734b4939bac894a705",
+    "scenario_character_snapshots:snap_00005_54ba2c": "9a42f214525ee1e5b284e96a7c3196baecee8bfc5b1fe93daef667024cc49f30",
+    "scenario_character_snapshots:snap_00006_1589b7": "266514b0ea7b814eada23dd2560b534447d8926ab7957ed6407495593b26bc31",
+    "character_assets:ca_00005_f6f1a7": "5a0fc2c1bb831288ea1318a32d3bb3bd021630d7d89da1a34af71e22897ea7bc",
+    "character_assets:ca_00004_156b81": "8dea0bc581dc9313ba50aeee4ebc8bcc9ed660185ae89d1c4fffb3f8abbc84c5",
+    "character_assets:ca_00003_e4718c": "10e44e7c9f4360b713a6648b201e66a39a4cf54ea24e578664e38a5e6b3d604f",
+    "character_assets:ca_00006_f4e0d6": "e0fa842430832f38e116e6e9799c8640507e7c0d1e59d153f8da3f63509a3d38",
+    "character_assets:ca_00005_707869": "f3dcce58cc83a72bccde1f4e28af584a28aea4249b0317ea8b0c21db30d4aaf0",
+    "character_assets:ca_00004_8f24f5": "ce087c42db4ae752be3ce924b212161a3d388f76faaeae9e1e694c5a2aead12b",
+    "character_assets:ca_00003_5cf0fb": "e654932af5bd07d9df61f086285d1fbc55a52a353db84daa2d5501de80b9a578",
+    "character_assets:ca_00017_4e208e": "5244cf01f163770cd6c61e845623bf5ae1b400e1fb35dcb5f8b3f2f1062c94da",
+    "character_assets:ca_00021_d03863": "6b552ff3469ef72219365c5ebaf5d97c32076a404f0f332143a75d088e354d5b",
+    "character_assets:ca_00022_54b566": "29dc645ec506d10be13b4e208a8a9bb07e5b3b302fb4d426902bbe1075021f7a",
+    "character_assets:ca_00016_628682": "7b1a0f52d3818f015d268de2d0788e5146f389f4afb748467c51c5e638ee923e",
+    "character_assets:ca_00003_5b1ad3": "0a6a8e7b0b5ab6cc4d30c89134450847c44805aa5ae65bd88810136c5445bb8a",
+    "character_assets:ca_00008_693c1b": "36cc3de1f41cfdd83c33a91f47e781903bc62481a297da6e1e9c814e177da4a7",
+    "character_assets:ca_00012_12b075": "938808d9d56c099a109c6616f68ebf462423c970edc2194fbee5e17cff3833a7",
+    "character_assets:ca_00013_2f631f": "e80aca6dcf65020ffc1768b856a9bfebe49d4d15001c7d9fb268e26cfdd5466a",
+    "character_assets:ca_00002_921521": "ded055ccdb2394ce5c5a3c2608b5311676fbc605abc3ab133e9df2c190e30bc3",
+    "character_assets:ca_00007_fc3839": "6cf261638a07e3c871e24c1f92573cfcd473113b66a66eb47b43f3285a880512"
+  },
+  "biohazard_draft_hash": "4cead6d02897835e3f4e2f0aafd5464b232dae93fbe93eb7e9338909cd4ef00f",
+  "biohazard_bindings": [
+    {
+      "id": "leon",
+      "character": "chr_00013_113084",
+      "pin": 8
+    },
+    {
+      "id": "stalker",
+      "character": null,
+      "pin": null
+    },
+    {
+      "id": "char_204d12",
+      "character": "chr_00018_204d12",
+      "pin": 7
+    },
+    {
+      "id": "char_149758",
+      "character": "chr_00032_149758",
+      "pin": 7
+    }
+  ]
+}

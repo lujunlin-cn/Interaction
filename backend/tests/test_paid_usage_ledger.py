@@ -19,6 +19,10 @@ def isolated_ledger(tmp_path, monkeypatch):
 def stub_http(monkeypatch, responder):
     from app.providers import real
 
+    async def source_images(self, urls):
+        return [("image", ("source.png", b"\x89PNG\r\n\x1a\nfixture", "image/png"))]
+    monkeypatch.setattr(real.OpenAIImageProvider, "_read_edit_sources", source_images)
+
     class Client:
         def __init__(self, *args, **kwargs):
             pass
@@ -125,7 +129,7 @@ def test_explicit_model_rejection_counts_two_attempts(monkeypatch):
     calls = []
 
     def responder(method, url, kwargs):
-        calls.append(kwargs["json"]["model"])
+        calls.append((kwargs.get("json") or kwargs["data"])["model"])
         if len(calls) == 1:
             return response(404, {"error": {"code": "model_not_found"}}, url, "rejected")
         return response(200, {"id": "accepted", "data": [{"url": "https://example.invalid/image"}]}, url)
@@ -151,7 +155,7 @@ def test_relay_uses_ordered_three_model_fallback(monkeypatch, edit):
     calls = []
 
     def responder(method, url, kwargs):
-        calls.append(kwargs["json"]["model"])
+        calls.append((kwargs.get("json") or kwargs["data"])["model"])
         if len(calls) < 4:
             return response(503, {"error": {"message": "temporarily unavailable"}}, url, f"failed-{len(calls)}")
         return response(200, {"model": "gpt-image-2", "data": [{"url": "https://example.invalid/image"}]}, url, "accepted")

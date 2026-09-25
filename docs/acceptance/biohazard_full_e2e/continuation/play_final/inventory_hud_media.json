@@ -1,0 +1,207 @@
+{
+  "events": [
+    {
+      "at": 1790340528796,
+      "kind": "loadstart",
+      "currentTime": 0,
+      "duration": null,
+      "ended": false,
+      "readyState": 0
+    },
+    {
+      "at": 1790340528835,
+      "kind": "loadedmetadata",
+      "currentTime": 0,
+      "duration": 8,
+      "ended": false,
+      "readyState": 1
+    },
+    {
+      "at": 1790340528860,
+      "kind": "canplay",
+      "currentTime": 0,
+      "duration": 8,
+      "ended": false,
+      "readyState": 4
+    },
+    {
+      "at": 1790340539281,
+      "kind": "playing",
+      "currentTime": 0,
+      "duration": 8,
+      "ended": false,
+      "readyState": 4
+    },
+    {
+      "at": 1790340547480,
+      "kind": "pause",
+      "currentTime": 8,
+      "duration": 8,
+      "ended": true,
+      "readyState": 2
+    },
+    {
+      "at": 1790340547481,
+      "kind": "ended",
+      "currentTime": 8,
+      "duration": 8,
+      "ended": true,
+      "readyState": 2
+    },
+    {
+      "at": 1790340716337,
+      "kind": "loadstart",
+      "currentTime": 0,
+      "duration": null,
+      "ended": false,
+      "readyState": 0
+    },
+    {
+      "at": 1790340716350,
+      "kind": "loadedmetadata",
+      "currentTime": 0,
+      "duration": 5.184,
+      "ended": false,
+      "readyState": 1
+    },
+    {
+      "at": 1790340716355,
+      "kind": "canplay",
+      "currentTime": 0,
+      "duration": 5.184,
+      "ended": false,
+      "readyState": 4
+    },
+    {
+      "at": 1790340716355,
+      "kind": "playing",
+      "currentTime": 0,
+      "duration": 5.184,
+      "ended": false,
+      "readyState": 4
+    },
+    {
+      "at": 1790340721894,
+      "kind": "pause",
+      "currentTime": 5.184,
+      "duration": 5.184,
+      "ended": true,
+      "readyState": 2
+    },
+    {
+      "at": 1790340721895,
+      "kind": "ended",
+      "currentTime": 5.184,
+      "duration": 5.184,
+      "ended": true,
+      "readyState": 2
+    },
+    {
+      "at": 1790340844222,
+      "kind": "loadstart",
+      "currentTime": 0,
+      "duration": null,
+      "ended": false,
+      "readyState": 0
+    },
+    {
+      "at": 1790340844236,
+      "kind": "loadedmetadata",
+      "currentTime": 0,
+      "duration": 5.184,
+      "ended": false,
+      "readyState": 1
+    },
+    {
+      "at": 1790340844240,
+      "kind": "canplay",
+      "currentTime": 0,
+      "duration": 5.184,
+      "ended": false,
+      "readyState": 4
+    },
+    {
+      "at": 1790340844240,
+      "kind": "playing",
+      "currentTime": 0,
+      "duration": 5.184,
+      "ended": false,
+      "readyState": 4
+    },
+    {
+      "at": 1790340849767,
+      "kind": "pause",
+      "currentTime": 5.184,
+      "duration": 5.184,
+      "ended": true,
+      "readyState": 2
+    },
+    {
+      "at": 1790340849768,
+      "kind": "ended",
+      "currentTime": 5.184,
+      "duration": 5.184,
+      "ended": true,
+      "readyState": 2
+    },
+    {
+      "at": 1790341299528,
+      "kind": "loadstart",
+      "currentTime": 0,
+      "duration": null,
+      "ended": false,
+      "readyState": 0
+    },
+    {
+      "at": 1790341299543,
+      "kind": "loadedmetadata",
+      "currentTime": 0,
+      "duration": 5.184,
+      "ended": false,
+      "readyState": 1
+    },
+    {
+      "at": 1790341299552,
+      "kind": "canplay",
+      "currentTime": 0,
+      "duration": 5.184,
+      "ended": false,
+      "readyState": 4
+    },
+    {
+      "at": 1790341299553,
+      "kind": "playing",
+      "currentTime": 0,
+      "duration": 5.184,
+      "ended": false,
+      "readyState": 4
+    },
+    {
+      "at": 1790341305093,
+      "kind": "pause",
+      "currentTime": 5.184,
+      "duration": 5.184,
+      "ended": true,
+      "readyState": 2
+    },
+    {
+      "at": 1790341305095,
+      "kind": "ended",
+      "currentTime": 5.184,
+      "duration": 5.184,
+      "ended": true,
+      "readyState": 2
+    }
+  ],
+  "videos": [
+    {
+      "src": "http://127.0.0.1:9000/media/scenes/scene_00171_00a292.mp4",
+      "currentTime": 5.184,
+      "duration": 5.184,
+      "ended": true,
+      "paused": true,
+      "readyState": 2,
+      "networkState": 1
+    }
+  ]
+}

@@ -1,0 +1,304 @@
+{
+  "items": [
+    {
+      "id": "span_00003_35789b",
+      "trace_id": "trace_00004_92033a",
+      "session_id": "sess_00006_6051ee",
+      "branch_id": null,
+      "name": "decision.intent",
+      "status": "success",
+      "input": {
+        "raw_player_input": "我把终端中已经查到的异常时间和撤离命令记录全部展示给克莱尔，承认自己曾过于轻信维克多。我问她愿意采取什么路线，并表示会尊重她的判断，一起先救被困的人。"
+      },
+      "output": {
+        "observation": {
+          "action": "我把终端中已经查到的异常时间和撤离命令记录全部展示给克莱尔，承认自己曾过于轻信维克多。我问她愿意采取什么路线，并表示会尊重她的判断，一起先救被困的人。",
+          "desire": "",
+          "strategy": "",
+          "desire_source": "UNKNOWN",
+          "route": "dialogue",
+          "confidence": 0.75,
+          "impact": "HIGH",
+          "clarification_required": false,
+          "clarification": "",
+          "usage": {
+            "input_tokens": 638,
+            "output_tokens": 79
+          }
+        }
+      },
+      "provider": "jev",
+      "model": "jev-1.13.0",
+      "model_version": "",
+      "profile": "",
+      "downstream_target": "",
+      "duration_ms": 0,
+      "skill_id": null,
+      "skill_version": null,
+      "at": 1790346858343
+    },
+    {
+      "id": "span_00006_5cc4d3",
+      "trace_id": "trace_00007_d37c90",
+      "session_id": null,
+      "branch_id": null,
+      "name": "provider.text",
+      "status": "success",
+      "input": {
+        "role": "director"
+      },
+      "output": {
+        "request_id": "chatcmpl-b3998644403dba47",
+        "usage": {
+          "prompt_tokens": 6978,
+          "total_tokens": 7585,
+          "completion_tokens": 607,
+          "prompt_tokens_details": null
+        }
+      },
+      "provider": "nemotron_local",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4",
+      "model_version": "",
+      "profile": "AGENT_LOCAL_PROFILE",
+      "downstream_target": "",
+      "duration_ms": 9119,
+      "skill_id": null,
+      "skill_version": null,
+      "at": 1790346867472
+    },
+    {
+      "id": "span_00008_2ba646",
+      "trace_id": "trace_00009_e4cc53",
+      "session_id": "sess_00006_6051ee",
+      "branch_id": null,
+      "name": "director.action",
+      "status": "success",
+      "input": {
+        "raw_player_input": "我把终端中已经查到的异常时间和撤离命令记录全部展示给克莱尔，承认自己曾过于轻信维克多。我问她愿意采取什么路线，并表示会尊重她的判断，一起先救被困的人。"
+      },
+      "output": {
+        "response_mode": "FULL_BEAT",
+        "outcome": {
+          "title": "克莱尔的决定",
+          "text": "克莱尔接过了终端，目光扫过异常时间戳和撤离命令记录。她沉默了片刻，随后摇头，语气坚定：\n\"我知道你是因为信任维克多才这么做的，李昂。但我不能再盲从了。这些证据只证明了他隐瞒了真相，并不代表他现在值得信任。\"\n\n她转向你，眼神认真：\n\"我愿意带着这些线索去救人。但我不能保证我们能同时拿到证据和样本。如果必须在救人和保留证据之间抉择，我会优先救人。你呢？\"\n\n你表示愿意尊重她的判断，两人握手确认，一起向被困人员的方向出发。",
+          "ops": [],
+          "evidence": [
+            "实验日志记录：异常时间戳、撤离命令序列",
+            "确认 Victor 于事故前知晓样本异常，事故后仍命令保留数据"
+          ],
+          "skill_triggers": [
+            {
+              "skill": "relationship",
+              "target": "char_204d12",
+              "label": "克莱尔",
+              "action": "add",
+              "stage": "VERIFIED",
+              "value": 10
+            }
+          ]
+        },
+        "directive": {
+          "primary_function": "RESPOND_TO_PLAYER_ACTION",
+          "secondary_functions": [
+            "尊重伙伴判断",
+            "共同行动"
+          ],
+          "target_changes": [],
+          "hard_constraints": [
+            "维持救援行动",
+            "不强制改变玩家对 Victor 的信任"
+          ],
+          "preferred_opportunities": [
+            "利用维修通道潜行",
+            "利用搜集到的物资"
+          ],
+          "avoid": [
+            "盲从 Victor 的指示",
+            "忽视克莱尔的意见"
+          ],
+          "evidence_refs": [
+            "实验日志记录：异常时间戳、撤离命令序列"
+          ],
+          "player_input": "我把终端中已经查到的异常时间和撤离命令记录全部展示给克莱尔，承认自己曾过于轻信维克多。我问她愿意采取什么路线，并表示会尊重她的判断，一起先救被困的人。"
+        }
+      },
+      "provider": "nemotron_local",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4",
+      "model_version": "",
+      "profile": "",
+      "downstream_target": "",
+      "duration_ms": 0,
+      "skill_id": null,
+      "skill_version": null,
+      "at": 1790346867473
+    },
+    {
+      "id": "span_00016_124ecc",
+      "trace_id": "trace_00017_aaeab0",
+      "session_id": "sess_00006_6051ee",
+      "branch_id": "br_00010_a0a79c",
+      "name": "skill.relationship",
+      "status": "success",
+      "input": {
+        "trigger": {
+          "skill": "relationship",
+          "target": "char_204d12",
+          "label": "克莱尔",
+          "action": "add",
+          "stage": "VERIFIED",
+          "value": 10
+        },
+        "npc": "stalker"
+      },
+      "output": {
+        "ops": 1,
+        "proposal": {
+          "proposal_id": "mprop_00015_36321d",
+          "base_version": 4,
+          "base_drama_revision": 6,
+          "source": "skill:relationship:br_00010_a0a79c",
+          "operations": [
+            {
+              "op": "increment",
+              "path": "relationships.char_204d12",
+              "value": 10
+            }
+          ],
+          "idempotency_key": "skill:relationship:br_00010_a0a79c"
+        }
+      },
+      "provider": "runtime",
+      "model": "",
+      "model_version": "",
+      "profile": "",
+      "downstream_target": "",
+      "duration_ms": 0,
+      "skill_id": "relationship",
+      "skill_version": "1.0.0",
+      "at": 1790346867913
+    },
+    {
+      "id": "span_00020_788b12",
+      "trace_id": "trace_00021_487a4b",
+      "session_id": "sess_00006_6051ee",
+      "branch_id": "br_00010_a0a79c",
+      "name": "director.plan",
+      "status": "success",
+      "input": {
+        "label": "我把终端中已经查到的异常时间和撤离命令记录全部展示给克莱尔，承认自己曾过于轻信维克多。我问她愿意采取什么路线，并表示会尊重她的判断，一起先救被困的人。"
+      },
+      "output": {
+        "primary_function": "RESPOND_TO_PLAYER_ACTION"
+      },
+      "provider": "nemotron_local",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4",
+      "model_version": "",
+      "profile": "",
+      "downstream_target": "",
+      "duration_ms": 0,
+      "skill_id": null,
+      "skill_version": null,
+      "at": 1790346867913
+    },
+    {
+      "id": "span_00025_b4d4c4",
+      "trace_id": "trace_00026_f0b0de",
+      "session_id": null,
+      "branch_id": "br_00010_a0a79c",
+      "name": "provider.text",
+      "status": "success",
+      "input": {
+        "role": "narrative"
+      },
+      "output": {
+        "request_id": "ab523d636a678887bd0bc6a81f268782.f2f55001ed6508fd09037205e6eff5d7",
+        "usage": {
+          "cached_tokens": 576,
+          "prompt_tokens": 638,
+          "completion_tokens": 2605,
+          "total_tokens": 3243,
+          "prompt_tokens_details": {
+            "cached_tokens": 576
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        }
+      },
+      "provider": "step_37",
+      "model": "step-3.7-flash",
+      "model_version": "",
+      "profile": "AGENT_LOCAL_PROFILE",
+      "downstream_target": "",
+      "duration_ms": 20621,
+      "skill_id": null,
+      "skill_version": null,
+      "at": 1790347008934
+    },
+    {
+      "id": "span_00027_0547d9",
+      "trace_id": "trace_00028_c9af61",
+      "session_id": "sess_00006_6051ee",
+      "branch_id": "br_00010_a0a79c",
+      "name": "narrative.beat",
+      "status": "success",
+      "input": {},
+      "output": {
+        "chars": 288
+      },
+      "provider": "step_37",
+      "model": "",
+      "model_version": "",
+      "profile": "",
+      "downstream_target": "",
+      "duration_ms": 0,
+      "skill_id": null,
+      "skill_version": null,
+      "at": 1790347008934
+    },
+    {
+      "id": "span_00030_52828b",
+      "trace_id": "trace_00031_896813",
+      "session_id": "sess_00006_6051ee",
+      "branch_id": "br_00010_a0a79c",
+      "name": "presentation.text",
+      "status": "success",
+      "input": {},
+      "output": {
+        "artifact_id": "text_scene_00029_d75089",
+        "path": "data/media/text/text_scene_00029_d75089.txt",
+        "video_generated": false
+      },
+      "provider": "runtime",
+      "model": "",
+      "model_version": "",
+      "profile": "",
+      "downstream_target": "",
+      "duration_ms": 0,
+      "skill_id": null,
+      "skill_version": null,
+      "at": 1790347008934
+    },
+    {
+      "id": "span_00033_403d8d",
+      "trace_id": "trace_00034_24009c",
+      "session_id": "sess_00006_6051ee",
+      "branch_id": "br_00010_a0a79c",
+      "name": "commit.canonical",
+      "status": "success",
+      "input": {},
+      "output": {
+        "branch": "br_00010_a0a79c"
+      },
+      "provider": "runtime",
+      "model": "",
+      "model_version": "",
+      "profile": "",
+      "downstream_target": "",
+      "duration_ms": 0,
+      "skill_id": null,
+      "skill_version": null,
+      "at": 1790347008977
+    }
+  ]
+}

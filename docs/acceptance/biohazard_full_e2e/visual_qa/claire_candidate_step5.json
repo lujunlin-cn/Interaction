@@ -1,0 +1,105 @@
+{
+  "provider": "step_5",
+  "requested_model": "step-5-preview",
+  "reasoning_effort": "high",
+  "max_tokens": 32768,
+  "started_at_ms": 1790335782143,
+  "assets": [
+    {
+      "character": "chr_00018_204d12",
+      "asset": "ca_00002_921521",
+      "role": "front",
+      "status": "CANONICAL",
+      "source_sha256": "f6703c894c3f18faa580b79e682363307bf4c5914c348235ea9bba35cf125e7c",
+      "original_dimensions": [
+        4096,
+        4096
+      ],
+      "review_dimensions": [
+        2048,
+        2048
+      ]
+    },
+    {
+      "character": "chr_00018_204d12",
+      "asset": "ca_00003_5b1ad3",
+      "role": "front",
+      "status": "CANDIDATE",
+      "source_sha256": "f2b330b9fa8de008610e6e98c302f3fb345ad023937f4c880dec2eb96712d40e",
+      "original_dimensions": [
+        4096,
+        4096
+      ],
+      "review_dimensions": [
+        2048,
+        2048
+      ]
+    }
+  ],
+  "instruction": "你是视觉 QA。只判断提供的图片，不决定剧情事实或 Runtime 状态。输出严格 JSON。只有明显身份错误、混脸、严重人体畸变、完全错误服装或视角才是 Major Failure。普通光线、构图、锐度或服装小细节不构成重生成理由。候选可能是不同身份，不能预设相同。每个 asset 返回 {asset_id, qa, major_failure, reason}，qa contract 为 {\"same_identity\": \"boolean\", \"identity_confidence\": \"0..1\", \"face_consistency\": \"0..1\", \"age_consistency\": \"0..1\", \"hair_consistency\": \"0..1\", \"body_consistency\": \"0..1\", \"outfit_correct\": \"boolean\", \"viewpoint_correct\": \"boolean\", \"prompt_adherence\": \"0..1\", \"major_artifact\": \"boolean\", \"issues\": [\"string\"], \"recommendation\": \"accept|retry|inspect\"}。如主图可接受，不因为其他候选更漂亮而替换。返回 canonical_acceptable（角色ID到布尔映射）。顶层另给 recommendation。证据不足使用 inspect，不编造。",
+  "status": "SUCCEEDED",
+  "step_chat_attempts": 1,
+  "new_media_generation_requests": 0,
+  "http_status": 200,
+  "actual_model": "step-5-preview",
+  "request_id": null,
+  "completion_id": "ce09d5ab57dbc90260a772294044eaa4.5a7c00e7aa91255a58227bbb9b381233",
+  "usage": {
+    "prompt_tokens": 3421,
+    "completion_tokens": 1891,
+    "total_tokens": 5312,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "result": {
+    "assets": [
+      {
+        "asset_id": "ca_00002_921521",
+        "qa": {
+          "same_identity": true,
+          "identity_confidence": 1.0,
+          "face_consistency": 1.0,
+          "age_consistency": 1.0,
+          "hair_consistency": 1.0,
+          "body_consistency": 1.0,
+          "outfit_correct": true,
+          "viewpoint_correct": true,
+          "prompt_adherence": 1.0,
+          "major_artifact": false,
+          "issues": [],
+          "recommendation": "accept"
+        },
+        "major_failure": false,
+        "reason": ""
+      },
+      {
+        "asset_id": "ca_00003_5b1ad3",
+        "qa": {
+          "same_identity": true,
+          "identity_confidence": 0.92,
+          "face_consistency": 0.9,
+          "age_consistency": 0.95,
+          "hair_consistency": 0.95,
+          "body_consistency": 0.9,
+          "outfit_correct": true,
+          "viewpoint_correct": true,
+          "prompt_adherence": 0.92,
+          "major_artifact": false,
+          "issues": [],
+          "recommendation": "accept"
+        },
+        "major_failure": false,
+        "reason": ""
+      }
+    ],
+    "canonical_acceptable": {
+      "chr_00018_204d12": true
+    },
+    "recommendation": "accept"
+  },
+  "latency_ms": 26218
+}

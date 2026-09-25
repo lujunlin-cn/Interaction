@@ -482,6 +482,11 @@ class ProviderRouter:
                              else settings.provider_timeout_seconds))
                 rec.model = resp.model
                 self._mark_success(rec.selected)
+                from ..runtime.tracer import tracer
+                await tracer.emit("provider.text", "success", input_={"role": role},
+                    output={"request_id": resp.request_id, "usage": resp.usage},
+                    provider=rec.selected or "", model=resp.model, profile=self.profile.value,
+                    duration_ms=resp.latency_ms, branch_id=branch_id)
                 return provider, rec, resp
             except Exception as exc:  # noqa: BLE001
                 kind = "retryable_transient" if isinstance(exc, DirectorAdmissionRejected) \

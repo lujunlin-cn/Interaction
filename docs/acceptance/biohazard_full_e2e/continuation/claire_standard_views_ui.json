@@ -1,0 +1,197 @@
+{
+  "status": 200,
+  "at": "2026-09-25T11:45:07.614Z",
+  "posts": [
+    {
+      "at": "2026-09-25T11:41:57.670Z",
+      "path": "/api/characters/chr_00018_204d12/standard-views",
+      "body": {
+        "front_asset_id": "ca_00002_921521"
+      }
+    }
+  ],
+  "body": {
+    "items": [
+      {
+        "id": "ca_00018_8aa48f",
+        "character_id": "chr_00018_204d12",
+        "character_version_id": null,
+        "asset_id": null,
+        "role": "three_quarter",
+        "status": "CANDIDATE",
+        "outfit_id": null,
+        "source_asset_refs": [
+          "ca_00002_921521"
+        ],
+        "generation_job_id": "job_00017_713675",
+        "provenance": {
+          "provider": "image_relay",
+          "model": "gpt-image-2.5-sunburst",
+          "request_id": "4d828479-e09e-4e26-b7cb-f8bdfec88bee",
+          "resolution": "4K",
+          "aspect_ratio": "1:1",
+          "prompt_hash": "12e748206240724b",
+          "capability": "IMAGE_EDIT",
+          "requested_model": "gpt-image-2.5-sunburst",
+          "requested_resolution": "4K",
+          "requested_aspect_ratio": "16:9",
+          "actual_aspect_ratio": "1:1",
+          "requested_size": "4096x4096",
+          "normalization": {
+            "aspect_ratio": {
+              "requested": "16:9",
+              "submitted": "1:1",
+              "reason": "OpenAI-compatible relay uses square size presets"
+            }
+          },
+          "transport": "multipart/form-data",
+          "source_image_sha256": [
+            "f6703c894c3f18faa580b79e682363307bf4c5914c348235ea9bba35cf125e7c"
+          ],
+          "output_dimensions": {
+            "width": 4096,
+            "height": 4096
+          },
+          "standard_view": "three_quarter"
+        },
+        "url": "https://c2a3v6.bilinkai.com/images/2026/09/25/1790336563_7cede20879a71cce90173e066cec3292.png",
+        "created_at": 1790336564349
+      },
+      {
+        "id": "ca_00019_c4f113",
+        "character_id": "chr_00018_204d12",
+        "character_version_id": null,
+        "asset_id": null,
+        "role": "side",
+        "status": "CANDIDATE",
+        "outfit_id": null,
+        "source_asset_refs": [
+          "ca_00002_921521"
+        ],
+        "generation_job_id": "job_00017_713675",
+        "provenance": {
+          "provider": "image_relay",
+          "model": "gpt-image-2.5-sunburst",
+          "request_id": "badf3ae8-2e60-46f0-8f22-8c5b77bd7056",
+          "resolution": "4K",
+          "aspect_ratio": "1:1",
+          "prompt_hash": "31fbfa1264a600d7",
+          "capability": "IMAGE_EDIT",
+          "requested_model": "gpt-image-2.5-sunburst",
+          "requested_resolution": "4K",
+          "requested_aspect_ratio": "16:9",
+          "actual_aspect_ratio": "1:1",
+          "requested_size": "4096x4096",
+          "normalization": {
+            "aspect_ratio": {
+              "requested": "16:9",
+              "submitted": "1:1",
+              "reason": "OpenAI-compatible relay uses square size presets"
+            }
+          },
+          "transport": "multipart/form-data",
+          "source_image_sha256": [
+            "f6703c894c3f18faa580b79e682363307bf4c5914c348235ea9bba35cf125e7c"
+          ],
+          "output_dimensions": {
+            "width": 4096,
+            "height": 4096
+          },
+          "standard_view": "side"
+        },
+        "url": "https://c2a3v6.bilinkai.com/images/2026/09/25/1790336610_d0ba1ca206f48174099ba1afe6c31ba6.png",
+        "created_at": 1790336611880
+      },
+      {
+        "id": "ca_00022_ffdc24",
+        "character_id": "chr_00018_204d12",
+        "character_version_id": null,
+        "asset_id": null,
+        "role": "full_front",
+        "status": "CANDIDATE",
+        "outfit_id": null,
+        "source_asset_refs": [
+          "ca_00002_921521"
+        ],
+        "generation_job_id": "job_00017_713675",
+        "provenance": {
+          "provider": "image_relay",
+          "model": "gpt-image-2.5-sunburst",
+          "request_id": "f4d149ca-3e49-4f1c-9df7-ac2e0e143f22",
+          "resolution": "4K",
+          "aspect_ratio": "1:1",
+          "prompt_hash": "ec112d80468aedd4",
+          "capability": "IMAGE_EDIT",
+          "requested_model": "gpt-image-2.5-sunburst",
+          "requested_resolution": "4K",
+          "requested_aspect_ratio": "16:9",
+          "actual_aspect_ratio": "1:1",
+          "requested_size": "4096x4096",
+          "normalization": {
+            "aspect_ratio": {
+              "requested": "16:9",
+              "submitted": "1:1",
+              "reason": "OpenAI-compatible relay uses square size presets"
+            }
+          },
+          "transport": "multipart/form-data",
+          "source_image_sha256": [
+            "f6703c894c3f18faa580b79e682363307bf4c5914c348235ea9bba35cf125e7c"
+          ],
+          "output_dimensions": {
+            "width": 4096,
+            "height": 4096
+          },
+          "standard_view": "full_front"
+        },
+        "url": "https://c2a3v6.bilinkai.com/images/2026/09/25/1790336660_114ac61b478b169ebdce1b8d887f0711.png",
+        "created_at": 1790336661560
+      },
+      {
+        "id": "ca_00025_c72f99",
+        "character_id": "chr_00018_204d12",
+        "character_version_id": null,
+        "asset_id": null,
+        "role": "full_side",
+        "status": "CANDIDATE",
+        "outfit_id": null,
+        "source_asset_refs": [
+          "ca_00002_921521"
+        ],
+        "generation_job_id": "job_00017_713675",
+        "provenance": {
+          "provider": "image_relay",
+          "model": "gpt-image-2.5-sunburst",
+          "request_id": "b7e886a7-f997-45f1-9aa3-2c83ea237c77",
+          "resolution": "4K",
+          "aspect_ratio": "1:1",
+          "prompt_hash": "e6c82dfd25d5ecb2",
+          "capability": "IMAGE_EDIT",
+          "requested_model": "gpt-image-2.5-sunburst",
+          "requested_resolution": "4K",
+          "requested_aspect_ratio": "16:9",
+          "actual_aspect_ratio": "1:1",
+          "requested_size": "4096x4096",
+          "normalization": {
+            "aspect_ratio": {
+              "requested": "16:9",
+              "submitted": "1:1",
+              "reason": "OpenAI-compatible relay uses square size presets"
+            }
+          },
+          "transport": "multipart/form-data",
+          "source_image_sha256": [
+            "f6703c894c3f18faa580b79e682363307bf4c5914c348235ea9bba35cf125e7c"
+          ],
+          "output_dimensions": {
+            "width": 4096,
+            "height": 4096
+          },
+          "standard_view": "full_side"
+        },
+        "url": "https://c2a3v6.bilinkai.com/images/2026/09/25/1790336706_cd087023c2e4423c5dc6ae0fa80179bd.png",
+        "created_at": 1790336707604
+      }
+    ]
+  }
+}

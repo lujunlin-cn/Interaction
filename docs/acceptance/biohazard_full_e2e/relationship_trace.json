@@ -1,0 +1,180 @@
+{
+  "scope": "Real Standard Player text continuation; no H3 generated",
+  "branch": "br_00010_a0a79c",
+  "character": "char_204d12",
+  "old": 50,
+  "new": 60,
+  "delta": 10,
+  "skill_proposal_commit": [
+    {
+      "id": "span_00016_124ecc",
+      "trace_id": "trace_00017_aaeab0",
+      "session_id": "sess_00006_6051ee",
+      "branch_id": "br_00010_a0a79c",
+      "name": "skill.relationship",
+      "status": "success",
+      "input": {
+        "trigger": {
+          "skill": "relationship",
+          "target": "char_204d12",
+          "label": "克莱尔",
+          "action": "add",
+          "stage": "VERIFIED",
+          "value": 10
+        },
+        "npc": "stalker"
+      },
+      "output": {
+        "ops": 1,
+        "proposal": {
+          "proposal_id": "mprop_00015_36321d",
+          "base_version": 4,
+          "base_drama_revision": 6,
+          "source": "skill:relationship:br_00010_a0a79c",
+          "operations": [
+            {
+              "op": "increment",
+              "path": "relationships.char_204d12",
+              "value": 10
+            }
+          ],
+          "idempotency_key": "skill:relationship:br_00010_a0a79c"
+        }
+      },
+      "provider": "runtime",
+      "model": "",
+      "model_version": "",
+      "profile": "",
+      "downstream_target": "",
+      "duration_ms": 0,
+      "skill_id": "relationship",
+      "skill_version": "1.0.0",
+      "at": 1790346867913
+    },
+    {
+      "id": "span_00020_788b12",
+      "trace_id": "trace_00021_487a4b",
+      "session_id": "sess_00006_6051ee",
+      "branch_id": "br_00010_a0a79c",
+      "name": "director.plan",
+      "status": "success",
+      "input": {
+        "label": "我把终端中已经查到的异常时间和撤离命令记录全部展示给克莱尔，承认自己曾过于轻信维克多。我问她愿意采取什么路线，并表示会尊重她的判断，一起先救被困的人。"
+      },
+      "output": {
+        "primary_function": "RESPOND_TO_PLAYER_ACTION"
+      },
+      "provider": "nemotron_local",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4",
+      "model_version": "",
+      "profile": "",
+      "downstream_target": "",
+      "duration_ms": 0,
+      "skill_id": null,
+      "skill_version": null,
+      "at": 1790346867913
+    },
+    {
+      "id": "span_00025_b4d4c4",
+      "trace_id": "trace_00026_f0b0de",
+      "session_id": null,
+      "branch_id": "br_00010_a0a79c",
+      "name": "provider.text",
+      "status": "success",
+      "input": {
+        "role": "narrative"
+      },
+      "output": {
+        "request_id": "ab523d636a678887bd0bc6a81f268782.f2f55001ed6508fd09037205e6eff5d7",
+        "usage": {
+          "cached_tokens": 576,
+          "prompt_tokens": 638,
+          "completion_tokens": 2605,
+          "total_tokens": 3243,
+          "prompt_tokens_details": {
+            "cached_tokens": 576
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        }
+      },
+      "provider": "step_37",
+      "model": "step-3.7-flash",
+      "model_version": "",
+      "profile": "AGENT_LOCAL_PROFILE",
+      "downstream_target": "",
+      "duration_ms": 20621,
+      "skill_id": null,
+      "skill_version": null,
+      "at": 1790347008934
+    },
+    {
+      "id": "span_00027_0547d9",
+      "trace_id": "trace_00028_c9af61",
+      "session_id": "sess_00006_6051ee",
+      "branch_id": "br_00010_a0a79c",
+      "name": "narrative.beat",
+      "status": "success",
+      "input": {},
+      "output": {
+        "chars": 288
+      },
+      "provider": "step_37",
+      "model": "",
+      "model_version": "",
+      "profile": "",
+      "downstream_target": "",
+      "duration_ms": 0,
+      "skill_id": null,
+      "skill_version": null,
+      "at": 1790347008934
+    },
+    {
+      "id": "span_00030_52828b",
+      "trace_id": "trace_00031_896813",
+      "session_id": "sess_00006_6051ee",
+      "branch_id": "br_00010_a0a79c",
+      "name": "presentation.text",
+      "status": "success",
+      "input": {},
+      "output": {
+        "artifact_id": "text_scene_00029_d75089",
+        "path": "data/media/text/text_scene_00029_d75089.txt",
+        "video_generated": false
+      },
+      "provider": "runtime",
+      "model": "",
+      "model_version": "",
+      "profile": "",
+      "downstream_target": "",
+      "duration_ms": 0,
+      "skill_id": null,
+      "skill_version": null,
+      "at": 1790347008934
+    },
+    {
+      "id": "span_00033_403d8d",
+      "trace_id": "trace_00034_24009c",
+      "session_id": "sess_00006_6051ee",
+      "branch_id": "br_00010_a0a79c",
+      "name": "commit.canonical",
+      "status": "success",
+      "input": {},
+      "output": {
+        "branch": "br_00010_a0a79c"
+      },
+      "provider": "runtime",
+      "model": "",
+      "model_version": "",
+      "profile": "",
+      "downstream_target": "",
+      "duration_ms": 0,
+      "skill_id": null,
+      "skill_version": null,
+      "at": 1790347008977
+    }
+  ],
+  "before_version": 4,
+  "after_version": 5
+}

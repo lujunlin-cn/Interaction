@@ -1,0 +1,130 @@
+{
+  "session_id": "sess_00006_6051ee",
+  "scenario": {
+    "title": "生化危机：黑雨隔离区",
+    "player_identity": "李昂·S·肯尼迪（Leon S. Kennedy）· 玩家角色，年轻 RPD 警员"
+  },
+  "arc": {
+    "seq": 1,
+    "total": 1
+  },
+  "player": {
+    "status": "WAITING_DECISION",
+    "scene_title": "搜寻冷藏样本库",
+    "scene_text": "李昂推开冷藏样本库的厚重钢门，霉味混着低温冷气扑面而来，昏黄闪烁的荧光灯勉强照亮黑暗中整齐排列的冷藏罐。克莱尔的无线电突然发出滋滋杂音，她急促的声音从耳机里传出：“前面有动静！有人被困，还有东西在追。”两人贴着一排冷藏罐的边缘小心挪动，李昂扫过冷藏罐的玻璃观察窗，看见三个研究人员躲在罐体后方，其中一人胸口起伏剧烈，另一人正攥着碎玻璃试图撬开锁舌。与此同时，走廊尽头的应急灯突然频闪，沉重的金属摩擦声由远及近传来——是追踪而至的T-103。冷藏库的供电指示灯开始疯狂闪烁，距离彻底断电已经不远。李昂攥紧手里的急救物资，克莱尔已经抬手举枪对准走廊方向，做好掩护准备。",
+    "caption": "搜寻冷藏样本库",
+    "caption_speaker": "",
+    "location_name": "配电室",
+    "video_url": "",
+    "duration": 0,
+    "lead": 0,
+    "decision_open_at": 0,
+    "position": 0
+  },
+  "presentation": {
+    "error_message": "",
+    "recovery_actions": [],
+    "state": "WAITING_DECISION"
+  },
+  "action_pending": false,
+  "recommendations": [],
+  "selected": {
+    "branch_id": "br_00010_cdc5e0",
+    "label": "我在冷藏样本库搜寻幸存者，使用现有急救物资救助伤员，请克莱尔帮忙带他们去紧急逃生通道。",
+    "status": "CANONICAL"
+  },
+  "generating": [],
+  "timed": null,
+  "pending_intent": null,
+  "last_failed_action": null,
+  "known": {
+    "inventory": [
+      "medical_supplies",
+      "ammunition",
+      "keycard_access"
+    ],
+    "inventory_labels": {
+      "medical_supplies": "冷藏样本库内有被困研究人员；T-103 追踪声由远而近；冷藏供电系统即将中断",
+      "ammunition": "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1",
+      "keycard_access": "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1"
+    },
+    "relationships": [
+      {
+        "id": "stalker",
+        "name": "T-103 型追踪实验体 · 高威胁敌对实体",
+        "value": 50
+      },
+      {
+        "id": "char_149758",
+        "name": "Dr. Victor Hale · Umbrella 地下设施研究主管",
+        "value": 50
+      },
+      {
+        "id": "char_204d12",
+        "name": "克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者",
+        "value": 70
+      }
+    ],
+    "clues": [
+      {
+        "id": "clue_repair_path",
+        "label": "配电室需要恢复供电才能打开相关门禁；维修通道是绕过主通道的替代路线；样本库后方可能藏有未被主通道发现的线索"
+      },
+      {
+        "id": "clue_power_restored",
+        "label": "冷藏样本库内有被困研究人员；T-103 追踪声由远而近；冷藏供电系统即将中断"
+      },
+      {
+        "id": "clue_experiment_log_anomaly",
+        "label": "实验日志异常时间戳与撤离命令记录"
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "配电室需要恢复供电才能打开相关门禁",
+        "label": "配电室需要恢复供电才能打开相关门禁"
+      },
+      {
+        "id": "维修通道是绕过主通道的替代路线",
+        "label": "维修通道是绕过主通道的替代路线"
+      },
+      {
+        "id": "样本库后方可能藏有未被主通道发现的线索",
+        "label": "样本库后方可能藏有未被主通道发现的线索"
+      },
+      {
+        "id": "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1",
+        "label": "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1"
+      }
+    ]
+  },
+  "messages": [
+    {
+      "at": 1790344045289,
+      "kind": "system",
+      "text": "已切换文字模式。尚未形成结果的行动已保留在输入框，可以修改后继续。"
+    }
+  ],
+  "hint_chips": [
+    "深入检查配电箱",
+    "优先转移幸存者",
+    "威胁 Victor 的实验记录"
+  ],
+  "ended": false,
+  "pending_continuation": false,
+  "wishes": [
+    {
+      "id": "wish_00266_fb60c5",
+      "raw": "我希望最后能和 Claire 一起把被困的幸存者救出去。",
+      "normalized_preference": "protect_npc",
+      "scope": "WORLD",
+      "arc_id": "",
+      "status": "ACTIVE",
+      "version": 1,
+      "effective_from_turn": 0,
+      "effective_boundary": "下一未锁定 Beat",
+      "evidence": [],
+      "history": []
+    }
+  ]
+}

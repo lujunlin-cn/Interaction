@@ -1,0 +1,84 @@
+{
+  "label": "relationship_share",
+  "session_id": "sess_00006_6051ee",
+  "duration_seconds": 120.736,
+  "text_mode": true,
+  "status": "GENERATING_NEXT",
+  "selected": {
+    "branch_id": "br_00010_262ca1",
+    "label": "我继续在已经打开的档案终端中读取原始实验日志，只记录屏幕上实际出现的异常时间和撤离命令。",
+    "status": "CANONICAL"
+  },
+  "ended": false,
+  "arc": {
+    "seq": 1,
+    "total": 1
+  },
+  "scene": "李昂盯着终端屏幕上滚动的实验日志，冷光映得他眉眼发沉。逐条跳出的异常时间戳与撤离命令序列铁证如山——Victor早在事故前就知晓样本异常，却在事故后仍强令保留数据，直接延误了黄金撤离窗口。可翻遍整份档案，关于T-103起源的关键信息踪迹全无，只有干巴巴的常规监控记录与应急指令，压抑的空气里仿佛压着无数未说出口的秘密。",
+  "known": {
+    "inventory": [
+      "medical_supplies",
+      "ammunition",
+      "keycard_access"
+    ],
+    "inventory_labels": {
+      "medical_supplies": "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1",
+      "ammunition": "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1",
+      "keycard_access": "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1"
+    },
+    "relationships": [
+      {
+        "id": "stalker",
+        "name": "T-103 型追踪实验体 · 高威胁敌对实体",
+        "value": 50
+      },
+      {
+        "id": "char_149758",
+        "name": "Dr. Victor Hale · Umbrella 地下设施研究主管",
+        "value": 50
+      },
+      {
+        "id": "char_204d12",
+        "name": "克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者",
+        "value": 50
+      }
+    ],
+    "clues": [
+      {
+        "id": "clue_repair_path",
+        "label": "配电室需要恢复供电才能打开相关门禁；维修通道是绕过主通道的替代路线；样本库后方可能藏有未被主通道发现的线索"
+      },
+      {
+        "id": "clue_power_restored",
+        "label": "维修通道是绕过主通道的替代路线"
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "配电室需要恢复供电才能打开相关门禁",
+        "label": "配电室需要恢复供电才能打开相关门禁"
+      },
+      {
+        "id": "维修通道是绕过主通道的替代路线",
+        "label": "维修通道是绕过主通道的替代路线"
+      },
+      {
+        "id": "样本库后方可能藏有未被主通道发现的线索",
+        "label": "样本库后方可能藏有未被主通道发现的线索"
+      },
+      {
+        "id": "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1",
+        "label": "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1"
+      }
+    ]
+  },
+  "timed": null,
+  "mutations": [
+    {
+      "method": "POST",
+      "url": "http://127.0.0.1:9000/api/sessions/sess_00006_6051ee/action",
+      "body": "{\"text\":\"我把终端中已经查到的异常时间和撤离命令记录全部展示给克莱尔，承认自己曾过于轻信维克多。我问她愿意采取什么路线，并表示会尊重她的判断，一起先救被困的人。\"}"
+    }
+  ],
+  "errors": []
+}

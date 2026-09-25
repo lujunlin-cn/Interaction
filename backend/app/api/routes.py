@@ -296,16 +296,55 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
 
     # ---------------- 全局角色库 ----------------
     @api.get("/characters")
-    async def list_characters(q: str = ""):
-        return {"items": await characters.list(q)}
+    async def list_characters(q: str = "", include_archived: bool = False):
+        return {"items": await characters.list(q, include_archived=include_archived)}
+
+    @api.get("/characters/duplicates")
+    async def character_duplicates(name: str):
+        return {"items": await characters.duplicate_candidates(name)}
 
     @api.post("/characters")
     async def create_character(data: dict):
         if not str(data.get("name", "")).strip() or not str(data.get("bio", "")).strip():
             raise HTTPException(422, "请填写名字和一句话角色定义")
-        result = await characters.create(data)
-        await char_assets._new_version(result["id"], "IDENTITY")
+        # Duplicate hints are advisory: the caller can explicitly opt into a
+        # genuinely second person with confirm_duplicate=true.
+        try:
+            existing_for_key = await characters.idempotent_character(data.get("creation_idempotency_key", ""), data)
+        except ValueError as error:
+            raise HTTPException(409, str(error))
+        if existing_for_key is not None:
+            return await char_assets.get_character(existing_for_key["id"])
+        if data.get("confirm_duplicate") is not True:
+            candidates = await characters.duplicate_candidates(str(data.get("name", "")))
+            if candidates:
+                # A competing retry may have committed between our first
+                # key lookup and the name lookup. Reuse that operation.
+                try:
+                    committed = await characters.idempotent_character(data.get("creation_idempotency_key", ""), data)
+                except ValueError as error:
+                    raise HTTPException(409, str(error))
+                if committed is not None:
+                    return await char_assets.get_character(committed["id"])
+                raise HTTPException(409, {
+                    "code": "DUPLICATE_CHARACTER",
+                    "message": "角色库中可能已经存在这个角色",
+                    "candidates": candidates,
+                    "actions": ["USE_EXISTING", "VIEW_EXISTING", "CREATE_ANYWAY"],
+                })
+        data = {k: v for k, v in data.items() if k != "confirm_duplicate"}
+        try:
+            result, _ = await characters.create_idempotent(data, version_service=char_assets)
+        except ValueError as error:
+            raise HTTPException(409, str(error))
         return await char_assets.get_character(result["id"])
+
+    @api.post("/characters/{cid}/archive")
+    async def archive_character(cid: str):
+        try:
+            return await characters.archive(cid)
+        except KeyError:
+            raise HTTPException(404, "character not found")
 
     @api.patch("/characters/{cid}")
     async def update_character(cid: str, patch: dict):
@@ -811,7 +850,8 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
                 "test_shot_duration": settings.developer_test_shot_duration,
                 "max_test_reference_images": settings.max_test_reference_images,
                 "max_test_reference_videos": settings.max_test_reference_videos,
-                "test_override_enabled": settings.developer_test_override_enabled}
+                "test_override_enabled": settings.developer_test_override_enabled,
+                "pre_generate_recommendation_media": settings.pre_generate_recommendation_media}
 
     @api.post("/dev/generation-settings")
     async def update_generation_settings(data: dict):
@@ -825,6 +865,7 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
             "max_test_reference_images": ("max_test_reference_images", range(0, 10)),
             "max_test_reference_videos": ("max_test_reference_videos", range(0, 4)),
             "test_override_enabled": ("developer_test_override_enabled", {True, False}),
+            "pre_generate_recommendation_media": ("pre_generate_recommendation_media", {True, False}),
         }
         for key, (attr, choices) in allowed.items():
             if key not in data:

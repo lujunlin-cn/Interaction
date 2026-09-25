@@ -1,0 +1,120 @@
+{
+  "session_id": "sess_00006_6051ee",
+  "scenario": {
+    "title": "生化危机：黑雨隔离区",
+    "player_identity": "李昂·S·肯尼迪（Leon S. Kennedy）· 玩家角色，年轻 RPD 警员"
+  },
+  "arc": {
+    "seq": 1,
+    "total": 1
+  },
+  "player": {
+    "status": "WAITING_DECISION",
+    "scene_title": "调查实验档案室",
+    "scene_text": "李昂与克莱尔沿维修通道潜行至实验档案室。李昂插入门禁卡，锁舌咔哒一声回响，金属门缓缓滑开。室内弥漫着陈旧的化学味，荧光灯闪烁不定。满架的文件柜和翻倒的实验记录表明这里曾是混乱的现场。李昂走向主终端，克莱尔则侧面留意走廊。终端屏幕亮起，显示登录提示。李昂输入凭证，档案开始卷动。监控录像和实验日志逐条呈现，李昂仔细浏览每一条条目，试图寻找Victor是否在事故前隐瞒了什么。",
+    "caption": "调查实验档案室",
+    "caption_speaker": "",
+    "location_name": "配电室",
+    "video_url": "/media/scenes/scene_00139_14bca4.mp4",
+    "duration": 5.184,
+    "lead": 3.184,
+    "decision_open_at": 3.184,
+    "position": 5.184
+  },
+  "presentation": {
+    "error_message": "",
+    "recovery_actions": [],
+    "state": "WAITING_DECISION"
+  },
+  "action_pending": false,
+  "recommendations": [],
+  "selected": {
+    "branch_id": "br_00078_d75c60",
+    "label": "我和 Claire 沿维修通道前往实验档案室，用找到的门禁卡进入。我检查终端里的实验日志和监控记录，看看 Victor 有没有对我们隐瞒事故发生前的信息。",
+    "status": "CANONICAL"
+  },
+  "generating": [],
+  "timed": null,
+  "pending_intent": null,
+  "last_failed_action": null,
+  "known": {
+    "inventory": [
+      "medical_supplies",
+      "ammunition",
+      "keycard_access"
+    ],
+    "inventory_labels": {
+      "medical_supplies": "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1",
+      "ammunition": "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1",
+      "keycard_access": "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1"
+    },
+    "relationships": [
+      {
+        "id": "stalker",
+        "name": "T-103 型追踪实验体 · 高威胁敌对实体",
+        "value": 50
+      },
+      {
+        "id": "char_149758",
+        "name": "Dr. Victor Hale · Umbrella 地下设施研究主管",
+        "value": 50
+      },
+      {
+        "id": "char_204d12",
+        "name": "克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者",
+        "value": 50
+      }
+    ],
+    "clues": [
+      {
+        "id": "clue_repair_path",
+        "label": "配电室需要恢复供电才能打开相关门禁；维修通道是绕过主通道的替代路线；样本库后方可能藏有未被主通道发现的线索"
+      },
+      {
+        "id": "clue_power_restored",
+        "label": "维修通道是绕过主通道的替代路线"
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "配电室需要恢复供电才能打开相关门禁",
+        "label": "配电室需要恢复供电才能打开相关门禁"
+      },
+      {
+        "id": "维修通道是绕过主通道的替代路线",
+        "label": "维修通道是绕过主通道的替代路线"
+      },
+      {
+        "id": "样本库后方可能藏有未被主通道发现的线索",
+        "label": "样本库后方可能藏有未被主通道发现的线索"
+      },
+      {
+        "id": "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1",
+        "label": "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1"
+      }
+    ]
+  },
+  "messages": [],
+  "hint_chips": [
+    "深入检查配电箱",
+    "优先转移幸存者",
+    "威胁 Victor 的实验记录"
+  ],
+  "ended": false,
+  "pending_continuation": false,
+  "wishes": [
+    {
+      "id": "wish_00266_fb60c5",
+      "raw": "我希望最后能和 Claire 一起把被困的幸存者救出去。",
+      "normalized_preference": "protect_npc",
+      "scope": "WORLD",
+      "arc_id": "",
+      "status": "ACTIVE",
+      "version": 1,
+      "effective_from_turn": 0,
+      "effective_boundary": "下一未锁定 Beat",
+      "evidence": [],
+      "history": []
+    }
+  ]
+}

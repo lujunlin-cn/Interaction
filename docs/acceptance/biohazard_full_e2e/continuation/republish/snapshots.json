@@ -1,0 +1,192 @@
+{
+  "items": [
+    {
+      "id": "snap_00002_dbf942",
+      "scenario_version_id": "ver_00001_1fa925",
+      "global_character_id": "chr_00013_113084",
+      "character_version_id": "cv_00024_b92096",
+      "character_version": 13,
+      "frozen_identity": {
+        "bio": "刚进入警队不久的年轻警员，在城市崩溃的灾难中依然坚持救人、调查真相并承担自己的决定。",
+        "name": "李昂·S·肯尼迪",
+        "tags": [],
+        "appearance": "",
+        "personality": "性格冷静沉稳，责任感极强，富有同情心，面对突发状况能迅速调动应变能力；虽因资历尚浅而偶显青涩，但在关键时刻倾向于挺身而出，并愿意为自己的决定承担后果。",
+        "default_fear": "恐惧自己因经验不足而在关键时刻判断失误，导致无法挽救本可救下的生命，或是辜负他人信任、在道德与生存的夹缝中迷失方向。",
+        "default_desire": "渴望在混乱与危险中保护无辜市民，查明隐藏在灾难背后的真相，并证明自己能够承担起身为警员的责任与使命。",
+        "default_secrets": "",
+        "default_knowledge": "掌握基础警务流程、急救知识与枪械使用；刚到岗，对浣熊市街道、警局与地下设施并不全知，面对未知威胁依靠现场观察、同伴协作与应变逐步学习。",
+        "default_relationship": "以礼貌与责任心对待同伴和市民，重视互相协作与保护弱者；不会因为他人宣称权威就无条件信任，具体同伴关系由各故事中的实际经历形成。"
+      },
+      "frozen_asset_refs": {
+        "pose": [],
+        "side": "ca_00011_d574bc",
+        "front": "ca_00016_628682",
+        "other": [],
+        "voice": null,
+        "motion": [],
+        "outfit": [
+          "ca_00006_9ac0e8"
+        ],
+        "full_side": "ca_00014_3af539",
+        "full_front": "ca_00013_c32afd",
+        "three_quarter": "ca_00010_d93507"
+      },
+      "local_overrides": {
+        "id": "leon",
+        "fear": "因无能导致他人死亡",
+        "desire": "找到幸存者，查明地下设施发生了什么，阻止危险病毒样本流出。",
+        "secrets": "无已确认的个人秘密；不预设玩家尚未做出的选择。",
+        "identity": "李昂·S·肯尼迪（Leon S. Kennedy）· 玩家角色，年轻 RPD 警员",
+        "voice_id": null,
+        "knowledge": "掌握基础警务、枪械与急救；进入地下时不知道 Victor 隐瞒的事故真相，需要通过现场证据逐步获知。",
+        "outfit_id": "outfit_00005_931bd6",
+        "pose_refs": [],
+        "motion_refs": [],
+        "personality": "冷静、有责任感与同情心，灾难中仍坚持救人；经验不足但应变能力强，愿意为自己的决定承担后果。",
+        "relationship": "克莱尔是有独立判断的合作伙伴；愿意与她共同决定，不替她做所有选择。对 Victor 保持审慎，信任须由证据支持。",
+        "visual_state": "本故事使用 RPD 执勤装备；保持主身份的脸、年龄、发型与体型，制服带雨水和污迹，没有感染特征。",
+        "local_outfits": [],
+        "overlay_sources": {
+          "pose": "INHERIT",
+          "voice": "INHERIT",
+          "desire": "OVERRIDE",
+          "motion": "INHERIT",
+          "outfit": "OVERRIDE",
+          "secrets": "OVERRIDE",
+          "identity": "OVERRIDE",
+          "knowledge": "OVERRIDE",
+          "appearance": "OVERRIDE",
+          "personality": "OVERRIDE",
+          "relationship": "OVERRIDE"
+        },
+        "global_character_id": "chr_00013_113084",
+        "reference_overrides": {},
+        "global_character_version": 13
+      },
+      "created_at": 1790337747883
+    },
+    {
+      "id": "snap_00003_4371ac",
+      "scenario_version_id": "ver_00001_1fa925",
+      "global_character_id": "chr_00018_204d12",
+      "character_version_id": "cv_00038_66e754",
+      "character_version": 12,
+      "frozen_identity": {
+        "bio": "为了寻找失踪哥哥而来到浣熊市的年轻女性，在灾难中表现出强烈行动力和保护弱者的意愿。",
+        "name": "克莱尔·雷德菲尔德（Claire Redfield）",
+        "tags": [],
+        "appearance": "年轻成年女性，棕红色长发利落束成马尾，脸部年轻自然，身形匀称而矫健，眼神坚定、警觉而温和。常见实用红色机车夹克与便于行动的服装；无伤势、无感染特征。保持独立于李昂与Victor的女性身份、年龄、发型和体型。",
+        "personality": "性格坚韧独立，行动果决且富有行动力；外柔内刚，面对危险与不公敢于挺身而出，同时对弱者保有温柔与强烈的同理心。",
+        "default_fear": "恐惧再次与亲人永别或眼见他人受难却无力施救，也恐惧在极端环境中逐渐丧失自我与良知。",
+        "default_desire": "渴望寻回失散的至亲，守护身边无辜的弱者，并在绝境中维系人性的尊严与希望。",
+        "default_secrets": "",
+        "default_knowledge": "具备基础机械维修、急救护理与野外求生知识，熟悉简易武器与工具的使用，能在资源匮乏的情况下灵活应变。",
+        "default_relationship": "与失散的兄长之间有着深厚的亲情牵挂；对身处险境的弱者常怀有强烈的保护欲，容易与之建立信任，并视其为必须守护的对象。"
+      },
+      "frozen_asset_refs": {
+        "pose": [],
+        "side": "ca_00019_c4f113",
+        "front": "ca_00002_921521",
+        "other": [],
+        "voice": null,
+        "motion": [],
+        "outfit": [],
+        "full_side": "ca_00025_c72f99",
+        "full_front": "ca_00022_ffdc24",
+        "three_quarter": "ca_00018_8aa48f"
+      },
+      "local_overrides": {
+        "id": "char_204d12",
+        "fear": "再次与亲人失散",
+        "desire": "找到被困幸存者，帮助他们离开设施，并查明 Umbrella 非法实验的证据。",
+        "secrets": "尚未掌握事故全部证据，但已强烈怀疑 Victor 的解释；怀疑不等于已经知道真相。",
+        "identity": "克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者",
+        "voice_id": null,
+        "knowledge": "熟悉基础急救与求生，知道有人在设施失踪；Victor 事故前后责任必须通过调查获知。",
+        "outfit_id": null,
+        "pose_refs": [],
+        "motion_refs": [],
+        "personality": "勇敢、机敏、有行动力，有自己的判断与立场，保护弱者，不只是跟随李昂的剧情工具。",
+        "relationship": "李昂救人、分享真相并尊重她的意见会增强信任；李昂在证据不足时盲从 Victor，她会明确反对并可能独立行动。",
+        "visual_state": "本故事覆盖：红色夹克沾有雨水与少量灰尘",
+        "local_outfits": [],
+        "overlay_sources": {
+          "fear": "OVERRIDE",
+          "desire": "OVERRIDE",
+          "secrets": "OVERRIDE",
+          "identity": "OVERRIDE",
+          "knowledge": "OVERRIDE",
+          "appearance": "OVERRIDE",
+          "personality": "OVERRIDE",
+          "relationship": "OVERRIDE"
+        },
+        "global_character_id": "chr_00018_204d12",
+        "reference_overrides": {},
+        "global_character_version": 12
+      },
+      "created_at": 1790337747886
+    },
+    {
+      "id": "snap_00004_d65603",
+      "scenario_version_id": "ver_00001_1fa925",
+      "global_character_id": "chr_00032_149758",
+      "character_version_id": "cv_00042_b29099",
+      "character_version": 12,
+      "frozen_identity": {
+        "bio": "Umbrella 地下设施研究主管，冷静、克制、极度功利，为保存实验成果可以合理化他人的牺牲。",
+        "name": "Dr. Victor Hale",
+        "tags": [],
+        "appearance": "中年男性，脸部轮廓清瘦，深色短发整齐向后梳理，鬓角少量灰白，戴细框眼镜，目光冷静锐利。身形瘦高、姿态端正，通常穿整洁白色实验服。稳定身份不带血迹、伤势或当前故事事件，清晰区别于年轻的Leon与Claire。",
+        "personality": "高度理性与情感隔离，以结果为导向，善于在极端压力下保持精确的计算与冷静的判断。表面维持专业克制的学者风度，内里奉行彻底的功利主义，能迅速将道德困境转化为成本收益分析，为保存实验成果合理化必要的牺牲。",
+        "default_fear": "恐惧研究数据丢失、实验体失控或成果被他人夺取，更害怕自己精密的功利计算出现致命漏洞，最终从掌控者沦为被组织或更强大力量牺牲的棋子。",
+        "default_desire": "希望保存有价值的研究成果并掌控自己的命运；面对危机首先确保自己能够带着成果活着离开，习惯以效率和成果衡量代价。",
+        "default_secrets": "",
+        "default_knowledge": "精通生物化学、基因工程与病毒学理论，熟悉地下设施的运作机制、资源调配与人员管理。深谙如何将人命、伦理与风险转化为可计算的实验参数，并掌握着组织内部灰色操作的普遍规则。",
+        "default_relationship": "习惯将人际关系视为资源交换与风险控制的延伸，用绩效与利用价值衡量他人。对下属和同事保持礼貌而疏离的观察态度，既不轻易信任，也不刻意交恶，所有互动都以降低不确定性为前提。"
+      },
+      "frozen_asset_refs": {
+        "pose": [],
+        "side": "ca_00030_2ab004",
+        "front": "ca_00007_fc3839",
+        "other": [],
+        "voice": null,
+        "motion": [],
+        "outfit": [],
+        "full_side": "ca_00032_6d97c5",
+        "full_front": "ca_00031_63c741",
+        "three_quarter": "ca_00029_18208e"
+      },
+      "local_overrides": {
+        "id": "char_149758",
+        "fear": "死亡、实验成果毁灭、责任暴露而失去控制。",
+        "desire": "利用李昂取回实验数据与危险样本，并带着研究成果活着离开；不是单纯毁灭城市。",
+        "secrets": "团队事故前已知道样本异常。事故后他仍命令保留实验数据，间接延误撤离。他声称的病毒抑制剂并不完全可靠；他知道这些事实但会隐瞒。",
+        "identity": "Dr. Victor Hale · Umbrella 地下设施研究主管",
+        "voice_id": null,
+        "knowledge": "知道设施实验、样本异常和撤离延误；只掌握仍在线的监控与系统信息，不知道所有盲区或玩家未透露的发现。",
+        "outfit_id": null,
+        "pose_refs": [],
+        "motion_refs": [],
+        "personality": "冷静、克制、极度功利，擅长用看似合理的解释争取合作，会为保存成果合理化他人的牺牲。",
+        "relationship": "以广播、监控和剩余安全权限影响李昂与克莱尔，希望他们取回数据和样本；面对证据可能辩解或交易，不具备无限系统权限。",
+        "visual_state": "本故事覆盖：实验服有少量血迹，右臂受伤",
+        "local_outfits": [],
+        "overlay_sources": {
+          "fear": "OVERRIDE",
+          "desire": "OVERRIDE",
+          "secrets": "OVERRIDE",
+          "identity": "OVERRIDE",
+          "knowledge": "OVERRIDE",
+          "appearance": "OVERRIDE",
+          "personality": "OVERRIDE",
+          "relationship": "OVERRIDE"
+        },
+        "global_character_id": "chr_00032_149758",
+        "reference_overrides": {},
+        "global_character_version": 12
+      },
+      "created_at": 1790337747887
+    }
+  ]
+}

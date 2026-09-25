@@ -1,0 +1,19 @@
+{
+  "at": "2026-09-25T11:40:00.936Z",
+  "character": "chr_00013_113084",
+  "source_canonical": "ca_00016_628682",
+  "approved_asset": "ca_00006_9ac0e8",
+  "outfit": {
+    "id": "outfit_00005_931bd6",
+    "name": "RPD 执勤装备",
+    "description": "浣熊市警察局新人警员的防护背心、制服和战术装备，雨水与污迹但无感染特征。",
+    "reference_assets": [
+      "ca_00006_9ac0e8"
+    ],
+    "reference_slots": {
+      "additional": [],
+      "front": "ca_00006_9ac0e8"
+    },
+    "is_default": true
+  }
+}

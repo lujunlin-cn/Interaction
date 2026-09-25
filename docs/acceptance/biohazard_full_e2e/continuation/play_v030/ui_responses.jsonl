@@ -1,0 +1,4 @@
+{"at":"2026-09-25T12:23:37.477Z","path":"/api/sessions","status":200,"body":{"session_id":"sess_00006_97bc74"}}
+{"at":"2026-09-25T12:29:07.103Z","path":"/api/sessions/sess_00006_97bc74/player","status":200,"body":{"position":0,"status":"OPENING_PREPARING"}}
+{"at":"2026-09-25T12:30:58.206Z","path":"/api/sessions/sess_00006_97bc74/player","status":200,"body":{"position":8.184,"status":"PLAYING"}}
+{"at":"2026-09-25T12:30:58.218Z","path":"/api/sessions/sess_00006_97bc74/player","status":200,"body":{"position":8.184,"status":"PLAYING"}}

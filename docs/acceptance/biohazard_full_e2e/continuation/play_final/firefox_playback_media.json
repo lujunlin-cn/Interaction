@@ -1,0 +1,39 @@
+{
+  "events": [
+    {
+      "at": 1790340500119,
+      "kind": "loadstart",
+      "currentTime": 0,
+      "duration": null,
+      "ended": false,
+      "readyState": 0
+    },
+    {
+      "at": 1790340500134,
+      "kind": "loadedmetadata",
+      "currentTime": 0,
+      "duration": 8,
+      "ended": false,
+      "readyState": 1
+    },
+    {
+      "at": 1790340500146,
+      "kind": "canplay",
+      "currentTime": 0,
+      "duration": 8,
+      "ended": false,
+      "readyState": 4
+    }
+  ],
+  "videos": [
+    {
+      "src": "http://127.0.0.1:9000/media/scenes/scene_00041_09fbe5.mp4",
+      "currentTime": 0,
+      "duration": 8,
+      "ended": false,
+      "paused": true,
+      "readyState": 4,
+      "networkState": 1
+    }
+  ]
+}

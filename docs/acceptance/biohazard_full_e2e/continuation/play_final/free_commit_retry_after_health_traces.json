@@ -1,0 +1,25 @@
+{
+  "items": [
+    {
+      "id": "span_00003_b3e54b",
+      "trace_id": "trace_00004_c5cfa8",
+      "session_id": "sess_00006_6051ee",
+      "branch_id": "br_00012_e5b104",
+      "name": "commit.canonical",
+      "status": "success",
+      "input": {},
+      "output": {
+        "branch": "br_00012_e5b104"
+      },
+      "provider": "runtime",
+      "model": "",
+      "model_version": "",
+      "profile": "",
+      "downstream_target": "",
+      "duration_ms": 0,
+      "skill_id": null,
+      "skill_version": null,
+      "at": 1790340715754
+    }
+  ]
+}

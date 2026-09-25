@@ -1,0 +1,115 @@
+{
+  "session_id": "sess_00006_6051ee",
+  "scenario": {
+    "title": "生化危机：黑雨隔离区",
+    "player_identity": "李昂·S·肯尼迪（Leon S. Kennedy）· 玩家角色，年轻 RPD 警员"
+  },
+  "arc": {
+    "seq": 1,
+    "total": 1
+  },
+  "player": {
+    "status": "WAITING_DECISION",
+    "scene_title": "潜入样本库",
+    "scene_text": "阴湿的维修通道里散落着破损的医疗废料，消毒水混着铁锈的腐臭往人鼻子里钻，应急灯滋滋闪着，水滴砸在铁皮地面上的回声在空管道里撞得人耳膜发疼。李昂贴着墙根挪到冷藏样本库的后门时，先扫了眼监控的覆盖盲区，刚要示意克莱尔跟上，就发现库门半掩着，里面摆着贴满生化警示标的空货架，半片样本盒的影子都没见着。",
+    "caption": "李昂与克莱尔沿维修通道潜入样本库外围，却未见预期存放的样本",
+    "caption_speaker": "",
+    "location_name": "配电室",
+    "video_url": "/media/scenes/scene_00119_c297a9.mp4",
+    "duration": 5.184,
+    "lead": 3.184,
+    "decision_open_at": 3.184,
+    "position": 5.184
+  },
+  "presentation": {
+    "error_message": "",
+    "recovery_actions": [],
+    "state": "WAITING_DECISION"
+  },
+  "action_pending": false,
+  "recommendations": [
+    {
+      "branch_id": "br_00014_c29e0e",
+      "label": "重新分配剩余电力",
+      "summary": "在生化危机笼罩的配电室内，李昂必须决定如何在追踪T-103、保持冷藏样本库供电、以及为即将到达的幸存者供电之间进行权衡。电力正在枯竭，任何重新分配都会直接影响克",
+      "confidence": 0.6,
+      "source": "recommendation"
+    },
+    {
+      "branch_id": "br_00016_0227c3",
+      "label": "撤离与撤退",
+      "summary": "面对日益恶化的局势，李昂与克莱尔可能选择撤离至安全控制中心或利用紧急逃生通道。这意味着放弃对样本库的控制，以及可能留下的证据，但换取了在T-103追踪日益逼近时",
+      "confidence": 0.6,
+      "source": "recommendation"
+    },
+    {
+      "branch_id": "br_00018_480454",
+      "label": "潜入样本库取回关键证据",
+      "summary": "利用维修通道潜入冷藏样本库，李昂与克莱尔可以回收Umbrella的非法实验证据。然而，这一行动会降低配电室的防护力度，可能加速T-103的追踪进度，并在危急时刻",
+      "confidence": 0.6,
+      "source": "recommendation"
+    }
+  ],
+  "selected": {
+    "branch_id": "br_00016_971354",
+    "label": "从维修通道潜入样本库",
+    "status": "CANONICAL"
+  },
+  "generating": [],
+  "timed": null,
+  "pending_intent": null,
+  "last_failed_action": null,
+  "known": {
+    "inventory": [],
+    "relationships": [
+      {
+        "id": "stalker",
+        "name": "T-103 型追踪实验体 · 高威胁敌对实体",
+        "value": 50
+      },
+      {
+        "id": "char_149758",
+        "name": "Dr. Victor Hale · Umbrella 地下设施研究主管",
+        "value": 50
+      },
+      {
+        "id": "char_204d12",
+        "name": "克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者",
+        "value": 50
+      }
+    ],
+    "clues": [
+      {
+        "id": "clue_repair_path",
+        "label": "clue_repair_path"
+      },
+      {
+        "id": "clue_power_restored",
+        "label": "clue_power_restored"
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "配电室需要恢复供电才能打开相关门禁",
+        "label": "配电室需要恢复供电才能打开相关门禁"
+      },
+      {
+        "id": "维修通道是绕过主通道的替代路线",
+        "label": "维修通道是绕过主通道的替代路线"
+      },
+      {
+        "id": "样本库后方可能藏有未被主通道发现的线索",
+        "label": "样本库后方可能藏有未被主通道发现的线索"
+      }
+    ]
+  },
+  "messages": [],
+  "hint_chips": [
+    "重新分配剩余电力",
+    "撤离与撤退",
+    "潜入样本库取回关键证据"
+  ],
+  "ended": false,
+  "pending_continuation": false,
+  "wishes": []
+}

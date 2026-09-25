@@ -1,0 +1,25 @@
+{
+  "items": [
+    {
+      "id": "span_00009_910aff",
+      "trace_id": "trace_00010_ba94d0",
+      "session_id": "sess_00006_97bc74",
+      "branch_id": null,
+      "name": "session.create",
+      "status": "success",
+      "input": {},
+      "output": {
+        "session_id": "sess_00006_97bc74"
+      },
+      "provider": "runtime",
+      "model": "",
+      "model_version": "",
+      "profile": "",
+      "downstream_target": "",
+      "duration_ms": 0,
+      "skill_id": null,
+      "skill_version": null,
+      "at": 1790339017469
+    }
+  ]
+}

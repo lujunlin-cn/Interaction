@@ -468,6 +468,28 @@ body[data-appearance="dark"] .notice { background: var(--player-surface); }
 .immersive-player:fullscreen .interaction-dock, .immersive-player:fullscreen .player-controls, .immersive-player:fullscreen .player-head { flex-shrink: 0; }
 .immersive-player:fullscreen .rec-card { padding: 10px 14px; }
 .immersive-player:fullscreen .rec-card p { margin: 0; }
+.immersive-player:fullscreen[data-decision-open="false"] .player-controls,
+.immersive-player:fullscreen[data-decision-open="false"] .player-hud,
+.immersive-player:fullscreen[data-decision-open="false"] .interaction-dock,
+.appframe.theater-mode .player-shell[data-decision-open="false"] .interaction-dock > *,
+.appframe.theater-mode .player-shell[data-decision-open="false"] .player-controls,
+.appframe.theater-mode .player-shell[data-decision-open="false"] .player-hud,
+.appframe.theater-mode .player-shell[data-decision-open="false"] .interaction-dock {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.immersive-player:fullscreen[data-decision-open="true"] .player-controls,
+.immersive-player:fullscreen[data-decision-open="true"] .player-hud,
+.immersive-player:fullscreen[data-decision-open="true"] .interaction-dock,
+.appframe.theater-mode .player-shell[data-decision-open="true"] .interaction-dock > *,
+.appframe.theater-mode .player-shell[data-decision-open="true"] .player-controls,
+.appframe.theater-mode .player-shell[data-decision-open="true"] .player-hud,
+.appframe.theater-mode .player-shell[data-decision-open="true"] .interaction-dock {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
 body[data-subtitle-pos="bottomOutside"] .immersive-player .player-stage { margin-bottom: 0; overflow: hidden; }
 body[data-subtitle-pos="bottomOutside"] .immersive-player .scene-caption { position: relative; bottom: auto; padding: 8px 16px; }
 body[data-subtitle-pos="bottomOutside"] .immersive-player .scene-text { text-shadow: none; }

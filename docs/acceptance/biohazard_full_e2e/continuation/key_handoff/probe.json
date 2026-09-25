@@ -1,0 +1,19 @@
+{
+  "scope": "Explicit user-authorized new-primary-key validation, not a new canonical story beat",
+  "model": "minimax/h3-max/reference-to-video",
+  "provider": "h3_max",
+  "duration": 5,
+  "resolution": "480P",
+  "aspect_ratio": "16:9",
+  "primary_fingerprint": "19090382a2",
+  "secondary_fingerprint": "20901bf4f9",
+  "fallback_allowed": false,
+  "max_submits": 1,
+  "started_at": 1790347591.998477,
+  "request_id": "01a0d908-49b8-7613-8565-2532149fd835",
+  "status": "PASS",
+  "clips": [
+    "data/media/clips/01a0d908-49b8-7613-8565-2532149fd835/clip_1.mp4"
+  ],
+  "elapsed_seconds": 20.091
+}

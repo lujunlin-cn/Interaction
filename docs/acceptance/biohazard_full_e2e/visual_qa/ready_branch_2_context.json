@@ -1,0 +1,183 @@
+{
+  "session_id": "sess_00006_6051ee",
+  "branch_id": "br_00059_35f225",
+  "narrative": "系统已记录本次护送幸存者前往避难所的指令，该行动将直接影响幸存者存活概率、同伴间的信任值，以及后续对抗T-103的难度。此时克莱尔正带着一名受困的医护人员躲进最近的储物间，她抬手打亮手电筒向空中发出断续的定位信号，刻意避开发出声响的通道，避免引来嗅觉与听觉都异常敏锐的T-103，随后侧头压低声音询问对方是否留意到样本运输的具体方向。",
+  "shot_prompts": [
+    "点灯求生：克莱尔手持手电筒，光束在狭窄的储物间内扫过，勉强照亮角落里蜷缩的医护人员。克莱尔侧过头，压低声音向对方询问，语气急促而压抑。周围空气潮湿，只有手电筒的断续光斑切割黑暗。T-103的沉重脚步声在隔壁若隐若现，克莱尔刻意屏住呼吸，避免发出任何声响，她的红色机车夹克因紧张而微微起伏。\nPinned cast appearance and current visual state: [{\"character_id\": \"char_204d12\", \"identity\": \"克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者\", \"appearance\": \"年轻成年女性，棕红色长发利落束成马尾，脸部年轻自然，身形匀称而矫健，眼神坚定、警觉而温和。常见实用红色机车夹克与便于行动的服装；无伤势、无感染特征。保持独立于李昂与Victor的女性身份、年龄、发型和体型。\", \"visual_state\": \"本故事覆盖：红色夹克沾有雨水与少量灰尘\", \"reference_mode\": \"identity_reference\"}, {\"character_id\": \"char_149758\", \"identity\": \"Dr. Victor Hale · Umbrella 地下设施研究主管\", \"appearance\": \"中年男性，脸部轮廓清瘦，深色短发整齐向后梳理，鬓角少量灰白，戴细框眼镜，目光冷静锐利。身形瘦高、姿态端正，通常穿整洁白色实验服。稳定身份不带血迹、伤势或当前故事事件，清晰区别于年轻的Leon与Claire。\", \"visual_state\": \"本故事覆盖：实验服有少量血迹，右臂受伤\", \"reference_mode\": \"identity_reference\"}]\nReference identity map: Image 1: char_204d12 — 克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者 (front); Image 2: char_149758 — Dr. Victor Hale · Umbrella 地下设施研究主管 (front); Image 3: char_204d12 — 克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者 (three_quarter); Image 4: char_149758 — Dr. Victor Hale · Umbrella 地下设施研究主管 (three_quarter); Image 5: char_204d12 — 克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者 (side); Image 6: char_149758 — Dr. Victor Hale · Umbrella 地下设施研究主管 (side); Image 7: char_204d12 — 克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者 (full_front); Image 8: char_149758 — Dr. Victor Hale · Umbrella 地下设施研究主管 (full_front). Keep each character's face, body and outfit separate."
+  ],
+  "expected_characters": [
+    [
+      "char_204d12",
+      "char_149758"
+    ]
+  ],
+  "expected_action": "护送幸存者至避难所",
+  "jobs": [
+    "01a0d894-1a73-7e30-840a-7b8903282c20"
+  ],
+  "artifact": {
+    "media_type": "video",
+    "id": "scene_00159_312908",
+    "branch_id": "br_00059_35f225",
+    "clip_refs": [
+      "clip_1.mp4"
+    ],
+    "assembled_path": "scenes/scene_00159_312908.mp4",
+    "quality_status": "READY",
+    "semantic_check": "not_run",
+    "technical_checks": "",
+    "provenance": {
+      "jobs": [
+        "01a0d894-1a73-7e30-840a-7b8903282c20"
+      ],
+      "assembler": "ffmpeg-concat",
+      "providers": [
+        "nemotron_local",
+        "step_37",
+        "nemotron_local",
+        "h3_max"
+      ],
+      "final_output": "data/media/scenes/scene_00159_312908.mp4",
+      "concat_inputs": [
+        "data/media/clips/01a0d894-1a73-7e30-840a-7b8903282c20/clip_1.mp4"
+      ],
+      "clip_durations": [
+        6.592
+      ],
+      "final_duration": 6.592,
+      "shot_provenance": [
+        [
+          {
+            "cast": [
+              "char_204d12",
+              "char_149758"
+            ],
+            "clips": [
+              "data/media/clips/01a0d894-1a73-7e30-840a-7b8903282c20/clip_1.mp4"
+            ],
+            "prompt": "点灯求生：克莱尔手持手电筒，光束在狭窄的储物间内扫过，勉强照亮角落里蜷缩的医护人员。克莱尔侧过头，压低声音向对方询问，语气急促而压抑。周围空气潮湿，只有手电筒的断续光斑切割黑暗。T-103的沉重脚步声在隔壁若隐若现，克莱尔刻意屏住呼吸，避免发出任何声响，她的红色机车夹克因紧张而微微起伏。\nPinned cast appearance and current visual state: [{\"character_id\": \"char_204d12\", \"identity\": \"克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者\", \"appearance\": \"年轻成年女性，棕红色长发利落束成马尾，脸部年轻自然，身形匀称而矫健，眼神坚定、警觉而温和。常见实用红色机车夹克与便于行动的服装；无伤势、无感染特征。保持独立于李昂与Victor的女性身份、年龄、发型和体型。\", \"visual_state\": \"本故事覆盖：红色夹克沾有雨水与少量灰尘\", \"reference_mode\": \"identity_reference\"}, {\"character_id\": \"char_149758\", \"identity\": \"Dr. Victor Hale · Umbrella 地下设施研究主管\", \"appearance\": \"中年男性，脸部轮廓清瘦，深色短发整齐向后梳理，鬓角少量灰白，戴细框眼镜，目光冷静锐利。身形瘦高、姿态端正，通常穿整洁白色实验服。稳定身份不带血迹、伤势或当前故事事件，清晰区别于年轻的Leon与Claire。\", \"visual_state\": \"本故事覆盖：实验服有少量血迹，右臂受伤\", \"reference_mode\": \"identity_reference\"}]\nReference identity map: Image 1: char_204d12 — 克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者 (front); Image 2: char_149758 — Dr. Victor Hale · Umbrella 地下设施研究主管 (front); Image 3: char_204d12 — 克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者 (three_quarter); Image 4: char_149758 — Dr. Victor Hale · Umbrella 地下设施研究主管 (three_quarter); Image 5: char_204d12 — 克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者 (side); Image 6: char_149758 — Dr. Victor Hale · Umbrella 地下设施研究主管 (side); Image 7: char_204d12 — 克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者 (full_front); Image 8: char_149758 — Dr. Victor Hale · Umbrella 地下设施研究主管 (full_front). Keep each character's face, body and outfit separate.",
+            "status": "READY",
+            "shot_id": "shot_1",
+            "timings": {},
+            "duration": 6.592,
+            "provider": "h3_max",
+            "references": [
+              {
+                "name": "front·v12",
+                "path": "https://c2a3v6.bilinkai.com/images/2026/09/25/1790328002_b928c00a86de950a9196957997874de7.png",
+                "role": "front",
+                "type": "image",
+                "entity": "char_204d12",
+                "version": 12,
+                "asset_id": "ca_00002_921521",
+                "character_snapshot_id": "snap_00003_4371ac"
+              },
+              {
+                "name": "front·v12",
+                "path": "https://c2a3v6.bilinkai.com/images/2026/09/25/1790328037_8886562e26455442dfe6dd25fc369f39.png",
+                "role": "front",
+                "type": "image",
+                "entity": "char_149758",
+                "version": 12,
+                "asset_id": "ca_00007_fc3839",
+                "character_snapshot_id": "snap_00004_d65603"
+              },
+              {
+                "name": "three_quarter·v12",
+                "path": "https://c2a3v6.bilinkai.com/images/2026/09/25/1790336563_7cede20879a71cce90173e066cec3292.png",
+                "role": "three_quarter",
+                "type": "image",
+                "entity": "char_204d12",
+                "version": 12,
+                "asset_id": "ca_00018_8aa48f",
+                "character_snapshot_id": "snap_00003_4371ac"
+              },
+              {
+                "name": "three_quarter·v12",
+                "path": "https://c2a3v6.bilinkai.com/images/2026/09/25/1790336941_0ae0fab8e61531cf8df425ef0e2393fe.png",
+                "role": "three_quarter",
+                "type": "image",
+                "entity": "char_149758",
+                "version": 12,
+                "asset_id": "ca_00029_18208e",
+                "character_snapshot_id": "snap_00004_d65603"
+              },
+              {
+                "name": "side·v12",
+                "path": "https://c2a3v6.bilinkai.com/images/2026/09/25/1790336610_d0ba1ca206f48174099ba1afe6c31ba6.png",
+                "role": "side",
+                "type": "image",
+                "entity": "char_204d12",
+                "version": 12,
+                "asset_id": "ca_00019_c4f113",
+                "character_snapshot_id": "snap_00003_4371ac"
+              },
+              {
+                "name": "side·v12",
+                "path": "https://c2a3v6.bilinkai.com/images/2026/09/25/1790336994_2529fe46a930884c2d1aa0363a8592c1.png",
+                "role": "side",
+                "type": "image",
+                "entity": "char_149758",
+                "version": 12,
+                "asset_id": "ca_00030_2ab004",
+                "character_snapshot_id": "snap_00004_d65603"
+              },
+              {
+                "name": "full_front·v12",
+                "path": "https://c2a3v6.bilinkai.com/images/2026/09/25/1790336660_114ac61b478b169ebdce1b8d887f0711.png",
+                "role": "full_front",
+                "type": "image",
+                "entity": "char_204d12",
+                "version": 12,
+                "asset_id": "ca_00022_ffdc24",
+                "character_snapshot_id": "snap_00003_4371ac"
+              },
+              {
+                "name": "full_front·v12",
+                "path": "https://c2a3v6.bilinkai.com/images/2026/09/25/1790337035_0e9f4341b4566f0a2afbe82bde8a08ca.png",
+                "role": "full_front",
+                "type": "image",
+                "entity": "char_149758",
+                "version": 12,
+                "asset_id": "ca_00031_63c741",
+                "character_snapshot_id": "snap_00004_d65603"
+              }
+            ],
+            "request_id": "01a0d894-1a73-7e30-840a-7b8903282c20",
+            "resolution": "480P",
+            "output_clip": "data/media/clips/01a0d894-1a73-7e30-840a-7b8903282c20/clip_1.mp4",
+            "aspect_ratio": "16:9",
+            "completed_at": 1790340005219,
+            "output_clips": [
+              "data/media/clips/01a0d894-1a73-7e30-840a-7b8903282c20/clip_1.mp4"
+            ],
+            "provider_raw": {
+              "fal": {
+                "seed": 965079512,
+                "video": {
+                  "url": "https://v3b.fal.media/files/b/0aabd78f/Z_dldV0y43Alk4HjoI1BG_minimax-h3.mp4",
+                  "file_name": "Z_dldV0y43Alk4HjoI1BG_minimax-h3.mp4",
+                  "file_size": 3078240,
+                  "content_type": "video/mp4"
+                },
+                "timings": {
+                  "inference": 2.3121600330000547
+                },
+                "expanded_prompt": null
+              },
+              "clips": [
+                "data/media/clips/01a0d894-1a73-7e30-840a-7b8903282c20/clip_1.mp4"
+              ]
+            },
+            "submitted_at": 1790339978471,
+            "text_only_cast": [],
+            "provider_job_id": "01a0d894-1a73-7e30-840a-7b8903282c20",
+            "declared_duration": 6.0
+          }
+        ]
+      ]
+    },
+    "duration": 6.592,
+    "presentation_receipts": []
+  }
+}

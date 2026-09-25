@@ -1,0 +1,109 @@
+{
+  "session_id": "sess_00006_6051ee",
+  "scenario": {
+    "title": "生化危机：黑雨隔离区",
+    "player_identity": "李昂·S·肯尼迪（Leon S. Kennedy）· 玩家角色，年轻 RPD 警员"
+  },
+  "arc": {
+    "seq": 1,
+    "total": 1
+  },
+  "player": {
+    "status": "WAITING_DECISION",
+    "scene_title": "行动确认",
+    "scene_text": "李昂放弃继续听从Victor的远程指引，带领克莱尔前往配电室恢复局部供电，随后准备通过维修通道绕至样本库后方。这一决定切断了二人与Victor实时广播的直接联系，后续只能依靠现场线索与通道推进调查。",
+    "caption": "行动确认",
+    "caption_speaker": "",
+    "location_name": "配电室",
+    "video_url": "/media/scenes/scene_00045_23139b.mp4",
+    "duration": 5.184,
+    "lead": 3.184,
+    "decision_open_at": 3.184,
+    "position": 5.184
+  },
+  "presentation": {
+    "error_message": "",
+    "recovery_actions": [],
+    "state": "WAITING_DECISION"
+  },
+  "action_pending": false,
+  "recommendations": [],
+  "selected": {
+    "branch_id": "br_00012_e5b104",
+    "label": "我先不听 Victor 的。我和 Claire 先去配电室恢复局部供电，然后从维修通道绕到样本库后方。",
+    "status": "CANONICAL"
+  },
+  "generating": [
+    {
+      "branch_id": "br_00014_5436a7",
+      "label": "恢复配电与分流电力",
+      "phase_label": "正在设计镜头"
+    },
+    {
+      "branch_id": "br_00016_971354",
+      "label": "从维修通道潜入样本库",
+      "phase_label": "正在构思接下来的故事"
+    },
+    {
+      "branch_id": "br_00018_cd8309",
+      "label": "优先保护幸存者并撤离",
+      "phase_label": "正在构思接下来的故事"
+    }
+  ],
+  "timed": null,
+  "pending_intent": null,
+  "last_failed_action": null,
+  "known": {
+    "inventory": [],
+    "relationships": [
+      {
+        "id": "stalker",
+        "name": "T-103 型追踪实验体 · 高威胁敌对实体",
+        "value": 50
+      },
+      {
+        "id": "char_149758",
+        "name": "Dr. Victor Hale · Umbrella 地下设施研究主管",
+        "value": 50
+      },
+      {
+        "id": "char_204d12",
+        "name": "克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者",
+        "value": 50
+      }
+    ],
+    "clues": [
+      {
+        "id": "clue_power_restored",
+        "label": "clue_power_restored"
+      },
+      {
+        "id": "clue_repair_path",
+        "label": "clue_repair_path"
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "配电室需要恢复供电才能打开相关门禁",
+        "label": "配电室需要恢复供电才能打开相关门禁"
+      },
+      {
+        "id": "维修通道是绕过主通道的替代路线",
+        "label": "维修通道是绕过主通道的替代路线"
+      },
+      {
+        "id": "样本库后方可能藏有未被主通道发现的线索",
+        "label": "样本库后方可能藏有未被主通道发现的线索"
+      }
+    ]
+  },
+  "messages": [],
+  "hint_chips": [
+    "恢复配电与分流电力",
+    "从维修通道潜入样本库",
+    "优先保护幸存者并撤离"
+  ],
+  "ended": false,
+  "pending_continuation": false,
+  "wishes": []
+}

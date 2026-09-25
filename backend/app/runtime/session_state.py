@@ -113,6 +113,7 @@ class SessionState(BaseModel):
     hint_chips: list[str] = Field(default_factory=list)       # 「试试这些输入」建议
 
     selection_lock: bool = False              # SELECTED 处理中，阻塞新的提交
+    pending_selected_branch_id: Optional[str] = None
     pending_freeform_id: Optional[str] = None  # 自由输入分支：就绪后自动选中播放
     ended: bool = False
     pending_continuation: bool = False

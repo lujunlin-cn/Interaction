@@ -137,6 +137,7 @@ export interface GlobalCharacter {
   version: number;
   created_at: number;
   updated_at: number;
+  status?: "ACTIVE" | "ARCHIVED";
 }
 
 export type CharacterAssetStatus = "GENERATED" | "CANDIDATE" | "APPROVED" | "CANONICAL" | "ARCHIVED";
@@ -196,6 +197,7 @@ export interface PlayerInfo {
   video_url: string;
   duration: number;
   lead: number;
+  decision_open_at?: number;
   position: number;
 }
 
@@ -205,6 +207,7 @@ export interface Recommendation {
   summary: string;
   confidence: number;
   source: string;
+  media_ready?: boolean;
 }
 
 export interface GeneratingItem {
@@ -233,6 +236,7 @@ export interface PendingIntent {
 
 export interface KnownState {
   inventory: string[];
+  inventory_labels?: Record<string, string>;
   relationships: { id: string; name: string; value: number }[];
   clues: { id: string; label: string }[];
   knowledge: { id: string; label: string }[];

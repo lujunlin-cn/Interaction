@@ -8,6 +8,10 @@ import type { CharacterAsset, GlobalCharacter } from "../types";
 
 const ROLE_LABELS: Record<string,string> = {front:"主身份图",three_quarter:"四分之三视图",side:"侧面视图",back:"额外背面参考",full_front:"全身正面",full_side:"全身侧面",outfit:"造型参考",pose:"姿势参考",motion:"动作参考",voice:"声音参考",derived:"编辑后的形象"};
 const UNDERSTANDING_LABELS: Record<string, string> = { personality: "基础人格", default_desire: "最想得到什么", default_fear: "最害怕什么", default_secrets: "默认秘密", default_knowledge: "默认认知", default_relationship: "默认关系", appearance: "稳定外观描述" };
+const CREATE_DRAFT_KEY = "drama.characterCreation";
+function readCreationDraft() {
+  try { return JSON.parse(localStorage.getItem(CREATE_DRAFT_KEY) || "{}"); } catch { return {}; }
+}
 function savedUnderstanding(id: string): Record<string, string> | null {
   try { return JSON.parse(sessionStorage.getItem(`character-understanding:${id}`) || "null"); }
   catch { return null; }
@@ -16,11 +20,12 @@ export default function CharacterLibrary() {
   const ui = useUi();
   const [items, setItems] = useState<GlobalCharacter[]>([]);
   const [q, setQ] = useState("");
+  const [showArchived, setShowArchived] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [pendingUnderstanding, setPendingUnderstanding] = useState<{ id: string; values: Record<string, string> } | null>(null);
 
-  const reload = () => api.listCharacters(q).then((r) => setItems(r.items)).catch(() => {});
-  useEffect(() => { reload(); }, [q]);
+  const reload = () => api.listCharacters(q, ui.mode === "developer" && showArchived).then((r) => setItems(r.items)).catch(() => {});
+  useEffect(() => { reload(); }, [q, showArchived, ui.mode]);
 
   const selected = items.find((g) => g.id === ui.globalCharacterId) ?? null;
   if (selected) {
@@ -38,6 +43,7 @@ export default function CharacterLibrary() {
       <div className="character-searchbar">
         <input placeholder="按名字、描述、标签、职业或性格搜索" value={q}
           onChange={(e) => setQ(e.target.value)} />
+        {ui.mode === "developer" && <label><input type="checkbox" checked={showArchived} onChange={e => setShowArchived(e.target.checked)} />显示已归档角色</label>}
       </div>
       <div className="global-character-grid">
         {items.map((g) => (
@@ -47,6 +53,7 @@ export default function CharacterLibrary() {
               <div className="global-character-copy">
                 <div className="row"><h3 className="grow">{g.name}</h3>
                   <span className="version-pill">v{g.version}</span></div>
+                {g.status === "ARCHIVED" && <span className="soft-tag">已归档</span>}
                 <p>{g.bio || "尚未填写简介"}</p>
                 <div className="pillrow">
                   {(g.tags || []).slice(0, 4).map((t) => <span key={t} className="soft-tag">{t}</span>)}
@@ -63,6 +70,7 @@ export default function CharacterLibrary() {
         {items.length === 0 && <div className="empty">没有找到匹配的角色。</div>}
       </div>
       {createOpen && <CharacterCreate onClose={() => setCreateOpen(false)} onCreated={(id, understanding) => {
+        localStorage.removeItem(CREATE_DRAFT_KEY);
         if (understanding) sessionStorage.setItem(`character-understanding:${id}`, JSON.stringify(understanding));
         setPendingUnderstanding(understanding ? { id, values: understanding } : null);
         setCreateOpen(false); setState({ globalCharacterId: id }); reload();
@@ -72,21 +80,33 @@ export default function CharacterLibrary() {
 }
 
 function CharacterCreate({ onClose, onCreated }: { onClose: () => void; onCreated: (id: string, understanding?: Record<string, string>) => void }) {
-  const [kind, setKind] = useState<"ai" | "image" | "manual">("ai");
-  const [name, setName] = useState("");
-  const [bio, setBio] = useState("");
-  const [personality, setPersonality] = useState("");
-  const [prompt, setPrompt] = useState("");
+  const [draft] = useState(readCreationDraft);
+  const [kind, setKind] = useState<"ai" | "image" | "manual">(draft.kind || "ai");
+  const [name, setName] = useState(draft.name || "");
+  const [bio, setBio] = useState(draft.bio || "");
+  const [personality, setPersonality] = useState(draft.personality || "");
+  const [prompt, setPrompt] = useState(draft.prompt || "");
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const submitting = useRef(false);
-  const [createdId, setCreatedId] = useState<string | null>(null);
-  const submit = async () => {
+  const [createdId, setCreatedId] = useState<string | null>(draft.createdId || null);
+  const [duplicateCandidates, setDuplicateCandidates] = useState<Array<{id: string; name: string; version: number}>>([]);
+  const [creationKey] = useState(() => draft.creationKey || `character-create:${crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`}`);
+  useEffect(() => { localStorage.setItem(CREATE_DRAFT_KEY, JSON.stringify({ name, bio, personality, prompt, kind, createdId, creationKey })); }, [name, bio, personality, prompt, kind, createdId, creationKey]);
+  useEffect(() => {
+    let active = true;
+    const timer = setTimeout(() => {
+      if (name.trim() && !createdId) api.duplicateCharacters(name).then(r => { if (active) setDuplicateCandidates(r.items); }).catch(() => {});
+      else setDuplicateCandidates([]);
+    }, 250);
+    return () => { active = false; clearTimeout(timer); };
+  }, [name, createdId]);
+  const submit = async (confirmDuplicate = false) => {
     if (!name.trim() || submitting.current) return;
     submitting.current = true;
     setBusy(true);
     try {
-      const created = createdId ? { id: createdId } : await api.createCharacter({ name: name.trim(), bio, personality, appearance: prompt });
+      const created = createdId ? { id: createdId } : await api.createCharacter({ name: name.trim(), bio, personality, appearance: prompt, creation_idempotency_key: creationKey, confirm_duplicate: confirmDuplicate });
       setCreatedId(created.id);
       if (kind === "ai") {
         const understanding = await api.characterUnderstanding(created.id);
@@ -100,7 +120,13 @@ function CharacterCreate({ onClose, onCreated }: { onClose: () => void; onCreate
         toast("无图片角色已创建，可在 Studio 中继续补充形象。");
       }
       onCreated(created.id);
-    } catch (e: any) { toast(`创建失败：${e.message}`); }
+    } catch (e: any) {
+      const detail = e?.detail;
+      if (detail?.code === "DUPLICATE_CHARACTER") {
+        setDuplicateCandidates(detail.candidates || []);
+        toast("角色库中可能已经存在这个角色，请选择使用现有角色或仍然创建。");
+      } else toast(`创建失败：${e.message}`);
+    }
     finally { submitting.current = false; setBusy(false); }
   };
   return <div className="modal-mask" role="dialog" aria-modal="true">
@@ -118,7 +144,16 @@ function CharacterCreate({ onClose, onCreated }: { onClose: () => void; onCreate
       {kind === "ai" && <label><span>形象描述</span><textarea value={prompt} onChange={e => setPrompt(e.target.value)} placeholder="短发、深色雨衣、疲惫但警觉" /></label>}
       {kind === "image" && <label><span>人物图片</span><input type="file" accept="image/*" onChange={e => setFile(e.target.files?.[0] ?? null)} /></label>}
       {createdId && <button onClick={() => onCreated(createdId)}>进入已创建角色，稍后补充图片</button>}
-      <div className="row" style={{ justifyContent: "flex-end" }}><button onClick={onClose}>取消</button><button className="primary" disabled={!name.trim() || !bio.trim() || busy || (kind === "image" && !file)} onClick={submit}>{busy ? "创建中…" : "创建并进入 Studio"}</button></div>
+      {duplicateCandidates.length > 0 && <section className="card duplicate-character-warning">
+        <strong>角色库中可能已经存在这个角色</strong>
+        {duplicateCandidates.map((candidate) => <div className="row" key={candidate.id}>
+          <span className="grow">{candidate.name} · v{candidate.version}</span>
+          <button onClick={() => onCreated(candidate.id)}>使用现有角色</button>
+          <button onClick={() => { onClose(); setState({ globalCharacterId: candidate.id }); }}>查看角色</button>
+        </div>)}
+        <button disabled={busy || !bio.trim() || (kind === "image" && !file)} onClick={() => void submit(true)}>仍然创建新角色</button>
+      </section>}
+      <div className="row" style={{ justifyContent: "flex-end" }}><button onClick={() => { localStorage.removeItem(CREATE_DRAFT_KEY); onClose(); }}>取消</button><button className="primary" disabled={!name.trim() || !bio.trim() || busy || (kind === "image" && !file)} onClick={() => void submit()}>{busy ? "创建中…" : "创建并进入 Studio"}</button></div>
     </div>
   </div>;
 }

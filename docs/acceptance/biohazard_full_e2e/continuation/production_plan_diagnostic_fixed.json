@@ -1,0 +1,132 @@
+{
+  "purpose": "Local copied state; no media and no persisted Runtime changes",
+  "error": null,
+  "calls": [
+    {
+      "role": "production",
+      "response": "{\n  \"shots\": [\n    {\n      \"title\": \"雨夜警局前的潜入\",\n      \"prompt\": \"雨水顺着锈蚀的金属门缝往下淌，混着铁锈味的潮湿空气里，应急灯的冷红光晕裹着蒸腾的雾气晃动。李昂举着手电筒，光束扫过墙上剥落的废弃设施标识，克莱尔站在他侧后方，机车夹克的领口被穿堂风掀得动了动，警觉地环顾四周。远处供电系统的嗡鸣越来越沉，冷藏样本库的制冷提示灯正一明一灭闪着告警，而他们都没察觉，视野盲区的阴影里，T-103型追踪实验体的压迫感正在无声收紧。\",\n      \"subtitle\": \"幕前布景\",\n      \"cast\": [\"leon\", \"char_204d12\"],\n      \"duration\": 9.0\n    }\n  ]\n}",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4",
+      "latency_ms": 3909,
+      "usage": {
+        "prompt_tokens": 989,
+        "total_tokens": 1273,
+        "completion_tokens": 284,
+        "prompt_tokens_details": null
+      }
+    }
+  ],
+  "shots": [
+    {
+      "id": "shot_1",
+      "index": 1,
+      "title": "雨夜警局前的潜入",
+      "duration": 9.0,
+      "trim_start": 0.0,
+      "trim_end": 9.0,
+      "transition": "cut",
+      "subtitle": "幕前布景",
+      "audio": "native",
+      "prompt": "雨水顺着锈蚀的金属门缝往下淌，混着铁锈味的潮湿空气里，应急灯的冷红光晕裹着蒸腾的雾气晃动。李昂举着手电筒，光束扫过墙上剥落的废弃设施标识，克莱尔站在他侧后方，机车夹克的领口被穿堂风掀得动了动，警觉地环顾四周。远处供电系统的嗡鸣越来越沉，冷藏样本库的制冷提示灯正一明一灭闪着告警，而他们都没察觉，视野盲区的阴影里，T-103型追踪实验体的压迫感正在无声收紧。\nPinned cast appearance and current visual state: [{\"character_id\": \"leon\", \"identity\": \"李昂·S·肯尼迪（Leon S. Kennedy）· 玩家角色，年轻 RPD 警员\", \"appearance\": \"\", \"visual_state\": \"本故事使用 RPD 执勤装备；保持主身份的脸、年龄、发型与体型，制服带雨水和污迹，没有感染特征。\", \"reference_mode\": \"identity_reference\"}, {\"character_id\": \"char_204d12\", \"identity\": \"克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者\", \"appearance\": \"年轻成年女性，棕红色长发利落束成马尾，脸部年轻自然，身形匀称而矫健，眼神坚定、警觉而温和。常见实用红色机车夹克与便于行动的服装；无伤势、无感染特征。保持独立于李昂与Victor的女性身份、年龄、发型和体型。\", \"visual_state\": \"本故事覆盖：红色夹克沾有雨水与少量灰尘\", \"reference_mode\": \"identity_reference\"}]\nReference identity map: Image 1: leon — 李昂·S·肯尼迪（Leon S. Kennedy）· 玩家角色，年轻 RPD 警员 (front); Image 2: char_204d12 — 克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者 (front); Image 3: leon — 李昂·S·肯尼迪（Leon S. Kennedy）· 玩家角色，年轻 RPD 警员 (wardrobe); Image 4: char_204d12 — 克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者 (three_quarter); Image 5: leon — 李昂·S·肯尼迪（Leon S. Kennedy）· 玩家角色，年轻 RPD 警员 (three_quarter); Image 6: char_204d12 — 克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者 (side); Image 7: leon — 李昂·S·肯尼迪（Leon S. Kennedy）· 玩家角色，年轻 RPD 警员 (side); Image 8: char_204d12 — 克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者 (full_front). Keep each character's face, body and outfit separate.",
+      "references": [
+        {
+          "asset_id": "ca_00016_628682",
+          "name": "front·v13",
+          "role": "front",
+          "entity": "leon",
+          "path": "https://c2a3v6.bilinkai.com/images/2026/09/25/1790304957_c99b59c13db0e9952b4a04171349ddd8.png",
+          "version": 13,
+          "type": "image",
+          "character_snapshot_id": "snap_00002_dbf942"
+        },
+        {
+          "asset_id": "ca_00002_921521",
+          "name": "front·v12",
+          "role": "front",
+          "entity": "char_204d12",
+          "path": "https://c2a3v6.bilinkai.com/images/2026/09/25/1790328002_b928c00a86de950a9196957997874de7.png",
+          "version": 12,
+          "type": "image",
+          "character_snapshot_id": "snap_00003_4371ac"
+        },
+        {
+          "asset_id": "ca_00006_9ac0e8",
+          "name": "outfit·v13",
+          "role": "wardrobe",
+          "entity": "leon",
+          "path": "https://c2a3v6.bilinkai.com/images/2026/09/25/1790336210_1cfe898f8e8330e3e5c1568a4d949f07.png",
+          "version": 13,
+          "type": "image",
+          "character_snapshot_id": "snap_00002_dbf942"
+        },
+        {
+          "asset_id": "ca_00018_8aa48f",
+          "name": "three_quarter·v12",
+          "role": "three_quarter",
+          "entity": "char_204d12",
+          "path": "https://c2a3v6.bilinkai.com/images/2026/09/25/1790336563_7cede20879a71cce90173e066cec3292.png",
+          "version": 12,
+          "type": "image",
+          "character_snapshot_id": "snap_00003_4371ac"
+        },
+        {
+          "asset_id": "ca_00010_d93507",
+          "name": "three_quarter·v13",
+          "role": "three_quarter",
+          "entity": "leon",
+          "path": "https://c2a3v6.bilinkai.com/images/2026/09/25/1790336350_747da03231103d73a4f2bf48d5a4915e.png",
+          "version": 13,
+          "type": "image",
+          "character_snapshot_id": "snap_00002_dbf942"
+        },
+        {
+          "asset_id": "ca_00019_c4f113",
+          "name": "side·v12",
+          "role": "side",
+          "entity": "char_204d12",
+          "path": "https://c2a3v6.bilinkai.com/images/2026/09/25/1790336610_d0ba1ca206f48174099ba1afe6c31ba6.png",
+          "version": 12,
+          "type": "image",
+          "character_snapshot_id": "snap_00003_4371ac"
+        },
+        {
+          "asset_id": "ca_00011_d574bc",
+          "name": "side·v13",
+          "role": "side",
+          "entity": "leon",
+          "path": "https://c2a3v6.bilinkai.com/images/2026/09/25/1790336395_d82c1d3ff4a0e57b08e405682435e13c.png",
+          "version": 13,
+          "type": "image",
+          "character_snapshot_id": "snap_00002_dbf942"
+        },
+        {
+          "asset_id": "ca_00022_ffdc24",
+          "name": "full_front·v12",
+          "role": "full_front",
+          "entity": "char_204d12",
+          "path": "https://c2a3v6.bilinkai.com/images/2026/09/25/1790336660_114ac61b478b169ebdce1b8d887f0711.png",
+          "version": 12,
+          "type": "image",
+          "character_snapshot_id": "snap_00003_4371ac"
+        }
+      ],
+      "params": {
+        "cast": [
+          "leon",
+          "char_204d12"
+        ],
+        "text_only_cast": [],
+        "shot_policy": {
+          "count": 1,
+          "minimum": 8.0,
+          "maximum": 10.0,
+          "target": 8.0,
+          "developer_test_override": false
+        },
+        "requested_duration": 9.0,
+        "normalized_duration": false
+      },
+      "status": "PLANNED",
+      "clip_path": null
+    }
+  ]
+}

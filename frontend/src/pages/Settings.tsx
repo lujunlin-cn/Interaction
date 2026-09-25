@@ -157,6 +157,10 @@ export default function Settings() {
           <h4>开发测试覆盖</h4>
           <p className="muted">仅用于测试/验收，不会修改已发布故事的正式配置。</p>
           <div className="two">
+            <label className="toggle-line"><span>Jev 推荐预生成视频</span><input type="checkbox"
+              checked={generation?.pre_generate_recommendation_media !== false}
+              onChange={e => updateGeneration({ pre_generate_recommendation_media: e.target.checked })} />
+              <small>{generation?.pre_generate_recommendation_media === false ? "关闭：只在选中后生成视频，节省 H3 费用" : "开启：推荐出现前并行准备视频"}</small></label>
             <label className="toggle-line"><span>启用测试生成覆盖</span><input type="checkbox" checked={Boolean(generation?.test_override_enabled)} onChange={e => updateGeneration({ test_override_enabled: e.target.checked })} /> <small>仅开发测试上下文</small></label>
             <label><span>测试 Top-K</span><select value={generation?.test_top_k ?? 1} onChange={e => updateGeneration({ test_top_k: Number(e.target.value) })}>{[1, 2, 3].map(v => <option key={v}>{v}</option>)}</select></label>
             <label><span>每分支最大 Shot</span><select value={generation?.test_max_shots ?? 1} onChange={e => updateGeneration({ test_max_shots: Number(e.target.value) })}>{[1, 2, 3].map(v => <option key={v}>{v}</option>)}</select></label>

@@ -15,3 +15,5 @@ The supplied Image Relay credential was installed only in ignored `backend/.env`
 The formal `standard-views` workflow attempted four edits per character through `https://api-top.com/v1/images/edits` (8 external attempts total). The Relay returned HTTP 502/network failures. No fallback, mock asset, or Fal image request was used. Leon standard views and Outfit edit were not retried.
 
 The durable usage ledger records the successful generation requests and failed edit attempts without secrets. Visual QA remains PARTIAL until reference views and Outfit edit are available.
+
+> Historical snapshot note (2026-09-25 continuation): this file records the first 502/network-failure batch only. It is superseded for current status by `continuation/usage_current.json`, `relay_character_assets_final.json`, and the acceptance report: the multipart Image Relay adapter subsequently completed 13 edits successfully (4K), while the eight 502 records remain preserved as historical failures. No Fal image fallback was used.

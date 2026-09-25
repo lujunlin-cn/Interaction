@@ -62,6 +62,32 @@ def path_allowed(path: str) -> bool:
     return path in ALLOWED_PATCH_PATHS or any(path.startswith(p) for p in ALLOWED_PREFIXES)
 
 
+def normalize_operation_transport(ops: list[PatchOperation]) -> list[PatchOperation]:
+    """Translate unambiguous object assignments; never infer missing effects.
+
+    Some providers use JSON Pointer and RFC-6902 object add/replace. The
+    domain still validates every resulting path/value. A redundant clues
+    envelope is ignored only when every entry has an explicit typed proposal.
+    """
+    normalized = []
+    for original in ops:
+        path = original.path
+        if path and path.startswith('/'):
+            segments = path[1:].split('/')
+            if any(not part or '~' in part or '.' in part for part in segments):
+                raise ProposalRejected(f'ambiguous pointer: {path}')
+            path = '.'.join(segments)
+        operation = 'set' if original.op in ('add', 'replace') and path and path_allowed(path) else original.op
+        normalized.append(original.model_copy(update={'op': operation, 'path': path}))
+    explicit_clues = {op.path[6:] for op in normalized
+                      if op.op == 'set' and op.path and op.path.startswith('clues.')
+                      and op.value in ('DISCOVERED', 'VERIFIED', 'USED')}
+    return [op for op in normalized if not (
+        op.op == 'add' and op.path == 'clues' and isinstance(op.value, list)
+        and all(isinstance(key, str) and key in explicit_clues for key in op.value)
+    )]
+
+
 def apply_operations(
     world: WorldState,
     ops: list[PatchOperation],
@@ -74,7 +100,7 @@ def apply_operations(
     locations：Scenario 声明的地点值域；非空时 location 的 set 值必须命中。
     """
     w = world.model_copy(deep=True)
-    for op in ops:
+    for op in normalize_operation_transport(ops):
         if op.op == "addItem":
             if not isinstance(op.value, str):
                 raise ProposalRejected("addItem value must be string")

@@ -11,6 +11,7 @@ class TextResponse(BaseModel):
     model: str = ""
     provider: str = ""
     latency_ms: int = 0
+    request_id: Optional[str] = None
     usage: dict[str, Any] = {}
 
 

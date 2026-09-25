@@ -2,16 +2,22 @@
 import json
 from typing import Literal
 from pydantic import BaseModel, Field
-from ..domain.schemas import DramaticDirective, OutcomeSpec
+from ..domain.schemas import DramaticDirective, OutcomeSpec, PatchOperation
+
+class DirectorOperation(PatchOperation):
+    op: Literal['set', 'increment', 'addItem', 'removeItem', 'inspect']
+    path: str | None = Field(default=None, pattern=r"^(location|health|fiction_minutes|(objects|relationships|clues)\..+)$")
 
 class MechanicTrigger(BaseModel):
     skill: Literal["relationship", "clue-system", "inventory"]
     target: str = ""
+    label: str = Field(default="", description="Natural-language player-facing item or clue name; never a technical identifier")
     action: Literal["add", "remove"] = "add"
     stage: Literal["DISCOVERED", "VERIFIED", "USED"] = "DISCOVERED"
     value: int | None = None
 
 class DirectorOutcome(OutcomeSpec):
+    ops: list[DirectorOperation] = Field(default_factory=list)
     skill_triggers: list[MechanicTrigger] = Field(default_factory=list)
 
 class DirectorOutput(BaseModel):

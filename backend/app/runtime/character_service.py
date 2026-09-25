@@ -59,7 +59,7 @@ def _image_provenance(provider, result: dict, image: dict, prompt: str,
         "capability": capability,
     }
     for field in ("requested_model", "requested_resolution", "requested_aspect_ratio",
-                  "actual_aspect_ratio", "requested_size", "normalization"):
+                  "actual_aspect_ratio", "requested_size", "normalization", "transport", "source_image_sha256"):
         if field in result:
             provenance[field] = result[field]
     if image.get("width") and image.get("height"):
@@ -243,20 +243,17 @@ class CharacterAssetService:
                                 "standard_view": role}))
             return made
 
-        # 4 视图并行（fal queue 单任务可能 >180s，串行会成倍放大超时面）
-        import asyncio
-        batches = await asyncio.gather(
-            *[_one(r, d) for r, d in view_prompts.items()],
-            return_exceptions=True)
+        # Sequential edits fail fast on a provider outage. Already persisted
+        # views from this source are reused when the user resumes a partial pack.
         out: list[CharacterAsset] = []
-        failed: list[str] = []
-        for b in batches:
-            if isinstance(b, Exception):
-                failed.append(str(b)[:120])
+        existing = await self.list_assets(character_id)
+        for role, description in view_prompts.items():
+            reusable = [a for a in existing if a.role == role and front_asset_id in a.source_asset_refs
+                        and a.status != CharacterAssetStatus.ARCHIVED]
+            if reusable:
+                out.append(reusable[-1])
             else:
-                out.extend(b)
-        if not out and failed:
-            raise RuntimeError(f"all views failed: {failed[0]}")
+                out.extend(await _one(role, description))
         await tracer.emit("character.standard_views", "success",
                           input_={"character": character_id},
                           output={"views": len(out), "request_ids": list(dict.fromkeys(
@@ -324,51 +321,55 @@ class CharacterAssetService:
                            breaking: bool = False) -> CharacterVersion:
         async with SessionLocal() as db:
             async with db.begin():
-                row = await self._row(db, character_id)
-                data = dict(row.data)
-                # 当前最新版本号
-                last = (await db.execute(
-                    select(CharacterVersionRow)
-                    .where(CharacterVersionRow.character_id == character_id)
-                    .order_by(CharacterVersionRow.version.desc()).limit(1))
-                ).scalars().first()
-                n = (last.version + 1) if last else 1
-                row.version = n
-                data["version"] = n
-                canonical = await self._canonical_refs(db, character_id)
-                # Explicit library bindings (including unlinking) take precedence.
-                for slot, key in {
-                    "front": "ref_front_asset", "three_quarter": "ref_three_quarter_asset",
-                    "side": "ref_side_asset", "full_front": "ref_full_front_asset",
-                    "full_side": "ref_full_side_asset", "back": "ref_back_asset",
-                }.items():
-                    if key in data:
-                        canonical[slot] = data[key]
-                ver = CharacterVersion(
-                    id=uid("cv"), character_id=character_id, version=n,
-                    change_type=change_type,
-                    identity_spec={"name": data.get("name", ""),
-                                   "bio": data.get("bio", ""),
-                                   "personality": data.get("personality", ""),
-                                   "appearance": data.get("appearance", ""),
-                                   "tags": data.get("tags", []),
-                                   **{k: data.get(k, "") for k in ("default_desire", "default_fear", "default_secrets", "default_knowledge", "default_relationship")}},
-                    canonical_asset_refs=canonical,
-                    other_refs=list(data.get("ref_other_assets", [])),
-                    outfits=[CharacterOutfit(**o) for o in data.get("outfits", [])],
-                    pose_refs=list(data.get("ref_pose_assets", [])),
-                    motion_refs=list(data.get("ref_motion_assets", [])) if "ref_motion_assets" in data else ([data["ref_motion_asset"]] if data.get("ref_motion_asset") else []),
-                    canonical_voice_ref=data.get("ref_voice_asset"),
-                    alternate_voice_refs=list(data.get("alternate_voice_assets", [])),
-                    source_version_id=last.id if last else None,
-                    breaking_identity_change=breaking)
-                db.add(CharacterVersionRow(
-                    id=ver.id, character_id=character_id, version=n,
-                    change_type=change_type,
-                    data=ver.model_dump(mode="json"), created_at=ver.created_at))
-                data["current_version_id"] = ver.id
-                row.data = data
-                row.updated_at = now_ms()
+                return await self._new_version_in_transaction(db, character_id, change_type, breaking)
+
+    async def _new_version_in_transaction(self, db, character_id: str, change_type: str,
+                                          breaking: bool = False) -> CharacterVersion:
+        row = await self._row(db, character_id)
+        data = dict(row.data)
+        # 当前最新版本号
+        last = (await db.execute(
+            select(CharacterVersionRow)
+            .where(CharacterVersionRow.character_id == character_id)
+            .order_by(CharacterVersionRow.version.desc()).limit(1))
+        ).scalars().first()
+        n = (last.version + 1) if last else 1
+        row.version = n
+        data["version"] = n
+        canonical = await self._canonical_refs(db, character_id)
+        # Explicit library bindings (including unlinking) take precedence.
+        for slot, key in {
+            "front": "ref_front_asset", "three_quarter": "ref_three_quarter_asset",
+            "side": "ref_side_asset", "full_front": "ref_full_front_asset",
+            "full_side": "ref_full_side_asset", "back": "ref_back_asset",
+        }.items():
+            if key in data:
+                canonical[slot] = data[key]
+        ver = CharacterVersion(
+            id=uid("cv"), character_id=character_id, version=n,
+            change_type=change_type,
+            identity_spec={"name": data.get("name", ""),
+                           "bio": data.get("bio", ""),
+                           "personality": data.get("personality", ""),
+                           "appearance": data.get("appearance", ""),
+                           "tags": data.get("tags", []),
+                           **{k: data.get(k, "") for k in ("default_desire", "default_fear", "default_secrets", "default_knowledge", "default_relationship")}},
+            canonical_asset_refs=canonical,
+            other_refs=list(data.get("ref_other_assets", [])),
+            outfits=[CharacterOutfit(**o) for o in data.get("outfits", [])],
+            pose_refs=list(data.get("ref_pose_assets", [])),
+            motion_refs=list(data.get("ref_motion_assets", [])) if "ref_motion_assets" in data else ([data["ref_motion_asset"]] if data.get("ref_motion_asset") else []),
+            canonical_voice_ref=data.get("ref_voice_asset"),
+            alternate_voice_refs=list(data.get("alternate_voice_assets", [])),
+            source_version_id=last.id if last else None,
+            breaking_identity_change=breaking)
+        db.add(CharacterVersionRow(
+            id=ver.id, character_id=character_id, version=n,
+            change_type=change_type,
+            data=ver.model_dump(mode="json"), created_at=ver.created_at))
+        data["current_version_id"] = ver.id
+        row.data = data
+        row.updated_at = now_ms()
         return ver
 
     async def _canonical_refs(self, db, character_id: str) -> dict[str, Any]:

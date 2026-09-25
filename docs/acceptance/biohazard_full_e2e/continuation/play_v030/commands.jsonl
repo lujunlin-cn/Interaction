@@ -1,0 +1,4 @@
+{"at":"2026-09-25T12:23:37.351Z","op":"start","expectedVersion":"0.3.0","label":"opening_started"}
+{"at":"2026-09-25T12:29:07.036Z","op":"retry","label":"opening_retry_after_cast_fix"}
+{"at":"2026-09-25T12:36:14.367Z","op":"inspect","label":"opening_major_failure_ready3"}
+{"at":"2026-09-25T12:36:15.068Z","op":"home","label":"major_failure_checkpoint"}

@@ -60,7 +60,7 @@ def test_pinned_overlay_and_explicit_promote(client):
     from app.runtime.character_service import CharacterAssetService
     from app.main import provider_router
     service = CharacterAssetService(provider_router)
-    g = client.post('/api/characters', json={'name': '林岚', 'bio': '灯塔维修员'}).json()
+    g = client.post('/api/characters', json={'name': '林岚', 'bio': '灯塔维修员', 'confirm_duplicate': True}).json()
     version = client.get(f"/api/characters/{g['id']}/versions").json()['items'][0]
     client.patch(f"/api/characters/{g['id']}", json={'bio': '全局新定义'})
     async def snapshot():

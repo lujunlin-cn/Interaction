@@ -2,13 +2,18 @@
 from __future__ import annotations
 
 import json
+import hashlib
+import re
+import unicodedata
 from typing import Optional
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from ..config import settings
 
 from ..db import SessionLocal
-from ..db_models import CharacterVersionRow, GlobalCharacterRow, ScenarioRow, ScenarioVersionRow
+from ..db_models import (CharacterCreationKeyRow, CharacterVersionRow,
+                         GlobalCharacterRow, ScenarioRow, ScenarioVersionRow)
 from ..domain.ids import uid
 from ..domain.schemas import ScenarioDraft, now_ms
 from ..domain.pressure_spec import normalize_draft_pressures, normalize_pressures, PRESSURE_FORMAT
@@ -446,7 +451,27 @@ class ScenarioService:
 class CharacterService:
     """全局角色库：跨 Scenario 共享、可检索；版本快照绑定到 Scenario Instance。"""
 
-    async def list(self, q: str = "") -> list[dict]:
+    @staticmethod
+    def normalize_name(value: str) -> str:
+        """Normalize names for duplicate hints without changing stored names."""
+        normalized = unicodedata.normalize("NFKC", value or "").casefold()
+        return "".join(ch for ch in normalized if unicodedata.category(ch)[0] not in "PZC" and not ch.isspace())
+
+    @classmethod
+    def name_keys(cls, name: str, aliases: list[str] | None = None) -> set[str]:
+        text = unicodedata.normalize("NFKC", name or "")
+        # A common bilingual display name carries an explicit alias in
+        # parentheses. Do not fuzzy-match biographies or unrelated substrings.
+        values = [text, *(aliases or []), *re.findall(r"\(([^()]+)\)", text)]
+        values.append(re.sub(r"\([^()]+\)", "", text))
+        return {key for value in values if (key := cls.normalize_name(value))}
+
+    @staticmethod
+    def creation_hash(data: dict) -> str:
+        meaningful = {k: v for k, v in data.items() if k not in {"creation_idempotency_key", "confirm_duplicate"}}
+        return hashlib.sha256(json.dumps(meaningful, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+
+    async def list(self, q: str = "", include_archived: bool = False) -> list[dict]:
         async with SessionLocal() as db:
             rows = (await db.execute(
                 select(GlobalCharacterRow).order_by(GlobalCharacterRow.updated_at.desc()))
@@ -455,6 +480,8 @@ class CharacterService:
         for r in rows:
             data = dict(r.data)
             data["version"] = r.version
+            if data.get("status", "ACTIVE") == "ARCHIVED" and not include_archived:
+                continue
             if q:
                 # G11：搜索覆盖 name/bio/tags/personality/appearance
                 hay = " ".join([
@@ -466,15 +493,89 @@ class CharacterService:
         return items
 
     async def create(self, data: dict) -> dict:
+        result, _ = await self.create_idempotent(data)
+        return result
+
+    async def create_idempotent(self, data: dict, version_service=None) -> tuple[dict, bool]:
         cid = data.get("id") or uid("chr")
+        creation_key = str(data.get("creation_idempotency_key") or "").strip()
+        if len(creation_key) > 160:
+            raise ValueError("创建操作标识过长")
+        request_hash = self.creation_hash(data)
+        stored = {k: v for k, v in data.items() if k not in {"creation_idempotency_key", "confirm_duplicate"}}
         now = now_ms()
+        try:
+            async with SessionLocal() as db:
+                async with db.begin():
+                    if creation_key:
+                        existing = await self.idempotent_character(creation_key, data)
+                        if existing is not None:
+                            return existing, False
+                        # Claim the unique key before inserting the character.
+                        # Competing processes wait on the DB constraint, then
+                        # return the committed winner after their rollback.
+                        db.add(CharacterCreationKeyRow(key=creation_key, character_id=cid,
+                                                       request_hash=request_hash, created_at=now))
+                        await db.flush()
+                    row = GlobalCharacterRow(
+                        id=cid, name=stored.get("name", "未命名角色"),
+                        data={**stored, "id": cid, "status": "ACTIVE", "version": 1,
+                              "created_at": now, "updated_at": now}, version=1, updated_at=now)
+                    db.add(row)
+                    await db.flush()
+                    if version_service is not None:
+                        await version_service._new_version_in_transaction(db, cid, "IDENTITY")
+                    result = dict(row.data)
+            return result, True
+        except IntegrityError:
+            if creation_key:
+                winner = await self.idempotent_character(creation_key, data)
+                if winner is not None:
+                    return winner, False
+            raise
+
+    async def duplicate_candidates(self, name: str) -> list[dict]:
+        wanted = self.name_keys(name)
+        if not wanted:
+            return []
+        async with SessionLocal() as db:
+            rows = (await db.execute(select(GlobalCharacterRow))).scalars().all()
+        candidates = []
+        for row in rows:
+            if row.data.get("status", "ACTIVE") == "ARCHIVED":
+                continue
+            if wanted & self.name_keys(row.name, row.data.get("aliases", [])):
+                candidates.append({"id": row.id, "name": row.name, "version": row.version,
+                                   "status": row.data.get("status", "ACTIVE")})
+        return candidates
+
+    async def idempotent_character(self, key: str, data: dict | None = None) -> Optional[dict]:
+        key = str(key or "").strip()
+        if not key:
+            return None
+        async with SessionLocal() as db:
+            mapping = await db.get(CharacterCreationKeyRow, key)
+            if mapping is None:
+                return None
+            if data is not None and mapping.request_hash != self.creation_hash(data):
+                raise ValueError("本次创建已提交不同的角色资料，请恢复原内容重试或重新新建角色。")
+            row = await db.get(GlobalCharacterRow, mapping.character_id)
+            if row is None:
+                return None
+            out = dict(row.data)
+            out["version"] = row.version
+            return out
+
+    async def archive(self, character_id: str) -> dict:
         async with SessionLocal() as db:
             async with db.begin():
-                db.add(GlobalCharacterRow(
-                    id=cid, name=data.get("name", "未命名角色"),
-                    data={**data, "id": cid, "created_at": now, "updated_at": now},
-                    version=1, updated_at=now))
-        return {**data, "id": cid, "version": 1}
+                row = await db.get(GlobalCharacterRow, character_id)
+                if row is None:
+                    raise KeyError(character_id)
+                data = {**row.data, "status": "ARCHIVED", "updated_at": now_ms()}
+                row.data = data
+                row.updated_at = data["updated_at"]
+                return {**data, "version": row.version}
 
     async def update(self, character_id: str, patch: dict) -> dict:
         async with SessionLocal() as db:

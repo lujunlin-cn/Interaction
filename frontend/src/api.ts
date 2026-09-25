@@ -54,8 +54,10 @@ export const api = {
   deleteScenario: (id: string) =>
     req<{ ok: boolean }>(`/api/scenarios/${id}`, { method: "DELETE" }),
 
-  listCharacters: (q = "") => req<{ items: GlobalCharacter[] }>(`/api/characters?q=${encodeURIComponent(q)}`),
-  createCharacter: (data: Partial<GlobalCharacter>) =>
+  listCharacters: (q = "", includeArchived = false) => req<{ items: GlobalCharacter[] }>(`/api/characters?q=${encodeURIComponent(q)}${includeArchived ? "&include_archived=true" : ""}`),
+  duplicateCharacters: (name: string) => req<{ items: Array<{ id: string; name: string; version: number }> }>(`/api/characters/duplicates?name=${encodeURIComponent(name)}`),
+  archiveCharacter: (id: string) => req<GlobalCharacter>(`/api/characters/${id}/archive`, { method: "POST" }),
+  createCharacter: (data: Partial<GlobalCharacter> & { creation_idempotency_key?: string; confirm_duplicate?: boolean }) =>
     req<GlobalCharacter>("/api/characters", { method: "POST", body: JSON.stringify(data) }),
   updateCharacter: (id: string, patch: Partial<GlobalCharacter>) =>
     req<GlobalCharacter>(`/api/characters/${id}`, { method: "PATCH", body: JSON.stringify(patch) }),

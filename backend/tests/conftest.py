@@ -6,6 +6,9 @@ import pytest
 
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///./itest.db"
 os.environ["PROVIDER_MODE"] = "mock"
+# The deployment can defer speculative media. Offline tests use the product
+# default; deferred-media tests explicitly override this setting themselves.
+os.environ["PRE_GENERATE_RECOMMENDATION_MEDIA"] = "true"
 os.environ["BRANCH_PHASE_DELAY_MS"] = "30"
 os.environ["MOCK_SHOT_DURATION"] = "1"
 os.environ["TIMED_TIMEOUT_OVERRIDE"] = "5"     # 限时互动测试加速

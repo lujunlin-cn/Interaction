@@ -1,0 +1,68 @@
+{
+  "session_id": "sess_00012_654bef",
+  "scenario": {
+    "title": "生化危机：黑雨隔离区",
+    "player_identity": "李昂·S·肯尼迪（Leon S. Kennedy）· 玩家角色，年轻 RPD 警员"
+  },
+  "arc": {
+    "seq": 1,
+    "total": 1
+  },
+  "player": {
+    "status": "FAILED_RECOVERABLE",
+    "scene_title": "",
+    "scene_text": "",
+    "caption": "",
+    "caption_speaker": "",
+    "location_name": "地下检疫入口",
+    "video_url": "",
+    "duration": 0,
+    "lead": 0,
+    "decision_open_at": 0,
+    "position": 0
+  },
+  "presentation": {
+    "error_message": "这个行动暂时没有生成成功。",
+    "recovery_actions": [
+      "retry",
+      "modify",
+      "text_continue",
+      "exit"
+    ],
+    "state": "FAILED_RECOVERABLE"
+  },
+  "action_pending": false,
+  "recommendations": [],
+  "selected": null,
+  "generating": [],
+  "timed": null,
+  "pending_intent": null,
+  "last_failed_action": null,
+  "known": {
+    "inventory": [],
+    "relationships": [
+      {
+        "id": "stalker",
+        "name": "T-103 型追踪实验体 · 高威胁敌对实体",
+        "value": 50
+      },
+      {
+        "id": "char_204d12",
+        "name": "克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者",
+        "value": 50
+      },
+      {
+        "id": "char_149758",
+        "name": "Dr. Victor Hale · Umbrella 地下设施研究主管",
+        "value": 50
+      }
+    ],
+    "clues": [],
+    "knowledge": []
+  },
+  "messages": [],
+  "hint_chips": [],
+  "ended": false,
+  "pending_continuation": false,
+  "wishes": []
+}

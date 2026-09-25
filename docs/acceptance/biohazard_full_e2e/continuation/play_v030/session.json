@@ -1,0 +1,10 @@
+{
+  "session_id": "sess_00006_97bc74",
+  "scenario": "scn_00003_364d7e",
+  "expected_version": {
+    "version_id": "ver_00001_1fa925",
+    "version": "0.3.0",
+    "created_at": 1790337747871
+  },
+  "actual_version_id": "ver_00001_1fa925"
+}

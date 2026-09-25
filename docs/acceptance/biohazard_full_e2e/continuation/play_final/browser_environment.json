@@ -1,0 +1,9 @@
+{
+  "browser": "firefox",
+  "version": "151.0",
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "preserve_live_services": true
+}

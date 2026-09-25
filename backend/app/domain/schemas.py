@@ -249,6 +249,7 @@ class GlobalCharacter(BaseModel):
     id: str
     name: str
     bio: str = ""
+    aliases: list[str] = Field(default_factory=list)
     personality: str = ""
     tags: list[str] = Field(default_factory=list)
     default_desire: str = ""
@@ -273,6 +274,7 @@ class GlobalCharacter(BaseModel):
     alternate_voice_assets: list[str] = Field(default_factory=list)
     outfits: list[dict[str, Any]] = Field(default_factory=list)
     current_version_id: Optional[str] = None        # CharacterVersion.id（v0.6）
+    status: str = "ACTIVE"                         # ACTIVE / ARCHIVED
     version: int = 1
     created_at: int = Field(default_factory=now_ms)
     updated_at: int = Field(default_factory=now_ms)
@@ -683,6 +685,8 @@ class RecommendationEpoch(BaseModel):
     created_at: int = Field(default_factory=now_ms)
     reason: str = ""
     timed: bool = False
+    options_exposed: bool = False
+    options_exposed_at: Optional[int] = None
 
 
 # ---------------------------------------------------------------------------

@@ -1,0 +1,99 @@
+[
+  {
+    "id": "ca_00016_628682",
+    "character_id": "chr_00013_113084",
+    "character_version_id": null,
+    "asset_id": null,
+    "role": "front",
+    "status": "CANONICAL",
+    "outfit_id": null,
+    "source_asset_refs": [],
+    "generation_job_id": "job_00015_9587ca",
+    "provenance": {
+      "model": "gpt-image-2.5-sunburst",
+      "provider": "image_relay",
+      "capability": "IMAGE_GENERATION",
+      "resolution": "4K",
+      "prompt_hash": "d2afb5bd4bcce93b",
+      "aspect_ratio": "16:9"
+    },
+    "url": "https://c2a3v6.bilinkai.com/images/2026/09/25/1790304957_c99b59c13db0e9952b4a04171349ddd8.png",
+    "created_at": 1790304977557
+  },
+  {
+    "id": "ca_00002_921521",
+    "character_id": "chr_00018_204d12",
+    "character_version_id": null,
+    "asset_id": null,
+    "role": "front",
+    "status": "CANONICAL",
+    "outfit_id": null,
+    "source_asset_refs": [],
+    "generation_job_id": "job_00001_3f1b43",
+    "provenance": {
+      "model": "gpt-image-2.5-sunburst",
+      "provider": "image_relay",
+      "capability": "IMAGE_GENERATION",
+      "request_id": "5f013a8d-eea4-4978-b99d-09a4d58369f1",
+      "resolution": "4K",
+      "prompt_hash": "363312a905b2ee01",
+      "aspect_ratio": "1:1",
+      "normalization": {
+        "aspect_ratio": {
+          "reason": "OpenAI-compatible relay uses square size presets",
+          "requested": "16:9",
+          "submitted": "1:1"
+        }
+      },
+      "requested_size": "4096x4096",
+      "requested_model": "gpt-image-2.5-sunburst",
+      "output_dimensions": {
+        "width": 4096,
+        "height": 4096
+      },
+      "actual_aspect_ratio": "1:1",
+      "requested_resolution": "4K",
+      "requested_aspect_ratio": "16:9"
+    },
+    "url": "https://c2a3v6.bilinkai.com/images/2026/09/25/1790328002_b928c00a86de950a9196957997874de7.png",
+    "created_at": 1790328009865
+  },
+  {
+    "id": "ca_00007_fc3839",
+    "character_id": "chr_00032_149758",
+    "character_version_id": null,
+    "asset_id": null,
+    "role": "front",
+    "status": "CANONICAL",
+    "outfit_id": null,
+    "source_asset_refs": [],
+    "generation_job_id": "job_00006_310d8b",
+    "provenance": {
+      "model": "gpt-image-2.5-sunburst",
+      "provider": "image_relay",
+      "capability": "IMAGE_GENERATION",
+      "request_id": "7f640a77-fd3f-4525-82ad-e06a44161175",
+      "resolution": "4K",
+      "prompt_hash": "ef3db01fe8064838",
+      "aspect_ratio": "1:1",
+      "normalization": {
+        "aspect_ratio": {
+          "reason": "OpenAI-compatible relay uses square size presets",
+          "requested": "16:9",
+          "submitted": "1:1"
+        }
+      },
+      "requested_size": "4096x4096",
+      "requested_model": "gpt-image-2.5-sunburst",
+      "output_dimensions": {
+        "width": 4096,
+        "height": 4096
+      },
+      "actual_aspect_ratio": "1:1",
+      "requested_resolution": "4K",
+      "requested_aspect_ratio": "16:9"
+    },
+    "url": "https://c2a3v6.bilinkai.com/images/2026/09/25/1790328037_8886562e26455442dfe6dd25fc369f39.png",
+    "created_at": 1790328040919
+  }
+]

@@ -1,0 +1,45 @@
+{
+  "scope": "isolated real backend + Standard UI",
+  "viewport": "1920x1080",
+  "paid_media_requests": 0,
+  "cases": [
+    {
+      "name": "Double click commits one Character",
+      "result": "PASS"
+    },
+    {
+      "name": "Lost response + page reload retry reuses creation token",
+      "result": "PASS"
+    },
+    {
+      "name": "Normalized duplicate warning and explicit second identity",
+      "result": "PASS"
+    }
+  ],
+  "creation_requests": [
+    {
+      "name": "Morgan · Vale",
+      "bio": "A careful archivist",
+      "personality": "",
+      "appearance": "",
+      "creation_idempotency_key": "character-create:a5ccc4b0-ec03-496f-9546-ba4f6c8a4bf9",
+      "confirm_duplicate": false
+    },
+    {
+      "name": "Morgan · Vale",
+      "bio": "A careful archivist",
+      "personality": "",
+      "appearance": "",
+      "creation_idempotency_key": "character-create:a5ccc4b0-ec03-496f-9546-ba4f6c8a4bf9",
+      "confirm_duplicate": false
+    },
+    {
+      "name": "ＭＯＲＧＡＮ-ＶＡＬＥ",
+      "bio": "A genuinely different person",
+      "personality": "",
+      "appearance": "",
+      "creation_idempotency_key": "character-create:9e86ea58-938d-45d4-a04a-b36d7d51ecf7",
+      "confirm_duplicate": true
+    }
+  ]
+}

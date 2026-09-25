@@ -78,6 +78,27 @@ def _clue_labels(state: "SessionState") -> dict[str, str]:
         if "：" in line:
             key, desc = line.split("：", 1)
             labels.setdefault(key.strip(), desc.strip()[:24])
+    labels.update(_mechanic_labels(state, "clue-system"))
+    return labels
+
+
+def _mechanic_labels(state: "SessionState", skill: str) -> dict[str, str]:
+    """Presentation metadata only, derived from committed evidence, never speculation."""
+    labels = {}
+    for branch in state.branches:
+        if branch.status != BranchStatus.CANONICAL or not branch.outcome:
+            continue
+        triggers = (branch.director_result or {}).get("outcome", {}).get("skill_triggers", [])
+        explicit = {t.get("target"): t.get("label") for t in triggers if t.get("skill") == skill and t.get("label")}
+        evidence = "；".join(branch.outcome.evidence)
+        for op in branch.outcome.ops:
+            key = str(op.value) if skill == "inventory" and op.op == "addItem" else (op.path[6:] if skill == "clue-system" and op.op == "set" and op.path and op.path.startswith("clues.") else None)
+            if key:
+                # Legacy proposals lacked labels. Show their recorded evidence
+                # as a group instead of guessing a translation of technical IDs.
+                label = explicit.get(key) or evidence
+                if label:
+                    labels[key] = label
     return labels
 
 
@@ -96,7 +117,16 @@ def _scenario_locations(state: "SessionState") -> list[str]:
 
 def _scenario_location_names(state: "SessionState") -> dict[str, str]:
     return _parse_declared_lines(
-        state.scenario_snapshot.get("world", {}).get("locations", ""))
+            state.scenario_snapshot.get("world", {}).get("locations", ""))
+
+
+def _public_story_text(state: "SessionState", text: str) -> str:
+    """Keep internal location ids out of Standard Player narration."""
+    value = text or ""
+    for location_id, label in _scenario_location_names(state).items():
+        if location_id and label and location_id != label:
+            value = value.replace(location_id, label)
+    return value
 
 
 def _npc_ids(state: "SessionState") -> list[str]:
@@ -134,16 +164,31 @@ class RuntimeEngine:
         chars = {c.get("id"): c for c in snapshot.get("characters", [])}
         return {
             "title": snapshot.get("title", ""),
+            "premise": snapshot.get("premise") or snapshot.get("description", ""),
             "genre": snapshot.get("genre", ""),
             "tone": snapshot.get("tone", ""),
             "core_question": (state.current_arc().question if state.current_arc() else "") or drama.get("core_question", ""),
             "central_conflict": (state.current_arc().conflict if state.current_arc() else "") or drama.get("central_conflict", ""),
             "ending_families": _ending_families(state),
             "truth_model": drama.get("truth_model", ""),
+            "authored_anchors": drama.get("anchors", ""),
+            "forbidden_outcomes": drama.get("forbidden_outcomes", ""),
+            "world_rules": snapshot.get("world", {}).get("rules", ""),
+            "world_constraints": snapshot.get("world", {}).get("constraints", ""),
+            "player": chars.get(snapshot.get("player_character"), {}),
             "locations": _scenario_location_names(state),
             "location": state.world.location,
             "inventory": state.world.inventory,
             "clues": list(state.world.clues.keys()),
+            "knowledge": list(state.world.knowledge),
+            "canonical_facts": {key: value for key, value in state.world.truth.items() if value},
+            "objects": state.world.objects,
+            "recent_canonical_beats": [
+                {"title": b.outcome.title, "result": b.outcome.text,
+                 "presented_narrative": b.narrative, "evidence": b.outcome.evidence}
+                for b in state.branches if b.status == BranchStatus.CANONICAL and b.outcome][-4:],
+            "wishes": [{"text": wish.raw, "status": wish.status.value}
+                       for wish in state.wishes if wish.status == WishStatus.ACTIVE],
             "relationships": state.world.relationships,
             "phase": state.drama.phase.value,
             "npcs": [{**chars.get(cid, {}), "id": cid}
@@ -607,7 +652,11 @@ class RuntimeEngine:
             branch_ids.append(branch.id)
         state.epoch = RecommendationEpoch(
             id=epoch_id, k=len(branch_ids), target_k=settings.effective_target_k,
-            status="PLANNING", branch_ids=branch_ids, timed=bool(timed_node))
+            status="PLANNING", branch_ids=branch_ids, timed=bool(timed_node),
+            # Decision content is safe to show as soon as Jev has locked it.
+            # Media readiness is a separate gate and may lag behind.
+            options_exposed=not bool(timed_node),
+            options_exposed_at=now_ms() if not timed_node else None)
         if timed_node:
             # 确定性超时 fallback 分支（Scenario 预先声明，不允许模型临场改判）
             timeout_s = settings.timed_timeout_override or timed_node["timeout_s"]
@@ -845,6 +894,26 @@ class RuntimeEngine:
             if branch.status != BranchStatus.PRODUCTION:
                 return
             await self._shoot_branch(state, branch)
+            if (not settings.pre_generate_recommendation_media
+                    and branch.source in (BranchSource.RECOMMENDATION, BranchSource.TIMED)):
+                duration = sum(s.duration for s in branch.shots) or settings.effective_shot_duration
+                branch.artifact = SceneArtifact(
+                    id=uid("deferred_scene"), branch_id=branch.id,
+                    quality_status="DEFERRED", duration=duration,
+                    provenance={"deferred_media": True,
+                                "reason": "recommendation_media_on_demand",
+                                "provider": settings.fal_h3_model})
+                branch.pipeline_events.append({"at": now_ms(), "status": "READY",
+                                               "media": "DEFERRED"})
+                branch.status = BranchStatus.READY
+                branch.ready_at = now_ms()
+                self._event(state, "recommendation_ready_without_media",
+                            f"推荐已就绪，等待选择后生成视频：{branch.label}",
+                            branch_id=branch.id)
+                await self._persist(state)
+                await self._maybe_publish(state)
+                await self._push(state)
+                return
             await self._set_phase(state, branch, BranchStatus.GENERATING)
 
         gen_error: Optional[str] = None
@@ -923,12 +992,18 @@ class RuntimeEngine:
     # 各阶段实现（Provider 调用经 Router，Agent 不直接绑 SDK）
     # ------------------------------------------------------------------
     async def _director_output(self, messages, mechanics, session_id, branch_id=None):
-        from .director_output import normalize_director_output, DirectorOutcome
+        from .director_output import normalize_director_output, DirectorOutcome, DirectorOutput
         schema = {"outcome": DirectorOutcome.model_json_schema(), "directive": DramaticDirective.model_json_schema()}
         messages = [{"role": "system", "content": "严格返回 JSON {outcome, directive}。outcome 必须含 title 和 text。QUICK_ACK 只用于轻量观察；改变地点、关系、获得重要证据、主动退出或形成结局使用 FULL_BEAT。决定关闭篇章时给 ending（合法结局方向或退出后果），ending 非空必须使用 FULL_BEAT，不得仅用确认文案假装故事已结束。不能改写核心真相。schema: " + json.dumps(schema, ensure_ascii=False)}] + messages
         enabled = [k for k, v in mechanics.items() if isinstance(v, dict) and v.get("enabled")]
         messages[0]["content"] += " 已启用玩法：" + json.dumps(enabled) + "。关系、线索和物品变化用相应 skill_triggers 提案，同一变化只提出一次。target 使用场景中的角色/物品/线索标识，location 使用 locations 字典的键。"
         messages[0]["content"] += (
+            ' State operations use dot paths, never JSON Pointer: location, health, fiction_minutes, objects.<id>, relationships.<id>, clues.<id>.'
+            ' Example movement: {"op":"set","path":"location","value":"declared_location_id"}.'
+            ' Inventory/clue/relationship changes belong in skill_triggers; do not duplicate them in ops.'
+            ' Inventory targets must be tangible carried objects, not flags, abstract outcomes, or system identifiers; use natural-language item names.'
+            ' Record changed facility conditions under objects, not inventory. Actual movement must include a location set using the declared location ID.'
+            ' Never invent possession, evidence or a relationship delta just to populate a field. Explain the observable causal basis in text/evidence.'
             " outcome 必须显式给出 ops、evidence、skill_triggers 三个数组；没有变化时返回空数组。"
             "如果你决定人物信任改变、发现线索或获得物品，必须在 skill_triggers 给出相应的类型化提案，"
             "不能仅在 text 或 directive.secondary_functions 中描述变化。"
@@ -936,10 +1011,16 @@ class RuntimeEngine:
             '线索提案格式：{"skill":"clue-system","target":"线索ID","stage":"DISCOVERED"}；'
             '物品提案格式：{"skill":"inventory","target":"物品ID","action":"add"}。'
             "只为已启用的玩法提出与当前行动有因果依据的变化，不为凑齐字段发明事实。"
+            "根据recent_canonical_beats承接已经发生的情节，不重复铺垫已经完成的步骤。"
+            "本次应裁定玩家行动的具体结果或明确阻碍，不能只写准备执行。"
+            "text若写人物实际抵达新地点，ops必须同步location；只有意图或受阻时不移动。"
+            "新物品和线索trigger.label必须用玩家语言给出可读名称；不要把内部ID当显示名。"
+            "这是行动裁定而不是最终旁白；text控制在200字以内，把预算留给完整的结构化提案与directive。"
         )
         for attempt in range(2):
             _, rec, resp = await self.router.call_text("director", messages=messages,
-                output_contract={"purpose": "director_plan", "mechanics": mechanics}, branch_id=branch_id)
+                output_contract={"purpose": "director_plan", "mechanics": mechanics,
+                                 "json_schema": DirectorOutput.model_json_schema()}, branch_id=branch_id)
             try:
                 result = normalize_director_output(resp.content)
                 original = json.loads(resp.content) if resp.content.lstrip().startswith("{") else result
@@ -953,8 +1034,12 @@ class RuntimeEngine:
                     model=resp.model, session_id=session_id, branch_id=branch_id)
                 if attempt:
                     raise
-                messages = messages + [{"role": "assistant", "content": resp.content},
-                    {"role": "user", "content": "只修复输出格式，保持原意、事实和状态操作不变。校验错误：" + str(error)}]
+                # A truncated draft can consume all remaining local context.
+                # Retry against the original authoritative input, never append
+                # an incomplete model draft as new story evidence.
+                messages = messages + [{"role": "user", "content":
+                    "上一稿格式无效。请根据原始输入重新返回完整且简洁的JSON，不增加原始输入之外的事实；"
+                    "text控制在200字以内。校验错误：" + str(error)[:500]}]
 
     async def _plan_branch(self, state: SessionState, branch: Branch) -> None:
         if branch.source == BranchSource.OPENING:
@@ -964,6 +1049,8 @@ class RuntimeEngine:
                   "为这个故事设计第一幕：建立当前地点、实际在场人物与核心冲突，给玩家留下行动空间。"
                   "这是开始展示已发布的故事，不是玩家已完成的行动：不得增加物品、线索、关系或揭露尚未知晓的秘密，"
                   "不得提前形成结局；ops、evidence、skill_triggers 必须为空，ending 必须为 null。\n"
+                  "遵守已确认 authored_anchors 中的开场安排与人物出场方式；"
+                  "远程或广播人物不能无原因改为现场出现。player 指定玩家身份，不得替换或遗漏。"
                   f"scenario_context: {json.dumps(self._scenario_brief(state), ensure_ascii=False)}"}],
                 mechanics, state.id, branch.id)
             outcome = content.get("outcome") or {}
@@ -1025,6 +1112,7 @@ class RuntimeEngine:
                   f"scenario_context: {json.dumps(self._scenario_brief(state), ensure_ascii=False)}\n{schema_hint}"}],
                 mechanics, state.id, branch.id)
         outcome = content.get("outcome") or {}
+        branch.director_result = content
         directive_data = content.get("directive") or {}
         branch.directive = DramaticDirective(
             id=uid("dir"),
@@ -1056,7 +1144,8 @@ class RuntimeEngine:
                 branch.outcome.ops.append(PatchOperation(**op))
             await tracer.emit(f"skill.{sid}", "success",
                               input_=result["input"],
-                              output={"ops": len(result["proposal"]["operations"])},
+                              output={"ops": len(result["proposal"]["operations"]),
+                                      "proposal": result["proposal"]},
                               provider="runtime",
                               session_id=state.id, branch_id=branch.id,
                               skill_id=sid, skill_version=result["skill_version"])
@@ -1072,6 +1161,11 @@ class RuntimeEngine:
             base_revision=state.drama.revision, source=f"branch:{branch.id}",
             operations=self._drama_ops_for(state, branch),
             idempotency_key=f"dcommit:{branch.id}")
+        # Reject illegal proposals before any paid media submission. Validation
+        # is a copy-only dry run; formal state changes still occur at commit.
+        if branch.state_patch_proposal:
+            state_manager.validate(state.world, branch.state_patch_proposal, state.committed_keys,
+                drama_revision=state.drama.revision, locations=_scenario_locations(state) or None)
         branch.context = self.build_context(state, directive_data)
         branch.packet = self._build_scene_packet(state, branch)
         if not branch.routes or branch.routes[-1] != rec:
@@ -1120,13 +1214,21 @@ class RuntimeEngine:
                 values[k.strip()] = v.strip()
         hits: list[str] = []
         import re as _re
+        # Public names may be mentioned without disclosing the facts attached
+        # to them. English names otherwise cross the six-character threshold.
+        public_names = {
+            word.casefold()
+            for character in state.scenario_snapshot.get("characters", [])
+            for field in ("name", "identity")
+            for word in _re.findall(r"[A-Za-z]+", character.get(field, "") or "")
+        }
         for key in branch.packet.forbidden_revelations:
             value = values.get(key, "")
             for seg in _re.split(r"[，。；、,.;！？\s]+", value):
                 seg = seg.strip()
                 # ≥6 字才视为泄密特征片段：短片段（如角色名 "Alice"、地名）会出现在
                 # 任何正常叙事里，阈值过低会把合法文本误判为泄密（G07 泛化后暴露）。
-                if len(seg) >= 6 and seg in text:
+                if len(seg) >= 6 and seg.casefold() not in public_names and seg in text:
                     hits.append(f"{key}→{seg}")
         return hits
 
@@ -1272,18 +1374,36 @@ class RuntimeEngine:
     async def _shoot_branch(self, state: SessionState, branch: Branch) -> None:
         policy = self._shot_policy(branch)
         characters = state.scenario_snapshot.get("characters", [])
+        cast_ids = sorted({c["id"] for c in characters if c.get("id")})
+        cast_schema = {"type": "array", "items": {"type": "string", "enum": cast_ids}} if cast_ids else {"type": "array", "maxItems": 0}
+        schema = {
+            "type": "object", "additionalProperties": False, "required": ["shots"],
+            "properties": {"shots": {
+                "type": "array", "minItems": policy["count"], "maxItems": policy["count"],
+                "items": {
+                    "type": "object", "additionalProperties": False,
+                    "required": ["title", "prompt", "subtitle", "duration", "cast"],
+                    "properties": {
+                        "title": {"type": "string"}, "prompt": {"type": "string", "minLength": 1},
+                        "subtitle": {"type": "string"}, "cast": cast_schema,
+                        "duration": {"type": "number", "minimum": policy["minimum"], "maximum": policy["maximum"]},
+                    },
+                },
+            }},
+        }
         _, rec, resp = await self.router.call_text(
             "production",
             messages=[{"role": "system", "content":
                 f"返回 JSON，包含 shots 数组，必须正好 {policy['count']} 个镜头。每个 title/prompt/subtitle 为字符串，"
                 f"duration 目标 {policy['target']} 秒，允许 {policy['minimum']} 至 {policy['maximum']} 秒。"
                 "每个镜头必须给 cast:[角色ID]，只包含画面中真正可见的角色；广播、画外音不算可见角色。"
+                f"cast 中每一项只能逐字使用这些 ID，禁止用姓名或自创缩写替代：{json.dumps(cast_ids)}。"
                 "prompt 使用完整具体影视描述，人物与场景保持连续。角色：" + json.dumps(
                     [{k: c.get(k, "") for k in ("id", "identity", "appearance", "visual_state")} for c in characters], ensure_ascii=False)},
                 {"role": "user", "content": f"raw_player_input: {branch.label}\n"
                  f"scene_title: {branch.outcome.title if branch.outcome else branch.label}\n"
                  f"scene_text: {branch.narrative}"}],
-            output_contract={"purpose": "production_shots", "shot_policy": policy}, branch_id=branch.id)
+            output_contract={"purpose": "production_shots", "shot_policy": policy, "json_schema": schema}, branch_id=branch.id)
         from .structured_output import decode_object
         content = decode_object(resp.content)
         raw_shots = content.get("shots")
@@ -1319,6 +1439,11 @@ class RuntimeEngine:
             cast = shot.get("cast")
             if not isinstance(cast, list) or any(not isinstance(cid, str) or cid not in known for cid in cast):
                 if settings.provider_mode != "mock":
+                    await tracer.emit("production.shots", "rejected",
+                        output={"reason": "invalid_cast", "cast": cast, "allowed_ids": cast_ids,
+                                "raw_output": resp.content},
+                        provider=rec.selected or "", model=resp.model,
+                        session_id=state.id, branch_id=branch.id)
                     raise EngineError("Production requires a valid explicit shot cast before paid submission")
                 cast = list(known)  # Offline fixtures predate cast; never inferred for a paid provider.
             refs = self._bound_references(state, cast)
@@ -1623,15 +1748,109 @@ class RuntimeEngine:
     # ==================================================================
     def valid_branch(self, state: SessionState, branch: Branch) -> bool:
         arc = state.current_arc()
+        # An active, published UNTIMED decision is held while the user thinks
+        # (PRD 04.7). TTL applies once an unselected branch leaves that decision
+        # and becomes reusable cache; it must not silently erase visible choices.
+        held_decision = bool(
+            not state.ended and state.epoch and state.epoch.published
+            and state.epoch.status == "READY" and not state.epoch.timed
+            and branch.id in state.epoch.ready_ids
+            and branch.interaction_mode == InteractionMode.UNTIMED
+        )
         return (
             branch.session_id == state.id
             and (arc is None or branch.arc_id == arc.id)
             and branch.status == BranchStatus.READY
-            and (not branch.expires_at or now_ms() <= branch.expires_at)
+            and (held_decision or not branch.expires_at or now_ms() <= branch.expires_at)
             and branch.fingerprint == self.compute_fingerprint(state)
             and branch.artifact is not None
-            and branch.artifact.quality_status == "READY"
+            and branch.artifact.quality_status in ("READY", "DEFERRED")
+            and (branch.artifact.quality_status == "READY"
+                 or branch.artifact.provenance.get("deferred_media") is True)
         )
+
+    async def _materialize_deferred_selection(self, session_id: str, branch_id: str) -> None:
+        """Generate only the recommendation the player actually selected."""
+        async with self._lock(session_id):
+            state = await self.load_session(session_id)
+            branch = state.branch(branch_id)
+            if not branch or not branch.artifact or branch.artifact.quality_status != "DEFERRED":
+                return
+            branch.status = BranchStatus.GENERATING
+            branch.pipeline_events.append({"at": now_ms(), "status": "GENERATING",
+                                           "media": "ON_DEMAND"})
+            await self._persist(state)
+            await self._push(state)
+        try:
+            await self._generate_branch_media(session_id, branch_id)
+            async with self._lock(session_id):
+                state = await self.load_session(session_id)
+                branch = state.branch(branch_id)
+                await self._assemble_branch(state, branch)
+                branch.status = BranchStatus.READY
+                branch.ready_at = now_ms()
+                spent = settings.effective_shots_per_branch * settings.shot_unit_cost
+                state.budget.spent_by_branch[branch.id] = spent
+                state.budget.reserved = max(0, state.budget.reserved - spent)
+                state.budget.used += spent
+                await self._persist(state)
+                await self._push(state)
+        except Exception as error:
+            async with self._lock(session_id):
+                state = await self.load_session(session_id)
+                branch = state.branch(branch_id)
+                branch.status = BranchStatus.FAILED
+                branch.fail_stage = "GENERATING"
+                branch.last_error = f"{type(error).__name__}: {error}"
+                state.selection_lock = False
+                state.player.status = "FAILED_RECOVERABLE"
+                self._release_budget(state, branch)
+                await self._persist(state)
+                await self._push(state)
+            raise
+
+    async def _await_selected_branch(self, session_id: str, branch_id: str) -> None:
+        """Keep an early Jev selection pending until its branch is ready."""
+        try:
+            for _ in range(1200):
+                async with self._lock(session_id):
+                    state = await self.load_session(session_id)
+                    branch = state.branch(branch_id) if state else None
+                    if not state or not branch:
+                        return
+                    if branch.status == BranchStatus.READY:
+                        break
+                    if branch.status in (BranchStatus.FAILED, BranchStatus.INVALIDATED,
+                                         BranchStatus.EXPIRED, BranchStatus.CANCELLED):
+                        state.selection_lock = False
+                        state.pending_selected_branch_id = None
+                        state.player.status = "WAITING_DECISION"
+                        await self._persist(state)
+                        await self._push(state)
+                        return
+                await asyncio.sleep(0.25)
+            else:
+                raise EngineError("推荐视频准备超时")
+            state = await self.load_session(session_id)
+            branch = state.branch(branch_id)
+            if branch.artifact and branch.artifact.quality_status == "DEFERRED":
+                await self._materialize_deferred_selection(session_id, branch_id)
+            async with self._lock(session_id):
+                state = await self.load_session(session_id)
+                branch = state.branch(branch_id)
+                await self._commit_selected(state, branch)
+        except Exception as error:
+            async with self._lock(session_id):
+                state = await self.load_session(session_id)
+                if state:
+                    state.selection_lock = False
+                    state.pending_selected_branch_id = None
+                    state.player.status = "FAILED_RECOVERABLE"
+                    state.messages.append({"kind": "system",
+                                           "text": "已选择该方向，但视频准备失败，可以重试。",
+                                           "at": now_ms()})
+                    await self._persist(state)
+                    await self._push(state)
 
     async def select_branch(self, session_id: str, branch_id: str) -> dict:
         async with self._lock(session_id):
@@ -1645,8 +1864,27 @@ class RuntimeEngine:
             if state.timed.active and not state.timed.selection_open:
                 raise EngineError("选项正在准备中，倒计时开始后即可选择")
             branch = state.branch(branch_id)
-            if not branch or not self.valid_branch(state, branch):
+            early_selectable = bool(
+                branch and state.epoch and state.epoch.options_exposed
+                and branch.id in state.epoch.branch_ids
+                and branch.source in (BranchSource.RECOMMENDATION, BranchSource.TIMED)
+                and branch.status in (BranchStatus.PREDICTED, BranchStatus.PLANNING,
+                                      BranchStatus.NARRATIVE, BranchStatus.PRODUCTION,
+                                      BranchStatus.GENERATING, BranchStatus.ASSEMBLING))
+            if not branch or (not self.valid_branch(state, branch) and not early_selectable):
                 raise EngineError("该选项已失效，请选择其他方向")
+            if early_selectable:
+                state.selection_lock = True
+                state.pending_selected_branch_id = branch_id
+                state.player.status = "GENERATING_NEXT"
+                self._event(state, "branch_selected_early",
+                            f"玩家先选了推荐，等待该方向的场景准备：{branch.label}",
+                            branch_id=branch_id)
+                await self._persist(state)
+                await self._push(state)
+                asyncio.get_running_loop().create_task(
+                    self._await_selected_branch(session_id, branch_id))
+                return {"status": "SELECTING", "branch_id": branch_id}
             state.selection_lock = True
             branch.status = BranchStatus.SELECTED
             state.counters.spend_attempts += 1
@@ -1656,6 +1894,9 @@ class RuntimeEngine:
                         branch_id=branch_id)
             await self._persist(state)
             await self._push(state)
+
+        if branch.artifact and branch.artifact.quality_status == "DEFERRED":
+            await self._materialize_deferred_selection(session_id, branch_id)
 
         async with self._lock(session_id):
             state = await self.load_session(session_id)
@@ -1685,6 +1926,9 @@ class RuntimeEngine:
             # Phase 2：媒体确认 → 双域原子提交 → CANONICAL
             await self._commit_branch(state, branch)
             branch.status = BranchStatus.CANONICAL
+            branch.last_error = None
+            branch.fail_stage = None
+            branch.rollback_reason = None
             branch.commit_event = f"commit:{branch.id}"
             state.counters.spend_success += 1
             self._invalidate_others(state, branch)
@@ -1705,6 +1949,7 @@ class RuntimeEngine:
                               session_id=state.id, branch_id=branch.id)
         finally:
             state.selection_lock = False
+            state.pending_selected_branch_id = None
         if branch.status == BranchStatus.CANONICAL:
             self._present(state, branch)
         await self._persist(state)
@@ -1712,9 +1957,17 @@ class RuntimeEngine:
 
     def _invalidate_others(self, state: SessionState, chosen: Branch) -> None:
         for b in state.branches:
-            if b.id != chosen.id and b.status == BranchStatus.READY:
+            if (b.id != chosen.id and state.epoch and b.id in state.epoch.branch_ids
+                    and b.status in (BranchStatus.PREDICTED, BranchStatus.PLANNING,
+                                     BranchStatus.NARRATIVE, BranchStatus.PRODUCTION,
+                                     BranchStatus.GENERATING, BranchStatus.ASSEMBLING,
+                                     BranchStatus.READY, BranchStatus.RETRYING)):
                 b.status = BranchStatus.INVALIDATED
                 b.invalidated_reason = "not_selected"
+                self._release_budget(state, b)
+                task = self._pipeline_tasks.get(b.id)
+                if task and not task.done():
+                    task.cancel()
 
     async def _commit_branch(self, state: SessionState, branch: Branch) -> None:
         """双域原子提交：world + drama 全部 validate 通过后才一次性落版本（G03）。
@@ -1899,8 +2152,18 @@ class RuntimeEngine:
                     raise EngineError("当前没有可恢复的生成失败")
                 failed = next((b for b in reversed(state.branches)
                                if b.status == BranchStatus.FAILED), None)
+                if failed and failed.fail_stage == "COMMIT" and failed.artifact:
+                    if failed.fingerprint != self.compute_fingerprint(state):
+                        raise EngineError("故事状态已变化，请重新确认行动")
+                    self._event(state, "commit_retry", "重新校验已完成场景，复用现有视频", branch_id=failed.id)
+                    await self._commit_selected(state, failed)
+                    return {"position": player.position(), "status": player.status}
                 player.status = "OPENING_PREPARING" if not player.branch_id else "GENERATING_NEXT"
                 if failed:
+                    if failed.fail_stage == "PLANNING":
+                        # Invalid model output must be replanned under the
+                        # current contract, not replayed forever from cache.
+                        failed.director_result = None
                     failed.status = BranchStatus.RETRYING
                     failed.last_error = None
                     self._spawn_pipeline(session_id, failed.id)
@@ -2375,24 +2638,31 @@ class RuntimeEngine:
             subs.remove(ws)
 
     def player_view(self, state: SessionState) -> dict:
-        """玩家视图：只含 READY 分支与自然语言状态（术语隔离，I05 Ready Gate）。"""
+        """玩家视图：先暴露已锁定的 Jev 选项，媒体就绪状态单独呈现。"""
         recommendations = []
         position = state.player.position()
-        # Recommendation exposure is a server-side timing contract.  A missing
-        # video never opens the gate early; only the recorded decision_open_at
-        # (or an explicitly ended scene) can expose ready branches.
+        # Recommendation exposure is a server-side timing contract.  Once the
+        # decision lead is reached, locked Jev labels may be exposed while
+        # branch media is still planning or generating; media_ready is shown
+        # separately and does not gate the decision UI.
         lead_open = (state.player.status in ("WAITING_DECISION", "READY", "ENDED")
                      or position >= state.player.decision_open_at)
         pending_demand = state.branch(state.pending_freeform_id) if state.pending_freeform_id else None
         demand_running = pending_demand and pending_demand.status not in (BranchStatus.FAILED, BranchStatus.CANONICAL, BranchStatus.CANCELLED, BranchStatus.INVALIDATED, BranchStatus.EXPIRED)
-        if lead_open and not state.text_mode and not demand_running and state.epoch and state.epoch.published:
-            for bid in state.epoch.ready_ids:
+        if (lead_open and not state.text_mode and not demand_running
+                and not state.selection_lock and state.epoch
+                and (state.epoch.published or state.epoch.options_exposed)):
+            ids = state.epoch.ready_ids if state.epoch.published else state.epoch.branch_ids
+            for bid in ids:
                 b = state.branch(bid)
-                if b and b.source in (BranchSource.RECOMMENDATION, BranchSource.TIMED) and self.valid_branch(state, b) and b.artifact.media_type == "video":
+                if (b and b.source in (BranchSource.RECOMMENDATION, BranchSource.TIMED)
+                        and b.status not in (BranchStatus.FAILED, BranchStatus.INVALIDATED,
+                                             BranchStatus.EXPIRED, BranchStatus.CANCELLED)):
                     recommendations.append({
-                        "branch_id": b.id, "label": b.label,
-                        "summary": b.summary, "confidence": b.probability,
-                        "source": b.source.value})
+                        "branch_id": b.id, "label": _public_story_text(state, b.label),
+                        "summary": _public_story_text(state, b.summary), "confidence": b.probability,
+                        "source": b.source.value,
+                        "media_ready": bool(b.artifact and b.artifact.quality_status == "READY")})
         pos = position
         if pos >= state.player.duration and state.player.status == "PLAYING":
             state.player.status = "WAITING_DECISION"
@@ -2403,10 +2673,16 @@ class RuntimeEngine:
         player_char = chars.get(snapshot.get("player_character", "player"), {})
         # 已选分支（提交窗口内用于「已选收起」呈现）
         selected = None
+        if state.pending_selected_branch_id:
+            pending_selected = state.branch(state.pending_selected_branch_id)
+            if pending_selected:
+                selected = {"branch_id": pending_selected.id,
+                            "label": _public_story_text(state, pending_selected.label),
+                            "status": "SELECTING"}
         for b in reversed(state.branches[-10:]):
-            if b.status in (BranchStatus.SELECTED, BranchStatus.PROVISIONAL,
+            if selected is None and b.status in (BranchStatus.SELECTED, BranchStatus.PROVISIONAL,
                             BranchStatus.CANONICAL):
-                selected = {"branch_id": b.id, "label": b.label,
+                selected = {"branch_id": b.id, "label": _public_story_text(state, b.label),
                             "status": b.status.value}
                 break
         # 已知状态（呈现回执后才进 knowledge；这里给工具栏展示）
@@ -2439,11 +2715,11 @@ class RuntimeEngine:
             "arc": {"seq": arc.seq if arc else len(state.arcs), "total": len(state.arcs)},
             "player": {
                 "status": state.player.status,
-                "scene_title": state.player.scene_title,
-                "scene_text": state.player.scene_text,
-                "caption": state.player.caption,
+                "scene_title": _public_story_text(state, state.player.scene_title),
+                "scene_text": _public_story_text(state, state.player.scene_text),
+                "caption": _public_story_text(state, state.player.caption),
                 "caption_speaker": chars.get(current.caption_speaker, {}).get("identity", "") if (current := state.branch(state.player.branch_id)) and current.caption_speaker else "",
-                "location_name": _scenario_location_names(state).get(state.world.location, ""),
+                "location_name": _scenario_location_names(state).get(state.world.location, "当前区域"),
                 "video_url": state.player.video_url,
                 "duration": state.player.duration,
                 "lead": state.player.lead,
@@ -2470,7 +2746,7 @@ class RuntimeEngine:
                     (x for x in reversed(state.branches[-10:])
                      if x.status == BranchStatus.FAILED
                      and x.source == BranchSource.FREE and x.id == state.pending_freeform_id), None)) else None),
-            "known": {"inventory": state.world.inventory, "relationships": relationships,
+            "known": {"inventory": state.world.inventory, "inventory_labels": _mechanic_labels(state, "inventory"), "relationships": relationships,
                       "clues": clues, "knowledge": knowledge},
             "messages": state.messages[-20:],
             "hint_chips": state.hint_chips[:4],

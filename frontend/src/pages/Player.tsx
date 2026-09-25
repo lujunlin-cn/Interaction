@@ -8,7 +8,7 @@ const WISH_STATUS_LABEL: Record<string, string> = {
   ACTIVE: "生效中", DEFERRED: "已延期", CONFLICTED: "与规则冲突", FULFILLED: "已实现",
   PARTIALLY_FULFILLED: "部分实现", FAILED: "未能实现", SUPERSEDED: "被替换", WITHDRAWN: "已撤回",
 };
-function publicLabel(value: string, fallback: string) { return /^(?:fact|clue|item|obj)_[a-z0-9_]+$/i.test(value) ? fallback : value; }
+function publicLabel(value: string, fallback: string) { return /^[a-z][a-z0-9]*_[a-z0-9_]+$/i.test(value) ? fallback : value; }
 function relationshipLabel(value: number) { return value >= 70 ? "信任你" : value >= 50 ? "愿意与你交流" : value >= 30 ? "有所戒备" : "暂时保持距离"; }
 
 export default function Player() {
@@ -104,6 +104,12 @@ export default function Player() {
   const failed = p.status === "FAILED_RECOVERABLE" || p.status === "FAILED";
   const generating = p.status === "OPENING_PREPARING" || p.status === "GENERATING_NEXT";
   const accepted = busy || Boolean((view as any).action_pending) || Boolean(view.pending_intent);
+  const decisionOpen = Boolean(
+    view.ended || view.pending_intent || view.last_failed_action ||
+    view.recommendations.length > 0 || view.timed?.selection_open ||
+    failed || media === "failed" || p.status === "WAITING_DECISION" ||
+    p.status === "READY" || (p.status === "PLAYING" && p.duration > 0 && p.position >= (p.decision_open_at ?? p.lead))
+  );
   const remaining = timedBase ? Math.max(0, timedBase.remaining - (now - timedBase.at)) : null;
   const hudOpen = hudPinned || hudHover;
   const source = replay || p.video_url;
@@ -119,7 +125,7 @@ export default function Player() {
     <button onClick={async () => { const r = await command("text_continue"); if (r?.needs_action) setInput(r.raw_text || ""); else setInput(""); }}>文字模式继续</button>
     <button onClick={() => setState({page: "home", sessionId: null})}>退出故事</button>
   </div>;
-  return <div className="player-shell immersive-player" ref={shellRef} data-testid="player-shell" onPointerMove={() => setControlActivity(Date.now())} onPointerDown={() => setControlActivity(Date.now())} onKeyDown={() => setControlActivity(Date.now())}>
+  return <div className="player-shell immersive-player" ref={shellRef} data-testid="player-shell" data-decision-open={decisionOpen ? "true" : "false"} onPointerMove={() => setControlActivity(Date.now())} onPointerDown={() => setControlActivity(Date.now())} onKeyDown={() => setControlActivity(Date.now())}>
     <header className="player-head"><b className="grow">{view.scenario.title}</b><span className="muted">第 {view.arc.seq} 篇章</span><button className="small" onClick={() => setState({page: "home", sessionId: null, theaterMode: false})}>退出</button></header>
     <div className="immersion-layer" data-layer="immersion">
       <div className="player-stage">
@@ -143,7 +149,7 @@ export default function Player() {
         <aside className={`player-hud ${hudOpen ? "open" : ""}`} data-layer="hud" onMouseEnter={() => setHudHover(true)} onMouseLeave={() => setHudHover(false)}>
           <button className="hud-toggle" aria-label="故事随身册" aria-expanded={hudOpen} aria-pressed={hudPinned} onClick={() => { setHudPinned(v => !v); setHudHover(false); }}>☰ {hudPinned ? "收回" : "随身册"}</button>
           {hudOpen && <div className="hud-drawer">
-            <h4>背包</h4>{view.known.inventory.map(it => <p key={it}>{developer ? it : publicLabel(it, "随身物品")}</p>)}{!view.known.inventory.length && <p className="muted">暂时没有物品</p>}
+            <h4>背包</h4>{[...new Set(view.known.inventory.map(it => developer ? it : publicLabel(view.known.inventory_labels?.[it] || it, "随身物品")))].map(label => <p key={label}>{label}</p>)}{!view.known.inventory.length && <p className="muted">暂时没有物品</p>}
             <h4>人物关系</h4>{view.known.relationships.map(r => <p key={r.id}>{r.name}：{developer ? `${r.value} / 100` : relationshipLabel(r.value)}</p>)}
             <h4>线索</h4>{[...view.known.clues, ...view.known.knowledge].filter((c,i,a) => a.findIndex(x => x.id === c.id) === i).map(c => <p key={c.id}>{developer ? c.label : publicLabel(c.label, "新发现的线索")}</p>)}
             <h4>愿望</h4>{view.wishes.filter(w => w.status === "ACTIVE").map(w => <p key={w.id}>{w.raw}</p>)}
@@ -175,7 +181,7 @@ export default function Player() {
     {!view.ended && <div className="interaction-dock">
       {view.timed?.active && <div className="qte-composer"><b>{remaining == null ? "准备快速决定" : `${Math.ceil(remaining / 1000)} 秒`}</b><p>{view.timed.fallback_hint}</p></div>}
       {view.selected && view.selected.status !== "CANONICAL" ? <div className="decision-layer" data-layer="decision">✓ {view.selected.label} · 正在继续故事……</div>
-        : !accepted && view.recommendations.length > 0 && (!view.timed?.active || view.timed.selection_open) && <section className="decision-layer" data-layer="decision"><div className="rec-row">{view.recommendations.map(r => <button className="rec-card" key={r.branch_id} disabled={busy} onClick={() => choose(r.branch_id)}><b>{r.label}</b><p>{r.summary}</p></button>)}</div></section>}
+        : !accepted && view.recommendations.length > 0 && (!view.timed?.active || view.timed.selection_open) && <section className="decision-layer" data-layer="decision"><div className="rec-row">{view.recommendations.map(r => <button className="rec-card" key={r.branch_id} disabled={busy} onClick={() => choose(r.branch_id)}><b>{r.label}</b>{r.media_ready === false && <small className="muted">视频准备中，选中后继续</small>}<p>{r.summary}</p></button>)}</div></section>}
       <section className="agency-layer" data-layer="agency"><p className="muted">推荐只是快捷行动，你仍然可以做自己的选择。</p><div className="free-input-row"><input aria-label="描述你想做的事" placeholder="描述你想做的事……" value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && !accepted) void submitAction(); }} /><button className="primary" disabled={accepted || !input.trim()} onClick={submitAction}>{accepted ? "正在继续故事…" : "行动"}</button></div></section>
     </div>}
     {developer && ui.inspectorOpen && <section className="card developer-inspector"><h3>Developer Inspector</h3><pre>{JSON.stringify(devState, null, 2)}</pre><button onClick={() => setState({page: "developer", devTab: "trace"})}>查看完整 Trace</button></section>}

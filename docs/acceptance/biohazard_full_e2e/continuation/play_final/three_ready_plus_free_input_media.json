@@ -1,0 +1,63 @@
+{
+  "events": [
+    {
+      "at": 1790340528796,
+      "kind": "loadstart",
+      "currentTime": 0,
+      "duration": null,
+      "ended": false,
+      "readyState": 0
+    },
+    {
+      "at": 1790340528835,
+      "kind": "loadedmetadata",
+      "currentTime": 0,
+      "duration": 8,
+      "ended": false,
+      "readyState": 1
+    },
+    {
+      "at": 1790340528860,
+      "kind": "canplay",
+      "currentTime": 0,
+      "duration": 8,
+      "ended": false,
+      "readyState": 4
+    },
+    {
+      "at": 1790340539281,
+      "kind": "playing",
+      "currentTime": 0,
+      "duration": 8,
+      "ended": false,
+      "readyState": 4
+    },
+    {
+      "at": 1790340547480,
+      "kind": "pause",
+      "currentTime": 8,
+      "duration": 8,
+      "ended": true,
+      "readyState": 2
+    },
+    {
+      "at": 1790340547481,
+      "kind": "ended",
+      "currentTime": 8,
+      "duration": 8,
+      "ended": true,
+      "readyState": 2
+    }
+  ],
+  "videos": [
+    {
+      "src": "http://127.0.0.1:9000/media/scenes/scene_00041_09fbe5.mp4",
+      "currentTime": 8,
+      "duration": 8,
+      "ended": true,
+      "paused": true,
+      "readyState": 2,
+      "networkState": 1
+    }
+  ]
+}

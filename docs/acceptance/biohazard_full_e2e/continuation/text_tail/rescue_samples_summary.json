@@ -1,0 +1,88 @@
+{
+  "label": "rescue_samples",
+  "session_id": "sess_00006_6051ee",
+  "duration_seconds": 14.414,
+  "text_mode": true,
+  "status": "FAILED_RECOVERABLE",
+  "selected": {
+    "branch_id": "br_00010_de1567",
+    "label": "我趁离开前把终端上显示的实验日志异常时间与撤离命令签署时间逐项核对，将实际找到的记录存进随身册，注明每条线索的来源，再和克莱尔沿维修通道前往冷藏样本库寻找幸存者。",
+    "status": "CANONICAL"
+  },
+  "ended": false,
+  "arc": {
+    "seq": 1,
+    "total": 1
+  },
+  "scene": "李昂将终端屏幕上跳动的时间戳与撤离命令逐项记录在随身册上，在每条记录旁注明来源为异常时间戳、撤离命令签署时间。这些记录确凿证实维克多于事故前便知晓样本异常，却在事故后仍强令保留数据，间接延误了撤离时间，随身册上已留下完整的线索链条。随后李昂与克莱尔沿潮湿的维修通道踱向冷藏样本库，二人保持警觉，随时准备应对前方可能出现的阻碍或追踪。",
+  "known": {
+    "inventory": [
+      "medical_supplies",
+      "ammunition",
+      "keycard_access"
+    ],
+    "inventory_labels": {
+      "medical_supplies": "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1",
+      "ammunition": "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1",
+      "keycard_access": "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1"
+    },
+    "relationships": [
+      {
+        "id": "stalker",
+        "name": "T-103 型追踪实验体 · 高威胁敌对实体",
+        "value": 50
+      },
+      {
+        "id": "char_149758",
+        "name": "Dr. Victor Hale · Umbrella 地下设施研究主管",
+        "value": 50
+      },
+      {
+        "id": "char_204d12",
+        "name": "克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者",
+        "value": 60
+      }
+    ],
+    "clues": [
+      {
+        "id": "clue_repair_path",
+        "label": "配电室需要恢复供电才能打开相关门禁；维修通道是绕过主通道的替代路线；样本库后方可能藏有未被主通道发现的线索"
+      },
+      {
+        "id": "clue_power_restored",
+        "label": "维修通道是绕过主通道的替代路线"
+      },
+      {
+        "id": "clue_experiment_log_anomaly",
+        "label": "实验日志异常时间戳与撤离命令记录"
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "配电室需要恢复供电才能打开相关门禁",
+        "label": "配电室需要恢复供电才能打开相关门禁"
+      },
+      {
+        "id": "维修通道是绕过主通道的替代路线",
+        "label": "维修通道是绕过主通道的替代路线"
+      },
+      {
+        "id": "样本库后方可能藏有未被主通道发现的线索",
+        "label": "样本库后方可能藏有未被主通道发现的线索"
+      },
+      {
+        "id": "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1",
+        "label": "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1"
+      }
+    ]
+  },
+  "timed": null,
+  "mutations": [
+    {
+      "method": "POST",
+      "url": "http://127.0.0.1:9000/api/sessions/sess_00006_6051ee/action",
+      "body": "{\"text\":\"我和克莱尔检查冷藏样本库里是否有幸存者，优先用急救物资救助受伤的人，核对样本与抑制剂的说明和风险。带着已经复制的证据，我们寻找能把幸存者安全带向紧急逃生通道的路线；不把不明样本带出隔离区。\"}"
+    }
+  ],
+  "errors": []
+}

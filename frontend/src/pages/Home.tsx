@@ -1,5 +1,5 @@
 /** 故事库：选择世界 / 创建 / 导入。 */
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { api } from "../api";
 import { setState, toast, useUi } from "../store";
 import type { ScenarioDraft } from "../types";
@@ -14,6 +14,8 @@ export default function Home() {
   const [versions, setVersions] = useState<Record<string, string>>({});
   const [importing, setImporting] = useState(false);
   const [importText, setImportText] = useState("");
+  const starting = useRef(false);
+  const [startingId, setStartingId] = useState<string | null>(null);
 
   const reload = () => {
     api.listScenarios().then(async (r) => {
@@ -31,17 +33,26 @@ export default function Home() {
   useEffect(reload, []);
 
   const startPlay = async (sc: ScenarioDraft) => {
-    const versionId = versions[sc.id];
-    if (!versionId) {
-      toast("请先完成发布，试玩会使用最近一次发布的故事版本。");
-      setState({ editId: sc.id, page: "creator", creatorTab: "publish" });
-      return;
-    }
+    if (starting.current) return;
+    starting.current = true;
+    setStartingId(sc.id);
     try {
+      // A publication may have changed while this library stayed open.
+      // Resolve at the user action boundary before purchasing an opening.
+      const latest = await api.scenarioVersions(sc.id);
+      const versionId = latest.items[0]?.version_id;
+      if (!versionId) {
+        toast("请先完成发布，试玩会使用最近一次发布的故事版本。");
+        setState({ editId: sc.id, page: "creator", creatorTab: "publish" });
+        return;
+      }
       const { session_id } = await api.createSession(versionId);
       setState({ sessionId: session_id, scenarioVersionId: versionId, page: "player" });
     } catch (e: any) {
       toast(`开始游玩失败：${e.message}`);
+    } finally {
+      starting.current = false;
+      setStartingId(null);
     }
   };
 
@@ -82,7 +93,7 @@ export default function Home() {
               <br />版本：v{sc.version}
             </p>
             <div className="toolbar">
-              <button className="primary" disabled={!versions[sc.id] && sc.status !== "PUBLISHED"}
+              <button className="primary" disabled={startingId !== null || (!versions[sc.id] && sc.status !== "PUBLISHED")}
                 onClick={() => startPlay(sc)}>开始游玩</button>
               <button onClick={() => setState({ editId: sc.id, page: "creator", creatorTab: "overview" })}>
                 编辑

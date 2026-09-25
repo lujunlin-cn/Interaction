@@ -124,6 +124,9 @@ class Settings(BaseSettings):
     max_test_reference_images: int = 2
     max_test_reference_videos: int = 0
     developer_test_override_enabled: bool = False
+    # Jev recommendations can be planned without purchasing speculative H3
+    # media. The selected recommendation is generated on demand.
+    pre_generate_recommendation_media: bool = True
 
     @property
     def effective_target_k(self) -> int:
