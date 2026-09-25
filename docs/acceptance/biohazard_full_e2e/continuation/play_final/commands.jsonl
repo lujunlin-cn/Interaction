@@ -18,3 +18,4 @@
 {"at":"2026-09-25T13:18:05.820Z","op":"action","label":"clue_terminal_read","text":"我继续在已经打开的档案终端中读取原始实验日志，把样本异常的最早时间、撤离命令时间和抑制剂试验结果逐项比对，保存能实际查到的记录作为证据。"}
 {"at":"2026-09-25T13:45:21.043Z","op":"inspect","label":"current_inspect"}
 {"at":"2026-09-25T13:47:44.770Z","op":"action","label":"clue_text_continue","text":"我继续在已经打开的档案终端中读取原始实验日志，只记录屏幕上实际出现的异常时间和撤离命令。"}
+{"at":"2026-09-25T15:03:09.235Z","op":"home","label":"human_handoff_home"}
