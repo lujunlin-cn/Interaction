@@ -1,0 +1,50 @@
+{
+  "result": "PASS",
+  "provider_mode": "mock",
+  "paid_guard": false,
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "browser_create_then_real_mock_understanding_endpoint": true,
+  "ai_suggestion_not_applied_before_confirmation": true,
+  "explicit_accept_created_version": true,
+  "character_assets": 0,
+  "media_submit_attempts": [],
+  "requests": [
+    {
+      "method": "POST",
+      "url": "http://127.0.0.1:9001/api/characters"
+    },
+    {
+      "method": "POST",
+      "url": "http://127.0.0.1:9001/api/characters/chr_00001_d83705/understanding"
+    },
+    {
+      "method": "PATCH",
+      "url": "http://127.0.0.1:9001/api/characters/chr_00001_d83705"
+    }
+  ],
+  "before": {
+    "name": "AI Create Confirmation Regression",
+    "bio": "年轻调查员，渴望寻找真相，担心失去朋友。",
+    "personality": "",
+    "appearance": "短发，深色外套，稳定身份草稿",
+    "id": "chr_00001_d83705",
+    "created_at": 1790309423148,
+    "updated_at": 1790309423148,
+    "version": 1,
+    "current_version_id": "cv_00002_5a4cd6"
+  },
+  "after": {
+    "name": "AI Create Confirmation Regression",
+    "bio": "年轻调查员，渴望寻找真相，担心失去朋友。",
+    "personality": "谨慎而细心",
+    "appearance": "短发，深色外套，稳定身份草稿",
+    "id": "chr_00001_d83705",
+    "created_at": 1790309423148,
+    "updated_at": 1790309423448,
+    "version": 2,
+    "current_version_id": "cv_00006_e531fb"
+  }
+}

@@ -1,5 +1,6 @@
 """pytest 共享 fixture：单一 TestClient / 单一路径 SQLite，避免模块间互相删库。"""
 import os
+import tempfile
 
 import pytest
 
@@ -8,6 +9,10 @@ os.environ["PROVIDER_MODE"] = "mock"
 os.environ["BRANCH_PHASE_DELAY_MS"] = "30"
 os.environ["MOCK_SHOT_DURATION"] = "1"
 os.environ["TIMED_TIMEOUT_OVERRIDE"] = "5"     # 限时互动测试加速
+# Media, uploads and paid-attempt audit must never touch the live data tree.
+_test_data = tempfile.TemporaryDirectory(prefix="interaction-tests-")
+os.environ["DATA_DIR"] = _test_data.name
+os.environ["MEDIA_DIR"] = os.path.join(_test_data.name, "media")
 
 
 @pytest.fixture(scope="session")

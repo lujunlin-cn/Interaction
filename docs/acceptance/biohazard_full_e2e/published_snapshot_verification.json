@@ -1,0 +1,63 @@
+{
+  "verified_at": "2026-09-25T04:37:21.758327+00:00",
+  "service": "http://127.0.0.1:9000",
+  "scenario_id": "scn_00003_364d7e",
+  "scenario_version_id": "ver_00001_b26e3c",
+  "semver": "0.2.0",
+  "publication_evidence": "scenario_published_ui.json",
+  "method": "GET-only verification after Standard UI review and Publish new version",
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/api/scenarios/ver_00001_b26e3c/character-snapshots",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/scenarios/scn_00003_364d7e/versions",
+      "status": 200
+    }
+  ],
+  "snapshots": [
+    {
+      "snapshot_id": "snap_00004_a7cb7f",
+      "global_character_id": "chr_00013_113084",
+      "character_version": 8,
+      "story_character_id": "leon",
+      "pinned_version_matches": true,
+      "complete_story_overlay_matches": true,
+      "outfit_id": "outfit_00005_931bd6",
+      "appearance_source": "OVERRIDE",
+      "visual_state": "本故事使用 RPD 执勤装备；保持主身份的脸、年龄、发型与体型，制服带雨水和污迹，没有感染特征。"
+    },
+    {
+      "snapshot_id": "snap_00005_54ba2c",
+      "global_character_id": "chr_00018_204d12",
+      "character_version": 7,
+      "story_character_id": "char_204d12",
+      "pinned_version_matches": true,
+      "complete_story_overlay_matches": true,
+      "outfit_id": null,
+      "appearance_source": "OVERRIDE",
+      "visual_state": "本故事覆盖：红色夹克沾有雨水与少量灰尘"
+    },
+    {
+      "snapshot_id": "snap_00006_1589b7",
+      "global_character_id": "chr_00032_149758",
+      "character_version": 7,
+      "story_character_id": "char_149758",
+      "pinned_version_matches": true,
+      "complete_story_overlay_matches": true,
+      "outfit_id": null,
+      "appearance_source": "OVERRIDE",
+      "visual_state": "本故事覆盖：实验服有少量血迹，右臂受伤"
+    }
+  ],
+  "published_snapshot_set_matches": true,
+  "version_history_contains_ui_publication": true,
+  "media_submits_during_verification": 0,
+  "writes_during_verification": 0,
+  "session_created": false,
+  "status": "PASS",
+  "scope": "Authoring publication and immutable character snapshots only; not media readiness, runtime play, or full E2E."
+}

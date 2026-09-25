@@ -1,0 +1,197 @@
+{
+  "id": "projection_00002_6a52df",
+  "summary": "资源管理、线索核实、信任变化与限时追逐共同驱动调查与逃生。",
+  "items": [
+    {
+      "path": "mechanics.inventory",
+      "summary": "门禁卡、绿色草药、弹药、保险丝与关键道具入库占容量，普通草药不治疗病毒感染。",
+      "value": {
+        "enabled": true,
+        "config": {
+          "capacity": 8,
+          "show_panel": true
+        },
+        "skill_id": "inventory",
+        "version": "1.0.0",
+        "title": "道具",
+        "tutorial": "门禁卡、绿色草药、弹药、保险丝与关键道具入库占容量，普通草药不治疗病毒感染。",
+        "trigger": "获得或使用物品",
+        "state_patch_contract": [
+          "addItem",
+          "removeItem"
+        ]
+      },
+      "question": "",
+      "evidence_quote": "",
+      "suggestions": [],
+      "before": {
+        "enabled": true,
+        "config": {
+          "capacity": 8,
+          "show_panel": true
+        },
+        "skill_id": "inventory",
+        "version": "1.0.0",
+        "title": "道具",
+        "tutorial": "搜寻和使用行为可获得或消耗门禁卡、绿色草药、弹药、保险丝和关键道具；普通草药不治疗病毒感染。",
+        "trigger": "获得或使用物品",
+        "state_patch_contract": [
+          "addItem",
+          "removeItem"
+        ]
+      }
+    },
+    {
+      "path": "mechanics.clue-system",
+      "summary": "搜寻日志、监控与对话可获得线索，须核实后才能用于指认Victor的责任。",
+      "value": {
+        "enabled": true,
+        "config": {
+          "states": [
+            "DISCOVERED",
+            "VERIFIED",
+            "USED"
+          ],
+          "show_panel": true,
+          "allow_review": true
+        },
+        "skill_id": "clue-system",
+        "version": "1.0.0",
+        "title": "调查与线索",
+        "tutorial": "搜寻日志、监控与对话可获得线索，须核实后才能用于指认Victor的责任。",
+        "trigger": "调查或询问",
+        "state_patch_contract": [
+          "clues.*"
+        ]
+      },
+      "question": "",
+      "evidence_quote": "",
+      "suggestions": [],
+      "before": {
+        "enabled": true,
+        "config": {
+          "states": [
+            "DISCOVERED",
+            "VERIFIED",
+            "USED"
+          ],
+          "show_panel": true,
+          "allow_review": true
+        },
+        "skill_id": "clue-system",
+        "version": "1.0.0",
+        "title": "调查与线索",
+        "tutorial": "调查实验日志、监控和对话可发现线索，核实后使用并复查；无证据不能直接得知隐秘。",
+        "trigger": "调查或询问",
+        "state_patch_contract": [
+          "clues.*"
+        ]
+      }
+    },
+    {
+      "path": "mechanics.relationship",
+      "summary": "克莱尔的信任随救人、分享真相与尊重判断升降，界面仅显示自然语言态度。",
+      "value": {
+        "enabled": true,
+        "config": {
+          "care_delta": 5,
+          "min": 0,
+          "max": 100,
+          "show_values": false,
+          "show_panel": true
+        },
+        "skill_id": "relationship",
+        "version": "1.0.0",
+        "title": "人物关系",
+        "tutorial": "克莱尔的信任随救人、分享真相与尊重判断升降，界面仅显示自然语言态度。",
+        "trigger": "角色互动",
+        "state_patch_contract": [
+          "relationships.*"
+        ]
+      },
+      "question": "",
+      "evidence_quote": "",
+      "suggestions": [],
+      "before": {
+        "enabled": true,
+        "config": {
+          "max": 100,
+          "min": 0,
+          "care_delta": 9,
+          "show_panel": true,
+          "show_values": false
+        },
+        "skill_id": "relationship",
+        "version": "1.0.0",
+        "title": "人物关系",
+        "tutorial": "克莱尔会依李昂救人、盲信Victor、分享真相与尊重判断改变态度，界面只显示自然语言态度。",
+        "trigger": "角色互动",
+        "state_patch_contract": [
+          "relationships.*"
+        ]
+      }
+    },
+    {
+      "path": "mechanics.qte",
+      "summary": "进入冷藏样本库或安全控制中心后会触发T-103限时追逐，15秒内行动，超时消耗资源并绕路。",
+      "value": {
+        "enabled": true,
+        "config": {
+          "timeout_seconds": 15,
+          "trigger_after_actions": 1,
+          "trigger_location_ids": [
+            "loc_exit",
+            "location_5"
+          ],
+          "qte_fallback": "qte_failure",
+          "dialogue_fallback": "silence"
+        },
+        "skill_id": "qte",
+        "version": "1.0.0",
+        "title": "紧张时刻",
+        "tutorial": "进入冷藏样本库或安全控制中心后会触发T-103限时追逐，15秒内行动，超时消耗资源并绕路。",
+        "trigger": "故事声明的限时事件",
+        "state_patch_contract": [
+          "TimedInteractionRequest"
+        ]
+      },
+      "question": "",
+      "evidence_quote": "",
+      "suggestions": [],
+      "before": {
+        "enabled": true,
+        "config": {
+          "qte_fallback": "qte_failure",
+          "timeout_seconds": 15,
+          "dialogue_fallback": "silence",
+          "trigger_location_ids": [],
+          "trigger_after_actions": 1
+        },
+        "skill_id": "qte",
+        "version": "1.0.0",
+        "title": "紧张时刻",
+        "tutorial": "进入冷藏样本库或安全控制中心后触发T-103追逐，15秒内行动；超时会受伤或消耗资源并绕路。",
+        "trigger": "故事声明的限时事件",
+        "state_patch_contract": [
+          "TimedInteractionRequest"
+        ]
+      }
+    },
+    {
+      "path": "drama.timed_interactions",
+      "summary": "15 秒内决定；超时：超时受到伤害并消耗资源，被迫绕路，不会直接结束。",
+      "value": "t103_chase｜qte｜15｜超时受到伤害并消耗资源，被迫绕路，不会直接结束。",
+      "question": "",
+      "evidence_quote": "",
+      "suggestions": [],
+      "before": "t103_quarantine_chase｜qte｜15｜超时受到伤害或资源消耗，并被迫绕路，不会直接结束。"
+    }
+  ],
+  "scope": "mechanics",
+  "character_id": "",
+  "instruction": "这个故事要有资源管理、调查线索、角色关系和限时追逐。李昂通过正式搜寻和使用行为获得或消耗门禁卡、绿色草药、弹药、保险丝和关键道具；普通草药不治疗病毒感染。线索从实验日志、监控或对话中发现并核实，逐步揭露研究主管Victor事故前知样本异常、事故后保数据延误撤离及抑制剂不可靠的秘密，不能无证据直接知道。克莱尔根据李昂是否救人、是否盲信Victor、是否分享真相与尊重她的判断改变信任；Standard只显示自然语言态度。进入冷藏样本库或安全控制中心后安排一次T-103追逐，15秒内做出行动；超时受到伤害或资源消耗并被迫绕路，不能直接游戏结束。请启用inventory、clue-system、relationship、qte四项现有玩法，经Typed Config/Skill/Proposal/StateManager生效；不要添加新技能，不要把自然语言直接当Runtime规则。保留现有剧情、人物绑定和版本，不新增角色。",
+  "provider": "step_5",
+  "model": "step-5-preview",
+  "created_at": 1790310503092,
+  "accepted": []
+}

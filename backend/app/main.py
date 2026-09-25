@@ -8,6 +8,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from sqlalchemy import select
 
 from .config import settings
@@ -99,9 +100,17 @@ from .api.routes import build_api, build_ws_router  # noqa: E402
 app.include_router(build_api(runtime_engine, provider_router))
 app.include_router(build_ws_router(runtime_engine))
 
+# Private audit files share the data root, but must never be served as assets.
+class PublicAssetFiles(StaticFiles):
+    async def get_response(self, path, scope):
+        if any(part.startswith(".") for part in Path(path).parts):
+            raise StarletteHTTPException(status_code=404)
+        return await super().get_response(path, scope)
+
+
 # 媒体目录（生成的场景视频 / 素材）
 app.mount("/media", StaticFiles(directory=str(settings.media_path)), name="media")
-app.mount("/files", StaticFiles(directory=str(settings.data_path)), name="files")
+app.mount("/files", PublicAssetFiles(directory=str(settings.data_path)), name="files")
 
 # 前端构建产物（存在时托管，单端口部署）
 _frontend = Path(__file__).resolve().parents[2] / "frontend" / "dist"

@@ -1,0 +1,33 @@
+{
+  "date": "2026-09-25T04:01:01.265Z",
+  "mode": "browser API mocks; no live backend",
+  "viewport": "1920x1080",
+  "external_paid_media_requests": 0,
+  "cases": [
+    {
+      "name": "pending save completes before fresh publish checks",
+      "status": "FAIL",
+      "error": "AssertionError [ERR_ASSERTION]: review was allowed while save pending\n\nfalse !== true\n"
+    },
+    {
+      "name": "failed save blocks publishing",
+      "status": "FAIL",
+      "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\nfalse !== true\n"
+    },
+    {
+      "name": "latest draft change invalidates earlier review",
+      "status": "FAIL",
+      "error": "AssertionError [ERR_ASSERTION]: published an unreviewed newer draft\n\n1 !== 0\n"
+    },
+    {
+      "name": "publish rechecks validity and rejects stale success",
+      "status": "FAIL",
+      "error": "AssertionError [ERR_ASSERTION]: published using stale checklist\n\n1 !== 0\n"
+    },
+    {
+      "name": "same-tick double click submits one play request",
+      "status": "FAIL",
+      "error": "AssertionError [ERR_ASSERTION]: duplicate publish/session request\n\n3 !== 1\n"
+    }
+  ]
+}

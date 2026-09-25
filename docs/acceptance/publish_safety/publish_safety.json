@@ -1,0 +1,53 @@
+{
+  "date": "2026-09-25T04:37:25.630Z",
+  "mode": "browser API mocks; no live backend",
+  "viewport": "1920x1080",
+  "external_paid_media_requests": 0,
+  "cases": [
+    {
+      "name": "missing character image warning stays visible while text publication is allowed",
+      "status": "PASS",
+      "elapsed_ms": 459
+    },
+    {
+      "name": "pending save completes before fresh publish checks",
+      "status": "PASS",
+      "elapsed_ms": 435
+    },
+    {
+      "name": "failed save blocks publishing",
+      "status": "PASS",
+      "elapsed_ms": 436
+    },
+    {
+      "name": "latest draft change invalidates earlier review",
+      "status": "PASS",
+      "elapsed_ms": 522
+    },
+    {
+      "name": "normalized draft converges and a new human review can publish",
+      "status": "PASS",
+      "elapsed_ms": 555
+    },
+    {
+      "name": "publish rechecks validity and rejects stale success",
+      "status": "PASS",
+      "elapsed_ms": 402
+    },
+    {
+      "name": "draft changed during fresh check requires a new review",
+      "status": "PASS",
+      "elapsed_ms": 423
+    },
+    {
+      "name": "same-tick double click submits one play request",
+      "status": "PASS",
+      "elapsed_ms": 445
+    },
+    {
+      "name": "changing Creator tabs does not release in-flight publish lock",
+      "status": "PASS",
+      "elapsed_ms": 469
+    }
+  ]
+}

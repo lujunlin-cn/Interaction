@@ -16,12 +16,14 @@ import json
 from typing import Any, Optional
 
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..config import settings
 from ..db import SessionLocal
 from ..db_models import (AssetRow, CharacterAssetRow, CharacterVersionRow,
                          GlobalCharacterRow, ScenarioCharacterSnapshotRow)
 from ..domain.ids import uid
+from ..domain.character_overlay import outfit_refs, promotion_patch, resolve_overlay
 from ..domain.schemas import (CharacterAsset, CharacterAssetStatus,
                               CharacterOutfit, CharacterReferenceSelection,
                               CharacterVersion, CharacterVersionDiff,
@@ -43,6 +45,26 @@ CHANGE_VOICE = "VOICE"
 
 def _prompt_hash(prompt: str) -> str:
     return hashlib.sha256(prompt.encode("utf-8")).hexdigest()[:16]
+
+
+def _image_provenance(provider, result: dict, image: dict, prompt: str,
+                      capability: str) -> dict:
+    provenance = {
+        "provider": result.get("provider") or getattr(provider, "name", "nano_banana_2"),
+        "model": result.get("model", ""),
+        "request_id": result.get("request_id"),
+        "resolution": result.get("resolution", settings.image_generation_resolution),
+        "aspect_ratio": result.get("aspect_ratio", settings.generation_aspect_ratio),
+        "prompt_hash": _prompt_hash(prompt),
+        "capability": capability,
+    }
+    for field in ("requested_model", "requested_resolution", "requested_aspect_ratio",
+                  "actual_aspect_ratio", "requested_size", "normalization"):
+        if field in result:
+            provenance[field] = result[field]
+    if image.get("width") and image.get("height"):
+        provenance["output_dimensions"] = {"width": image["width"], "height": image["height"]}
+    return provenance
 
 
 class CharacterAssetService:
@@ -142,6 +164,9 @@ class CharacterAssetService:
                 nd["status"] = CharacterAssetStatus.CANONICAL.value
                 row.data = nd
                 asset.status = CharacterAssetStatus.CANONICAL
+                if asset.role in CANONICAL_IMAGE_ROLES:
+                    character = await self._row(db, asset.character_id)
+                    character.data = {**character.data, f"ref_{asset.role}_asset": asset.id}
         # canonical 变化 → 新版本（ASSET_ADDITION / IDENTITY 若主图）
         change = CHANGE_IDENTITY if asset.role == "front" else CHANGE_ASSET
         await self._new_version(asset.character_id, change,
@@ -173,15 +198,11 @@ class CharacterAssetService:
             out.append(await self.add_asset(
                 character_id, role="front", url=url,
                 status=CharacterAssetStatus.CANDIDATE, job_id=job_id,
-                provenance={"provider": getattr(provider, "name", "nano_banana_2"), "model": result.get("model", ""),
-                            "resolution": result.get("resolution", settings.image_generation_resolution),
-                            "aspect_ratio": result.get("aspect_ratio", settings.generation_aspect_ratio),
-                            "prompt_hash": _prompt_hash(prompt),
-                            "capability": "IMAGE_GENERATION"}))
+                provenance=_image_provenance(provider, result, img, prompt, "IMAGE_GENERATION")))
         await tracer.emit("character.image_generate", "success",
                           input_={"character": character_id, "num": num_images},
-                          output={"candidates": len(out)},
-                          provider="nano_banana_2")
+                          output={"candidates": len(out), "request_id": result.get("request_id")},
+                          provider=result.get("provider") or getattr(provider, "name", "nano_banana_2"))
         return out
 
     # ------------------------------------------------------------------
@@ -218,12 +239,7 @@ class CharacterAssetService:
                     character_id, role=role, url=img["url"],
                     status=CharacterAssetStatus.CANDIDATE, job_id=job_id,
                     source_refs=[front_asset_id],
-                    provenance={"provider": getattr(provider, "name", "nano_banana_2"),
-                                "model": result.get("model", ""),
-                                "resolution": result.get("resolution", settings.image_generation_resolution),
-                                "aspect_ratio": result.get("aspect_ratio", settings.generation_aspect_ratio),
-                                "prompt_hash": _prompt_hash(prompt),
-                                "capability": "IMAGE_EDIT",
+                    provenance={**_image_provenance(provider, result, img, prompt, "IMAGE_EDIT"),
                                 "standard_view": role}))
             return made
 
@@ -243,7 +259,9 @@ class CharacterAssetService:
             raise RuntimeError(f"all views failed: {failed[0]}")
         await tracer.emit("character.standard_views", "success",
                           input_={"character": character_id},
-                          output={"views": len(out)}, provider="nano_banana_2")
+                          output={"views": len(out), "request_ids": list(dict.fromkeys(
+                              a.provenance.get("request_id") for a in out if a.provenance.get("request_id")))},
+                          provider=getattr(provider, "name", "nano_banana_2"))
         return out
 
     # ------------------------------------------------------------------
@@ -271,19 +289,14 @@ class CharacterAssetService:
                 character_id, role=role, url=img["url"],
                 status=CharacterAssetStatus.CANDIDATE, job_id=job_id,
                 source_refs=[source_asset_id], outfit_id=outfit_id,
-                provenance={"provider": getattr(provider, "name", "nano_banana_2"),
-                            "model": result.get("model", ""),
-                            "resolution": result.get("resolution", settings.image_generation_resolution),
-                            "aspect_ratio": result.get("aspect_ratio", settings.generation_aspect_ratio),
-                            "prompt_hash": _prompt_hash(prompt),
-                            "capability": "IMAGE_EDIT",
+                provenance={**_image_provenance(provider, result, img, prompt, "IMAGE_EDIT"),
                             "instruction": instruction[:200],
                             "identity_guard": True}))
         await tracer.emit("character.image_edit", "success",
                           input_={"character": character_id,
                                   "instruction": instruction[:120]},
-                          output={"candidates": len(out)},
-                          provider="nano_banana_2")
+                          output={"candidates": len(out), "request_id": result.get("request_id")},
+                          provider=result.get("provider") or getattr(provider, "name", "nano_banana_2"))
         return out
 
     async def _get_asset(self, asset_id: str) -> CharacterAsset:
@@ -323,20 +336,14 @@ class CharacterAssetService:
                 row.version = n
                 data["version"] = n
                 canonical = await self._canonical_refs(db, character_id)
-            # Standard Reference Pack slots are first-class versioned refs even
-            # when they point at uploaded Asset rows rather than CharacterAsset
-            # rows.  Keeping them in the version snapshot makes a pinned
-            # Scenario Character reproducible after the library advances.
+                # Explicit library bindings (including unlinking) take precedence.
                 for slot, key in {
-                "front": "ref_front_asset",
-                "three_quarter": "ref_three_quarter_asset",
-                "side": "ref_side_asset",
-                "full_front": "ref_full_front_asset",
-                "full_side": "ref_full_side_asset",
-                "back": "ref_back_asset",
-            }.items():
-                    if data.get(key):
-                        canonical.setdefault(slot, data[key])
+                    "front": "ref_front_asset", "three_quarter": "ref_three_quarter_asset",
+                    "side": "ref_side_asset", "full_front": "ref_full_front_asset",
+                    "full_side": "ref_full_side_asset", "back": "ref_back_asset",
+                }.items():
+                    if key in data:
+                        canonical[slot] = data[key]
                 ver = CharacterVersion(
                     id=uid("cv"), character_id=character_id, version=n,
                     change_type=change_type,
@@ -347,9 +354,10 @@ class CharacterAssetService:
                                    "tags": data.get("tags", []),
                                    **{k: data.get(k, "") for k in ("default_desire", "default_fear", "default_secrets", "default_knowledge", "default_relationship")}},
                     canonical_asset_refs=canonical,
+                    other_refs=list(data.get("ref_other_assets", [])),
                     outfits=[CharacterOutfit(**o) for o in data.get("outfits", [])],
                     pose_refs=list(data.get("ref_pose_assets", [])),
-                    motion_refs=list(data.get("ref_motion_assets", [])) or ([data["ref_motion_asset"]] if data.get("ref_motion_asset") else []),
+                    motion_refs=list(data.get("ref_motion_assets", [])) if "ref_motion_assets" in data else ([data["ref_motion_asset"]] if data.get("ref_motion_asset") else []),
                     canonical_voice_ref=data.get("ref_voice_asset"),
                     alternate_voice_refs=list(data.get("alternate_voice_assets", [])),
                     source_version_id=last.id if last else None,
@@ -401,6 +409,32 @@ class CharacterAssetService:
         await self._new_version(character_id, CHANGE_METADATA)
         return outfit
 
+    async def update_outfit(self, character_id: str, outfit_id: str,
+                            patch: dict) -> CharacterOutfit:
+        async with SessionLocal() as db:
+            async with db.begin():
+                row = await self._row(db, character_id)
+                data = dict(row.data)
+                outfits = [dict(o) for o in data.get("outfits", [])]
+                current = next((o for o in outfits if o["id"] == outfit_id), None)
+                if current is None:
+                    raise KeyError(outfit_id)
+                allowed = set(CharacterOutfit.model_fields) - {"id"}
+                updated = CharacterOutfit.model_validate({**current, **{k: v for k, v in patch.items() if k in allowed}})
+                if not updated.name.strip():
+                    raise ValueError("outfit name is required")
+                updated.reference_assets = outfit_refs(updated.model_dump(mode="json"))
+                for i, item in enumerate(outfits):
+                    if item["id"] == outfit_id:
+                        outfits[i] = updated.model_dump(mode="json")
+                    elif updated.is_default:
+                        item["is_default"] = False
+                data["outfits"] = outfits
+                row.data = data
+                row.updated_at = now_ms()
+        await self._new_version(character_id, CHANGE_APPEARANCE)
+        return updated
+
     async def diff_versions(self, character_id: str,
                             from_v: int, to_v: int) -> CharacterVersionDiff:
         versions = {v.version: v for v in await self.list_versions(character_id)}
@@ -417,6 +451,11 @@ class CharacterAssetService:
             if a.canonical_asset_refs.get(k) != b.canonical_asset_refs.get(k):
                 asset_diffs[k] = {"before": a.canonical_asset_refs.get(k),
                                   "after": b.canonical_asset_refs.get(k)}
+        for key in ("outfits", "other_refs", "pose_refs", "motion_refs", "canonical_voice_ref", "alternate_voice_refs"):
+            before = a.model_dump(mode="json")[key]
+            after = b.model_dump(mode="json")[key]
+            if before != after:
+                asset_diffs[key] = {"before": before, "after": after}
         return CharacterVersionDiff(
             from_version=from_v, to_version=to_v,
             change_types=[b.change_type], field_diffs=field_diffs,
@@ -427,7 +466,25 @@ class CharacterAssetService:
     # Scenario Snapshot（FR-091 / Q86）
     async def snapshot_for_scenario(self, scenario_version_id: str,
                                     character_id: str, version: int | None = None,
-                                    overrides: dict | None = None) -> ScenarioCharacterSnapshot:
+                                    overrides: dict | None = None, *,
+                                    db: AsyncSession | None = None) -> ScenarioCharacterSnapshot:
+        # Publication owns its transaction: read the pinned immutable version
+        # and add the snapshot through the same Session without an inner commit.
+        if db is not None:
+            character = await self._row(db, character_id)
+            query = select(CharacterVersionRow).where(
+                CharacterVersionRow.character_id == character_id)
+            if version is not None:
+                query = query.where(CharacterVersionRow.version == version)
+            else:
+                query = query.where(CharacterVersionRow.id == character.data.get("current_version_id"))
+            row = (await db.execute(query)).scalars().first()
+            if row is None:
+                raise KeyError(f"character version {version}")
+            return self._add_snapshot(db, scenario_version_id, character_id,
+                                      CharacterVersion(**row.data), overrides)
+
+        # Standalone snapshot callers retain the legacy lazy version creation.
         ch = await self.get_character(character_id)
         if ch is None:
             raise KeyError(character_id)
@@ -444,20 +501,27 @@ class CharacterAssetService:
                     ver = CharacterVersion(**r.data)
         if ver is None:
             ver = await self._new_version(character_id, CHANGE_METADATA)
+        async with SessionLocal() as owned_db:
+            async with owned_db.begin():
+                snap = self._add_snapshot(owned_db, scenario_version_id, character_id, ver, overrides)
+        return snap
+
+    @staticmethod
+    def _add_snapshot(db: AsyncSession, scenario_version_id: str,
+                      character_id: str, ver: CharacterVersion,
+                      overrides: dict | None) -> ScenarioCharacterSnapshot:
         snap = ScenarioCharacterSnapshot(
             id=uid("snap"), scenario_version_id=scenario_version_id,
             global_character_id=character_id,
             character_version_id=ver.id, character_version=ver.version,
             frozen_identity=ver.identity_spec, local_overrides=overrides or {},
-            frozen_asset_refs={k: v for k, v in ver.canonical_asset_refs.items()})
-        async with SessionLocal() as db:
-            async with db.begin():
-                db.add(ScenarioCharacterSnapshotRow(
-                    id=snap.id, scenario_version_id=scenario_version_id,
-                    global_character_id=character_id,
-                    character_version_id=ver.id,
-                    data=snap.model_dump(mode="json"),
-                    created_at=snap.created_at))
+            frozen_asset_refs=resolve_overlay(ver, overrides or {}))
+        db.add(ScenarioCharacterSnapshotRow(
+            id=snap.id, scenario_version_id=scenario_version_id,
+            global_character_id=character_id,
+            character_version_id=ver.id,
+            data=snap.model_dump(mode="json"),
+            created_at=snap.created_at))
         return snap
 
     async def list_snapshots(self, scenario_version_id: str
@@ -480,6 +544,11 @@ class CharacterAssetService:
                 data = dict(row.data)
                 data["local_overrides"] = {
                     **data.get("local_overrides", {}), **overrides}
+                version = await db.get(CharacterVersionRow, data["character_version_id"])
+                if version is None:
+                    raise KeyError(data["character_version_id"])
+                data["frozen_asset_refs"] = resolve_overlay(
+                    CharacterVersion(**version.data), data["local_overrides"])
                 row.data = data          # 重赋值触发 flag_modified（JSON 列就地改不可见）
                 return ScenarioCharacterSnapshot(**row.data)
 
@@ -492,21 +561,22 @@ class CharacterAssetService:
             snap = ScenarioCharacterSnapshot(**row.data)
         if not snap.local_overrides:
             raise RuntimeError("no local_overrides to promote")
+        return await self.promote_scenario_overlay(
+            snap.global_character_id, snap.character_version, snap.local_overrides)
+
+    async def promote_scenario_overlay(self, character_id: str, version: int,
+                                        overrides: dict) -> CharacterVersion:
+        pinned = next((v for v in await self.list_versions(character_id) if v.version == version), None)
+        if pinned is None:
+            raise KeyError(f"character version {version}")
         async with SessionLocal() as db:
             async with db.begin():
-                crow = await self._row(db, snap.global_character_id)
-                data = dict(crow.data)
-                for k, v in snap.local_overrides.items():
-                    if k in ("name", "bio", "personality", "appearance", "tags"):
-                        data[k] = v
-                    elif k in ("desire", "fear", "secrets", "knowledge", "relationship"):
-                        data["default_" + k] = v
-                    elif k == "visual_state":
-                        data["appearance"] = v
-                crow.data = data
-                crow.version += 1
-                crow.updated_at = now_ms()
-        return await self._new_version(snap.global_character_id, CHANGE_METADATA)
+                row = await self._row(db, character_id)
+                patch = promotion_patch(row.data, pinned, overrides)
+                row.data = {**row.data, **patch}
+                row.name = row.data.get("name", row.name)
+                row.updated_at = now_ms()
+        return await self._new_version(character_id, CHANGE_METADATA)
 
     # ------------------------------------------------------------------
     # Production Reference Resolver（FR-093 / Q89-91）
@@ -534,8 +604,12 @@ class CharacterAssetService:
                 provider_limits_snapshot=limits)
         # 从 frozen_asset_refs 按标准视图优先级选（front > three_quarter > side > full_*）
         frozen = snap.frozen_asset_refs
-        order = ["front", "three_quarter", "side", "full_front", "full_side"]
-        picked = [frozen[r] for r in order if frozen.get(r)]
+        order = ["front", "outfit", "three_quarter", "pose", "side", "full_front", "full_side", "other"]
+        picked = []
+        for role in order:
+            value = frozen.get(role)
+            picked.extend(value if isinstance(value, list) else [value] if value else [])
+        picked = list(dict.fromkeys(picked))
         max_img = min(4, int(limits.get("image", 4)))
         selected = picked[:max_img]
         reason = (f"standard view priority {order}; picked {len(selected)}/"
@@ -543,6 +617,8 @@ class CharacterAssetService:
         voice = snap.local_overrides.get("voice_ref") or \
             snap.frozen_asset_refs.get("voice")
         motion = snap.frozen_asset_refs.get("motion")
+        if isinstance(motion, list):
+            motion = motion[0] if motion else None
         sel = CharacterReferenceSelection(
             scene_or_shot_id=scene_or_shot_id,
             character_snapshot_id=snapshot_id,

@@ -27,6 +27,9 @@ class Settings(BaseSettings):
     step_base_url: str = "https://api.stepfun.com/step_plan/v1"
     step37_model: str = "step-3.7-flash"       # 实际模型 ID 待账号确认（PIN_*）
     step5_model: str = "step-5-preview"        # 同上
+    authoring_reasoning_effort: str = "high"
+    authoring_max_tokens: int = 32768
+    authoring_timeout_seconds: float = 300.0
 
     fal_key: str = ""
     # Optional second Fal account. Keys are only read from environment/.env
@@ -104,6 +107,9 @@ class Settings(BaseSettings):
     branch_phase_delay_ms: int = 350      # 各管线阶段之间的最小间隔（让状态转换可观察）
     decision_lead_seconds: float = 2.0    # Decision Lead：距场景结束多少秒即可发布下一批推荐
     mock_shot_duration: float = 5.0       # Mock 视频单镜头时长
+    opening_shot_duration: float = 8.0   # Opening/ending use deliberate establishment/resolution beats
+    ending_shot_duration: float = 8.0
+    max_video_shot_duration: float = 10.0
     timed_timeout_override: float = 0.0   # >0 时覆盖 Scenario 声明的限时秒数（测试用）
 
     # 新生成任务的媒体参数（旧 Artifact 不受影响）

@@ -1,0 +1,85 @@
+[
+  {
+    "at": "2026-09-25T03:59:15.622Z",
+    "action": "fill natural-language drama intent",
+    "instruction": "请复核并修正这一个已有故事的戏剧理解，不创建新故事，不改人物绑定、世界地点、任何角色版本或视觉资产。人工已确认如下信息，不要再次重复追问：1998年浣熊市失控当夜，警局地下更深层 Umbrella 秘密检疫设施；玩家是李昂·S·肯尼迪，搭档克莱尔有独立判断，会反对盲信Victor并因救人/分享真相增强信任。Victor Hale是研究主管，不是安保主管。他的团队事故前已知道样本异常；事故后他仍命令保留实验数据，间接延误撤离；他声称的抑制剂并不可靠，真实目标是带着成果与样本活着离开。T-103型追踪实验体只是追杀威胁，不要保留“首席研究员变异”“对Claire发色或枪声执念”的错误设定。不要强行规定唯一幸存者数量，也不要预设李昂阵亡。核心问题是救眼前生命、阻止病毒扩散、保留Umbrella犯罪证据之间的取舍。压力包括供电恶化、T-103追踪、感染者进入、冷藏失效与幸存者救援倒计时。四类结局必须保留：A李昂和克莱尔救出幸存者并销毁样本但部分证据丢失；B取得犯罪证据但错失部分救援机会；C取得并带走样本但承担扩散风险；D彻底封锁并摧毁设施。不要唯一好结局，不提前判定角色生死。关键真相必须经实际线索、对话或现场证据获得，不得无证据泄露。进入冷藏样本库或安全控制中心后有一次T-103高压追逐：明确倒计时与可理解后果，超时受伤/消耗/路线封锁或救援延误但不能直接游戏结束。七地点仅使用已确认世界地点，请清理旧冲突事实，返回可以逐项确认的完整建议。"
+  },
+  {
+    "at": "2026-09-25T04:00:46.422Z",
+    "action": "AI understanding response",
+    "status": 200,
+    "projection_id": "projection_00002_0e1d79"
+  },
+  {
+    "at": "2026-09-25T04:01:42.351Z",
+    "action": "review all proposal values then click Accept understood items",
+    "scope": "drama",
+    "phase": "initial_ai_confirmation"
+  },
+  {
+    "at": "2026-09-25T04:01:42.799Z",
+    "action": "human review adjustment through Standard natural-language field",
+    "label": "人物的误解",
+    "value": "李昂愿意暂时听取 Victor 的路线建议，但尚不能判断他是否可靠；克莱尔强烈怀疑 Victor 隐瞒非法实验和事故责任，但怀疑不等于掌握全部真相。Victor 错误地认为只要实验数据最终得以保存，研究人员和幸存者的牺牲就是必要代价。角色不能把对未知样本风险的猜测当成已核实事实。",
+    "persisted": false,
+    "failure": "HTTP422 legacy pinned Leon v2 does not contain selected outfit; explicit UI version update resolved, then same edits repeated and verified."
+  },
+  {
+    "at": "2026-09-25T04:01:43.284Z",
+    "action": "human review adjustment through Standard natural-language field",
+    "label": "主要冲突",
+    "value": "救出眼前生命、阻止样本扩散、保留 Umbrella 犯罪证据与有限时间无法同时保证。克莱尔有自主判断，会反对无证据盲信 Victor；李昂的行动、分享信息和救援取舍影响双方信任，而不是预设玩家一定轻信他。Victor 希望借两人之力带着成果活着离开，与他们的救援和调查目标发生冲突。",
+    "persisted": false,
+    "failure": "HTTP422 legacy pinned Leon v2 does not contain selected outfit; explicit UI version update resolved, then same edits repeated and verified."
+  },
+  {
+    "at": "2026-09-25T04:01:43.722Z",
+    "action": "human review adjustment through Standard natural-language field",
+    "label": "推动故事的压力",
+    "value": "供电持续恶化，安全门与广播系统逐步失效\nT-103通过可见踪迹和噪音逼近\n感染者进入地下，隔离区域逐步失守\n冷藏失效使病毒样本稳定性恶化\n被困幸存者的救援窗口持续缩短",
+    "persisted": false,
+    "failure": "HTTP422 legacy pinned Leon v2 does not contain selected outfit; explicit UI version update resolved, then same edits repeated and verified."
+  },
+  {
+    "at": "2026-09-25T04:01:44.156Z",
+    "action": "human review adjustment through Standard natural-language field",
+    "label": "关键时刻",
+    "value": "先在地下检疫入口与克莱尔会合并听到 Victor 广播；通过医疗观察区和实验档案室的实际证据，逐步核实异常时间与撤离延误。进入冷藏样本库或安全控制中心后，T-103突破封锁触发一次限时追逐；玩家可掩护搭档、利用供电与门禁或另寻通道，后果由行动和现有资源决定，不预设固定关系奖励。最后围绕救援、销毁样本、保留证据或封锁设施作取舍。",
+    "persisted": false,
+    "failure": "HTTP422 legacy pinned Leon v2 does not contain selected outfit; explicit UI version update resolved, then same edits repeated and verified."
+  },
+  {
+    "at": "2026-09-25T04:03:50.018Z",
+    "action": "review all proposal values then click Accept understood items",
+    "scope": "drama",
+    "phase": "post_version_correction"
+  },
+  {
+    "at": "2026-09-25T04:03:50.450Z",
+    "action": "human review adjustment through Standard natural-language field",
+    "label": "人物的误解",
+    "value": "李昂愿意暂时听取 Victor 的路线建议，但尚不能判断他是否可靠；克莱尔强烈怀疑 Victor 隐瞒非法实验和事故责任，但怀疑不等于掌握全部真相。Victor 错误地认为只要实验数据最终得以保存，研究人员和幸存者的牺牲就是必要代价。角色不能把对未知样本风险的猜测当成已核实事实。",
+    "persisted": true
+  },
+  {
+    "at": "2026-09-25T04:03:50.926Z",
+    "action": "human review adjustment through Standard natural-language field",
+    "label": "主要冲突",
+    "value": "救出眼前生命、阻止样本扩散、保留 Umbrella 犯罪证据与有限时间无法同时保证。克莱尔有自主判断，会反对无证据盲信 Victor；李昂的行动、分享信息和救援取舍影响双方信任，而不是预设玩家一定轻信他。Victor 希望借两人之力带着成果活着离开，与他们的救援和调查目标发生冲突。",
+    "persisted": true
+  },
+  {
+    "at": "2026-09-25T04:03:51.352Z",
+    "action": "human review adjustment through Standard natural-language field",
+    "label": "推动故事的压力",
+    "value": "供电持续恶化，安全门与广播系统逐步失效\nT-103通过可见踪迹和噪音逼近\n感染者进入地下，隔离区域逐步失守\n冷藏失效使病毒样本稳定性恶化\n被困幸存者的救援窗口持续缩短",
+    "persisted": true
+  },
+  {
+    "at": "2026-09-25T04:03:51.786Z",
+    "action": "human review adjustment through Standard natural-language field",
+    "label": "关键时刻",
+    "value": "先在地下检疫入口与克莱尔会合并听到 Victor 广播；通过医疗观察区和实验档案室的实际证据，逐步核实异常时间与撤离延误。进入冷藏样本库或安全控制中心后，T-103突破封锁触发一次限时追逐；玩家可掩护搭档、利用供电与门禁或另寻通道，后果由行动和现有资源决定，不预设固定关系奖励。最后围绕救援、销毁样本、保留证据或封锁设施作取舍。",
+    "persisted": true
+  }
+]

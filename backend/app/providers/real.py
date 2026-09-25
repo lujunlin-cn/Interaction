@@ -6,7 +6,13 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import json
+import math
+import os
+import threading
 import time
+import uuid
+from pathlib import Path
 
 import httpx
 
@@ -16,15 +22,18 @@ from .base import DecisionAnswer, TextResponse, VideoJobHandle, VideoJobResult
 
 class FalGenerationError(RuntimeError):
     """分类后的 Fal 错误，供 Router/Runtime 做可审计回退。"""
-    def __init__(self, kind: str, message: str):
+    def __init__(self, kind: str, message: str, *, submit_uncertain: bool = False,
+                 usage_id: str | None = None):
         super().__init__(message)
         self.kind = kind
+        self.submit_uncertain = submit_uncertain
+        self.usage_id = usage_id
 
 
 _fal_circuit = {"state": "CLOSED", "reason": "", "opened_at": None, "http_attempts": 0,
                 "active_key_index": 0, "rotation_count": 0}
 _fal_key_states: list[dict] = []
-_usage_ledger: list[dict] = []
+_usage_ledger_lock = threading.RLock()
 
 
 def fal_circuit_status() -> dict:
@@ -88,27 +97,116 @@ def _rotate_fal_key(index: int, reason: str) -> bool:
 
 
 def usage_ledger(limit: int = 200) -> list[dict]:
-    """Developer-only audit of paid submissions and local guard blocks."""
-    return list(reversed(_usage_ledger[-limit:]))
+    """Latest state per attempt, reconstructed from the durable event journal."""
+    limit = max(1, min(int(limit), 5000))
+    with _usage_ledger_lock:
+        return list(reversed(list(_read_usage_ledger().values())[-limit:]))
+
+
+def _usage_ledger_path() -> Path:
+    folder = settings.data_path / ".private"
+    folder.mkdir(parents=True, exist_ok=True, mode=0o700)
+    return folder / "usage-ledger.jsonl"
+
+
+def _read_usage_ledger() -> dict[str, dict]:
+    items: dict[str, dict] = {}
+    path = _usage_ledger_path()
+    if path.exists():
+        with path.open(encoding="utf-8") as stream:
+            for line in stream:
+                try:
+                    item = json.loads(line)
+                    if isinstance(item, dict) and item.get("id"):
+                        items[item["id"]] = item
+                except (ValueError, TypeError):
+                    # Preserve earlier complete events after an interrupted
+                    # final append; never invent a completed provider request.
+                    continue
+    return items
+
+
+def _append_usage_event(item: dict) -> None:
+    # Record the attempt durably before sending a billable HTTP request. A
+    # storage failure therefore stops submission rather than losing audit.
+    import fcntl
+    path = _usage_ledger_path()
+    fd = os.open(path, os.O_RDWR | os.O_APPEND | os.O_CREAT, 0o600)
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX)
+        size = os.fstat(fd).st_size
+        # A process may have stopped midway through its final line. Separate
+        # that incomplete event so it cannot swallow the next valid append.
+        needs_newline = bool(size and os.pread(fd, 1, size - 1) != b"\n")
+        with os.fdopen(fd, "a", encoding="utf-8", closefd=False) as stream:
+            if needs_newline:
+                stream.write("\n")
+            stream.write(json.dumps(item, ensure_ascii=False, separators=(",", ":")) + "\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+    finally:
+        os.close(fd)
+
+
+def _usage_error_label(error: str) -> str:
+    # Raw provider bodies can echo prompts, signed URLs or credentials. Only
+    # a stable classification enters this journal.
+    allowed = {"BILLING_LOCKED", "QUOTA_EXHAUSTED", "AUTH_FAILED", "RATE_LIMITED",
+               "TRANSIENT_PROVIDER_ERROR", "INVALID_REQUEST", "INVALID_RESPONSE",
+               "TIMEOUT", "NETWORK_ERROR", "PROVIDER_ERROR", "CANCELLED"}
+    return error if error in allowed else ("PROVIDER_ERROR" if error else "")
 
 
 def _record_usage(provider: str, model: str, task: str, request: dict,
-                  status: str, blocked_reason: str = "", error: str = "") -> None:
-    _usage_ledger.append({
-        "id": f"usage_{int(time.time() * 1000)}_{len(_usage_ledger)}",
+                  status: str, blocked_reason: str = "", error: str = "") -> str:
+    refs = request.get("references") or []
+    image_refs = request.get("reference_image_urls") or request.get("image_urls") or request.get("image") or []
+    resolution = request.get("resolution") or {
+        "512x512": "0.5K", "1024x1024": "1K", "2048x2048": "2K", "4096x4096": "4K",
+    }.get(request.get("size"))
+    at = int(time.time() * 1000)
+    item = {
+        "id": f"usage_{uuid.uuid4().hex}",
         "provider": provider, "model": model, "task": task,
         "request_id": request.get("request_id") or request.get("job_id"),
-        "resolution": request.get("resolution"),
-        "aspect_ratio": request.get("aspect_ratio"),
+        "resolution": resolution, "size": request.get("size"),
+        "aspect_ratio": request.get("aspect_ratio") or ("1:1" if request.get("size") in {
+            "512x512", "1024x1024", "2048x2048", "4096x4096"} else None),
         "duration": request.get("duration") or ((request.get("shots") or [{}])[0].get("duration")),
         "num_images": request.get("num_images") or request.get("n"),
-        "reference_summary": {"images": len(request.get("references") or request.get("image_urls") or []),
-                               "videos": len(request.get("reference_video_urls") or []),
-                               "audios": len(request.get("reference_audio_urls") or [])},
-        "status": status, "blocked_reason": blocked_reason, "error": error,
-        "at": int(time.time() * 1000),
-    })
-    del _usage_ledger[:-500]
+        "reference_summary": {
+            "images": len(image_refs) + int(bool(request.get("image_url"))) + sum(r.get("type", "image") == "image" for r in refs if isinstance(r, dict)),
+            "videos": len(request.get("reference_video_urls") or []) + sum(r.get("type") == "video" for r in refs if isinstance(r, dict)),
+            "audios": len(request.get("reference_audio_urls") or []) + sum(r.get("type") == "audio" for r in refs if isinstance(r, dict)),
+        },
+        "status": status, "blocked_reason": blocked_reason, "error": _usage_error_label(error),
+        "external_http_attempts": 1 if status == "SUBMITTED" else 0,
+        "at": at, "updated_at": at,
+    }
+    with _usage_ledger_lock:
+        _append_usage_event(item)
+    return item["id"]
+
+
+def _update_usage(usage_id: str | None, status: str, *, request_id: str | None = None,
+                  model: str | None = None, error: str = "", http_status: int | None = None) -> None:
+    if not usage_id:
+        return
+    with _usage_ledger_lock:
+        item = _read_usage_ledger().get(usage_id)
+        if item is None:
+            return
+        changes = {"status": status, "error": _usage_error_label(error)}
+        if request_id:
+            changes["request_id"] = request_id
+        if model:
+            changes["model"] = model
+        if http_status is not None:
+            changes["http_status"] = http_status
+        if all(item.get(key) == value for key, value in changes.items()):
+            return
+        item.update(changes, updated_at=int(time.time() * 1000))
+        _append_usage_event(item)
 
 
 def reset_fal_circuit() -> None:
@@ -192,6 +290,12 @@ class OpenAICompatTextProvider:
             headers["Authorization"] = f"Bearer {self.api_key}"
         timeout = (settings.director_local_request_timeout_seconds
                    if self.name == "nemotron_local" else settings.provider_timeout_seconds)
+        if self.name == "step_5" and output_contract and output_contract.get("purpose") in {
+            "authoring_draft", "authoring_patch", "creator_projection", "mechanic_projection", "character_understanding",
+        }:
+            timeout = settings.authoring_timeout_seconds
+        if self.name == "step_5" and budget and budget.get("timeout_seconds"):
+            timeout = float(budget["timeout_seconds"])
         async with httpx.AsyncClient(timeout=timeout) as client:
             resp = await client.post(f"{self.base_url}/chat/completions", json=payload, headers=headers)
             resp.raise_for_status()
@@ -230,6 +334,7 @@ class FalH3MaxProvider:
     """fal.ai 上的 H3 Max（reference-to-video）。提交后轮询任务状态。"""
 
     name = "h3_max"
+    REFERENCE_LIMITS = {"image": 9, "audio": 3, "video": 3, "mixed": 12}
 
     def __init__(self, api_key: str = "", model: str = ""):
         self._explicit_key = api_key
@@ -244,8 +349,8 @@ class FalH3MaxProvider:
         return {
             "text_to_video": "documented", "reference_image": "documented",
             "reference_audio": "documented", "reference_video": "documented",
-            "limits": {"image": 9, "audio": 3, "video": 3, "mixed": 12},
-            "limits_source": "PRD 13.2 snapshot, 升级后需回归测试",
+            "limits": dict(self.REFERENCE_LIMITS),
+            "limits_source": "PRD per-modality caps; Fal API mixed <=12 checked 2026-09-25",
         }
 
     def _adapt_references(self, request: dict) -> dict:
@@ -280,8 +385,7 @@ class FalH3MaxProvider:
                 out["reference_audio_urls"].append(url)
             elif kind == "video":
                 out["reference_video_urls"].append(url)
-        caps = {"reference_image_urls": 9, "reference_audio_urls": 3, "reference_video_urls": 3}
-        return {k: v[: caps[k]] for k, v in out.items() if v}
+        return {k: list(dict.fromkeys(v)) for k, v in out.items() if v}
 
     async def submit(self, request: dict) -> VideoJobHandle:
         _ensure_fal_paid_allowed("video_generation", request, self.name, self._explicit_key)
@@ -291,16 +395,25 @@ class FalH3MaxProvider:
         aspect_ratio = request.get("aspect_ratio") or settings.generation_aspect_ratio
         if resolution not in {"480P", "768P", "1080P"}:
             raise ValueError(f"H3 Max unsupported resolution: {resolution}")
-        if aspect_ratio not in {"auto", "16:9", "9:16", "1:1"}:
+        if aspect_ratio == "auto":
+            aspect_ratio = "adaptive"
+        if aspect_ratio not in {"adaptive", "21:9", "16:9", "4:3", "1:1", "3:4", "9:16"}:
             raise ValueError(f"H3 Max unsupported aspect_ratio: {aspect_ratio}")
+        try:
+            requested_duration = float(shots[0].get("duration", settings.mock_shot_duration)
+                                       if shots else request.get("duration", settings.mock_shot_duration))
+        except (TypeError, ValueError):
+            raise FalGenerationError("INVALID_REQUEST", "H3 duration must be a positive finite integer") from None
+        if not math.isfinite(requested_duration) or requested_duration <= 0 or not requested_duration.is_integer():
+            raise FalGenerationError("INVALID_REQUEST", "H3 duration must be a positive finite integer")
         # H3 Max requires duration for each independent Shot request.  Runtime
         # deliberately submits one-shot payloads for real multi-shot assembly.
         payload: dict = {
             "prompt": prompt,
-            "duration": float(shots[0].get("duration", settings.mock_shot_duration))
-            if shots else settings.mock_shot_duration,
+            "duration": int(requested_duration),
             "resolution": resolution,
             "aspect_ratio": aspect_ratio,
+            "prompt_expansion_mode": "disabled",
         }
         for key in ("image_url", "reference_image_urls", "reference_audio_urls", "reference_video_urls"):
             if request.get(key):
@@ -309,36 +422,59 @@ class FalH3MaxProvider:
         for key, urls in self._adapt_references(request).items():
             payload.setdefault(key, [])
             payload[key] = list(dict.fromkeys(payload[key] + urls))
+        reference_fields = {"image": "reference_image_urls", "audio": "reference_audio_urls", "video": "reference_video_urls"}
+        counts = {kind: len(payload.get(field, [])) for kind, field in reference_fields.items()}
+        if any(counts[kind] > self.REFERENCE_LIMITS[kind] for kind in counts) or sum(counts.values()) > self.REFERENCE_LIMITS["mixed"]:
+            raise FalGenerationError("INVALID_REQUEST", "reference count exceeds declared H3 capability")
         keys = [self._explicit_key] if self._explicit_key else _configured_fal_keys()
         attempts = max(1, len(keys))
         last_error: Exception | None = None
         for _ in range(attempts):
             selected = _ensure_fal_paid_allowed("video_generation", request, self.name, self._explicit_key)
             key_index, key = selected
+            usage_id = None
             try:
                 headers = {"Authorization": f"Key {key}", "Content-Type": "application/json"}
-                _record_usage(self.name, self.model, "video_generation", payload, "SUBMITTED")
                 async with httpx.AsyncClient(timeout=settings.provider_timeout_seconds) as client:
                     try:
+                        usage_id = _record_usage(self.name, self.model, "video_generation", payload, "SUBMITTED")
                         _fal_circuit["http_attempts"] += 1
                         resp = await client.post(self.base, json=payload, headers=headers)
                         resp.raise_for_status()
                     except httpx.HTTPStatusError as exc:
                         raise _fal_http_error(exc, key_index) from exc
                     except httpx.TimeoutException as exc:
-                        raise FalGenerationError("TIMEOUT", "provider request timed out") from exc
+                        uncertain = not isinstance(exc, (httpx.ConnectTimeout, httpx.PoolTimeout))
+                        raise FalGenerationError("TIMEOUT", "provider submit outcome is unknown" if uncertain
+                            else "provider connection timed out before submit", submit_uncertain=uncertain,
+                            usage_id=usage_id) from exc
                     data = resp.json()
+                _update_usage(usage_id, "ACCEPTED", request_id=data["request_id"], http_status=resp.status_code)
                 return VideoJobHandle(
                     provider_job_id=data["request_id"], provider=self.name,
                     status_url=data.get("status_url"), response_url=data.get("response_url"),
                     cancel_url=data.get("cancel_url"),
-                    metadata={"fal_key_index": key_index, "fal_key_fingerprint": _key_fingerprint(key)})
+                    metadata={"fal_key_index": key_index, "fal_key_fingerprint": _key_fingerprint(key),
+                              "usage_id": usage_id})
             except FalGenerationError as exc:
+                _update_usage(usage_id, "SUBMISSION_UNCERTAIN" if exc.submit_uncertain else "FAILED", error=exc.kind)
                 last_error = exc
                 if self._explicit_key or exc.kind not in {"QUOTA_EXHAUSTED", "BILLING_LOCKED"}:
                     raise
                 if _next_fal_key() is None:
                     raise
+            except httpx.RequestError as exc:
+                uncertain = not isinstance(exc, httpx.ConnectError)
+                _update_usage(usage_id, "SUBMISSION_UNCERTAIN" if uncertain else "FAILED", error="NETWORK_ERROR")
+                raise FalGenerationError("TRANSIENT_PROVIDER_ERROR", "provider submit outcome is unknown" if uncertain
+                    else "provider connection failed before submit", submit_uncertain=uncertain,
+                    usage_id=usage_id) from exc
+            except (ValueError, KeyError) as exc:
+                # A successful HTTP response without a usable job ID does
+                # not prove that no billable job was created.
+                _update_usage(usage_id, "SUBMISSION_UNCERTAIN", error="INVALID_RESPONSE")
+                raise FalGenerationError("INVALID_REQUEST", "provider submit response is missing a usable job identifier",
+                                         submit_uncertain=True, usage_id=usage_id) from exc
         if last_error:
             raise last_error
         raise FalGenerationError("BILLING_LOCKED", "provider unavailable: all Fal keys are circuit-open")
@@ -351,6 +487,7 @@ class FalH3MaxProvider:
             "support); resubmit the job to obtain queue URLs")
 
     async def status(self, handle: VideoJobHandle) -> VideoJobResult:
+        usage_id = handle.metadata.get("usage_id")
         key_index = handle.metadata.get("fal_key_index")
         keys = _configured_fal_keys()
         key = keys[int(key_index)] if key_index is not None and int(key_index) < len(keys) else self.api_key
@@ -360,6 +497,9 @@ class FalH3MaxProvider:
             resp.raise_for_status()
             st = resp.json().get("status", "")
             if st not in ("COMPLETED",):
+                _update_usage(usage_id, "GENERATING" if st in ("IN_PROGRESS", "IN_QUEUE") else "FAILED",
+                              request_id=handle.provider_job_id,
+                              error="" if st in ("IN_PROGRESS", "IN_QUEUE") else "PROVIDER_ERROR")
                 return VideoJobResult(status="GENERATING" if st in ("IN_PROGRESS", "IN_QUEUE") else st,
                                       raw={"fal_status": st})
             result_url = handle.response_url
@@ -380,7 +520,9 @@ class FalH3MaxProvider:
             data = result.json()
         video_url = (data.get("video") or {}).get("url") or data.get("video_url")
         if not video_url:
+            _update_usage(usage_id, "FAILED", request_id=handle.provider_job_id, error="INVALID_RESPONSE")
             return VideoJobResult(status="FAILED", error="fal response has no video url", raw=data)
+        _update_usage(usage_id, "SUCCEEDED", request_id=handle.provider_job_id)
         # 下载到受控媒体目录
         out = settings.media_path / "clips" / handle.provider_job_id
         out.mkdir(parents=True, exist_ok=True)
@@ -403,6 +545,9 @@ class FalH3MaxProvider:
             headers = {"Authorization": f"Key {key}"}
             async with httpx.AsyncClient(timeout=10) as client:
                 resp = await client.put(handle.cancel_url, headers=headers)
+                if resp.status_code < 300:
+                    _update_usage(handle.metadata.get("usage_id"), "CANCEL_REQUESTED",
+                                  request_id=handle.provider_job_id, http_status=resp.status_code)
                 return resp.status_code < 300
         except Exception:
             return False
@@ -728,16 +873,109 @@ class OpenAIImageProvider:
         if not self.base_url or not self.api_key:
             raise RuntimeError("image relay is not configured")
         async with httpx.AsyncClient(timeout=settings.provider_timeout_seconds) as client:
-            response = await client.post(f"{self.base_url}/v1/images/{path}",
-                                         json=payload, headers=self._headers())
-            response.raise_for_status()
-            return response.json()
+            usage_id = _record_usage(self.name, payload["model"],
+                                     "image_edit" if path == "edits" else "image_generation",
+                                     payload, "SUBMITTED")
+            try:
+                response = await client.post(f"{self.base_url}/v1/images/{path}",
+                                             json=payload, headers=self._headers())
+                response.raise_for_status()
+                data = response.json()
+                if not isinstance(data, dict) or not any(img.get("url") for img in self._images(data)):
+                    raise ValueError("invalid image response")
+                # Some relays only expose the external ID in a header.
+                response_id = response.headers.get("x-request-id") or response.headers.get("request-id")
+                if response_id:
+                    data["_response_request_id"] = response_id
+                _update_usage(usage_id, "SUCCEEDED", request_id=data.get("request_id") or data.get("id") or response_id,
+                              model=data.get("model") or payload["model"], http_status=response.status_code)
+                return data
+            except httpx.HTTPStatusError as exc:
+                code = exc.response.status_code
+                kind = ("AUTH_FAILED" if code in (401, 403) else "QUOTA_EXHAUSTED" if code == 402
+                        else "RATE_LIMITED" if code == 429 else "INVALID_REQUEST" if code in (400, 404, 422)
+                        else "TRANSIENT_PROVIDER_ERROR")
+                _update_usage(usage_id, "FAILED", request_id=exc.response.headers.get("x-request-id"),
+                              error=kind, http_status=code)
+                raise
+            except httpx.TimeoutException:
+                _update_usage(usage_id, "FAILED", error="TIMEOUT")
+                raise
+            except httpx.RequestError:
+                _update_usage(usage_id, "FAILED", error="NETWORK_ERROR")
+                raise
+            except (ValueError, TypeError):
+                _update_usage(usage_id, "FAILED", error="INVALID_RESPONSE")
+                raise RuntimeError("image relay returned an invalid response") from None
+
+    @staticmethod
+    def _unsupported_model(exc: httpx.HTTPStatusError) -> bool:
+        if exc.response.status_code not in (400, 404, 422):
+            return False
+        try:
+            data = exc.response.json()
+        except ValueError:
+            return False
+        error = data.get("error", data) if isinstance(data, dict) else {}
+        if not isinstance(error, dict):
+            return False
+        code = str(error.get("code") or error.get("type") or "").lower()
+        if code in {"model_not_found", "unsupported_model", "invalid_model", "model_not_supported"}:
+            return True
+        message = str(error.get("message", "")).lower()
+        return any(term in message for term in (
+            "model does not exist", "model not found", "model is not supported", "unsupported model", "unknown model")) \
+            or (error.get("param") == "model" and any(term in message for term in (
+                "does not exist", "not found", "not supported", "unsupported")))
 
     @staticmethod
     def _images(data: dict) -> list[dict]:
         # Standard OpenAI shape: {data:[{url:...}]}.
         items = data.get("data") or data.get("images") or []
         return [x if isinstance(x, dict) else {"url": x} for x in items]
+
+    def _result(self, data: dict, payload: dict, request: dict, resolution: str) -> dict:
+        images = self._images(data)
+        dimensions = []
+        for img in images:
+            width, height = img.get("width"), img.get("height")
+            if isinstance(width, int) and isinstance(height, int) and width > 0 and height > 0:
+                dimensions.append({"width": width, "height": height})
+            else:
+                dimensions.append(None)
+        actual_ratio = data.get("aspect_ratio")
+        if not actual_ratio and dimensions and dimensions[0]:
+            width, height = dimensions[0]["width"], dimensions[0]["height"]
+            divisor = math.gcd(width, height)
+            actual_ratio = f"{width // divisor}:{height // divisor}"
+        # Size is the OpenAI Images contract actually sent to the relay. Do
+        # not label the caller's requested video aspect as an observed image
+        # aspect: the existing relay contract requests square image sizes.
+        requested_width, requested_height = (int(n) for n in payload["size"].split("x"))
+        divisor = math.gcd(requested_width, requested_height)
+        submitted_ratio = f"{requested_width // divisor}:{requested_height // divisor}"
+        requested_ratio = request.get("aspect_ratio")
+        normalized = requested_ratio not in (None, "", "adaptive", submitted_ratio)
+        return {
+            "images": images,
+            "provider": self.name,
+            "model": data.get("model") or payload["model"],
+            "requested_model": request.get("model") or self.model,
+            "request_id": data.get("request_id") or data.get("id") or data.get("_response_request_id"),
+            "resolution": data.get("resolution") or resolution,
+            "requested_resolution": resolution,
+            "aspect_ratio": actual_ratio or submitted_ratio,
+            "requested_aspect_ratio": requested_ratio,
+            "actual_aspect_ratio": actual_ratio,
+            "requested_size": payload["size"],
+            "output_dimensions": dimensions,
+            "normalization": ({"aspect_ratio": {"requested": requested_ratio,
+                                "submitted": submitted_ratio,
+                                "reason": "OpenAI-compatible relay uses square size presets"}}
+                              if normalized else {}),
+            "raw": {"provider": self.name,
+                    "payload": {k: v for k, v in payload.items() if k not in ("prompt", "image")}},
+        }
 
     async def generate(self, request: dict) -> dict:
         resolution = request.get("resolution") or settings.image_generation_resolution
@@ -753,14 +991,12 @@ class OpenAIImageProvider:
         except httpx.HTTPStatusError as exc:
             # The relay's alternate model is only used for an explicit model
             # rejection; transient/auth failures are surfaced unchanged.
-            if exc.response.status_code not in (400, 404, 422) or not settings.image_provider_fallback_model \
+            if not self._unsupported_model(exc) or not settings.image_provider_fallback_model \
                     or payload["model"] == settings.image_provider_fallback_model:
                 raise
             payload["model"] = settings.image_provider_fallback_model
             data = await self._request("generations", payload)
-        return {"images": self._images(data), "model": payload["model"],
-                "resolution": resolution, "aspect_ratio": request.get("aspect_ratio"),
-                "raw": {"provider": self.name, "payload": {k: v for k, v in payload.items() if k != "prompt"}}}
+        return self._result(data, payload, request, resolution)
 
     async def edit(self, request: dict) -> dict:
         resolution = request.get("resolution") or settings.image_generation_resolution
@@ -774,9 +1010,7 @@ class OpenAIImageProvider:
         # Many OpenAI-compatible relays accept image[] as URL strings.
         payload["image"] = urls[:4]
         data = await self._request("edits", payload)
-        return {"images": self._images(data), "model": payload["model"],
-                "resolution": resolution, "aspect_ratio": request.get("aspect_ratio"),
-                "raw": {"provider": self.name, "payload": {k: v for k, v in payload.items() if k not in ("prompt", "image")}}}
+        return self._result(data, payload, request, resolution)
 
     async def health(self) -> bool:
         return bool(self.base_url and self.api_key)
@@ -821,10 +1055,11 @@ class FalImageProvider:
         for _ in range(attempts):
             key_index, key = _ensure_fal_paid_allowed(task, payload, self.name, self._explicit_key)
             headers = {"Authorization": f"Key {key}", "Content-Type": "application/json"}
+            usage_id = None
             try:
                 async with httpx.AsyncClient(timeout=settings.provider_timeout_seconds) as client:
                     try:
-                        _record_usage(self.name, endpoint, task, payload, "SUBMITTED")
+                        usage_id = _record_usage(self.name, endpoint, task, payload, "SUBMITTED")
                         _fal_circuit["http_attempts"] += 1
                         resp = await client.post(base, json=payload, headers=headers)
                         resp.raise_for_status()
@@ -833,6 +1068,8 @@ class FalImageProvider:
                     except httpx.TimeoutException as exc:
                         raise FalGenerationError("TIMEOUT", "provider request timed out") from exc
                     sub = resp.json()
+                    request_id = sub.get("request_id")
+                    _update_usage(usage_id, "ACCEPTED", request_id=request_id, http_status=resp.status_code)
                     status_url = sub.get("status_url")
                     response_url = sub.get("response_url")
                     if not status_url or not response_url:
@@ -846,15 +1083,32 @@ class FalImageProvider:
                         if s == "COMPLETED":
                             rr = await client.get(response_url, headers={"Authorization": f"Key {key}"})
                             rr.raise_for_status()
-                            return rr.json()
+                            result = rr.json()
+                            result.setdefault("request_id", request_id)
+                            _update_usage(usage_id, "SUCCEEDED", request_id=request_id)
+                            return result
                         if s not in ("IN_QUEUE", "IN_PROGRESS"):
                             raise RuntimeError(f"fal job terminal status={s}: {body}")
                         await asyncio.sleep(3)
+                    raise FalGenerationError("TIMEOUT", "provider image job timed out")
             except FalGenerationError as exc:
+                _update_usage(usage_id, "FAILED", error=exc.kind)
                 if self._explicit_key or exc.kind not in {"QUOTA_EXHAUSTED", "BILLING_LOCKED"}:
                     raise
                 if _next_fal_key() is None:
                     raise
+            except httpx.HTTPStatusError as exc:
+                _update_usage(usage_id, "FAILED", error="PROVIDER_ERROR", http_status=exc.response.status_code)
+                raise
+            except httpx.TimeoutException:
+                _update_usage(usage_id, "FAILED", error="TIMEOUT")
+                raise
+            except httpx.RequestError:
+                _update_usage(usage_id, "FAILED", error="NETWORK_ERROR")
+                raise
+            except (ValueError, TypeError, RuntimeError):
+                _update_usage(usage_id, "FAILED", error="INVALID_RESPONSE")
+                raise
         raise FalGenerationError("BILLING_LOCKED", "provider unavailable: all Fal keys are circuit-open")
 
     async def generate(self, request: dict) -> dict:
@@ -868,6 +1122,7 @@ class FalImageProvider:
             payload["aspect_ratio"] = request["aspect_ratio"]
         data = await self._submit_and_wait(self.GENERATE_ENDPOINT, payload)
         return {"images": data.get("images", []), "model": self.GENERATE_ENDPOINT,
+                "request_id": data.get("request_id"),
                 "resolution": payload["resolution"], "aspect_ratio": payload.get("aspect_ratio"),
                 "raw": {k: v for k, v in data.items() if k != "images"}}
 
@@ -882,6 +1137,7 @@ class FalImageProvider:
                    "resolution": request.get("resolution") or settings.image_generation_resolution}
         data = await self._submit_and_wait(self.EDIT_ENDPOINT, payload)
         return {"images": data.get("images", []), "model": self.EDIT_ENDPOINT,
+                "request_id": data.get("request_id"),
                 "resolution": payload["resolution"], "aspect_ratio": payload.get("aspect_ratio"),
                 "raw": {k: v for k, v in data.items() if k != "images"}}
 
@@ -905,7 +1161,7 @@ def build_provider_registry(mode: str) -> dict:
         "nano_banana_2": (OpenAIImageProvider(settings.image_provider_base_url,
                                                 settings.image_provider_api_key,
                                                 settings.image_provider_model)
-                           if settings.image_provider_base_url and settings.image_provider_api_key
+                           if settings.image_provider_base_url or settings.image_provider_api_key
                            else FalImageProvider()),
     }
     if mode in ("mock", "hybrid"):
@@ -917,8 +1173,8 @@ def build_provider_registry(mode: str) -> dict:
         registry["mock_decision"] = MockDecisionProvider()
         registry["mock_video"] = MockVideoProvider()
         # mock 模式（或 hybrid 缺 FAL_KEY 时）用确定性生图桩，保证角色链路可测
-        if (mode == "mock" and not (settings.image_provider_base_url and settings.image_provider_api_key)) \
+        if (mode == "mock" and not (settings.image_provider_base_url or settings.image_provider_api_key)) \
                 or (not (settings.fal_key or settings.fal_key_secondary)
-                    and not (settings.image_provider_base_url and settings.image_provider_api_key)):
+                    and not (settings.image_provider_base_url or settings.image_provider_api_key)):
             registry["nano_banana_2"] = MockImageProvider()
     return registry

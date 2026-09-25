@@ -1,0 +1,91 @@
+{
+  "mode": "candidates",
+  "model": "step-5-preview",
+  "reasoning_effort": "high",
+  "max_tokens": 32768,
+  "timeout_seconds": 300.0,
+  "canonical_asset_id": "ca_00016_628682",
+  "assets": [
+    {
+      "asset_id": "ca_00016_628682",
+      "role": "front",
+      "status": "CANONICAL",
+      "source": "https://c2a3v6.bilinkai.com/images/2026/09/25/1790304957_c99b59c13db0e9952b4a04171349ddd8.png",
+      "source_sha256": "8e565ee593d4585d42162b970875065542f68886c520fa54e51ec1ee1ace2930",
+      "original_dimensions": [
+        4096,
+        4096
+      ],
+      "qa_dimensions": [
+        2048,
+        2048
+      ],
+      "position_seconds": null
+    },
+    {
+      "asset_id": "ca_00017_4e208e",
+      "role": "front",
+      "status": "CANDIDATE",
+      "source": "https://c2a3v6.bilinkai.com/images/2026/09/25/1790304976_4fc8bddd82a06b471bda69b17b1859cc.png",
+      "source_sha256": "0343105645ff66b9951fa8a182dd26761b4231feae9b5ebf936013d58f36d692",
+      "original_dimensions": [
+        4096,
+        4096
+      ],
+      "qa_dimensions": [
+        2048,
+        2048
+      ],
+      "position_seconds": null
+    },
+    {
+      "asset_id": "ca_00021_d03863",
+      "role": "front",
+      "status": "CANDIDATE",
+      "source": "https://c2a3v6.bilinkai.com/images/2026/09/25/1790305076_1444a574b31d1eb0bcbabcdfd33f610f.png",
+      "source_sha256": "98f8ee41837c6beb25aa34aad3312b35319b168700f989d5fee0a32d87eff30d",
+      "original_dimensions": [
+        4096,
+        4096
+      ],
+      "qa_dimensions": [
+        2048,
+        2048
+      ],
+      "position_seconds": null
+    },
+    {
+      "asset_id": "ca_00022_54b566",
+      "role": "front",
+      "status": "CANDIDATE",
+      "source": "https://c2a3v6.bilinkai.com/images/2026/09/25/1790305082_05b4a0e5be245533754ad81df9e11c22.png",
+      "source_sha256": "18832ba17212d337ef429d2fc1c341154056629aa53504395dc107945b5c15b1",
+      "original_dimensions": [
+        4096,
+        4096
+      ],
+      "qa_dimensions": [
+        2048,
+        2048
+      ],
+      "position_seconds": null
+    }
+  ],
+  "context": {
+    "expected_character": {
+      "name": "李昂·S·肯尼迪",
+      "definition": "刚进入警队不久的年轻警员，在城市崩溃的灾难中依然坚持救人、调查真相并承担自己的决定。",
+      "personality": "冷静、责任感强、富有同情心，经验不足但应变能力强。",
+      "age": "young adult"
+    },
+    "expected_portrait": "Neutral-background character portrait for identity selection; verify face, hair, age and body are stable enough to become canonical.",
+    "current_canonical_asset_id": "ca_00016_628682",
+    "adjudication_instruction": "Review all four existing candidates independently and compare identity differences. Decide whether current canonical is acceptable. Do not request regeneration for ordinary aesthetics.",
+    "media_constraint": {
+      "requested_resolution": "4K",
+      "verified_existing_dimensions": "all four 4096x4096",
+      "new_generation_allowed": false
+    }
+  },
+  "instruction": "你是视觉QA评审。只检查提供的真实图片或从同一真实视频抽取的帧，不推断没有观察到的结果。你不决定剧情事实、角色关系分数、分支状态、物品、线索或结局。输出严格JSON对象，不用markdown。只有明显换脸/身份交换/混脸、严重人体畸变、完全错误服装或视角、动作/场景完全不符才是Major Failure。普通光线、构图、锐度、服装小细节不构成重生成理由。证据不足时inspect并说明，不假装看清。所有数值在0到1；recommendation仅accept/retry/inspect。单任务最多一次Major质量Retry，评审本身不触发生图。返回顶层 qa 使用此contract：{\"same_identity\": \"boolean\", \"identity_confidence\": \"0..1\", \"face_consistency\": \"0..1\", \"age_consistency\": \"0..1\", \"hair_consistency\": \"0..1\", \"body_consistency\": \"0..1\", \"outfit_correct\": \"boolean\", \"viewpoint_correct\": \"boolean\", \"prompt_adherence\": \"0..1\", \"major_artifact\": \"boolean\", \"issues\": [\"string\"], \"recommendation\": \"accept|retry|inspect\"}候选是独立生成，不能预设所有候选已经是同一身份。逐张判断身份特征、年龄、脸、发型、体型、服装、姿势与重大畸形。返回 candidates:[{asset_id,qa:(上方完整图片contract),major_failure:boolean,major_failure_reason:string}]，selected_candidate_id、selection_reason、canonical_asset_id、canonical_acceptable:boolean、canonical_reason。如果已选主图本身可接受，不因其他候选更漂亮而建议重生成；可与其他图不同而独立作为身份基准。当前主图ID：ca_00016_628682。创作上下文：{\"expected_character\": {\"name\": \"李昂·S·肯尼迪\", \"definition\": \"刚进入警队不久的年轻警员，在城市崩溃的灾难中依然坚持救人、调查真相并承担自己的决定。\", \"personality\": \"冷静、责任感强、富有同情心，经验不足但应变能力强。\", \"age\": \"young adult\"}, \"expected_portrait\": \"Neutral-background character portrait for identity selection; verify face, hair, age and body are stable enough to become canonical.\", \"current_canonical_asset_id\": \"ca_00016_628682\", \"adjudication_instruction\": \"Review all four existing candidates independently and compare identity differences. Decide whether current canonical is acceptable. Do not request regeneration for ordinary aesthetics.\", \"media_constraint\": {\"requested_resolution\": \"4K\", \"verified_existing_dimensions\": \"all four 4096x4096\", \"new_generation_allowed\": false}}"
+}

@@ -1,7 +1,7 @@
 /** 设置：标准 / 开发者模式 + 全局显示（外观/字号/密度/字幕）+ 运行信息。 */
 import React, { useEffect, useState } from "react";
 import { api } from "../api";
-import { setDisplay, setState, useUi } from "../store";
+import { setDisplay, setState, toast, useUi } from "../store";
 
 export default function Settings() {
   const ui = useUi();
@@ -163,8 +163,11 @@ export default function Settings() {
             <label><span>单 Shot 最大时长</span><select value={generation?.test_shot_duration ?? 5} onChange={e => updateGeneration({ test_shot_duration: Number(e.target.value) })}>{[5, 10, 15].map(v => <option key={v}>{v}s</option>)}</select></label>
           </div>
           <p className="muted">测试参考上限：图片 {generation?.max_test_reference_images ?? 2} 张，视频 {generation?.max_test_reference_videos ?? 0} 个。</p>
-          <div className="toolbar"><button onClick={async () => setPreflight(await api.devGenerationPreflight({ role: "h3_max", branches: generation?.test_top_k ?? 1, shots: generation?.test_max_shots ?? 1, duration: generation?.test_shot_duration ?? 5, reference_images: generation?.max_test_reference_images ?? 2 }))}>查看付费 Preflight</button><button onClick={() => api.devUsageLedger().then(r => setLedger(r.items))}>刷新 Usage Ledger</button></div>
-          {preflight && <pre>{JSON.stringify(preflight, null, 2)}</pre>}
+          <div className="toolbar"><button onClick={async () => {
+            try { setPreflight(await api.devGenerationPreflight({ role: "h3_max" })); }
+            catch { toast("暂时无法读取生成预检，请稍后重试。"); }
+          }}>查看付费 Preflight</button><button onClick={() => api.devUsageLedger().then(r => setLedger(r.items))}>刷新 Usage Ledger</button></div>
+          {preflight && <><p className="muted">当前配置预估，尚未锁定生成计划；参考素材数量在完成角色与镜头解析前未知。</p><pre>{JSON.stringify(preflight, null, 2)}</pre></>}
           {ledger.length > 0 && <details><summary>最近 Usage Ledger（{ledger.length}）</summary><pre>{JSON.stringify(ledger, null, 2)}</pre></details>}
         </>}
       </div>

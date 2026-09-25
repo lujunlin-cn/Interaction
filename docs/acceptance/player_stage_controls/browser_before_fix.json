@@ -1,0 +1,259 @@
+{
+  "captured_at": "2026-09-25T04:42:04.505Z",
+  "evidence_scope": "Offline browser fixtures, not Real Provider E2E",
+  "external_paid_media_requests": 0,
+  "mutation_requests": [],
+  "unexpected": [],
+  "cases": [
+    {
+      "name": "1920_error",
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "fixture": "failed + 3 Ready recommendations",
+      "theater": {
+        "stage": {
+          "x": 0,
+          "y": 0,
+          "right": 1920,
+          "bottom": 900.25,
+          "width": 1920,
+          "height": 900.25
+        },
+        "controls": {
+          "x": 18,
+          "y": 1029.859375,
+          "right": 1902,
+          "bottom": 1068,
+          "width": 1884,
+          "height": 38.140625
+        },
+        "decision": {
+          "x": 0,
+          "y": 900.25,
+          "right": 1920,
+          "bottom": 997.75,
+          "width": 1920,
+          "height": 97.5
+        },
+        "agency": {
+          "x": 0,
+          "y": 997.75,
+          "right": 1920,
+          "bottom": 1080,
+          "width": 1920,
+          "height": 82.25
+        },
+        "hud": {
+          "x": 14,
+          "y": 14,
+          "right": 101.90625,
+          "bottom": 50.25,
+          "width": 87.90625,
+          "height": 36.25
+        },
+        "error": {
+          "x": 0,
+          "y": 0,
+          "right": 1920,
+          "bottom": 900.25,
+          "width": 1920,
+          "height": 900.25
+        },
+        "fullscreen": false,
+        "theater": "true",
+        "sidebar": false,
+        "headerVisible": false,
+        "session": "offline-layout-session",
+        "progress": "8s / 8s"
+      },
+      "status": "FAIL",
+      "error": "AssertionError [ERR_ASSERTION]: controls must stay inside Stage, not Agency: {\"stage\":{\"x\":0,\"y\":0,\"right\":1920,\"bottom\":900.25,\"width\":1920,\"height\":900.25},\"controls\":{\"x\":18,\"y\":1029.859375,\"right\":1902,\"bottom\":1068,\"width\":1884,\"height\":38.140625},\"decision\":{\"x\":0,\"y\":900.25,\"right\":1920,\"bottom\":997.75,\"width\":1920,\"height\":97.5},\"agency\":{\"x\":0,\"y\":997.75,\"right\":1920,\"bottom\":1080,\"width\":1920,\"height\":82.25},\"hud\":{\"x\":14,\"y\":14,\"right\":101.90625,\"bottom\":50.25,\"width\":87.90625,\"height\":36.25},\"error\":{\"x\":0,\"y\":0,\"right\":1920,\"bottom\":900.25,\"width\":1920,\"height\":900.25},\"fullscreen\":false,\"theater\":\"true\",\"sidebar\":false,\"headerVisible\":false,\"session\":\"offline-layout-session\",\"progress\":\"8s / 8s\"}"
+    },
+    {
+      "name": "1920_ready",
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "fixture": "3 Ready recommendations",
+      "theater": {
+        "stage": {
+          "x": 0,
+          "y": 0,
+          "right": 1920,
+          "bottom": 900.25,
+          "width": 1920,
+          "height": 900.25
+        },
+        "controls": {
+          "x": 18,
+          "y": 1029.859375,
+          "right": 1902,
+          "bottom": 1068,
+          "width": 1884,
+          "height": 38.140625
+        },
+        "decision": {
+          "x": 0,
+          "y": 900.25,
+          "right": 1920,
+          "bottom": 997.75,
+          "width": 1920,
+          "height": 97.5
+        },
+        "agency": {
+          "x": 0,
+          "y": 997.75,
+          "right": 1920,
+          "bottom": 1080,
+          "width": 1920,
+          "height": 82.25
+        },
+        "hud": {
+          "x": 14,
+          "y": 14,
+          "right": 101.90625,
+          "bottom": 50.25,
+          "width": 87.90625,
+          "height": 36.25
+        },
+        "error": null,
+        "fullscreen": false,
+        "theater": "true",
+        "sidebar": false,
+        "headerVisible": false,
+        "session": "offline-layout-session",
+        "progress": "8s / 8s"
+      },
+      "status": "FAIL",
+      "error": "AssertionError [ERR_ASSERTION]: controls must stay inside Stage, not Agency: {\"stage\":{\"x\":0,\"y\":0,\"right\":1920,\"bottom\":900.25,\"width\":1920,\"height\":900.25},\"controls\":{\"x\":18,\"y\":1029.859375,\"right\":1902,\"bottom\":1068,\"width\":1884,\"height\":38.140625},\"decision\":{\"x\":0,\"y\":900.25,\"right\":1920,\"bottom\":997.75,\"width\":1920,\"height\":97.5},\"agency\":{\"x\":0,\"y\":997.75,\"right\":1920,\"bottom\":1080,\"width\":1920,\"height\":82.25},\"hud\":{\"x\":14,\"y\":14,\"right\":101.90625,\"bottom\":50.25,\"width\":87.90625,\"height\":36.25},\"error\":null,\"fullscreen\":false,\"theater\":\"true\",\"sidebar\":false,\"headerVisible\":false,\"session\":\"offline-layout-session\",\"progress\":\"8s / 8s\"}"
+    },
+    {
+      "name": "2560_error",
+      "viewport": {
+        "width": 2560,
+        "height": 1440
+      },
+      "fixture": "failed + 3 Ready recommendations",
+      "theater": {
+        "stage": {
+          "x": 0,
+          "y": 0,
+          "right": 2560,
+          "bottom": 1247.515625,
+          "width": 2560,
+          "height": 1247.515625
+        },
+        "controls": {
+          "x": 18,
+          "y": 1385.203125,
+          "right": 2542,
+          "bottom": 1428,
+          "width": 2524,
+          "height": 42.796875
+        },
+        "decision": {
+          "x": 0,
+          "y": 1247.515625,
+          "right": 2560,
+          "bottom": 1353.109375,
+          "width": 2560,
+          "height": 105.59375
+        },
+        "agency": {
+          "x": 0,
+          "y": 1353.109375,
+          "right": 2560,
+          "bottom": 1440,
+          "width": 2560,
+          "height": 86.890625
+        },
+        "hud": {
+          "x": 14,
+          "y": 14,
+          "right": 114.6875,
+          "bottom": 56,
+          "width": 100.6875,
+          "height": 42
+        },
+        "error": {
+          "x": 0,
+          "y": 0,
+          "right": 2560,
+          "bottom": 1247.515625,
+          "width": 2560,
+          "height": 1247.515625
+        },
+        "fullscreen": false,
+        "theater": "true",
+        "sidebar": false,
+        "headerVisible": false,
+        "session": "offline-layout-session",
+        "progress": "8s / 8s"
+      },
+      "status": "FAIL",
+      "error": "AssertionError [ERR_ASSERTION]: controls must stay inside Stage, not Agency: {\"stage\":{\"x\":0,\"y\":0,\"right\":2560,\"bottom\":1247.515625,\"width\":2560,\"height\":1247.515625},\"controls\":{\"x\":18,\"y\":1385.203125,\"right\":2542,\"bottom\":1428,\"width\":2524,\"height\":42.796875},\"decision\":{\"x\":0,\"y\":1247.515625,\"right\":2560,\"bottom\":1353.109375,\"width\":2560,\"height\":105.59375},\"agency\":{\"x\":0,\"y\":1353.109375,\"right\":2560,\"bottom\":1440,\"width\":2560,\"height\":86.890625},\"hud\":{\"x\":14,\"y\":14,\"right\":114.6875,\"bottom\":56,\"width\":100.6875,\"height\":42},\"error\":{\"x\":0,\"y\":0,\"right\":2560,\"bottom\":1247.515625,\"width\":2560,\"height\":1247.515625},\"fullscreen\":false,\"theater\":\"true\",\"sidebar\":false,\"headerVisible\":false,\"session\":\"offline-layout-session\",\"progress\":\"8s / 8s\"}"
+    },
+    {
+      "name": "2560_ready",
+      "viewport": {
+        "width": 2560,
+        "height": 1440
+      },
+      "fixture": "3 Ready recommendations",
+      "theater": {
+        "stage": {
+          "x": 0,
+          "y": 0,
+          "right": 2560,
+          "bottom": 1247.515625,
+          "width": 2560,
+          "height": 1247.515625
+        },
+        "controls": {
+          "x": 18,
+          "y": 1385.203125,
+          "right": 2542,
+          "bottom": 1428,
+          "width": 2524,
+          "height": 42.796875
+        },
+        "decision": {
+          "x": 0,
+          "y": 1247.515625,
+          "right": 2560,
+          "bottom": 1353.109375,
+          "width": 2560,
+          "height": 105.59375
+        },
+        "agency": {
+          "x": 0,
+          "y": 1353.109375,
+          "right": 2560,
+          "bottom": 1440,
+          "width": 2560,
+          "height": 86.890625
+        },
+        "hud": {
+          "x": 14,
+          "y": 14,
+          "right": 114.6875,
+          "bottom": 56,
+          "width": 100.6875,
+          "height": 42
+        },
+        "error": null,
+        "fullscreen": false,
+        "theater": "true",
+        "sidebar": false,
+        "headerVisible": false,
+        "session": "offline-layout-session",
+        "progress": "8s / 8s"
+      },
+      "status": "FAIL",
+      "error": "AssertionError [ERR_ASSERTION]: controls must stay inside Stage, not Agency: {\"stage\":{\"x\":0,\"y\":0,\"right\":2560,\"bottom\":1247.515625,\"width\":2560,\"height\":1247.515625},\"controls\":{\"x\":18,\"y\":1385.203125,\"right\":2542,\"bottom\":1428,\"width\":2524,\"height\":42.796875},\"decision\":{\"x\":0,\"y\":1247.515625,\"right\":2560,\"bottom\":1353.109375,\"width\":2560,\"height\":105.59375},\"agency\":{\"x\":0,\"y\":1353.109375,\"right\":2560,\"bottom\":1440,\"width\":2560,\"height\":86.890625},\"hud\":{\"x\":14,\"y\":14,\"right\":114.6875,\"bottom\":56,\"width\":100.6875,\"height\":42},\"error\":null,\"fullscreen\":false,\"theater\":\"true\",\"sidebar\":false,\"headerVisible\":false,\"session\":\"offline-layout-session\",\"progress\":\"8s / 8s\"}"
+    }
+  ]
+}

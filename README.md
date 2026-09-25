@@ -3,7 +3,7 @@
 基于 PRD v0.6 Final Closure 的可运行实现：React+TypeScript 前端 + FastAPI + PostgreSQL 后端，
 部署目标为 DGX Spark（`/home/hajimi2025/interaction`）。
 
-最新应用代码候选：`以最终 `git rev-parse HEAD` 为准`。PRD冻结基线包含Q01–Q129、FR-001–120、AT-01–98。整体结论 **PARTIAL**，详见 [最新UX验收](LATEST_PRD_UX_ACCEPTANCE.md) 与 [封版报告](FINAL_CLOSURE_REPORT.md)。
+最新应用代码：本报告所在最终提交，使用 `git rev-parse HEAD` 核对。PRD冻结基线包含Q01–Q129、FR-001–120、AT-01–98。整体结论 **PARTIAL**，详见 [最新UX验收](LATEST_PRD_UX_ACCEPTANCE.md) 与 [封版报告](FINAL_CLOSURE_REPORT.md)。
 
 ## 架构
 
@@ -12,7 +12,7 @@ frontend/   React + TS + Vite（左侧 Sidebar IA：故事库/创作/角色库/�
 backend/    FastAPI + SQLAlchemy 2 async + Pydantic v2
   app/domain/       确定性状态核心（StateManager / DramaStateManager / Fingerprint）
   app/providers/    Provider Router + Mock/真实 Provider（Nemotron 本地 / StepFun / fal H3 / Jev）
-  app/runtime/      RuntimeEngine（Branch 生命周期、Top-K 调度、两阶段提交、原子发布）
+  app/runtime/      RuntimeEngine（Branch 生命周期、Top-K 调度、两阶段提交）
   app/skills/       平台 Skills 与玩法机制注册表（只产 Proposal）
   app/api/          REST + WebSocket
 deploy/     Docker Compose（PostgreSQL 5433）+ 一键启动脚本
@@ -30,11 +30,11 @@ bash deploy/start.sh                    # 起库 + 依赖 + 构建 + 服务于 :
 `PROVIDER_MODE=hybrid` 或 `live`，不会把 Mock 结果计入真实 Provider 证据。
 mock模式使用确定性规则和FFmpeg占位视频，不能证明真实模型/视频Provider。
 
-Character Studio 的 IMAGE_GENERATION / IMAGE_EDIT 使用已批准的 OpenAI-compatible 中转站：设置
+Character Studio 的 IMAGE_GENERATION / IMAGE_EDIT → configured image provider；当前部署优先使用 OpenAI-compatible Image Relay，这是 **USER-approved cost optimization**。FalImageProvider 仍保留，本次 FULL E2E 中 Fal 仅用于 H3。设置
 `IMAGE_PROVIDER_BASE_URL`、`IMAGE_PROVIDER_API_KEY`、`IMAGE_PROVIDER_MODEL`（默认
 `gpt-image-2.5-sunburst`，备用 `gpt-image-2`）。密钥只放在 `backend/.env`，不要提交到 Git。
 
-Fal 云生成支持服务端 `FAL_KEY` + `FAL_KEY_SECONDARY` 双 Key。额度或账单错误会按 Key 独立熔断并自动轮换；两把 Key 都不可用时本地快速失败。最新小额真实图片 smoke 见 [`FAL_KEY_ROTATION_ACCEPTANCE.md`](FAL_KEY_ROTATION_ACCEPTANCE.md)。
+Fal 云生成支持服务端 `FAL_KEY` + `FAL_KEY_SECONDARY` 双 Key。额度或账单错误会按 Key 独立熔断并自动轮换；两把 Key 都不可用时本地快速失败。历史小额真实图片 smoke 见 [`FAL_KEY_ROTATION_ACCEPTANCE.md`](FAL_KEY_ROTATION_ACCEPTANCE.md)；该历史记录不改变当前 FULL E2E 的 Relay 图片 / Fal H3 视频分工，也不证明当前 Key 余额。
 
 ## Provider 模式
 
@@ -68,11 +68,13 @@ StepFun 的 OpenAI-compatible endpoint 固定为 `https://api.stepfun.com/step_p
 
 ## 本轮UX与验收
 
-Standard Creator先展示AI理解与建议，确认后写正式Drama/Character/Mechanic数据；Developer保留原始结构。角色库与Creator共用七组信息架构，故事Overlay不会静默改Global。自然语言玩法编译为受验证的Typed Config，Runtime仍由已安装Skill提出状态变更。
+Standard Creator先展示AI理解与建议，确认后写正式Drama/Character/Mechanic数据；Developer保留原始结构。角色库与Creator共用 CharacterStudio 管理组件，支持身份参考组、造型多视图、姿势/动作多选、主/备用声音、固定版本与显式提升；故事Overlay不会静默改Global。自然语言玩法编译为受验证的Typed Config，Runtime仍由已安装Skill提出状态变更。
 
-Player 默认使用应用内 Theater Mode（Browser Fullscreen 为“更多”中的二级可选能力）、隐藏HUD、Lead后Ready快捷行动与持续自由输入；生成、加载、失败可区分，原始错误只进Developer。用户选择文字恢复后生成明确的text artifact，通过原有状态提交，不把它计作视频成功。
+Player 默认使用应用内 Theater Mode；Browser Fullscreen 为二级可选能力（位于“更多”菜单）、隐藏HUD、Lead后Ready快捷行动与持续自由输入；生成、加载、失败可区分，原始错误只进Developer。用户选择文字恢复后生成明确的text artifact，通过原有状态提交，不把它计作视频成功。
 
-最新离线回归63 passed / 0 failed / 6 warnings；npm ci与build通过；AT-77–90为13 PASS / 1 PARTIAL；AT-91–98为8 PASS（最后修复后的新FREE视频因fal锁未重测），35项响应式检查通过。真实H3开场、推荐与FREE视频成功；视频Ending被fal `403 TOP_UP`阻塞，文字Ending与继续世界已实测。Nano Banana新生图完整Flow本轮未重跑。
+当前 AT-80 已由1920×1080实际 A–F角色作用域回归重新验证，上传/选择/刷新/版本/Promote均以持久化数据断言，隔离测试媒体生成请求0；详见 `CHARACTER_GRANULARITY_CLOSURE.md`。前端 `npm ci` / build 通过，整合后全套 Backend 为 **195 passed / 0 failed / 6 warnings**。当前《生化危机：黑雨隔离区》已通过 Standard UI 逐页检查参数并显式审阅发布 v0.2.0；完整媒体游玩仍为 PARTIAL。历史真实H3与35项响应式证据保留，但不替代该故事完整E2E；Provider/费用/Ending与最终部署结果以 `BIOHAZARD_FULL_E2E_ACCEPTANCE.md` 为准。
+
+最终后端 compileall / pip check 通过，服务重启于 **9000**；实际返回的 JS/CSS 与最终构建逐字节/SHA-256 一致。用户要求的付费开关保持开启；当前完整媒体 E2E 仍缺 Image Relay key，不能用 Fal 图片替代。部署证据见 `docs/acceptance/biohazard_full_e2e/deployment_final.json`。
 
 ## 关键契约
 

@@ -131,12 +131,28 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
     @api.put("/scenarios/{sid}")
     async def save_scenario(sid: str, draft: dict):
         from ..domain.schemas import ScenarioDraft
-        incoming = ScenarioDraft(**{**draft, "id": sid})
+        from ..domain.pressure_spec import normalize_draft_pressures
+        try:
+            incoming = ScenarioDraft(**normalize_draft_pressures({**draft, "id": sid}))
+        except ValueError:
+            raise HTTPException(422, "故事资料格式不正确，请检查角色、压力的来源与触发方式及各项设置后保存。")
         from ..domain.mechanic_spec import validate_mechanics
         try:
-            incoming.mechanics = validate_mechanics(incoming.mechanics)
+            incoming.mechanics = validate_mechanics(incoming.mechanics, incoming.world.locations)
         except ValueError:
             raise HTTPException(422, "玩法配置不符合已安装玩法的类型或权限，请检查后保存。")
+        from ..domain.character_overlay import resolve_overlay
+        try:
+            for character in incoming.characters:
+                if not character.global_character_id:
+                    continue
+                versions = await char_assets.list_versions(character.global_character_id)
+                pinned = next((v for v in versions if v.version == character.global_character_version), None)
+                if pinned is None:
+                    raise ValueError("missing pinned character version")
+                resolve_overlay(pinned, character.model_dump(mode="json"))
+        except ValueError:
+            raise HTTPException(422, "角色继承版本或参考设置无效，请重新选择后保存。")
         # G17：对比旧草案，把人工编辑写入结构化 changes
         old = await scenarios.get(sid)
         if old is not None:
@@ -172,9 +188,14 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
                         "source": "manual", "at": now_ms()})
                     continue
                 for f in ("identity", "personality", "desire", "fear", "secrets",
-                          "knowledge", "relationship", "visual_state"):
+                          "knowledge", "relationship", "visual_state", "global_character_id",
+                          "global_character_version", "outfit_id", "pose_refs", "motion_refs",
+                          "voice_id", "overlay_sources", "local_outfits", "reference_overrides"):
                     bv, av = getattr(oc, f), getattr(c, f)
                     if bv != av:
+                        if f == "local_outfits":
+                            bv = [o.model_dump(mode="json") for o in bv]
+                            av = [o.model_dump(mode="json") for o in av]
                         incoming.changes.append({
                             "path": f"characters[{c.id}].{f}", "before": bv, "after": av,
                             "reason": "", "source": "manual", "at": now_ms()})
@@ -190,6 +211,9 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
             draft = await scenarios.apply_instruction(sid, req.instruction)
         except KeyError:
             raise HTTPException(404, "scenario not found")
+        except (ValueError, TypeError) as error:
+            await tracer.emit("authoring.patch", "failed", input_={"scenario_id": sid}, output={"error": str(error)})
+            raise HTTPException(422, "这次修改暂时没有完成。请明确压力是随行动触发还是随故事时间推进，再保留原文重试。")
         return draft.model_dump(mode="json")
 
     @api.post("/scenarios/{sid}/understanding")
@@ -220,12 +244,14 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
         draft = await scenarios.get(sid)
         sc = next((c for c in draft.characters if c.id == cid), None) if draft else None
         if not sc or not sc.global_character_id:
-            raise HTTPException(422, "请先绑定全局角色")
+            raise HTTPException(422, "请先绑定角色库中的角色")
         # Explicit promotion only. Existing published snapshots remain unchanged.
-        patch = {"personality": sc.personality, "appearance": sc.visual_state,
-                 **{"default_" + k: getattr(sc, k) for k in ("desire", "fear", "secrets", "knowledge", "relationship")}}
-        await characters.update(sc.global_character_id, patch)
-        version = await char_assets._new_version(sc.global_character_id, "METADATA")
+        patch = sc.model_dump(mode="json")
+        try:
+            version = await char_assets.promote_scenario_overlay(
+                sc.global_character_id, sc.global_character_version, patch)
+        except (KeyError, ValueError):
+            raise HTTPException(422, "角色继承版本或参考设置无效，请检查后重试。")
         await tracer.emit("character.overlay_promote", "success", input_={"scenario": sid, "character": cid},
                           output={"version": version.version, "changes": patch})
         return version.model_dump(mode="json")
@@ -244,23 +270,8 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
             result = await scenarios.publish(sid, reviewed=bool(req and req.reviewed))
         except KeyError:
             raise HTTPException(404, "scenario not found")
-        # FR-091/Q86：为绑定全局角色的 ScenarioCharacter 冻结版本快照
-        draft = await scenarios.get(sid)
-        snapshot_ids: list[str] = []
-        if draft:
-            for sc in draft.characters:
-                if not getattr(sc, "global_character_id", None):
-                    continue
-                try:
-                    snap = await char_assets.snapshot_for_scenario(
-                        result["version_id"], sc.global_character_id,
-                        version=sc.global_character_version,
-                        overrides={k: getattr(sc, k) for k in ("identity", "personality", "desire", "fear", "secrets", "knowledge", "relationship", "visual_state")})
-                    snapshot_ids.append(snap.id)
-                except KeyError:
-                    raise HTTPException(422, f"global character not found: {sc.global_character_id}")
-        if snapshot_ids:
-            result["character_snapshots"] = snapshot_ids
+        # ScenarioVersion and all character snapshots are already committed by
+        # one transaction. Do not re-read the mutable draft after publication.
         if req and req.play:
             state = await engine.create_session(result["version_id"])
             result["session_id"] = state.id
@@ -313,12 +324,21 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
     @api.get("/characters/{cid}/assets")
     async def list_character_assets(cid: str):
         """该角色可引用的素材：全局池 + entity 绑定到该角色的条目。"""
+        from ..domain.character_overlay import outfit_refs
+        character = await char_assets.get_character(cid)
+        promoted_refs: set[str] = set()
+        if character:
+            for key, value in character.items():
+                if key.startswith("ref_") or key == "alternate_voice_assets":
+                    promoted_refs.update(v for v in (value if isinstance(value, list) else [value]) if isinstance(v, str))
+            for outfit in character.get("outfits", []):
+                promoted_refs.update(outfit_refs(outfit))
         async with SessionLocal() as db:
             rows = (await db.execute(
                 select(AssetRow).order_by(AssetRow.created_at.desc()))).scalars().all()
         items = [r.data for r in rows
                  if r.data.get("scenario_id") == GLOBAL_ASSET_SCOPE
-                 or r.data.get("entity") == cid]
+                 or r.data.get("entity") == cid or r.id in promoted_refs]
         return {"items": items}
 
     @api.post("/characters/{cid}/assets")
@@ -409,7 +429,7 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
         try:
             _, rec, response = await router.call_text("authoring", messages=[
                 {"role": "system", "content": "为这个跨故事角色提出可选的稳定默认信息。返回 JSON 对象，值为自然中文字符串，只包含以下字段：" + ",".join(sorted(allowed)) + "。不引入具体故事的秘密或情节。"},
-                {"role": "user", "content": json.dumps(ch, ensure_ascii=False)}], output_contract={"purpose": "character_understanding"}, budget={"max_tokens": 2048, "reasoning_effort": "low"})
+                {"role": "user", "content": json.dumps(ch, ensure_ascii=False)}], output_contract={"purpose": "character_understanding"}, budget={"max_tokens": settings.authoring_max_tokens, "reasoning_effort": settings.authoring_reasoning_effort})
             from ..runtime.structured_output import decode_object
             result = decode_object(response.content)
             if not isinstance(result, dict) or not result or any(k not in allowed or not isinstance(v, str) for k, v in result.items()):
@@ -432,11 +452,15 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
                   f"直接输出描述文本，不要解释。")
         try:
             _, rec, resp = await router.call_text(
-                "authoring", messages=[{"role": "user", "content": prompt}])
+                "authoring", messages=[{"role": "user", "content": prompt}],
+                budget={"max_tokens": settings.authoring_max_tokens,
+                        "reasoning_effort": settings.authoring_reasoning_effort,
+                        "timeout_seconds": settings.authoring_timeout_seconds})
             text = (resp.content or "").strip().strip('"').strip()
             return {"appearance": text, "provider": rec.selected or ""}
         except Exception as e:
-            raise HTTPException(502, f"describe failed: {e}")
+            await tracer.emit("character.describe", "failed", output={"error": str(e)})
+            raise HTTPException(502, "外观描述暂时没有生成成功，请保留内容后重试。")
 
     @api.post("/characters/{cid}/ai-generate")
     async def character_ai_generate(cid: str, data: dict | None = None):
@@ -524,6 +548,15 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
         except KeyError:
             raise HTTPException(404, "character not found")
 
+    @api.patch("/characters/{cid}/outfits/{oid}")
+    async def character_outfit_update(cid: str, oid: str, data: dict):
+        try:
+            return (await char_assets.update_outfit(cid, oid, data)).model_dump(mode="json")
+        except KeyError:
+            raise HTTPException(404, "造型不存在")
+        except ValueError:
+            raise HTTPException(422, "请检查造型名称与参考素材设置。")
+
     @api.get("/characters/{cid}/versions/diff")
     async def character_version_diff(cid: str, from_v: int, to_v: int):
         try:
@@ -554,6 +587,8 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
             return s.model_dump(mode="json")
         except KeyError:
             raise HTTPException(404, "snapshot not found")
+        except ValueError:
+            raise HTTPException(422, "请检查本故事参考设置。")
 
     @api.post("/character-snapshots/{snap}/promote")
     async def snapshot_promote(snap: str):
@@ -804,25 +839,85 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
 
     @api.post("/dev/generation-preflight")
     async def dev_generation_preflight(data: dict):
+        import math
+        from ..providers.real import FalH3MaxProvider, fal_circuit_status
         role = str(data.get("role", "h3_max"))
-        branches = max(1, int(data.get("branches", settings.developer_test_top_k)))
-        shots = max(1, int(data.get("shots", settings.developer_test_max_shots)))
-        duration = float(data.get("duration", settings.developer_test_shot_duration))
+        phase = str(data.get("phase", "speculation")).lower()
+        if phase not in ("speculation", "opening", "ending", "free"):
+            raise HTTPException(422, "请选择有效的预览阶段。")
+        special = phase in ("opening", "ending")
+        maximum = float(settings.max_video_shot_duration)
+        if settings.developer_test_override_enabled:
+            maximum = min(maximum, float(settings.developer_test_shot_duration))
+        target_duration = (settings.opening_shot_duration if phase == "opening" else
+                           settings.ending_shot_duration if phase == "ending" else settings.effective_shot_duration)
+        default_duration = min(maximum, max(min(8.0 if special else 1.0, maximum), float(target_duration)))
+        manual_keys = {"branches", "shots", "duration", "resolution", "aspect_ratio",
+                       "reference_images", "reference_videos", "reference_audio"}
+        try:
+            branches = int(data.get("branches", settings.effective_target_k if phase == "speculation" else 1))
+            shots = int(data.get("shots", 1 if special else settings.effective_shots_per_branch))
+            duration = float(data.get("duration", default_duration))
+            counts = {key: int(data[key]) if key in data else None for key in
+                      ("reference_images", "reference_videos", "reference_audio")}
+            if branches < 1 or shots < 1 or not math.isfinite(duration) or duration <= 0 or any(
+                    value is not None and value < 0 for value in counts.values()):
+                raise ValueError("invalid count")
+        except (ValueError, TypeError, OverflowError):
+            raise HTTPException(422, "预览任务数量和时长必须为正数，参考数量不能为负数。")
         resolution = data.get("resolution") or settings.video_generation_resolution
-        result = {"provider": role, "branches": branches, "shots_per_branch": shots,
-                "jobs": branches * shots, "total_requested_duration": branches * shots * duration,
-                "resolution": resolution, "aspect_ratio": data.get("aspect_ratio") or settings.generation_aspect_ratio,
-                "reference_images": min(int(data.get("reference_images", 0)), settings.max_test_reference_images),
-                "reference_videos": min(int(data.get("reference_videos", 0)), settings.max_test_reference_videos),
-                "guard": "OPEN" if not settings.fal_paid_generation_enabled else "CLOSED",
-                "circuit": "CLOSED",
-                "test_override_enabled": settings.developer_test_override_enabled,
-                "fal_request_allowed": bool(settings.fal_paid_generation_enabled)}
-        from ..providers.real import fal_circuit_status, _record_usage
+        aspect = data.get("aspect_ratio") or settings.generation_aspect_ratio
+        limits = dict(FalH3MaxProvider.REFERENCE_LIMITS)
+        if settings.developer_test_override_enabled:
+            limits["image"] = min(limits["image"], settings.max_test_reference_images)
+            limits["video"] = min(limits["video"], settings.max_test_reference_videos)
+        validation = []
+        if duration > maximum:
+            validation.append("单镜头时长超过当前生成上限")
+        for key, kind in (("reference_images", "image"), ("reference_videos", "video"), ("reference_audio", "audio")):
+            if counts[key] is not None and counts[key] > limits[kind]:
+                validation.append(f"{kind} references exceed current limit")
+        if sum(value or 0 for value in counts.values()) > limits["mixed"]:
+            validation.append("mixed references exceed current limit")
+        if role == "h3_max" and resolution not in {"480P", "768P", "1080P"}:
+            validation.append("unsupported video resolution")
+        if role == "h3_max" and aspect not in {"auto", "adaptive", "21:9", "16:9", "4:3", "1:1", "3:4", "9:16"}:
+            validation.append("unsupported video aspect ratio")
         circuit = fal_circuit_status()
-        result["circuit"] = circuit.get("state", "UNKNOWN")
-        if role in ("h3_max", "nano_banana_2") and not settings.fal_paid_generation_enabled:
-            _record_usage(role, str(data.get("model", "")), "preflight", result, "BLOCKED", "PAID_GENERATION_DISABLED")
+        route_health = getattr(router, "health", {}).get(role)
+        route_circuit = getattr(route_health, "circuit", "CLOSED")
+        is_fal = role in ("h3_max", "nano_banana_2")
+        blocked = []
+        if is_fal:
+            if not settings.fal_paid_generation_enabled:
+                blocked.append("PAID_GENERATION_DISABLED")
+            if circuit.get("state") != "CLOSED":
+                blocked.append(circuit.get("reason") or "CIRCUIT_OPEN")
+            if route_circuit != "CLOSED":
+                blocked.append("ROUTER_CIRCUIT_OPEN")
+            if not circuit.get("keys"):
+                blocked.append("AUTH_NOT_CONFIGURED")
+            elif all(key.get("state") == "OPEN" for key in circuit["keys"]):
+                blocked.append("ALL_KEYS_CIRCUIT_OPEN")
+            if getattr(router, "mode", "mock") != "live":
+                blocked.append("REAL_VIDEO_ROUTE_DISABLED")
+        if validation:
+            blocked.append("INVALID_PREVIEW_PARAMETERS")
+        result = {"provider": role, "model": settings.fal_h3_model if role == "h3_max" else None,
+                "phase": phase, "estimate": True, "actual_plan": False,
+                "estimate_basis": "MANUAL_PREVIEW" if manual_keys & data.keys() else "EFFECTIVE_CONFIGURATION",
+                "note": "配置预估，不是已锁定的生成计划；实际镜头、时长和参考以 Production/Resolver 及 Usage Ledger 为准。",
+                "branches": branches, "shots_per_branch": shots, "duration": duration,
+                "jobs": branches * shots, "total_requested_duration": branches * shots * duration,
+                "resolution": resolution, "aspect_ratio": aspect,
+                **counts, "reference_limits": limits,
+                "reference_status": "MANUAL_COUNTS_NOT_RESOLVED" if any(v is not None for v in counts.values()) else "UNKNOWN_NOT_RESOLVED",
+                "guard": "OPEN" if not settings.fal_paid_generation_enabled else "CLOSED",
+                "circuit": circuit.get("state", "UNKNOWN"), "router_circuit": route_circuit,
+                "blocked_reasons": list(dict.fromkeys(blocked)), "validation_errors": validation,
+                "test_override_enabled": settings.developer_test_override_enabled,
+                "fal_request_allowed": is_fal and not blocked}
+        # A preview neither submits media nor records a fake generation attempt.
         return result
 
     @api.get("/dev/usage-ledger")

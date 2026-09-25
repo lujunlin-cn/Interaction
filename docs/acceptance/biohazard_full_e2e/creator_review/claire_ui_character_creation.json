@@ -1,0 +1,40 @@
+{
+  "at": "2026-09-25T04:12:28.269Z",
+  "entry": "Standard Character Library > New Character > AI Create",
+  "definition": {
+    "name": "克莱尔·雷德菲尔德（Claire Redfield）",
+    "bio": "为了寻找失踪哥哥而来到浣熊市的年轻女性，在灾难中表现出强烈行动力和保护弱者的意愿。"
+  },
+  "character": {
+    "id": "chr_00018_204d12",
+    "bio": "为了寻找失踪哥哥而来到浣熊市的年轻女性，在灾难中表现出强烈行动力和保护弱者的意愿。",
+    "name": "克莱尔·雷德菲尔德（Claire Redfield）",
+    "version": 1,
+    "appearance": "",
+    "created_at": 1790309535527,
+    "updated_at": 1790309535527,
+    "personality": "",
+    "current_version_id": "cv_00019_7cc3b3"
+  },
+  "proposal": {
+    "appearance": "年轻女性，常穿着实用耐穿的机车风格夹克与牛仔裤，发型利落便于行动，眼神坚定而温和，身形矫健，整体给人一种干练又亲和的旅人感。",
+    "default_desire": "渴望寻回失散的亲人并揭开失踪背后的真相，内心深处希望保护无辜者不再受到伤害，追求一个能让普通人安全生活的世界。",
+    "default_fear": "害怕再次失去重要的人，恐惧自己在关键时刻无能为力，担心善意与信任在残酷环境中被利用或辜负。",
+    "default_knowledge": "具备基础的机械维修与机车驾驶技能，掌握一定的急救常识和野外生存技巧，对普通社会的认知多于对隐秘地下世界的了解，通常以普通人的视角起步。",
+    "default_relationship": "重视家人与同伴，倾向于主动照顾弱势群体，容易与他人建立信任，但在面对权威或神秘组织时会保持警惕，与哥哥之间有着深厚却未完全化解的牵挂。",
+    "default_secrets": "内心深处藏着对自己是否足够强大的怀疑，偶尔会因冲动而后悔，不擅长向亲人展露脆弱，习惯将担忧与压力独自承受。",
+    "personality": "勇敢坚韧，富有行动力与同理心，外表直率开朗，内心敏感细腻，面对危险时习惯挺身而出，偶尔显得冲动，但关键时刻能够冷静思考并承担责任。"
+  },
+  "requests": [
+    {
+      "url": "http://127.0.0.1:9000/api/characters",
+      "method": "POST"
+    },
+    {
+      "url": "http://127.0.0.1:9000/api/characters/chr_00018_204d12/understanding",
+      "method": "POST"
+    }
+  ],
+  "new_media_requests": 0,
+  "accepted": false
+}

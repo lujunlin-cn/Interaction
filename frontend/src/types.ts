@@ -23,6 +23,17 @@ export interface ScenarioCharacter {
   motion_refs?: string[];
   voice_id?: string | null;
   overlay_sources?: Record<string, string>;
+  local_outfits?: CharacterOutfit[];
+  reference_overrides?: Record<string, string | string[] | null>;
+}
+
+export interface CharacterOutfit {
+  id: string;
+  name: string;
+  description?: string;
+  is_default?: boolean;
+  reference_assets?: string[];
+  reference_slots?: Record<string, string | string[] | null>;
 }
 
 export interface WorldSpec {
@@ -122,7 +133,7 @@ export interface GlobalCharacter {
   ref_pose_assets?: string[];
   ref_motion_assets?: string[];
   alternate_voice_assets?: string[];
-  outfits?: Array<{ id: string; name: string; description?: string; reference_assets?: string[]; is_default?: boolean }>;
+  outfits?: CharacterOutfit[];
   version: number;
   created_at: number;
   updated_at: number;
@@ -136,8 +147,12 @@ export interface CharacterAsset {
 }
 export interface CharacterVersion {
   id: string; character_id: string; version: number; change_type: string;
-  identity_spec: Record<string, any>; canonical_asset_refs: Record<string, string | null>;
-  outfits: Array<{ id: string; name: string; description: string; reference_assets: string[]; is_default: boolean }>;
+  identity_spec: Record<string, any>; canonical_asset_refs: Record<string, string | string[] | null>;
+  outfits: CharacterOutfit[];
+  pose_refs?: string[];
+  motion_refs?: string[];
+  canonical_voice_ref?: string | null;
+  alternate_voice_refs?: string[];
   created_at: number;
 }
 export interface CharacterSnapshot {

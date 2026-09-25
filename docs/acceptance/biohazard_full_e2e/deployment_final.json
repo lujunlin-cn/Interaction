@@ -1,0 +1,61 @@
+{
+  "captured_at": "2026-09-25T04:55:48.274399+00:00",
+  "service": "interaction.service",
+  "port": 9000,
+  "systemd_active": "active",
+  "health": {
+    "ok": true,
+    "provider_mode": "live",
+    "profile": "AGENT_LOCAL_PROFILE"
+  },
+  "frontend": {
+    "npm_ci": "PASS",
+    "build": "PASS",
+    "modules": 42,
+    "served_assets": [
+      {
+        "path": "/assets/index-C4Yk5vqH.css",
+        "bytes": 29070,
+        "sha256": "f667e0727c3d18390ee555feb52a2a519aa4afc131d4f31d82b6443a1a54beb5",
+        "matches_latest_disk_build": true
+      },
+      {
+        "path": "/assets/index-DBDSet8X.js",
+        "bytes": 294616,
+        "sha256": "77282019eaa4a1ef723fd99d9fb3819b84b2ca6169c864e5319f078c154e6435",
+        "matches_latest_disk_build": true
+      }
+    ]
+  },
+  "backend": {
+    "pytest_passed": 195,
+    "pytest_failed": 0,
+    "warnings": 6,
+    "compileall": "PASS",
+    "pip_check": "PASS"
+  },
+  "user_objects_unchanged_across_restart": {
+    "sessions": true,
+    "scenarios": true,
+    "versions": true,
+    "characters": true
+  },
+  "startup_seed_rows_refreshed_by_existing_seed_if_empty": {
+    "scenarios": [
+      "rainy_apartment"
+    ],
+    "versions": [
+      "ver_rainy_1_0_0"
+    ]
+  },
+  "seed_note": "Existing application startup refreshes official rainy_apartment seed rows. User Scenario versions, characters, and all Sessions remained unchanged.",
+  "object_counts": {
+    "sessions": 23,
+    "scenarios": 6,
+    "versions": 3,
+    "characters": 9
+  },
+  "fal_paid_generation_enabled": true,
+  "new_paid_media_generation_requests_in_repair_review_continuation": 0,
+  "application_commit": "This evidence belongs to the final integration commit; full SHA is in the delivery response and git rev-parse HEAD."
+}

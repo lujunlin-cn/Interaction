@@ -1,34 +1,47 @@
 # Character Library ↔ Creator Granularity Closure
 
-Start SHA: `a9458fd64f91b4455d6d55a0c870ab20597534e0`
-Final SHA: recorded after commit
+Date: 2026-09-25.
+Start SHA for the current FULL E2E work: `1eabeb6afc89e8bdcb402f5b2b452499e7089b9e`.
+Final SHA: 本报告所在最终提交；交付回复提供完整 SHA，使用 `git rev-parse HEAD` 核对。
 
-Paid media generation requests: **0**
+**AT-80: PASS for character management scope.** The old PASS based mainly on seven matching tabs was insufficient and is superseded. This pass is based on persisted A–F UI operations against an isolated backend, including explicit empty overrides, refresh, version pinning, and Promote.
 
-## Result
+## Scope and paid-request accounting
+
+The character scope regression used a separate temporary SQLite database on port 9001, `FAL_PAID_GENERATION_ENABLED=false`, `PROVIDER_MODE=mock`, and `PROFILE_LIFECYCLE_ENABLED=false`. All media were locally created, clearly labeled upload fixtures. Browser external network access and media-generation submits were blocked.
+
+**Paid media generation requests in this isolated scope regression: 0.** This is not an assertion that the broader FULL E2E has incurred no paid requests: that work already has four historical Relay candidate images and a Fal attempt; its final usage accounting belongs in `BIOHAZARD_FULL_E2E_ACCEPTANCE.md`. The production service on port 9000 was not changed by this regression.
+
+## Results
 
 | Area | Status | Evidence |
 | --- | --- | --- |
-| Character naming | PASS | Standard UI uses `角色库` and `角色`; Creator says `从角色库添加角色` and identifies the same Alice. |
-| Shared Studio architecture | PASS | Creator and Character Library both expose 概览、身份、造型、姿势与动作、声音、使用记录、版本; Creator uses the shared `CharacterProfile` and scenario overlay panel. |
-| Standard Reference Pack | PASS | Library exposes 主身份图、四分之三、侧面、全身正面、全身侧面; back is an extra reference. |
-| Outfit | PASS | Library outfit creation accepts name/description and shows default/reference count; Creator selects an existing outfit and persists `outfit_id` with `INHERIT`/`OVERRIDE`. |
-| Pose | PASS | Creator renders each library pose as a checkbox and persists `ScenarioCharacter.pose_refs[]`. |
-| Motion | PASS | Creator renders each library motion as a checkbox and persists `ScenarioCharacter.motion_refs[]`. |
-| Canonical Voice | PASS | Library has a canonical voice slot; Creator selects it and records `voice_id` as `INHERIT`. |
-| Alternate Voice | PASS | Library supports multiple alternate voice refs; Creator presents each as a selectable voice and records `OVERRIDE`. |
-| Scenario Overlay | PASS | Outfit, pose, motion and voice changes are scenario fields with explicit overlay sources; Global Character is not patched by Creator changes. |
-| Version Pin | PASS | Creator displays the pinned library version and keeps update/promote actions explicit. |
-| Promote Global | PASS | Existing promote endpoint remains explicit; scenario changes do not silently update the library. |
-| AT-80 | PASS | Browser check at 1920×1080 opened Alice in both entry points, verified all seven tabs, added Alice to a scenario, opened 造型 and verified the scenario overlay controls. Backend contract tests cover persistence and snapshot isolation. |
+| Character naming | PASS | Standard uses 角色库 / 角色 / 从角色库添加角色 / 来自角色库 vN / 本故事覆盖 N 项. |
+| Shared Studio architecture | PASS | Both entries use `CharacterStudio`, shared tabs and `CharacterProfile`; scope chooses GlobalCharacter versus ScenarioCharacter writes. |
+| Standard Reference Pack | PASS | Uploaded and bound front / three_quarter / side / full_front / full_side; back/other remain extra references; generated CharacterAssets and uploaded Assets share the picker. |
+| Outfit | PASS | Default and Yellow Raincoat created through UI; editable name/description/default and front/side/back/full_body/additional slots; Creator selects inherited outfits or saves a local outfit/ref without altering the library. |
+| Pose | PASS | Three library uploads; Creator selects two; explicit zero selected remains OVERRIDE; uploaded story-only pose persists. |
+| Motion | PASS | Two library uploads; Creator selects one and retains it after refresh. |
+| Canonical Voice | PASS | Uploaded Voice A is canonical with audition control; remains unchanged after story selection. |
+| Alternate Voice | PASS | Uploaded Voice B is selectable and auditionable; story stores voice_id and OVERRIDE. |
+| Scenario Overlay | PASS | Read-only state comparisons prove library data is unchanged by outfit, pose, motion, voice, and story-upload edits. |
+| Version Pin | PASS | Library v24→v25 leaves story at v24; Continue v24 preserves it; explicit Update v25 refreshes inherited personality while keeping overrides. |
+| Promote Global | PASS | Explicit Promote creates library v26 from local outfit/pose/voice overrides; story stays v25 and prior immutable CharacterVersion rows are unchanged. |
+| AT-80 | PASS | Actual 1920×1080 Standard UI A–F operations and strict persisted-state assertions, not label-only checks. |
 
 ## Verification
 
-- Backend: `FAL_PAID_GENERATION_ENABLED=false PROVIDER_MODE=mock PROFILE_LIFECYCLE_ENABLED=false pytest tests/ -q` → **64 passed / 0 failed / 5 warnings**.
-- Frontend: `npm run build` → **PASS**.
-- Browser: Playwright at 1920×1080; Character Library verified all seven tabs, standard Reference Pack, Outfit, Pose/Motion and Voice panels. Creator added Alice from the library and verified the same seven tabs plus scenario Outfit/Pose/Motion/Voice overlay. Evidence: `docs/acceptance/prd_v06_latest/character_granularity_browser.json` and screenshots in the same directory.
-- External paid media generation: **0 requests**. No Fal, Image Relay, H3 or image edit submit was made.
+- Backend full integration suite: **195 passed / 0 failed / 6 warnings**, with mock providers, Fal Guard OFF and lifecycle disabled. This supersedes the historical 64-pass count and does not prove real-provider media quality.
+- Frontend: `npm run build` → **PASS** after shared Studio changes and checkbox layout repair (42 modules).
+- Final deployment: `npm ci` / build and backend compileall/pip check **PASS**; `interaction.service` restarted active on 9000. Served JS/CSS bytes/SHA-256 match final dist; `docs/acceptance/biohazard_full_e2e/deployment_final.json`.
+- Browser: **PASS**, 1920×1080, no page errors and zero generation/edit submission attempts.
+- Evidence: `docs/acceptance/character_scope_regression/scope_regression.json`, replayable `regression.cjs`, screenshots, and README.
+- Latest regression character: `chr_00136_31e26b`; scenario: `scn_00180_9ee3f0`. These exist only in the isolated regression database, not the live E2E story.
 
 ## Remaining
 
-Paid-01, Paid-02 and Paid-03 remain pending until paid media validation is explicitly authorized. AT-44 independent user feedback and previously unrerun historical AT-01–76 cases remain at their prior statuses.
+No known non-Fal P0 remains in the tested character management scope. Real multi-character image/video quality, Production Resolver integration and the complete Paid-01 / Paid-02 / Paid-03 narrative path are **not** proved by upload fixtures; the authorized FULL E2E is tracked separately. AT-44 remains independent human feedback.
+
+The live story was subsequently reviewed and published through Standard UI as **v0.2.0**, `ver_00001_b26e3c`, with Leon v8 / Claire v7 / Victor v7 pins; GET-only checks matched all snapshots and complete local overrides. The full E2E remains PARTIAL because the Image Relay credential is missing and the three-character media/runtime path is unfinished. The later-discovered backend atomic-publication gap was fixed and seven transaction/source-drift/compatibility regressions passed; see `BIOHAZARD_FULL_E2E_ACCEPTANCE.md`.
+
+Image routing is a **USER-approved cost optimization**: IMAGE_GENERATION / IMAGE_EDIT → configured image provider → current deployment prefers OpenAI-compatible Image Relay (`gpt-image-2.5-sunburst`); FalImageProvider remains available in code. This is not an unauthorized PRD deviation, and this FULL E2E must not call Fal Nano Banana.

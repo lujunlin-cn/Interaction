@@ -1,0 +1,238 @@
+{
+  "method": "Standard UI review and Publish new version, no Play",
+  "reviewed": true,
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "result": {
+    "version_id": "ver_00001_b26e3c",
+    "version": "0.2.0",
+    "checklist": [
+      {
+        "id": "title",
+        "label": "标题与简介",
+        "ok": true,
+        "detail": "标题与简介不能为空"
+      },
+      {
+        "id": "world_rules",
+        "label": "世界规则",
+        "ok": true,
+        "detail": "world.rules 不能为空"
+      },
+      {
+        "id": "player_character",
+        "label": "玩家角色存在",
+        "ok": true,
+        "detail": "player_character='leon' 不在角色表"
+      },
+      {
+        "id": "char_identity",
+        "label": "角色身份信息",
+        "ok": true,
+        "detail": "每个角色需要 identity，且至少一名角色"
+      },
+      {
+        "id": "core_question",
+        "label": "核心问题",
+        "ok": true,
+        "detail": "drama.core_question 不能为空"
+      },
+      {
+        "id": "truth_model",
+        "label": "真相模型",
+        "ok": true,
+        "detail": "drama.truth_model 不能为空"
+      },
+      {
+        "id": "pressures",
+        "label": "压力线",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "id": "ending_families",
+        "label": "结局族",
+        "ok": true,
+        "detail": "drama.ending_families 不能为空"
+      },
+      {
+        "id": "timed",
+        "label": "限时互动声明",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "id": "char_snapshot",
+        "label": "角色快照绑定",
+        "ok": true,
+        "detail": "绑定全局角色需记录版本号"
+      },
+      {
+        "id": "char_assets",
+        "label": "角色视觉资产",
+        "ok": true,
+        "detail": "警告：角色缺少 CANONICAL 资产（视频制作时需补充或使用文字模式）：chr_00018_204d12, chr_00032_149758"
+      },
+      {
+        "id": "mechanics",
+        "label": "玩法机制",
+        "ok": true,
+        "detail": ""
+      }
+    ],
+    "character_snapshots": [
+      "snap_00004_a7cb7f",
+      "snap_00005_54ba2c",
+      "snap_00006_1589b7"
+    ]
+  },
+  "writes": [
+    {
+      "method": "POST",
+      "path": "/api/scenarios/scn_00003_364d7e/publish",
+      "body": {
+        "reviewed": true,
+        "play": false
+      }
+    }
+  ],
+  "versions": {
+    "items": [
+      {
+        "version_id": "ver_00001_b26e3c",
+        "version": "0.2.0",
+        "created_at": 1790310796541
+      },
+      {
+        "version_id": "ver_00017_8f2d1c",
+        "version": "0.1.0",
+        "created_at": 1790306918933
+      }
+    ]
+  },
+  "characters": [
+    {
+      "id": "leon",
+      "identity": "李昂·S·肯尼迪（Leon S. Kennedy）· 玩家角色，年轻 RPD 警员",
+      "personality": "冷静、有责任感与同情心，灾难中仍坚持救人；经验不足但应变能力强，愿意为自己的决定承担后果。",
+      "desire": "找到幸存者，查明地下设施发生了什么，阻止危险病毒样本流出。",
+      "fear": "因无能导致他人死亡",
+      "secrets": "无已确认的个人秘密；不预设玩家尚未做出的选择。",
+      "knowledge": "掌握基础警务、枪械与急救；进入地下时不知道 Victor 隐瞒的事故真相，需要通过现场证据逐步获知。",
+      "relationship": "克莱尔是有独立判断的合作伙伴；愿意与她共同决定，不替她做所有选择。对 Victor 保持审慎，信任须由证据支持。",
+      "visual_state": "本故事使用 RPD 执勤装备；保持主身份的脸、年龄、发型与体型，制服带雨水和污迹，没有感染特征。",
+      "global_character_id": "chr_00013_113084",
+      "global_character_version": 8,
+      "outfit_id": "outfit_00005_931bd6",
+      "pose_refs": [],
+      "motion_refs": [],
+      "voice_id": null,
+      "overlay_sources": {
+        "pose": "INHERIT",
+        "voice": "INHERIT",
+        "desire": "OVERRIDE",
+        "motion": "INHERIT",
+        "outfit": "OVERRIDE",
+        "secrets": "OVERRIDE",
+        "identity": "OVERRIDE",
+        "knowledge": "OVERRIDE",
+        "appearance": "OVERRIDE",
+        "personality": "OVERRIDE",
+        "relationship": "OVERRIDE"
+      },
+      "local_outfits": [],
+      "reference_overrides": {}
+    },
+    {
+      "id": "stalker",
+      "identity": "T-103 型追踪实验体 · 高威胁敌对实体",
+      "personality": "危险而持续的追踪威胁，不能用普通谈判停止攻击。",
+      "desire": "追踪设施内的目标并构成持续压迫。",
+      "fear": "不预设未经证实的特定恐惧或弱点；玩家只能根据实际观察尝试利用环境。",
+      "secrets": "没有“由某位设施研究员变异”或“对克莱尔发色执念”的已确认设定。",
+      "knowledge": "只依据实际感知与可达通道追踪，不全知、不瞬间传送。",
+      "relationship": "对李昂、克莱尔与幸存者构成威胁，是追逐和限时遭遇的压力来源。",
+      "visual_state": "高大的 T-103 型人形追踪实验体，轮廓与保护性服装形成沉重压迫感，不与任何人类角色混淆。",
+      "global_character_id": null,
+      "global_character_version": null,
+      "outfit_id": null,
+      "pose_refs": [],
+      "motion_refs": [],
+      "voice_id": null,
+      "overlay_sources": {
+        "fear": "OVERRIDE",
+        "desire": "OVERRIDE",
+        "secrets": "OVERRIDE",
+        "identity": "OVERRIDE",
+        "knowledge": "OVERRIDE",
+        "appearance": "OVERRIDE",
+        "personality": "OVERRIDE",
+        "relationship": "OVERRIDE"
+      },
+      "local_outfits": [],
+      "reference_overrides": {}
+    },
+    {
+      "id": "char_204d12",
+      "identity": "克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者",
+      "personality": "勇敢、机敏、有行动力，有自己的判断与立场，保护弱者，不只是跟随李昂的剧情工具。",
+      "desire": "找到被困幸存者，帮助他们离开设施，并查明 Umbrella 非法实验的证据。",
+      "fear": "再次与亲人失散",
+      "secrets": "尚未掌握事故全部证据，但已强烈怀疑 Victor 的解释；怀疑不等于已经知道真相。",
+      "knowledge": "熟悉基础急救与求生，知道有人在设施失踪；Victor 事故前后责任必须通过调查获知。",
+      "relationship": "李昂救人、分享真相并尊重她的意见会增强信任；李昂在证据不足时盲从 Victor，她会明确反对并可能独立行动。",
+      "visual_state": "本故事覆盖：红色夹克沾有雨水与少量灰尘",
+      "global_character_id": "chr_00018_204d12",
+      "global_character_version": 7,
+      "outfit_id": null,
+      "pose_refs": [],
+      "motion_refs": [],
+      "voice_id": null,
+      "overlay_sources": {
+        "fear": "OVERRIDE",
+        "desire": "OVERRIDE",
+        "secrets": "OVERRIDE",
+        "identity": "OVERRIDE",
+        "knowledge": "OVERRIDE",
+        "appearance": "OVERRIDE",
+        "personality": "OVERRIDE",
+        "relationship": "OVERRIDE"
+      },
+      "local_outfits": [],
+      "reference_overrides": {}
+    },
+    {
+      "id": "char_149758",
+      "identity": "Dr. Victor Hale · Umbrella 地下设施研究主管",
+      "personality": "冷静、克制、极度功利，擅长用看似合理的解释争取合作，会为保存成果合理化他人的牺牲。",
+      "desire": "利用李昂取回实验数据与危险样本，并带着研究成果活着离开；不是单纯毁灭城市。",
+      "fear": "死亡、实验成果毁灭、责任暴露而失去控制。",
+      "secrets": "团队事故前已知道样本异常。事故后他仍命令保留实验数据，间接延误撤离。他声称的病毒抑制剂并不完全可靠；他知道这些事实但会隐瞒。",
+      "knowledge": "知道设施实验、样本异常和撤离延误；只掌握仍在线的监控与系统信息，不知道所有盲区或玩家未透露的发现。",
+      "relationship": "以广播、监控和剩余安全权限影响李昂与克莱尔，希望他们取回数据和样本；面对证据可能辩解或交易，不具备无限系统权限。",
+      "visual_state": "本故事覆盖：实验服有少量血迹，右臂受伤",
+      "global_character_id": "chr_00032_149758",
+      "global_character_version": 7,
+      "outfit_id": null,
+      "pose_refs": [],
+      "motion_refs": [],
+      "voice_id": null,
+      "overlay_sources": {
+        "fear": "OVERRIDE",
+        "desire": "OVERRIDE",
+        "secrets": "OVERRIDE",
+        "identity": "OVERRIDE",
+        "knowledge": "OVERRIDE",
+        "appearance": "OVERRIDE",
+        "personality": "OVERRIDE",
+        "relationship": "OVERRIDE"
+      },
+      "local_outfits": [],
+      "reference_overrides": {}
+    }
+  ],
+  "media_submits": 0,
+  "session_created": false
+}

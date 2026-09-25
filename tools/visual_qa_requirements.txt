@@ -1,0 +1,4 @@
+# QA helper only; run with an interpreter that also reads backend app.config.
+httpx
+Pillow
+pydantic-settings

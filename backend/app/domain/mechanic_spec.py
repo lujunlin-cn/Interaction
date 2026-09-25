@@ -24,6 +24,7 @@ class InventoryConfig(StrictConfig):
 class QteConfig(StrictConfig):
     timeout_seconds: int = Field(default=10, ge=1, le=120)
     trigger_after_actions: int = Field(default=1, ge=1, le=100)
+    trigger_location_ids: list[str] = Field(default_factory=list)
     qte_fallback: Literal["qte_failure"] = "qte_failure"
     dialogue_fallback: Literal["silence"] = "silence"
 
@@ -36,7 +37,17 @@ CONTRACTS = {
     "qte": ("紧张时刻", "危险场景需要在有限时间内决定，超时按已设定的结果继续。", "故事声明的限时事件", ["TimedInteractionRequest"]),
 }
 
-def validate_mechanics(mechanics: dict) -> dict:
+def location_names(locations: str) -> dict[str, str]:
+    """Use the same stable location IDs as canonical WorldState."""
+    names = {}
+    for line in locations.splitlines():
+        parts = [part.strip() for part in line.split("｜", 1)]
+        if parts[0]:
+            names[parts[0]] = parts[1] if len(parts) == 2 else parts[0]
+    return names
+
+
+def validate_mechanics(mechanics: dict, locations: str | None = None) -> dict:
     from .schemas import MechanicConfig
     out = {}
     for key, raw in mechanics.items():
@@ -45,6 +56,10 @@ def validate_mechanics(mechanics: dict) -> dict:
         item = raw.model_dump() if isinstance(raw, MechanicConfig) else raw
         spec = MechanicConfig.model_validate(item)
         spec.config = CONFIGS[key].model_validate(spec.config).model_dump()
+        if key == "qte" and locations is not None:
+            unknown = set(spec.config["trigger_location_ids"]) - location_names(locations).keys()
+            if unknown:
+                raise ValueError("限时玩法触发地点不存在，请从当前故事地点中选择：" + "、".join(sorted(unknown)))
         title, tutorial, trigger, permissions = CONTRACTS[key]
         spec.skill_id, spec.version = key, "1.0.0"
         spec.title, spec.tutorial = title, spec.tutorial or tutorial

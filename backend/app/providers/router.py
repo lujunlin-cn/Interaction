@@ -478,6 +478,7 @@ class ProviderRouter:
                     provider.generate(messages, output_contract, None, budget),
                     timeout=(settings.director_local_request_timeout_seconds
                              if role == "director" and rec.selected == "nemotron_local"
+                             else settings.authoring_timeout_seconds if role == "authoring"
                              else settings.provider_timeout_seconds))
                 rec.model = resp.model
                 self._mark_success(rec.selected)

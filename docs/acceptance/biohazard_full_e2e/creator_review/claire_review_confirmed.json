@@ -1,0 +1,94 @@
+{
+  "cid": "chr_00018_204d12",
+  "character": {
+    "id": "chr_00018_204d12",
+    "bio": "为了寻找失踪哥哥而来到浣熊市的年轻女性，在灾难中表现出强烈行动力和保护弱者的意愿。",
+    "name": "克莱尔·雷德菲尔德（Claire Redfield）",
+    "version": 7,
+    "appearance": "年轻成年女性，棕红色长发利落束成马尾，脸部年轻自然，身形匀称而矫健，眼神坚定、警觉而温和。常见实用红色机车夹克与便于行动的服装；无伤势、无感染特征。保持独立于李昂与Victor的女性身份、年龄、发型和体型。",
+    "created_at": 1790309535527,
+    "updated_at": 1790309787929,
+    "personality": "性格坚韧独立，行动果决且富有行动力；外柔内刚，面对危险与不公敢于挺身而出，同时对弱者保有温柔与强烈的同理心。",
+    "default_fear": "恐惧再次与亲人永别或眼见他人受难却无力施救，也恐惧在极端环境中逐渐丧失自我与良知。",
+    "default_desire": "渴望寻回失散的至亲，守护身边无辜的弱者，并在绝境中维系人性的尊严与希望。",
+    "default_knowledge": "具备基础机械维修、急救护理与野外求生知识，熟悉简易武器与工具的使用，能在资源匮乏的情况下灵活应变。",
+    "current_version_id": "cv_00031_9545b4",
+    "default_relationship": "与失散的兄长之间有着深厚的亲情牵挂；对身处险境的弱者常怀有强烈的保护欲，容易与之建立信任，并视其为必须守护的对象。"
+  },
+  "proposal": {
+    "appearance": "一位身形矫健的年轻女性，常以便于行动的实用装束为主，短发或简单束发，神情坚定而温和，给人以坚韧且值得信赖的印象。",
+    "default_desire": "渴望寻回失散的至亲，守护身边无辜的弱者，并在绝境中维系人性的尊严与希望。",
+    "default_fear": "恐惧再次与亲人永别或眼见他人受难却无力施救，也恐惧在极端环境中逐渐丧失自我与良知。",
+    "default_knowledge": "具备基础机械维修、急救护理与野外求生知识，熟悉简易武器与工具的使用，能在资源匮乏的情况下灵活应变。",
+    "default_relationship": "与失散的兄长之间有着深厚的亲情牵挂；对身处险境的弱者常怀有强烈的保护欲，容易与之建立信任，并视其为必须守护的对象。",
+    "default_secrets": "内心深处因未能更早阻止亲人涉险而怀有隐秘的自责，偶尔也会怀疑自身能力的极限，但她极少向他人展露这份脆弱。",
+    "personality": "性格坚韧独立，行动果决且富有行动力；外柔内刚，面对危险与不公敢于挺身而出，同时对弱者保有温柔与强烈的同理心。"
+  },
+  "decisions": [
+    {
+      "field": "personality",
+      "action": "accept",
+      "value": "性格坚韧独立，行动果决且富有行动力；外柔内刚，面对危险与不公敢于挺身而出，同时对弱者保有温柔与强烈的同理心。"
+    },
+    {
+      "field": "default_desire",
+      "action": "accept",
+      "value": "渴望寻回失散的至亲，守护身边无辜的弱者，并在绝境中维系人性的尊严与希望。"
+    },
+    {
+      "field": "default_fear",
+      "action": "accept",
+      "value": "恐惧再次与亲人永别或眼见他人受难却无力施救，也恐惧在极端环境中逐渐丧失自我与良知。"
+    },
+    {
+      "field": "appearance",
+      "action": "modify_then_accept",
+      "value": "年轻成年女性，棕红色长发利落束成马尾，脸部年轻自然，身形匀称而矫健，眼神坚定、警觉而温和。常见实用红色机车夹克与便于行动的服装；无伤势、无感染特征。保持独立于李昂与Victor的女性身份、年龄、发型和体型。"
+    },
+    {
+      "field": "default_knowledge",
+      "action": "accept",
+      "value": "具备基础机械维修、急救护理与野外求生知识，熟悉简易武器与工具的使用，能在资源匮乏的情况下灵活应变。"
+    },
+    {
+      "field": "default_relationship",
+      "action": "accept",
+      "value": "与失散的兄长之间有着深厚的亲情牵挂；对身处险境的弱者常怀有强烈的保护欲，容易与之建立信任，并视其为必须守护的对象。"
+    },
+    {
+      "field": "default_secrets",
+      "action": "ignore"
+    }
+  ],
+  "requests": [
+    {
+      "url": "http://127.0.0.1:9000/api/characters/chr_00018_204d12/understanding",
+      "method": "POST"
+    },
+    {
+      "url": "http://127.0.0.1:9000/api/characters/chr_00018_204d12",
+      "method": "PATCH"
+    },
+    {
+      "url": "http://127.0.0.1:9000/api/characters/chr_00018_204d12",
+      "method": "PATCH"
+    },
+    {
+      "url": "http://127.0.0.1:9000/api/characters/chr_00018_204d12",
+      "method": "PATCH"
+    },
+    {
+      "url": "http://127.0.0.1:9000/api/characters/chr_00018_204d12",
+      "method": "PATCH"
+    },
+    {
+      "url": "http://127.0.0.1:9000/api/characters/chr_00018_204d12",
+      "method": "PATCH"
+    },
+    {
+      "url": "http://127.0.0.1:9000/api/characters/chr_00018_204d12",
+      "method": "PATCH"
+    }
+  ],
+  "new_media_requests": 0
+}

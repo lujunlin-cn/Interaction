@@ -1,0 +1,446 @@
+{
+  "id": "scn_00003_364d7e",
+  "title": "地下禁区：浣熊市之夜",
+  "description": "李昂在警局地下发现雨伞秘密设施，与克莱尔会合。寻找幸存者与危险样本时，一只实验体紧追不舍，而主管哈利的广播指引暗藏疑点。",
+  "genre": "生存恐怖／调查冒险",
+  "tone": "压抑、紧迫、疑云重重",
+  "play_style": "探索、物资管理、信任抉择与高压追逐",
+  "player_character": "leon",
+  "status": "DRAFT",
+  "version": "0.1.0",
+  "owner": "user",
+  "world": {
+    "rules": "T病毒泄漏致丧尸横行；警局地下藏有雨伞秘密设施；监控与广播覆盖全区；实验体惧光但听觉敏锐。",
+    "lore": "1998年9月，浣熊市因雨伞泄露陷入混乱。警局地下隔离设施原为研究观测点，事故后封锁，仅存少数人员。",
+    "locations": "loc_parking｜地下停车场\nloc_lab_a｜A区实验室\nloc_control｜监控室\nloc_holding｜隔离收容区\nloc_exit｜紧急通道",
+    "constraints": "弹药与药品稀缺；广播时断时续；监控存在固定盲区；实验体不可正面硬拼，须潜行或利用环境。"
+  },
+  "characters": [
+    {
+      "id": "leon",
+      "identity": "浣熊市警局新人警察",
+      "personality": "冷静、责任感强、略带青涩",
+      "desire": "活下去并保护同胞",
+      "fear": "因无能导致他人死亡",
+      "secrets": "尚未告诉克莱尔自己第一天上班就遇上此等噩梦",
+      "knowledge": "基础警用格斗与枪械使用",
+      "relationship": "依赖克莱尔的果断，对Hale保持职业礼貌",
+      "visual_state": "警服染血，手持标准配枪",
+      "global_character_id": null,
+      "global_character_version": null,
+      "outfit_id": null,
+      "pose_refs": [],
+      "motion_refs": [],
+      "voice_id": null,
+      "overlay_sources": {}
+    },
+    {
+      "id": "claire",
+      "identity": "寻找哥哥的大学生",
+      "personality": "勇敢、机敏、独立",
+      "desire": "找到克里斯并查明真相",
+      "fear": "再次与亲人失散",
+      "secrets": "已在停车场独自击杀多只丧尸，未告诉李昂",
+      "knowledge": "机械改造与基础急救",
+      "relationship": "信任李昂，但对其乐观判断偶有质疑",
+      "visual_state": "红衣背包，手持自制武器",
+      "global_character_id": null,
+      "global_character_version": null,
+      "outfit_id": null,
+      "pose_refs": [],
+      "motion_refs": [],
+      "voice_id": null,
+      "overlay_sources": {}
+    },
+    {
+      "id": "victor_hale",
+      "identity": "雨伞设施主管",
+      "personality": "儒雅、控制欲强、言辞谨慎",
+      "desire": "保住样本与自身地位",
+      "fear": "设施实验体与泄露真相",
+      "secrets": "故意延迟救援，等待雨伞特别部队接管",
+      "knowledge": "设施结构、实验体习性、样本特性",
+      "relationship": "以引导者姿态操控李昂与克莱尔",
+      "visual_state": "仅通过监控出现的西装男子，面带微笑",
+      "global_character_id": null,
+      "global_character_version": null,
+      "outfit_id": null,
+      "pose_refs": [],
+      "motion_refs": [],
+      "voice_id": null,
+      "overlay_sources": {}
+    },
+    {
+      "id": "stalker",
+      "identity": "追踪型实验体",
+      "personality": "无理智、执念深、感官敏锐",
+      "desire": "捕猎所有活物",
+      "fear": "强光与高温",
+      "secrets": "变异前是设施研究员，对克莱尔的发色有反应",
+      "knowledge": "熟悉设施所有通道",
+      "relationship": "将李昂与克莱尔视为猎物",
+      "visual_state": "高大扭曲，皮肤溃烂，指骨如刃",
+      "global_character_id": null,
+      "global_character_version": null,
+      "outfit_id": null,
+      "pose_refs": [],
+      "motion_refs": [],
+      "voice_id": null,
+      "overlay_sources": {}
+    }
+  ],
+  "drama": {
+    "core_question": "李昂能否在实验体追杀与雨伞阴谋中救出幸存者，并决定危险样本的最终归属？",
+    "central_conflict": "求生本能与道德责任的冲突；对Victor Hale的信任与日益增长的怀疑；有限物资与团队安危的抉择。",
+    "truth_model": "fact_01：Victor Hale是雨伞安保主管，完全知情事故经过\nfact_02：追踪型实验体原为设施首席研究员，因直接接触原型样本变异\nfact_03：危险样本是暴君原型活体细胞，会持续进化并影响宿主\nfact_04：三名失踪者中仅一人存活，其余已成为实验体猎物\nfact_05：Hale已手动锁定自毁程序，意在掩盖设施存在",
+    "secrets": "Hale借引导之名拖延时间，等待雨伞回收部队；实验体对克莱尔的枪声有异常执念；样本若离开低温容器将加速暴君孵化。",
+    "misbeliefs": "李昂以为设施只是临时避难所；克莱尔坚信哥哥可能被关押于此；两人初期都相信Hale会协助他们逃出。",
+    "pressures": "实验体追踪｜行动触发｜噪音与战斗后逐步逼近\n设施封锁｜故事时间推进｜安全区域随时间减少\n物资匮乏｜故事时间推进｜药品与弹药被发现速率低于消耗\n信任裂痕｜行动触发｜Hale指令与现场证据矛盾时加深",
+    "anchors": "高压追逐：样本运输通道内实验体破门而入，玩家须在昏暗狭窄空间奔逃，并选择掩护克莱尔或独自引开目标。",
+    "ending_families": "escape｜逃出生天但暴露行踪\nburn｜销毁证据与样本\nrebel｜获得Hale罪证\nlost｜阵亡却留下真相芯片",
+    "foreshadows": "广播中偶尔出现的痛苦低吼；监控盲区里一闪而过的白大褂；Hale提到回收时语气生硬；低温容器上的抓痕。",
+    "forbidden_outcomes": "李昂不得感染变异；浣熊市不得提前遭核打击；Victor Hale不得无动机作恶；不得出现超自然力量。",
+    "timed_interactions": "chase_01｜qte｜8｜李昂未能及时撞开变形的安全门，实验体逼近，克莱尔被迫开枪引来更多丧尸"
+  },
+  "mechanics": {
+    "qte": {
+      "enabled": false,
+      "config": {
+        "qte_fallback": "qte_failure",
+        "timeout_seconds": 10,
+        "dialogue_fallback": "silence",
+        "trigger_after_actions": 1
+      },
+      "skill_id": "qte",
+      "version": "1.0.0",
+      "title": "紧张时刻",
+      "tutorial": "危险场景需要在有限时间内决定，超时按已设定的结果继续。",
+      "trigger": "故事声明的限时事件",
+      "state_patch_contract": [
+        "TimedInteractionRequest"
+      ]
+    },
+    "inventory": {
+      "enabled": false,
+      "config": {
+        "capacity": 8,
+        "show_panel": true
+      },
+      "skill_id": "inventory",
+      "version": "1.0.0",
+      "title": "道具",
+      "tutorial": "重要物品可以保存，在之后的场景再次使用。",
+      "trigger": "获得或使用物品",
+      "state_patch_contract": [
+        "addItem",
+        "removeItem"
+      ]
+    },
+    "clue-system": {
+      "enabled": false,
+      "config": {
+        "states": [
+          "DISCOVERED",
+          "VERIFIED",
+          "USED"
+        ],
+        "show_panel": true,
+        "allow_review": true
+      },
+      "skill_id": "clue-system",
+      "version": "1.0.0",
+      "title": "调查与线索",
+      "tutorial": "检查环境、物品和询问人物，可以发现并核实线索。",
+      "trigger": "调查或询问",
+      "state_patch_contract": [
+        "clues.*"
+      ]
+    },
+    "relationship": {
+      "enabled": false,
+      "config": {
+        "max": 100,
+        "min": 0,
+        "care_delta": 9,
+        "show_panel": true,
+        "show_values": false
+      },
+      "skill_id": "relationship",
+      "version": "1.0.0",
+      "title": "人物关系",
+      "tutorial": "角色会记住你如何对待他们，影响以后的帮助与交流。",
+      "trigger": "角色互动",
+      "state_patch_contract": [
+        "relationships.*"
+      ]
+    }
+  },
+  "theme": {
+    "accent": "#245477",
+    "font": "system",
+    "density": "comfortable",
+    "subtitles": "normal",
+    "background": "plain"
+  },
+  "authoring_intent": "做一个生化危机世界观下的原创短篇。我扮演李昂·S·肯尼迪。1998 年浣熊市失控当夜，李昂在警察局地下发现一处 Umbrella 秘密隔离设施，并与克莱尔重新会合。两人要寻找失踪幸存者和一份危险样本，同时受到一只追踪型实验体追杀。设施主管 Victor Hale 通过监控和广播引导他们，但他明显隐瞒了事故真相。我希望故事有调查、物资管理、角色信任、秘密揭露、一次高压追逐，以及不止一种合理结局。",
+  "mechanic_authoring_intent": "",
+  "creator_projection": {
+    "drama:": {
+      "id": "projection_00004_817233",
+      "items": [
+        {
+          "path": "drama.core_question",
+          "value": "在实验体追杀与雨伞阴谋中，李昂能否救出幸存者，并在销毁危险样本、保留Umbrella罪证与维系同伴信任之间做出真正取舍？",
+          "before": "李昂能否在实验体追杀与雨伞阴谋中救出幸存者，并决定危险样本的最终归属？",
+          "summary": "将核心问题从单纯生存提升为多重道德抉择，直接呼应终局取舍要求。",
+          "question": "",
+          "suggestions": [],
+          "evidence_quote": "结局不要只有打败反派，而要在救人、销毁病毒样本、保留 Umbrella 犯罪证据之间产生真正取舍。"
+        },
+        {
+          "path": "drama.central_conflict",
+          "value": "求生本能与道德责任的冲突；李昂对Victor Hale的轻信与克莱尔基于现场证据的尖锐反对之间的冲突；有限物资、幸存者性命与团队信任之间的抉择。",
+          "before": "求生本能与道德责任的冲突；对Victor Hale的信任与日益增长的怀疑；有限物资与团队安危的抉择。",
+          "summary": "加入李昂与克莱尔因Victor Hale产生的立场对立，以及信任与救援的冲突。",
+          "question": "",
+          "suggestions": [],
+          "evidence_quote": "我希望 Claire 有自己的立场。如果 Leon 过度相信 Victor，她应该明显反对；如果 Leon 愿意冒险救幸存者，她会更信任他。"
+        },
+        {
+          "path": "drama.truth_model",
+          "value": "fact_01：Victor Hale是雨伞安保主管，完全知情事故经过\nfact_02：追踪型实验体原为设施首席研究员，因直接接触原型样本变异\nfact_03：危险样本是暴君原型活体细胞，会持续进化并影响宿主\nfact_04：三名失踪者中仅一人存活，其余已成为实验体猎物\nfact_05：Hale已手动锁定自毁程序，意在掩盖设施存在",
+          "before": "fact_01：Victor Hale是雨伞安保主管，完全知情事故经过\nfact_02：追踪型实验体原为设施首席研究员，因直接接触原型样本变异\nfact_03：危险样本是暴君原型活体细胞，会持续进化并影响宿主\nfact_04：三名失踪者中仅一人存活，其余已成为实验体猎物\nfact_05：Hale已手动锁定自毁程序，意在掩盖设施存在",
+          "summary": "现有真相模型已足够支撑调查与背叛主题，维持不变。",
+          "question": "",
+          "suggestions": [],
+          "evidence_quote": ""
+        },
+        {
+          "path": "drama.secrets",
+          "value": "Hale借引导之名拖延时间，等待雨伞回收部队；Hale故意提供错误路线以消耗二人体力并加剧李昂与克莱尔的分歧；实验体对克莱尔的枪声有异常执念；样本若离开低温容器将加速暴君孵化。",
+          "before": "Hale借引导之名拖延时间，等待雨伞回收部队；实验体对克莱尔的枪声有异常执念；样本若离开低温容器将加速暴君孵化。",
+          "summary": "补充Hale故意误导路线以离间二人的秘密，强化克莱尔反对的合理性。",
+          "question": "",
+          "suggestions": [],
+          "evidence_quote": "设施主管 Victor Hale 通过监控和广播引导他们，但他明显隐瞒了事故真相。"
+        },
+        {
+          "path": "drama.misbeliefs",
+          "value": "李昂以为设施只是临时避难所；克莱尔坚信哥哥可能被关押于此；两人初期都相信Hale会协助他们逃出；李昂误将克莱尔对Hale的质疑当作过度恐慌。",
+          "before": "李昂以为设施只是临时避难所；克莱尔坚信哥哥可能被关押于此；两人初期都相信Hale会协助他们逃出。",
+          "summary": "增加李昂对克莱尔判断力的误判，为后续信任裂痕铺垫。",
+          "question": "",
+          "suggestions": [],
+          "evidence_quote": "我希望 Claire 有自己的立场。如果 Leon 过度相信 Victor，她应该明显反对；如果 Leon 愿意冒险救幸存者，她会更信任他。"
+        },
+        {
+          "path": "drama.pressures",
+          "value": "实验体追踪｜行动触发｜噪音与战斗后逐步逼近\n设施封锁｜故事时间推进｜安全区域随时间减少\n物资匮乏｜故事时间推进｜药品与弹药被发现速率低于消耗\n信任裂痕｜行动触发｜Hale指令与现场证据矛盾时加深\n信任变化｜行动触发｜李昂冒险营救幸存者时克莱尔提升信任，盲从Hale时降低信任",
+          "before": "实验体追踪｜行动触发｜噪音与战斗后逐步逼近\n设施封锁｜故事时间推进｜安全区域随时间减少\n物资匮乏｜故事时间推进｜药品与弹药被发现速率低于消耗\n信任裂痕｜行动触发｜Hale指令与现场证据矛盾时加深",
+          "summary": "需要明确克莱尔的信任变化是仅作为叙事氛围，还是作为可影响机制的压力系统。",
+          "question": "",
+          "suggestions": [
+            {
+              "label": "信任作为隐藏数值",
+              "value": "信任裂痕｜行动触发｜李昂过度听从Victor Hale时克莱尔明显反对并降低支援意愿\n信任加固｜行动触发｜李昂选择冒险营救幸存者时克莱尔提升信任并主动分享物资"
+            },
+            {
+              "label": "信任仅驱动对话",
+              "value": "信任裂痕｜行动触发｜Hale指令与现场证据矛盾时克莱尔出言质疑，但不改变机制\n态度变化｜行动触发｜李昂救援平民时克莱尔表示认可，影响后续对话选项"
+            },
+            {
+              "label": "信任触发关键分歧",
+              "value": "信任裂痕｜行动触发｜李昂盲信Hale时克莱尔拒绝执行高风险指令并可能单独行动\n信任加固｜行动触发｜李昂以身作则后克莱尔在终局无条件跟随其选择"
+            },
+            {
+              "label": "信任绑定生存状态",
+              "value": "信任裂痕｜行动触发｜李昂忽视克莱尔意见时她更易冲动，增加被实验体发现的概率\n信任加固｜行动触发｜获得克莱尔信任后她会提前预警危险并优化潜行路线"
+            }
+          ],
+          "evidence_quote": ""
+        },
+        {
+          "path": "drama.anchors",
+          "value": "高压追逐：样本运输通道内实验体破门而入，玩家须在昏暗狭窄空间奔逃，并选择掩护克莱尔或独自引开目标；掩护克莱尔会消耗弹药但提升信任，独自引开则可能让她被迫独自面对危险。",
+          "before": "高压追逐：样本运输通道内实验体破门而入，玩家须在昏暗狭窄空间奔逃，并选择掩护克莱尔或独自引开目标。",
+          "summary": "确认高压追逐中的分工选择是否会对克莱尔的立场、状态或结局产生差异化后果。",
+          "question": "",
+          "suggestions": [
+            {
+              "label": "掩护消耗资源但巩固信任",
+              "value": "高压追逐：样本运输通道内实验体破门而入，玩家须在昏暗狭窄空间奔逃，并选择掩护克莱尔或独自引开目标；掩护克莱尔会消耗弹药与药品但显著提升信任，独自引开则潜行更易成功但导致克莱尔陷入孤立无援的险境。"
+            },
+            {
+              "label": "独自引开触发克莱尔危机",
+              "value": "高压追逐：样本运输通道内实验体破门而入，玩家须在昏暗狭窄空间奔逃，并选择掩护克莱尔或独自引开目标；若独自引开，克莱尔将在出口被实验体伏击并重伤，除非之前累积了足够信任让她信任你的判断。"
+            },
+            {
+              "label": "环境互动替代人员分工",
+              "value": "高压追逐：样本运输通道内实验体破门而入，玩家须在昏暗狭窄空间奔逃，利用爆闪灯与狭窄通道摆脱实验体；克莱尔会根据你此前对待她的态度，选择并肩作战或抢先独自逃向出口。"
+            },
+            {
+              "label": "双向抉择均无惩罚",
+              "value": "高压追逐：样本运输通道内实验体破门而入，玩家须在昏暗狭窄空间奔逃，并选择掩护克莱尔或独自引开目标；两种选择只会改变即时战斗难度，不影响克莱尔后续立场。"
+            }
+          ],
+          "evidence_quote": ""
+        },
+        {
+          "path": "drama.ending_families",
+          "value": "escape｜逃出生天但暴露行踪\nburn｜销毁证据与样本\nrebel｜获得Hale罪证\nlost｜阵亡却留下真相芯片",
+          "before": "escape｜逃出生天但暴露行踪\nburn｜销毁证据与样本\nrebel｜获得Hale罪证\nlost｜阵亡却留下真相芯片",
+          "summary": "将终局从单纯逃出重构为救人、样本与罪证之间的不可兼得，但需确认具体呈现方式。",
+          "question": "",
+          "suggestions": [
+            {
+              "label": "三难取舍直接写入结局",
+              "value": "escape｜二人携幸存者逃出，但样本与罪证均落入雨伞之手\nburn｜为阻止病毒扩散销毁样本，却让Umbrella核心罪证随之湮灭\nrebel｜拼死取得Hale罪证芯片，但为掩护证据不得不放弃部分幸存者或样本\nlost｜李昂阵亡，克莱尔带着样本与真相芯片逃出，面临未来的抉择"
+            },
+            {
+              "label": "资源空间强制二选一",
+              "value": "escape｜逃出生天但暴露行踪，仅能带走一样关键物品\nburn｜销毁病毒样本与设施，拯救城市却失去所有Umbrella把柄\nrebel｜获得Hale罪证并送出幸存者，但危险样本被强制留在泄漏的低温容器旁\nlost｜阵亡却留下真相芯片，样本与幸存者命运托付给克莱尔"
+            },
+            {
+              "label": "信任决定能否兼得",
+              "value": "escape｜低信任下二人仅能自救，高信任下可额外救出幸存者\nburn｜销毁样本需克莱尔高度信任才会协助操作，否则她将阻止你放弃证据\nrebel｜保留罪证会招致雨伞追兵，只有李昂赢得克莱尔信任她才愿意共同面对\nlost｜阵亡却留下真相芯片，克莱尔基于信任决定带走样本还是公开罪证"
+            },
+            {
+              "label": "地理分隔制造取舍",
+              "value": "escape｜从紧急通道逃出，只来得及带人，样本与罪证留在设施内\nburn｜在自毁程序中手动销毁样本，但监控室主机里的罪证数据同时被格式化\nrebel｜突破封锁取得Hale的物理证物，却因警报响起导致幸存者区被实验体突破\nlost｜阵亡却留下真相芯片，克莱尔必须在追赶的直升机和地面的幸存者之间选择救援方向"
+            }
+          ],
+          "evidence_quote": "结局不要只有打败反派，而要在救人、销毁病毒样本、保留 Umbrella 犯罪证据之间产生真正取舍。"
+        },
+        {
+          "path": "drama.forbidden_outcomes",
+          "value": "李昂不得感染变异；浣熊市不得提前遭核打击；Victor Hale不得无动机作恶；不得出现超自然力量。",
+          "before": "李昂不得感染变异；浣熊市不得提前遭核打击；Victor Hale不得无动机作恶；不得出现超自然力量。",
+          "summary": "维持现有底线约束，确保故事不偏离生化危机基调。",
+          "question": "",
+          "suggestions": [],
+          "evidence_quote": ""
+        },
+        {
+          "path": "drama.foreshadows",
+          "value": "广播中偶尔出现的痛苦低吼；监控盲区里一闪而过的白大褂；Hale提到回收时语气生硬；低温容器上的抓痕。",
+          "before": "广播中偶尔出现的痛苦低吼；监控盲区里一闪而过的白大褂；Hale提到回收时语气生硬；低温容器上的抓痕。",
+          "summary": "现有伏笔已能支撑Hale阴谋与实验体起源，维持不变。",
+          "question": "",
+          "suggestions": [],
+          "evidence_quote": ""
+        },
+        {
+          "path": "drama.timed_interactions",
+          "value": "chase_01｜qte｜8｜李昂未能及时撞开变形的安全门，实验体逼近，克莱尔被迫开枪引来更多丧尸，并当场斥责李昂不该盲目听从Hale的路线安排",
+          "before": "chase_01｜qte｜8｜李昂未能及时撞开变形的安全门，实验体逼近，克莱尔被迫开枪引来更多丧尸",
+          "summary": "在限时失败结果中植入克莱尔的即时立场反应，强化人物关系。",
+          "question": "",
+          "suggestions": [],
+          "evidence_quote": "一次高压追逐"
+        }
+      ],
+      "model": "step-5-preview",
+      "scope": "drama",
+      "summary": "围绕克莱尔的独立立场、李昂对Victor Hale的信任危机，以及终局在救人、销毁样本与保留罪证之间的真正取舍，对地下设施短篇进行戏剧性深化。",
+      "accepted": [],
+      "provider": "step_5",
+      "created_at": 1790304623334,
+      "instruction": "我希望 Claire 有自己的立场。如果 Leon 过度相信 Victor，她应该明显反对；如果 Leon 愿意冒险救幸存者，她会更信任他。结局不要只有打败反派，而要在救人、销毁病毒样本、保留 Umbrella 犯罪证据之间产生真正取舍。",
+      "character_id": ""
+    }
+  },
+  "reviewed": false,
+  "manual_edits": [],
+  "locks": [],
+  "changes": [
+    {
+      "at": 1790303771262,
+      "path": "drama.core_question",
+      "after": "李昂能否在实验体追杀与雨伞阴谋中救出幸存者，并决定危险样本的最终归属？",
+      "before": "李昂能否在实验体追杀与雨伞阴谋中救出幸存者，并决定危险样本的最终归属？",
+      "reason": "用户确认 AI 当前理解",
+      "source": "confirmed_ai"
+    },
+    {
+      "at": 1790303771262,
+      "path": "drama.central_conflict",
+      "after": "求生本能与道德责任的冲突；对Victor Hale的信任与日益增长的怀疑；有限物资与团队安危的抉择。",
+      "before": "求生本能与道德责任的冲突；对Victor Hale的信任与日益增长的怀疑；有限物资与团队安危的抉择。",
+      "reason": "用户确认 AI 当前理解",
+      "source": "confirmed_ai"
+    },
+    {
+      "at": 1790303771262,
+      "path": "drama.truth_model",
+      "after": "fact_01：Victor Hale是雨伞安保主管，完全知情事故经过\nfact_02：追踪型实验体原为设施首席研究员，因直接接触原型样本变异\nfact_03：危险样本是暴君原型活体细胞，会持续进化并影响宿主\nfact_04：三名失踪者中仅一人存活，其余已成为实验体猎物\nfact_05：Hale已手动锁定自毁程序，意在掩盖设施存在",
+      "before": "fact_01：Victor Hale是雨伞安保主管，完全知情事故经过\nfact_02：追踪型实验体原为设施首席研究员，因直接接触原型样本变异\nfact_03：危险样本是暴君原型活体细胞，会持续进化并影响宿主\nfact_04：三名失踪者中仅一人存活，其余已成为实验体猎物\nfact_05：Hale已手动锁定自毁程序，意在掩盖设施存在",
+      "reason": "用户确认 AI 当前理解",
+      "source": "confirmed_ai"
+    },
+    {
+      "at": 1790303771262,
+      "path": "drama.secrets",
+      "after": "Hale借引导之名拖延时间，等待雨伞回收部队；实验体对克莱尔的枪声有异常执念；样本若离开低温容器将加速暴君孵化。",
+      "before": "Hale借引导之名拖延时间，等待雨伞回收部队；实验体对克莱尔的枪声有异常执念；样本若离开低温容器将加速暴君孵化。",
+      "reason": "用户确认 AI 当前理解",
+      "source": "confirmed_ai"
+    },
+    {
+      "at": 1790303771262,
+      "path": "drama.misbeliefs",
+      "after": "李昂以为设施只是临时避难所；克莱尔坚信哥哥可能被关押于此；两人初期都相信Hale会协助他们逃出。",
+      "before": "李昂以为设施只是临时避难所；克莱尔坚信哥哥可能被关押于此；两人初期都相信Hale会协助他们逃出。",
+      "reason": "用户确认 AI 当前理解",
+      "source": "confirmed_ai"
+    },
+    {
+      "at": 1790303771263,
+      "path": "drama.pressures",
+      "after": "实验体追踪｜行动触发｜噪音与战斗后逐步逼近\n设施封锁｜故事时间推进｜安全区域随时间减少\n物资匮乏｜故事时间推进｜药品与弹药被发现速率低于消耗\n信任裂痕｜行动触发｜Hale指令与现场证据矛盾时加深",
+      "before": "实验体追踪｜行动触发｜噪音与战斗后逐步逼近\n设施封锁｜故事时间推进｜安全区域随时间减少\n物资匮乏｜故事时间推进｜药品与弹药被发现速率低于消耗\n信任裂痕｜行动触发｜Hale指令与现场证据矛盾时加深",
+      "reason": "用户确认 AI 当前理解",
+      "source": "confirmed_ai"
+    },
+    {
+      "at": 1790303771263,
+      "path": "drama.anchors",
+      "after": "高压追逐：样本运输通道内实验体破门而入，玩家须在昏暗狭窄空间奔逃，并选择掩护克莱尔或独自引开目标。",
+      "before": "高压追逐：样本运输通道内实验体破门而入，玩家须在昏暗狭窄空间奔逃，并选择掩护克莱尔或独自引开目标。",
+      "reason": "用户确认 AI 当前理解",
+      "source": "confirmed_ai"
+    },
+    {
+      "at": 1790303771263,
+      "path": "drama.ending_families",
+      "after": "escape｜逃出生天但暴露行踪\nburn｜销毁证据与样本\nrebel｜获得Hale罪证\nlost｜阵亡却留下真相芯片",
+      "before": "escape｜逃出生天但暴露行踪\nburn｜销毁证据与样本\nrebel｜获得Hale罪证\nlost｜阵亡却留下真相芯片",
+      "reason": "用户确认 AI 当前理解",
+      "source": "confirmed_ai"
+    },
+    {
+      "at": 1790303771263,
+      "path": "drama.forbidden_outcomes",
+      "after": "李昂不得感染变异；浣熊市不得提前遭核打击；Victor Hale不得无动机作恶；不得出现超自然力量。",
+      "before": "李昂不得感染变异；浣熊市不得提前遭核打击；Victor Hale不得无动机作恶；不得出现超自然力量。",
+      "reason": "用户确认 AI 当前理解",
+      "source": "confirmed_ai"
+    },
+    {
+      "at": 1790303771263,
+      "path": "drama.foreshadows",
+      "after": "广播中偶尔出现的痛苦低吼；监控盲区里一闪而过的白大褂；Hale提到回收时语气生硬；低温容器上的抓痕。",
+      "before": "广播中偶尔出现的痛苦低吼；监控盲区里一闪而过的白大褂；Hale提到回收时语气生硬；低温容器上的抓痕。",
+      "reason": "用户确认 AI 当前理解",
+      "source": "confirmed_ai"
+    },
+    {
+      "at": 1790303771264,
+      "path": "drama.timed_interactions",
+      "after": "chase_01｜qte｜8｜李昂未能及时撞开变形的安全门，实验体逼近，克莱尔被迫开枪引来更多丧尸",
+      "before": "",
+      "reason": "用户确认 AI 当前理解",
+      "source": "confirmed_ai"
+    }
+  ],
+  "updated_at": 1790304623337
+}

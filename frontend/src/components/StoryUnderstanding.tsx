@@ -17,7 +17,48 @@ export const FIELD_LABELS: Record<string, string> = {
   identity: "本故事身份", personality: "她的性格", desire: "最想得到", fear: "最害怕",
   knowledge: "已经知道", relationship: "与他人的关系", visual_state: "当前外观",
 };
+function pressureDriver(text: string, exact = false): string | null {
+  const value = text.trim().toLowerCase().replace(/-/g, "_");
+  if (!exact && (/(?:不是|并非|非|不随|不要|不由|不能|not|without|no)\s*(?:行动触发|故事时间推进|action|fiction|story)/.test(value)
+    || /(?:行动触发|故事时间推进)\s*(?:不|无效)/.test(value))) return null;
+  const drivers = [
+    ["行动触发", ["行动触发", "action", "actions", "action_triggered", "action_driven", "committed_actions"]],
+    ["故事时间推进", ["故事时间推进", "fiction_time", "fictional_time", "story_time", "story_time_driven"]],
+  ] as const;
+  const found = drivers.filter(([, aliases]) => aliases.some(alias => exact ? value === alias
+    : /[^\x00-\x7F]/.test(alias) ? value.includes(alias) : new RegExp(`(^|[^a-z_])${alias}([^a-z_]|$)`).test(value)));
+  return found.length === 1 ? found[0][0] : null;
+}
+function pressureRows(value: unknown): string[] | null {
+  if (typeof value === "string") {
+    if (!/^[\[{]/.test(value.trim())) return value.split("\n");
+    try { return pressureRows(JSON.parse(value)); } catch { return null; }
+  }
+  if (Array.isArray(value)) {
+    const rows = value.map(pressureRows);
+    return rows.every(row => row !== null) ? rows.flat() as string[] : null;
+  }
+  if (value && typeof value === "object") {
+    const row = value as Record<string, unknown>;
+    if (Object.keys(row).length === 1 && "pressures" in row) return pressureRows(row.pressures);
+    const name = row.name ?? row.title ?? row["名称"];
+    const source = row.source ?? row.origin ?? row["来源"];
+    const rawDriver = row.trigger_type ?? row.trigger ?? row.driver ?? row["驱动"] ?? row["触发方式"];
+    if (typeof name === "string" && typeof source === "string" && typeof rawDriver === "string") {
+      const driver = pressureDriver(rawDriver);
+      if (driver) return [`${name}｜${source}｜${driver}`];
+    }
+  }
+  return null;
+}
 export function readable(value: unknown): string {
+  if (typeof value === "string" && /^[\[{]/.test(value.trim())) {
+    const rows = pressureRows(value);
+    return rows ? rows.map(row => {
+      const [name, source, driver] = row.split("｜");
+      return `${name}：${source}（${driver}）`;
+    }).join("\n") : "这项内容需要重新整理，请更新理解后确认。";
+  }
   if (value && typeof value === "object") return String((value as any).tutorial || (value as any).title || "已准备玩法建议");
   return String(value ?? "").split("\n").map(l => {
     const cols = l.split("｜");
@@ -32,7 +73,17 @@ export function typedText(path: string, text: string, old: string): string {
   const previous = old.split("\n");
   if (key === "truth_model") return lines.map((s, i) => `${previous[i]?.split(/[：:]/)[0] || `fact_${i + 1}`}：${s}`).join("\n");
   if (["ending_families", "foreshadows"].includes(key || "")) return lines.map((s, i) => `${previous[i]?.split("｜")[0] || `entry_${i + 1}`}｜${s}`).join("\n");
-  if (key === "pressures") return lines.map((s, i) => `${previous[i]?.split("｜")[0] || `pressure_${i + 1}`}｜${s}｜${previous[i]?.split("｜")[2] || "行动触发"}`).join("\n");
+  if (key === "pressures") {
+    const oldRows = pressureRows(old) || [];
+    return lines.map((s, i) => {
+      const given = s.split(/[｜|]/).map(v => v.trim());
+      if (given.length === 3 && pressureDriver(given[2], true)) return `${given[0]}｜${given[1]}｜${pressureDriver(given[2], true)}`;
+      const prior = (oldRows[i] || "").split(/[｜|]/).map(v => v.trim());
+      const driver = pressureDriver(s) || pressureDriver(prior[2] || "", true) || pressureDriver(prior.slice(1).join("；"));
+      if (!driver || s.includes("｜") || s.includes("|")) throw new Error("请说明这项压力是随行动触发还是随故事时间推进，或通过补充想法让 AI 整理后再确认。");
+      return `${prior[0] || `pressure_${i + 1}`}｜${s}｜${driver}`;
+    }).join("\n");
+  }
   return text;
 }
 
@@ -76,7 +127,7 @@ export default function StoryUnderstanding({ draft, scope = "drama", characterId
             {editing === item.path && <div className="inline-editor"><textarea aria-label="自己描述" value={free} onChange={e => setFree(e.target.value)} />
               <button disabled={busy} onClick={() => {
                 if (typeof item.value === "object" || item.path.endsWith("timed_interactions")) { setInstruction(free); setEditing(null); toast("已放入补充想法，点击更新理解后确认新建议。"); }
-                else void accept({ [item.path]: typedText(item.path, free, item.value) });
+                else { try { void accept({ [item.path]: typedText(item.path, free, item.value) }); } catch (error: any) { toast(error.message); } }
               }}>确认修改</button></div>}
           </>}
           {developer && <pre>{JSON.stringify(item, null, 2)}</pre>}

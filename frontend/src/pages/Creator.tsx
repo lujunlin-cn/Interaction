@@ -1,9 +1,10 @@
 /** Creator：概览（AI 创作）/ 世界 / 角色 / 戏剧结构 / 玩法机制 / 主题 / 发布 / 变更记录。 */
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../api";
 import { setState, toast, useUi } from "../store";
 import StoryUnderstanding, { DRAMA_GROUPS, FIELD_LABELS, readable, typedText } from "../components/StoryUnderstanding";
 import CharacterProfile from "../components/CharacterProfile";
+import CharacterStudio, { CharacterStudioTabs, type StudioTab } from "../components/CharacterStudio";
 import type { GlobalCharacter, PublishCheck, ScenarioCharacter, ScenarioDraft } from "../types";
 
 const MECHANIC_LABELS: Record<string, string> = {
@@ -27,11 +28,24 @@ export default function Creator() {
   const ui = useUi();
   const saveQueue = useRef<Promise<unknown>>(Promise.resolve());
   const saveSequence = useRef(0);
+  const publishLock = useRef(false);
+  const [publishing, setPublishing] = useState(false);
   const [draft, setDraft] = useState<ScenarioDraft | null>(null);
   const [idea, setIdea] = useState("");
   const [authoring, setAuthoring] = useState(false);
   const [globals, setGlobals] = useState<GlobalCharacter[]>([]);
   const [versions, setVersions] = useState<{ version_id: string; version: string; created_at: number }[]>([]);
+
+  // A tab change must not let Publish inspect a draft while its save is pending.
+  // Preserve a rejected final save so publication fails closed until a later save succeeds.
+  const readSavedDraft = useCallback(async (id: string) => {
+    for (;;) {
+      const pending = saveQueue.current;
+      await pending;
+      const saved = await api.getScenario(id);
+      if (pending === saveQueue.current) return saved;
+    }
+  }, []);
 
   useEffect(() => {
     if (!ui.editId) return;
@@ -53,8 +67,14 @@ export default function Creator() {
       const saved = await request;
       if (sequence === saveSequence.current) setDraft(saved);
       if (note) toast(note);
+      return true;
     } catch (e: any) {
       toast(`保存失败：${e.message}`);
+      if (sequence === saveSequence.current) {
+        const persisted = await api.getScenario(next.id).catch(() => null);
+        if (persisted) setDraft(persisted);
+      }
+      return false;
     }
   };
   const patch = (p: Partial<ScenarioDraft>) => save({ ...draft, ...p, updated_at: Date.now() });
@@ -126,7 +146,7 @@ export default function Creator() {
       )}
 
       {ui.creatorTab === "characters" && (
-        <CharactersTab draft={draft} globals={globals} onSave={save}
+        <CharactersTab draft={draft} globals={globals} onSave={save} onLibraryRefresh={() => api.listCharacters().then(r => setGlobals(r.items))} beforePromote={() => saveQueue.current}
           selectedId={ui.characterId} onSelect={(id) => setState({ characterId: id })} />
       )}
 
@@ -214,7 +234,9 @@ export default function Creator() {
       )}
 
       {ui.creatorTab === "publish" && (
-        <PublishTab draft={draft} versions={versions} onPublished={async () => {
+        <PublishTab draft={draft} versions={versions} readSavedDraft={readSavedDraft}
+          onDraft={setDraft} publishLock={publishLock} publishing={publishing} onPublishingChange={setPublishing}
+          onPublished={async () => {
           const v = await api.scenarioVersions(draft.id);
           setVersions(v.items);
         }} />
@@ -284,63 +306,128 @@ function InstructCard({ draft, onDraft }: { draft: ScenarioDraft; onDraft: (d: S
 }
 
 /** G18/G19：发布 Gate（服务端 checklist）+「我已审阅」+ 发布并试玩 */
-function PublishTab({ draft, versions, onPublished }: {
+function PublishTab({ draft, versions, readSavedDraft, onDraft, publishLock, publishing, onPublishingChange, onPublished }: {
   draft: ScenarioDraft;
   versions: { version_id: string; version: string; created_at: number }[];
+  readSavedDraft: (id: string) => Promise<ScenarioDraft>;
+  onDraft: (draft: ScenarioDraft) => void;
+  publishLock: React.MutableRefObject<boolean>;
+  publishing: boolean;
+  onPublishingChange: (value: boolean) => void;
   onPublished: () => Promise<void>;
 }) {
   const developer = useUi().mode === "developer";
   const [checklist, setChecklist] = useState<PublishCheck[] | null>(null);
-  const [reviewed, setReviewed] = useState(false);
+  const [checkedRevision, setCheckedRevision] = useState<string | null>(null);
+  const [reviewedRevision, setReviewedRevision] = useState<string | null>(null);
   const [err, setErr] = useState("");
+  const revision = JSON.stringify(draft);
+  const currentRevision = useRef(revision);
+  currentRevision.current = revision;
+  const reviewed = reviewedRevision === revision;
+  const allOk = checkedRevision === revision && Boolean(checklist?.length) && checklist!.every(c => c.ok);
 
   useEffect(() => {
-    api.publishCheck(draft.id).then((r) => setChecklist(r.checklist)).catch(() => {});
-  }, [draft.id, draft.updated_at]);
+    let active = true;
+    setReviewedRevision(null);
+    setCheckedRevision(null);
+    setChecklist(null);
+    if (reviewedRevision !== null) setErr("故事内容已更新，请重新检查并勾选审阅后再发布。");
+    void (async () => {
+      const saved = await readSavedDraft(draft.id);
+      if (!active) return;
+      if (JSON.stringify(saved) !== revision) {
+        onDraft(saved);
+        return;
+      }
+      const result = await api.publishCheck(draft.id);
+      if (!active) return;
+      setChecklist(result.checklist);
+      setCheckedRevision(revision);
+    })().catch(() => {
+      if (active) setErr("最新故事暂时无法确认。请检查修改已保存，再重新进入发布页。");
+    });
+    return () => { active = false; };
+  }, [draft.id, revision, readSavedDraft, onDraft]);
 
   const publish = async (play: boolean) => {
+    // The ref closes the same-event-loop double-click window before React renders.
+    // It lives in Creator so switching away and back cannot launch a second request.
+    if (publishLock.current || publishing || !reviewed || !allOk) return;
+    publishLock.current = true;
+    onPublishingChange(true);
     setErr("");
     try {
-      const r = await api.publishScenario(draft.id, { reviewed, play });
+      const stillReviewed = (saved: ScenarioDraft) => {
+        if (JSON.stringify(saved) === reviewedRevision && currentRevision.current === reviewedRevision) return true;
+        setReviewedRevision(null);
+        onDraft(saved);
+        setErr("故事内容已更新，请重新检查并勾选审阅后再发布。");
+        return false;
+      };
+      const saved = await readSavedDraft(draft.id);
+      if (!stillReviewed(saved)) return;
+      const freshCheck = await api.publishCheck(draft.id);
+      setChecklist(freshCheck.checklist);
+      setCheckedRevision(revision);
+      if (!freshCheck.checklist.length || !freshCheck.checklist.every(c => c.ok)) {
+        setReviewedRevision(null);
+        setErr("最新发布检查未通过，请补充或修改后重新审阅。");
+        return;
+      }
+      // A save or another editor may have changed the draft while the check ran.
+      if (!stillReviewed(await readSavedDraft(draft.id))) return;
+      const r = await api.publishScenario(draft.id, { reviewed: true, play });
+      setReviewedRevision(null);
       toast(`已发布 v${r.version}。`);
-      await onPublished();
+      await onPublished().catch(() => toast(`已发布 v${r.version}；版本记录暂未刷新，请稍后查看。`));
       if (play && r.session_id) {
         setState({ sessionId: r.session_id, page: "player" });
       }
     } catch (e: any) {
-      // 422 detail 含 checklist
+      setReviewedRevision(null);
       const detail = e?.detail || e?.message || String(e);
       if (e?.detail?.checklist) setChecklist(e.detail.checklist);
-      setErr(typeof detail === "string" ? detail : (detail.message || "发布检查未通过"));
+      setErr(developer ? (typeof detail === "string" ? detail : (detail.message || "发布检查未通过"))
+        : "发布暂未完成。请确认修改已保存并重新审阅后再试。");
+    } finally {
+      publishLock.current = false;
+      onPublishingChange(false);
     }
   };
 
-  const allOk = (checklist ?? []).every((c) => c.ok);
   return (
     <div className="card">
       <h3>发布</h3>
       {checklist === null ? <p className="muted">正在检查…</p> : (
         <div>
           {checklist.map((c) => (
-            <div key={c.id} className="row" style={{ gap: 6 }}>
-              <span className={`badge ${c.ok ? "ok" : "err"}`}>{c.ok ? "PASS" : "FIX"}</span>
-              <span className="grow">{c.label}</span>
-              {c.detail && !c.ok && <span className="muted">{developer ? c.detail : "请补充或检查这项内容"}</span>}
+            <div key={c.id}>
+              <div className="row" style={{ gap: 6 }}>
+                <span className={`badge ${c.ok ? "ok" : "err"}`}>{c.ok ? "PASS" : "FIX"}</span>
+                <span className="grow">{c.label}</span>
+                {c.detail && !c.ok && <span className="muted">{developer ? c.detail : "请补充或检查这项内容"}</span>}
+              </div>
+              {c.ok && c.id === "char_assets" && /缺少|无图片|visual_reference_missing/.test(c.detail || "") && (
+                <p className="notice warn" role="status">{developer ? c.detail
+                  : "部分角色尚未设置视觉身份。可以先发布文字故事；制作视频前请补充角色图片，或选择文字模式。"}</p>
+              )}
             </div>
           ))}
         </div>
       )}
       <label style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 12 }}>
-        <input type="checkbox" style={{ width: "auto" }} checked={reviewed}
-          onChange={(e) => setReviewed(e.target.checked)} />
+        <input type="checkbox" style={{ width: "auto" }} checked={reviewed} disabled={publishing || !allOk}
+          onChange={(e) => { setReviewedRevision(e.target.checked ? revision : null); if (e.target.checked) setErr(""); }} />
         <b>我已审阅这个故事（世界规则、真相模型与结局族符合预期）</b>
       </label>
       {err && <div className="notice warn">{err}</div>}
       <div className="toolbar">
-        <button className="primary" disabled={!reviewed || !allOk}
+        <button className="primary" disabled={publishing || !reviewed || !allOk}
           onClick={() => publish(false)}>发布新版本</button>
-        <button disabled={!reviewed || !allOk}
+        <button disabled={publishing || !reviewed || !allOk}
           onClick={() => publish(true)}>发布并试玩</button>
+        {publishing && <span role="status">正在确认并发布，请稍候…</span>}
         <span className="muted">发布后形成不可变版本；已有会话不受影响。</span>
       </div>
       <div className="divider" />
@@ -369,14 +456,14 @@ function nextVersion(versions: { version: string }[]): string {
   return last === "0.0.0" ? "1.0.0" : `${a || 1}.${(b || 0) + 1}.0`;
 }
 
-function CharactersTab({ draft, globals, onSave, selectedId, onSelect }: {
+function CharactersTab({ draft, globals, onSave, selectedId, onSelect, onLibraryRefresh, beforePromote }: {
   draft: ScenarioDraft; globals: GlobalCharacter[];
-  onSave: (d: ScenarioDraft, note?: string) => void;
-  selectedId: string | null; onSelect: (id: string) => void;
+  onSave: (d: ScenarioDraft, note?: string) => Promise<boolean>;
+  selectedId: string | null; onSelect: (id: string) => void; onLibraryRefresh: () => void; beforePromote: () => Promise<unknown>;
 }) {
   const [pickGlobal, setPickGlobal] = useState("");
   const [inherited, setInherited] = useState<Record<string, any>>({});
-  const [studioTab, setStudioTab] = useState("overview");
+  const [studioTab, setStudioTab] = useState<StudioTab>("overview");
   const selected = draft.characters.find((c) => c.id === selectedId) ?? draft.characters[0];
 
   useEffect(() => {
@@ -389,7 +476,7 @@ function CharactersTab({ draft, globals, onSave, selectedId, onSelect }: {
   }, [selected?.id, selected?.global_character_version]);
   const updateChar = (patch: Partial<ScenarioCharacter>) => {
     const chars = draft.characters.map((c) => (c.id === selected?.id ? { ...c, ...patch } : c));
-    onSave({ ...draft, characters: chars });
+    return onSave({ ...draft, characters: chars });
   };
 
   return (
@@ -434,15 +521,13 @@ function CharactersTab({ draft, globals, onSave, selectedId, onSelect }: {
       {selected && (
         <div className="card">
           <h3>{selected.identity}</h3>
-          <nav className="studio-tabs" aria-label="角色">
-            {[["overview", "概览"], ["identity", "身份"], ["appearance", "造型"], ["motion", "姿势与动作"], ["voice", "声音"], ["usage", "使用记录"], ["versions", "版本"]].map(([id, label]) => <button key={id} className={studioTab === id ? "active" : ""} onClick={() => setStudioTab(id)}>{label}</button>)}
-          </nav>
+          <CharacterStudioTabs tab={studioTab} onChange={setStudioTab} />
           <GlobalBindingPanel character={selected} globals={globals} onUpdate={updateChar} />
           {studioTab === "overview" && <StoryUnderstanding key={`${draft.id}:${selected.id}`} draft={draft} scope="character" characterId={selected.id} onDraft={onSave} />}
-          <CharacterProfile scope="scenario" onlySections={studioTab === "overview" ? ["身份", "人格与动机", "认知与秘密", "关系"] : studioTab === "identity" ? ["身份", "人格与动机", "认知与秘密", "关系"] : studioTab === "appearance" ? ["外观与造型"] : studioTab === "motion" || studioTab === "voice" ? ["声音与动作"] : ["使用与版本"]} values={selected} inherited={inherited} onChange={updateChar}
-            onPromote={selected.global_character_id ? async () => {
-              try { const v = await api.promoteStoryCharacter(draft.id, selected.id); toast(`已保存为角色库 v${v.version}；本故事仍保留原版本。`); } catch (e: any) { toast(e.message); }
-            } : undefined} extras={{ "外观与造型": selected.global_character_id ? <StoryCharacterOverlay character={selected} globalCharacter={globals.find(g => g.id === selected.global_character_id)} onUpdate={updateChar} /> : null, "声音与动作": selected.global_character_id ? <StoryCharacterOverlay character={selected} globalCharacter={globals.find(g => g.id === selected.global_character_id)} onUpdate={updateChar} /> : <p className="muted">先选择角色库中的角色，当前故事再决定自己的造型、姿势和声音。</p> }} />
+          {(studioTab === "overview" || studioTab === "identity" || studioTab === "appearance") && <CharacterProfile scope="scenario" onlySections={studioTab === "appearance" ? ["外观与造型"] : ["身份", "人格与动机", "认知与秘密", "关系"]} values={selected} inherited={inherited} onChange={patch => updateChar({ ...patch, overlay_sources: { ...selected.overlay_sources, ...Object.fromEntries(Object.keys(patch).map(key => [key === "visual_state" ? "appearance" : key, patch[key] === inherited[key] ? "INHERIT" : "OVERRIDE"])) } })} />}
+          <CharacterStudio key={selected.id} scope="scenario" tab={studioTab} character={selected} scenarioId={draft.id}
+            libraryCharacter={globals.find(g => g.id === selected.global_character_id)} onScenarioChange={updateChar}
+            onLibraryChange={onLibraryRefresh} onPromote={selected.global_character_id ? async () => { await beforePromote(); await api.promoteStoryCharacter(draft.id, selected.id); onLibraryRefresh(); } : undefined} />
           <button className="danger small" onClick={() => {
             onSave({ ...draft, characters: draft.characters.filter((c) => c.id !== selected.id) });
           }}>删除这个角色</button>
@@ -452,43 +537,10 @@ function CharactersTab({ draft, globals, onSave, selectedId, onSelect }: {
   );
 }
 
-function StoryCharacterOverlay({ character, globalCharacter, onUpdate }: {
-  character: ScenarioCharacter; globalCharacter?: GlobalCharacter; onUpdate: (patch: Partial<ScenarioCharacter>) => void;
-}) {
-  const outfits = globalCharacter?.outfits ?? [];
-  const poses = globalCharacter?.ref_pose_assets ?? [];
-  const motions = globalCharacter?.ref_motion_assets?.length
-    ? globalCharacter.ref_motion_assets
-    : (globalCharacter?.ref_motion_asset ? [globalCharacter.ref_motion_asset] : []);
-  const voices = [
-    ...(globalCharacter?.ref_voice_asset ? [{ id: globalCharacter.ref_voice_asset, label: "主声音" }] : []),
-    ...(globalCharacter?.alternate_voice_assets ?? []).map((id, i) => ({ id, label: `备用声音 ${String.fromCharCode(66 + i)}` })),
-  ];
-  const toggle = (key: "pose_refs" | "motion_refs", id: string) => {
-    const current = character[key] ?? [];
-    const next = current.includes(id) ? current.filter(x => x !== id) : [...current, id];
-    onUpdate({ [key]: next, overlay_sources: { ...(character.overlay_sources ?? {}), [key === "pose_refs" ? "pose" : "motion"]: next.length ? "OVERRIDE" : "INHERIT" } });
-  };
-  return <div className="character-overlay-card">
-    <h4>本故事覆盖</h4>
-    <p className="muted">角色库定义继续保留；这里的选择只写入当前故事。</p>
-    <label><span>本故事造型</span><select aria-label="本故事造型" value={character.outfit_id ?? ""} onChange={e => onUpdate({ outfit_id: e.target.value || null, overlay_sources: { ...(character.overlay_sources ?? {}), outfit: e.target.value ? "OVERRIDE" : "INHERIT" } })}>
-      <option value="">继承默认造型</option>{outfits.map(o => <option value={o.id} key={o.id}>{o.name}</option>)}
-    </select></label>
-    {outfits.filter(o => o.id === character.outfit_id).map(o => <div className="notice" key={o.id}><b>{o.name}</b>{o.description && <p>{o.description}</p>}<span className="muted">已有参考素材 {o.reference_assets?.length ?? 0} 项 · 仅本故事选择</span></div>)}
-    <label><span>本故事视觉状态</span><textarea value={character.visual_state} onChange={e => onUpdate({ visual_state: e.target.value, overlay_sources: { ...(character.overlay_sources ?? {}), visual_state: e.target.value ? "OVERRIDE" : "INHERIT" } })} placeholder="例如：本故事中穿黄色雨衣，但保持身份不变" /></label>
-    <fieldset><legend>本故事姿势参考</legend>{poses.length ? poses.map((id, i) => <label className="check-row" key={id}><input type="checkbox" checked={(character.pose_refs ?? []).includes(id)} onChange={() => toggle("pose_refs", id)} /><span>姿势参考 {i + 1}</span><small className="muted">{(character.pose_refs ?? []).includes(id) ? "仅本故事" : "继承角色库"}</small></label>) : <p className="muted">角色库暂未绑定姿势参考。</p>}</fieldset>
-    <fieldset><legend>本故事动作参考</legend>{motions.length ? motions.map((id, i) => <label className="check-row" key={id}><input type="checkbox" checked={(character.motion_refs ?? []).includes(id)} onChange={() => toggle("motion_refs", id)} /><span>动作参考 {i + 1}</span><small className="muted">{(character.motion_refs ?? []).includes(id) ? "仅本故事" : "继承角色库"}</small></label>) : <p className="muted">角色库暂未绑定动作视频。</p>}</fieldset>
-    <fieldset><legend>本故事声音</legend>{voices.length ? voices.map(v => <label className="check-row" key={v.id}><input type="radio" name={`voice-${character.id}`} checked={(character.voice_id ?? globalCharacter?.ref_voice_asset) === v.id} onChange={() => onUpdate({ voice_id: v.id, overlay_sources: { ...(character.overlay_sources ?? {}), voice: v.id === globalCharacter?.ref_voice_asset ? "INHERIT" : "OVERRIDE" } })} /><span>{v.label}</span><small className="muted">{v.id === globalCharacter?.ref_voice_asset ? "继承角色库" : "仅本故事选择"}</small></label>) : <p className="muted">角色库暂未绑定声音。</p>}</fieldset>
-    <p className="muted">保存后显示“仅本故事”；使用外层“保存为角色库新版本”才会显式更新角色库。</p>
-  </div>;
-}
-
 function GlobalBindingPanel({ character, globals, onUpdate }: {
   character: ScenarioCharacter; globals: GlobalCharacter[];
   onUpdate: (patch: Partial<ScenarioCharacter>) => void;
 }) {
-  const [diff, setDiff] = useState<any>(null);
   const g = globals.find((x) => x.id === character.global_character_id);
   if (!g) {
     return (
@@ -508,27 +560,12 @@ function GlobalBindingPanel({ character, globals, onUpdate }: {
         <span className="avatar small">{g.name.slice(0, 1)}</span>
         <div className="grow">
           <b>{g.name}</b>
-          <div className="muted">继承角色库 v{character.global_character_version} · {g.bio?.slice(0, 40) || "未填写简介"}</div>
+          <div className="muted">来自角色库 v{character.global_character_version} · 本故事覆盖 {Object.values(character.overlay_sources || {}).filter(v => v === "OVERRIDE").length} 项</div>
         </div>
         <span className={`badge ${hasUpdate ? "warn" : ""}`}>
           {hasUpdate ? "角色库存在新版本" : "角色快照已固定"}
         </span>
       </div>
-      {diff && <div className="notice">{Object.entries(diff.field_diffs || {}).map(([k, v]: [string, any]) => <p key={k}>{FIELD_LABELS[k.replace("default_", "")] || (k === "appearance" ? "外观" : "角色资料")}：{readable(v.before) || "未设置"} → {readable(v.after) || "未设置"}</p>)}<p>参考图变化：{Object.keys(diff.asset_diffs || {}).length} 项</p></div>}
-      {hasUpdate && (
-        <div className="row" style={{ marginTop: 12 }}>
-          <button className="small" onClick={() => api.characterVersionDiff(g.id, character.global_character_version || 1, g.version).then(setDiff).catch(e => toast(e.message))}>
-            查看变化
-          </button>
-          <button className="primary small" onClick={() =>
-            onUpdate({ global_character_version: g.version })}>
-            更新到新版本
-          </button>
-          <button className="small" onClick={() => toast("继续使用当前版本，本故事没有更新。")}>
-            继续使用当前版本
-          </button>
-        </div>
-      )}
     </div>
   );
 }
@@ -536,5 +573,7 @@ function GlobalBindingPanel({ character, globals, onUpdate }: {
 function NaturalField({ label, value, path, onSave }: {label: string; value: string; path: string; onSave: (s: string) => void}) {
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState("");
-  return <div className="character-understanding"><b>{label}</b>{editing ? <><textarea value={text} onChange={e => setText(e.target.value)} /><button onClick={() => { onSave(typedText(path, text, value)); setEditing(false); }}>保存</button></> : <><p>{readable(value)}</p><button className="small" onClick={() => { setText(readable(value)); setEditing(true); }}>修改</button></>}</div>;
+  return <div className="character-understanding"><b>{label}</b>{editing ? <><textarea value={text} onChange={e => setText(e.target.value)} /><button onClick={() => {
+    try { onSave(typedText(path, text, value)); setEditing(false); } catch (error: any) { toast(error.message); }
+  }}>保存</button></> : <><p>{readable(value)}</p><button className="small" onClick={() => { setText(readable(value)); setEditing(true); }}>修改</button></>}</div>;
 }

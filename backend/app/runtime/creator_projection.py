@@ -5,9 +5,10 @@ from __future__ import annotations
 import json
 from typing import Any, Literal
 from pydantic import BaseModel, Field, ConfigDict
+from ..config import settings
 from ..domain.schemas import now_ms
 from ..domain.ids import uid
-from ..domain.mechanic_spec import CONFIGS, validate_mechanics
+from ..domain.mechanic_spec import CONFIGS, location_names, validate_mechanics
 from .tracer import tracer
 from .structured_output import decode_object
 
@@ -70,7 +71,7 @@ async def _propose_once(service, scenario_id, scope, instruction="", character_i
             "原文已经明确的真相、冲突、压力不重复提问；evidence_quote 必须逐字摘自 original_story/instruction。",
             "每个待确认问题给出3到4个与本故事人物地点相关的具体方案，每个方案有 label 和对应 typed value。",
             "其余条目作为可接受/修改/删除的当前理解。不能创建白名单以外的路径，不得修改 locks。",
-            "drama 值都是字符串，truth_model 每行 fact_key：事实；pressures 名称｜来源｜行动触发/故事时间推进；ending_families id｜描述。",
+            "drama 值都是字符串，truth_model 每行 fact_key：事实；pressures 每行名称｜来源｜驱动，第三列只能是行动触发或故事时间推进，后果并入来源说明；ending_families id｜描述。",
             "角色值都是自然语言字符串，未说明的动机不当成已确认事实。",
             "mechanics 值为 {enabled:bool, config:{...}, tutorial:中文}；使用下方 config schema。",
             "四种玩法都明确 enabled；不要的设为 false。skill/version/trigger/permissions 由服务端绑定。",
@@ -82,22 +83,25 @@ async def _propose_once(service, scenario_id, scope, instruction="", character_i
         # or legacy timed DSL. The adapter below projects validated typed data.
         prompt = {
             "task": "为当前故事编译玩法提案。仅返回 JSON，所有四个已安装玩法都给出 enabled/config/tutorial。不要额外字段。tutorial 60字内，只描述实际支持的行为，不许声称永久记忆、组合物品等没有的能力。",
-            "story": {"title": draft.title, "description": draft.description, "characters": [c.identity for c in draft.characters]},
+            "story": {"title": draft.title, "description": draft.description, "characters": [c.identity for c in draft.characters],
+                      "locations": location_names(draft.world.locations)},
             "intent": instruction, "schema_retry": retry_hint,
             "output_example": {"summary": "对玩法的中文理解", "mechanics": {
                 k: {"enabled": False, "config": c().model_dump(), "tutorial": "按故事语境写具体玩法教程"}
                 for k, c in CONFIGS.items()},
                 "timed_event": {"id": "urgent_choice", "kind": "qte", "timeout_seconds": 10, "fallback": "没有及时选择，错过眼前的机会"}},
-            "rules": "config 只能用示例里的键及类型。relationship 增减信任，clue-system 调查和核实线索，inventory 保存物品，qte 限时选择。不要发明技能或配置键。没有道具需求则关闭 inventory。启用 qte 必须给 timed_event；kind 必须是 qte 或 urgent_dialogue，timeout_seconds 在1到120之间。其余时候 timed_event=null。不要改变已确认的故事事实。"
+            "rules": "config 只能用示例里的键及类型。relationship 增减信任，clue-system 调查和核实线索，inventory 保存物品，qte 限时选择。不要发明技能或配置键。没有道具需求则关闭 inventory。启用 qte 必须给 timed_event；kind 必须是 qte 或 urgent_dialogue，timeout_seconds 在1到120之间。若用户明确要求进入某地点后才触发，必须把 story.locations 中对应 ID 写入 qte.config.trigger_location_ids，不能只写在 tutorial；多个地点为任一匹配，不能编造地点 ID。没有地点限制时 trigger_location_ids=[]。地点限制和 trigger_after_actions 必须同时满足。其余时候 timed_event=null。不要改变已确认的故事事实。"
         }
     _, rec, resp = await service.router.call_text("authoring", messages=[
         {"role": "system", "content": "你是故事创作助手。严格按输出 schema 返回 JSON，不要 Markdown。"},
         {"role": "user", "content": json.dumps(prompt, ensure_ascii=False)}],
-        output_contract={"purpose": "mechanic_projection" if scope == "mechanics" else "creator_projection"}, budget={"max_tokens": 8192, "reasoning_effort": "low"})
+        output_contract={"purpose": "mechanic_projection" if scope == "mechanics" else "creator_projection"}, budget={
+            "max_tokens": settings.authoring_max_tokens,
+            "reasoning_effort": settings.authoring_reasoning_effort})
     content = decode_object(resp.content)
     if scope == "mechanics":
         from ..domain.mechanic_spec import CONTRACTS
-        mechanics = validate_mechanics(content.get("mechanics") or {})
+        mechanics = validate_mechanics(content.get("mechanics") or {}, draft.world.locations)
         if set(mechanics) != set(CONFIGS):
             raise ValueError("mechanics 必须包含 relationship/clue-system/inventory/qte 四项，未启用的设 enabled=false")
         items = [{"path": "mechanics." + k, "summary": m.tutorial,
@@ -126,8 +130,11 @@ async def _propose_once(service, scenario_id, scope, instruction="", character_i
             item.question = ""
         if item.question and not 3 <= len(item.suggestions) <= 4:
             raise ValueError("AI 追问需要三个到四个具体建议，请重试")
-        for value in [item.value] + [s.value for s in item.suggestions]:
-            service.validate_patch(draft, item.path, value)
+        candidate = service.validate_patch(draft, item.path, item.value)
+        item.value = service._get_path(candidate, item.path)
+        for suggestion in item.suggestions:
+            candidate = service.validate_patch(draft, item.path, suggestion.value)
+            suggestion.value = service._get_path(candidate, item.path)
         items.append({**item.model_dump(), "before": service._get_path(draft, item.path)})
     if scope == "mechanics":
         values = {item["path"]: item["value"] for item in items}
@@ -166,8 +173,8 @@ async def accept(service, scenario_id, projection_id, answers):
             continue
         if service._get_path(draft, path) != items[path]["before"]:
             raise ValueError("内容已被修改，请重新生成建议")
-        service.validate_patch(draft, path, value)
-        patches.append({"path": path, "after": value, "reason": "用户确认 AI 当前理解"})
+        candidate = service.validate_patch(draft, path, value)
+        patches.append({"path": path, "after": service._get_path(candidate, path), "reason": "用户确认 AI 当前理解"})
     applied = service._apply_typed_patch(draft, patches, "confirmed_ai")
     for change in applied:
         item = items[change["path"]]

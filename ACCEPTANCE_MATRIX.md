@@ -3,14 +3,16 @@
 需求基线：PRD v0.6 / `b055674aa0702fc1c1ed50f7c3ee62e4ea43dc88`。
 最新应用代码候选：最新交付提交（见 `git rev-parse HEAD`）。详细证据：[LATEST_PRD_UX_ACCEPTANCE.md](LATEST_PRD_UX_ACCEPTANCE.md)。
 
-当前统计（本轮最新 HEAD）：**PASS 42 / PARTIAL 55 / BLOCKED 1 / FAIL 0**。
+当前矩阵统计（历史证据与下述新增角色 Scope 证据分开）：**PASS 42 / PARTIAL 55 / BLOCKED 1 / FAIL 0**。
 其中本轮重点 AT-77–90：13 PASS / 1 PARTIAL；本轮新增 AT-91–98：8 PASS。PARTIAL包含本轮未完整复测项，不表示已确认的部署能力丢失。
 
 历史“55 PASS / 20 PARTIAL / 1 BLOCKED”已移入[历史存档](docs/acceptance/prd_v06_latest/AT01_76_HISTORICAL.md)，不再充作最新HEAD结果。历史Sol-H3/Profile真实证据保留在FINAL_E2E_ACCEPTANCE.md和PROFILE_SWITCH_ACCEPTANCE.md；本轮没有重复模型部署或Profile切换。
 
 判定：PASS需要实际触发、正式状态/Artifact、Trace、正常与关键失败路径证据；PARTIAL表示有实现/部分验证但不足以完整关闭；BLOCKED有明确外部原因；FAIL表示实测实现不符合。离线pytest验证确定性契约，不能证明真实Provider。缓存回放与故障注入均显式标识。
 
-本轮无费用复验见 [NO_COST_E2E_ACCEPTANCE.md](NO_COST_E2E_ACCEPTANCE.md)：Fal 付费开关关闭，新增 Fal 请求 0；Billing Locked 熔断、Paid Guard、媒体 resolution 参数链通过。Nano Banana 新生图、FREE 新视频和 Video Ending 仍不计 PASS。
+历史无费用复验见 [NO_COST_E2E_ACCEPTANCE.md](NO_COST_E2E_ACCEPTANCE.md)。2026-09-25 新增的角色 Scope A–F 浏览器回归独立使用 mock / Fal Guard OFF，付费媒体请求 0；不代表正在进行的真实 FULL E2E 总请求为 0。完整付费验收与计费记录以 BIOHAZARD_FULL_E2E_ACCEPTANCE.md 为准。当前图片 Relay 是 USER-approved cost optimization；该轮图片必须走 Relay，Fal 仅用于 H3。
+
+2026-09-25 最终整合回归：**Backend 195 passed / 0 failed / 6 warnings**（mock providers、Fal Guard OFF、lifecycle disabled）；`compileall` / `pip check` / `npm ci` / frontend build PASS。9000服务已重启，JS/CSS实际响应与最终dist逐字节/SHA-256一致；`docs/acceptance/biohazard_full_e2e/deployment_final.json`。当前生化危机故事已通过真实 Standard UI 参数复查、显式审阅与发布 **v0.2.0**（`ver_00001_b26e3c`）；角色 pin 为 Leon v8 / Claire v7 / Victor v7。其 FULL E2E 仍为 **PARTIAL**：Relay key 缺失，三角色视觉资产未齐、无成功 H3 视频；不得借历史缓存或上述离线测试提升真实 Player 验收状态。详见 [BIOHAZARD_FULL_E2E_ACCEPTANCE.md](BIOHAZARD_FULL_E2E_ACCEPTANCE.md)。
 
 | AT | 用例 | 最新判定 | 本轮证据/限制 |
 | --- | --- | --- | --- |
@@ -93,11 +95,11 @@
 | AT-77 | 模糊故事 | PASS | 真实 Step 5 生成当前理解与三组上下文问题，React 选择建议并正式写入；锁/过期/非法路径由回归验证。 `at77_79_browser.json` |
 | AT-78 | 完整故事 | PASS | 明确真相/冲突/压力的描述没有重复问题（explicit_questions=0）。 `at78_81_browser.json` |
 | AT-79 | Drama 两种模式 | PASS | React 确认 truth_model 后 Changes 留 Before/After/source/time，Developer 显示同一值。 `at77_79_browser.json` |
-| AT-80 | 角色两个入口 | PASS | 1920×1080 Playwright 回归：同一个 Alice 在角色库与 Creator 均有七个工作台标签；Creator 可添加 Alice 并操作造型、姿势、动作、主/备用声音的 Scenario Overlay，Global 保持不变。 `character_granularity_browser.json` |
+| AT-80 | 角色两个入口同管理颗粒度 | PASS | 旧七标题/入口检查不足，已由 1920×1080 实际 UI A–F 覆盖：造型选择/五槽上传、3选2姿势及空覆盖、2选1动作、备用声音、刷新保留且Global逐字段不变；库v24→v25仍pin v24，显式更新与Promote新v26后旧版本不变。共享CharacterStudio，`docs/acceptance/character_scope_regression/scope_regression.json`。 |
 | AT-81 | 角色 Overlay | PASS | Desire/Secret/Visual State 修改后 Global 不变；点击 Promote 后才产生全局版本，已发布快照继续固定。 `at78_81_browser.json` |
 | AT-82 | 自然语言玩法 | PASS | 真实 Step 5 编译并发布三类玩法；真实 Jev/Nemotron 行动重试调用 relationship Skill 1.0.0，正式关系写入55，World version仅增加1。该次呈现为用户选定的文字模式。 `live_mechanics_proposal.json / live_mechanic_execution.json` |
 | AT-83 | 玩法两种模式 | PASS | Standard 教程卡无 JSON；Developer 查同一 Typed Config/Skill/trigger；确认与手动编辑共用校验。 `natural_language_mechanics.png / developer_mechanics.png` |
-| AT-84 | Player Theater Mode | PASS | 应用内 Theater Mode：普通浏览器窗口、`document.fullscreenElement=false`、Sidebar 隐藏、Stage 1920×997.75、Agency/HUD 保留；退出后输入仍在。 `no_fal_ui_browser.json` |
+| AT-84 | Player Theater Mode | PASS | 2026-09-25修复controls遮Agency与默认Theater入口。9000历史失败Session只读1920×1080/2560×1440：默认应用内Theater、fullscreen=false、Sidebar/Header隐藏、controls在Stage内、Agency底部、HUD/Session/input保留；`docs/acceptance/biohazard_full_e2e/theater_readonly.json`。隔离error/Ready四案验证切换/重新进入与progress保留；`docs/acceptance/player_stage_controls/browser.json`。非新H3成功证明。 |
 | AT-85 | Decision Lead | PASS | 真实 H3 缓存回放：Lead 前 API recommendations=[]，到达后3条Ready可见，React 位于输入上方；点击后CANONICAL。不是新生成证明。 `lead_ready_replay_validation.json` |
 | AT-86 | 三推荐之外自由行动 | PARTIAL | React 存在三条真实Ready时自由输入，经真实链生成新FREE H3分支br_00136_383b8e并CANONICAL；重复提交保护回归通过。 `firefox_player_validation.json / live_play_state.json`  最后Director/关系修复后真实文字FREE通过，但fal锁阻止最终候选新FREE视频重测。 |
 | AT-87 | HUD | PASS | Firefox hover/pin/unpin；背包/关系/线索/愿望；已写入的关系在Standard显示定性文字、Developer显示数值。 `final_player_checks.json / live_mechanic_execution.json` |

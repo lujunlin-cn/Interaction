@@ -95,6 +95,8 @@ export const api = {
   listCharacterOutfits: (cid: string) => req<{ items: any[] }>(`/api/characters/${cid}/outfits`),
   createCharacterOutfit: (cid: string, name: string, description = "") =>
     req<any>(`/api/characters/${cid}/outfits`, { method: "POST", body: JSON.stringify({ name, description }) }),
+  updateCharacterOutfit: (cid: string, oid: string, patch: Record<string, unknown>) =>
+    req<any>(`/api/characters/${cid}/outfits/${oid}`, { method: "PATCH", body: JSON.stringify(patch) }),
   characterVersionDiff: (cid: string, from: number, to: number) =>
     req<any>(`/api/characters/${cid}/versions/diff?from_v=${from}&to_v=${to}`),
   characterSnapshot: (scenarioVersionId: string, cid: string) =>

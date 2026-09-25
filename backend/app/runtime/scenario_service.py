@@ -5,18 +5,20 @@ import json
 from typing import Optional
 
 from sqlalchemy import select
+from ..config import settings
 
 from ..db import SessionLocal
-from ..db_models import CharacterAssetRow, CharacterVersionRow, GlobalCharacterRow, ScenarioRow, ScenarioVersionRow
+from ..db_models import CharacterVersionRow, GlobalCharacterRow, ScenarioRow, ScenarioVersionRow
 from ..domain.ids import uid
 from ..domain.schemas import ScenarioDraft, now_ms
+from ..domain.pressure_spec import normalize_draft_pressures, normalize_pressures, PRESSURE_FORMAT
 from ..providers.router import ProviderRouter
 from ..runtime.tracer import tracer
 from .structured_output import decode_object
 
 
 def _row_to_draft(row: ScenarioRow) -> ScenarioDraft:
-    return ScenarioDraft(**row.draft)
+    return ScenarioDraft(**normalize_draft_pressures(row.draft, strict=False))
 
 
 class ScenarioService:
@@ -36,7 +38,8 @@ class ScenarioService:
 
     async def save_draft(self, draft: ScenarioDraft) -> ScenarioDraft:
         from ..domain.mechanic_spec import validate_mechanics
-        draft.mechanics = validate_mechanics(draft.mechanics)
+        draft.drama.pressures = normalize_pressures(draft.drama.pressures)
+        draft.mechanics = validate_mechanics(draft.mechanics, draft.world.locations)
         draft.updated_at = now_ms()
         async with SessionLocal() as db:
             async with db.begin():
@@ -77,21 +80,24 @@ class ScenarioService:
         messages = [{"role": "system", "content": prompt}, {"role": "user", "content": f"idea: {idea}"}]
         for attempt in range(2):
             _, rec, resp = await self.router.call_text("authoring", messages=messages,
-                output_contract={"purpose": "authoring_draft"}, budget={"max_tokens": 4096, "reasoning_effort": "low"})
+                output_contract={"purpose": "authoring_draft"}, budget={
+                    "max_tokens": settings.authoring_max_tokens,
+                    "reasoning_effort": settings.authoring_reasoning_effort})
             try:
                 content = decode_object(resp.content)
+                content = normalize_draft_pressures(content)
                 # Lossless representation repair: string arrays become newline text.
                 for section in (content.get("world"), content.get("drama"), *(content.get("characters") or [])):
                     if isinstance(section, dict):
                         for key, value in section.items():
-                            if isinstance(value, list) and all(isinstance(v, str) for v in value):
+                            if key not in ("pose_refs", "motion_refs", "local_outfits") and isinstance(value, list) and all(isinstance(v, str) for v in value):
                                 section[key] = "\n".join(value)
                 keys = ("title", "description", "genre", "tone", "play_style", "player_character", "world", "drama", "characters", "mechanics", "theme")
                 draft = ScenarioDraft.model_validate({**{k: v for k, v in content.items() if k in keys}, "id": uid("scn"), "authoring_intent": idea})
                 if draft.characters and draft.player_character not in {c.id for c in draft.characters}:
                     draft.player_character = draft.characters[0].id
                 from ..domain.mechanic_spec import CONFIGS
-                draft.mechanics = validate_mechanics({**{k: {"enabled": False} for k in CONFIGS}, **draft.mechanics})
+                draft.mechanics = validate_mechanics({**{k: {"enabled": False} for k in CONFIGS}, **draft.mechanics}, draft.world.locations)
                 for line in draft.drama.timed_interactions.splitlines():
                     parts = line.split("｜")
                     if line.strip() and (len(parts) < 4 or parts[1] not in ("qte", "urgent_dialogue") or not parts[2].isdigit()):
@@ -141,7 +147,7 @@ class ScenarioService:
             ok = self._set_path(draft, path, after)
             if not ok:
                 continue
-            entry = {"path": path, "before": before, "after": after,
+            entry = {"path": path, "before": before, "after": self._get_path(draft, path),
                      "reason": p.get("reason", ""), "source": source,
                      "at": now_ms()}
             draft.changes.append(entry)
@@ -167,6 +173,8 @@ class ScenarioService:
 
     @staticmethod
     def validate_patch(draft, path, value):
+        if path == "drama.pressures":
+            value = normalize_pressures(value)
         data = draft.model_dump(mode="json")
         parts = ScenarioService._split_path(path)
         obj = data
@@ -182,7 +190,7 @@ class ScenarioService:
                 if line.strip() and (len(parts) != 4 or parts[1] not in ("qte", "urgent_dialogue") or not parts[2].isdigit() or not 1 <= int(parts[2]) <= 120 or not parts[3].strip()):
                     raise ValueError("限时事件必须为 id｜qte 或 urgent_dialogue｜1至120秒｜明确超时结果。第二段必须是 qte 或 urgent_dialogue，不能用中文场景名。")
         from ..domain.mechanic_spec import validate_mechanics
-        candidate.mechanics = validate_mechanics(candidate.mechanics)
+        candidate.mechanics = validate_mechanics(candidate.mechanics, candidate.world.locations)
         return candidate
 
     @staticmethod
@@ -200,14 +208,32 @@ class ScenarioService:
         draft = await self.get(scenario_id)
         if draft is None:
             raise KeyError(scenario_id)
-        _, rec, resp = await self.router.call_text(
-            "authoring",
-            messages=[{"role": "system", "content": '输出 JSON {"patches":[{"path":"drama.core_question","after":"新内容","reason":"原因"}]}。只修改指令明确要求且未被 locks 锁定的字段。'}, {"role": "user", "content":
+        messages = [{"role": "system", "content": '输出 JSON {"patches":[{"path":"drama.core_question","after":"新内容","reason":"原因"}]}。只修改指令明确要求且未被 locks 锁定的字段。drama.pressures 每行为名称｜来源｜行动触发或故事时间推进；第三列只能是这两个明确驱动，不能填后果。'}, {"role": "user", "content":
                        f"instruction: {instruction}\n"
-                       f"draft_summary: {json.dumps(draft.model_dump(exclude={"changes", "creator_projection"}), ensure_ascii=False)}"}],
-            output_contract={"purpose": "authoring_patch"}, budget={"max_tokens": 4096, "reasoning_effort": "low"})
-        content = decode_object(resp.content)
-        patches = content.get("patches")
+                       f"draft_summary: {json.dumps(draft.model_dump(exclude={"changes", "creator_projection"}), ensure_ascii=False)}"}]
+        for attempt in range(2):
+            _, rec, resp = await self.router.call_text("authoring", messages=messages,
+                output_contract={"purpose": "authoring_patch"}, budget={
+                    "max_tokens": settings.authoring_max_tokens,
+                    "reasoning_effort": settings.authoring_reasoning_effort})
+            try:
+                content = decode_object(resp.content)
+                patches = content.get("patches")
+                if isinstance(patches, list):
+                    # Validate the pressure representation before applying any
+                    # patch, so a failed repair cannot persist partial edits.
+                    for patch in patches:
+                        if patch.get("path") == "drama.pressures":
+                            patch["after"] = normalize_pressures(patch.get("after"))
+                break
+            except (ValueError, TypeError, AttributeError) as error:
+                await tracer.emit("authoring.patch_schema", "failed", input_={"scenario_id": scenario_id},
+                    output={"raw_output": resp.content, "error": str(error), "attempt": attempt + 1},
+                    provider=rec.selected or "", model=resp.model)
+                if attempt:
+                    raise ValueError("这次修改的压力触发方式仍不明确，请补充后重试。") from error
+                messages += [{"role": "assistant", "content": resp.content},
+                             {"role": "user", "content": "仅修复结构，不增改事实。" + str(error)}]
         applied: list[dict] = []
         if isinstance(patches, list) and patches:
             applied = self._apply_typed_patch(draft, patches, source="instruct")
@@ -249,8 +275,11 @@ class ScenarioService:
             "drama.core_question 不能为空")
         add("truth_model", "真相模型", bool(draft.drama.truth_model.strip()),
             "drama.truth_model 不能为空")
-        add("pressures", "压力线", bool(draft.drama.pressures.strip()),
-            "drama.pressures 不能为空")
+        try:
+            pressure_ok = bool(normalize_pressures(draft.drama.pressures))
+        except ValueError:
+            pressure_ok = False
+        add("pressures", "压力线", pressure_ok, "" if pressure_ok else PRESSURE_FORMAT)
         add("ending_families", "结局族", bool(draft.drama.ending_families.strip()),
             "drama.ending_families 不能为空")
         # 限时互动声明格式：id｜kind｜秒｜fallback
@@ -276,7 +305,7 @@ class ScenarioService:
                 c.global_character_id for c in draft.characters) else "纯文字角色可正常发布")
         try:
             from ..domain.mechanic_spec import validate_mechanics
-            validate_mechanics(draft.mechanics)
+            validate_mechanics(draft.mechanics, draft.world.locations)
             mechanics_ok = True
         except ValueError:
             mechanics_ok = False
@@ -285,63 +314,59 @@ class ScenarioService:
         return checks
 
     async def publish(self, scenario_id: str, reviewed: bool = False) -> dict:
-        """发布：Publish Gate 校验 + 生成不可变 ScenarioVersion（G18）。"""
-        draft = await self.get(scenario_id)
-        if draft is None:
-            raise KeyError(scenario_id)
-        checks = self.publish_checklist(draft)
-        bound_ids = {c.global_character_id for c in draft.characters
-                     if c.global_character_id}
-        if bound_ids:
-            async with SessionLocal() as db:
-                rows = (await db.execute(
-                    select(GlobalCharacterRow.id).where(
-                        GlobalCharacterRow.id.in_(bound_ids)))).all()
-            missing = bound_ids - {r[0] for r in rows}
-            for check in checks:
-                if check["id"] == "char_snapshot" and missing:
-                    check["ok"] = False
-                    check["detail"] = "无效全局角色引用：" + ", ".join(sorted(missing))
-                if not missing:
-                    async with SessionLocal() as db:
-                        globals_ = (await db.execute(
-                            select(GlobalCharacterRow).where(GlobalCharacterRow.id.in_(bound_ids))
-                        )).scalars().all()
-                        versions = (await db.execute(
-                            select(CharacterVersionRow).where(CharacterVersionRow.character_id.in_(bound_ids))
-                        )).scalars().all()
-                        version_ids = {v.id for v in versions}
-                        pinned_missing = [c.global_character_id for c in draft.characters if c.global_character_id and not any(v.character_id == c.global_character_id and v.version == c.global_character_version for v in versions)]
-                        invalid_snapshot = [g.id for g in globals_ if not g.data.get("current_version_id")
-                                            or g.data.get("current_version_id") not in version_ids] + pinned_missing
-                        canonical = (await db.execute(
-                            select(CharacterAssetRow).where(
-                                CharacterAssetRow.character_id.in_(bound_ids),
-                                CharacterAssetRow.status == "CANONICAL")
-                        )).scalars().all()
-                        invalid_assets = [c.global_character_id for c in draft.characters if c.global_character_id and not any(
-                            v.character_id == c.global_character_id and v.version == c.global_character_version
-                            and any(v.data.get("canonical_asset_refs", {}).values()) for v in versions)]
+        """Commit the immutable story and all pinned character snapshots together."""
+        from fastapi import HTTPException
+        from .character_service import CharacterAssetService
+
+        snapshot_ids: list[str] = []
+        async with SessionLocal() as db:
+            async with db.begin():
+                # PostgreSQL serializes publications/edits for this Scenario.
+                # Every downstream snapshot uses this exact captured draft.
+                row = (await db.execute(select(ScenarioRow).where(
+                    ScenarioRow.id == scenario_id).with_for_update())).scalars().first()
+                if row is None:
+                    raise KeyError(scenario_id)
+                draft = _row_to_draft(row)
+                checks = self.publish_checklist(draft)
+                bound_ids = {c.global_character_id for c in draft.characters
+                             if c.global_character_id}
+                if bound_ids:
+                    globals_ = (await db.execute(select(GlobalCharacterRow).where(
+                        GlobalCharacterRow.id.in_(bound_ids)))).scalars().all()
+                    versions = (await db.execute(select(CharacterVersionRow).where(
+                        CharacterVersionRow.character_id.in_(bound_ids)))).scalars().all()
+                    missing = bound_ids - {g.id for g in globals_}
+                    version_ids = {v.id for v in versions}
+                    pinned_missing = [c.global_character_id for c in draft.characters
+                                      if c.global_character_id and not any(
+                                          v.character_id == c.global_character_id
+                                          and v.version == c.global_character_version for v in versions)]
+                    invalid_snapshot = [g.id for g in globals_
+                                        if not g.data.get("current_version_id")
+                                        or g.data.get("current_version_id") not in version_ids] + pinned_missing
+                    invalid_assets = [c.global_character_id for c in draft.characters
+                                      if c.global_character_id and not any(
+                                          v.character_id == c.global_character_id
+                                          and v.version == c.global_character_version
+                                          and any(v.data.get("canonical_asset_refs", {}).values()) for v in versions)]
                     for check in checks:
-                        if check["id"] == "char_snapshot" and invalid_snapshot:
+                        if check["id"] == "char_snapshot" and missing:
+                            check["ok"] = False
+                            check["detail"] = "无效全局角色引用：" + ", ".join(sorted(missing))
+                        elif check["id"] == "char_snapshot" and invalid_snapshot:
                             check["ok"] = False
                             check["detail"] = "角色没有有效 Character Version：" + ", ".join(invalid_snapshot)
                         if check["id"] == "char_assets" and invalid_assets:
                             check["ok"] = True
                             check["detail"] = "警告：角色缺少 CANONICAL 资产（视频制作时需补充或使用文字模式）：" + ", ".join(invalid_assets)
-        failed = [c for c in checks if not c["ok"]]
-        if failed:
-            from fastapi import HTTPException
-            raise HTTPException(422, detail={"message": "发布检查未通过",
-                                             "checklist": checks})
-        if not reviewed:
-            from fastapi import HTTPException
-            raise HTTPException(422, detail={"message": "请先勾选「我已审阅这个故事」",
-                                             "checklist": checks})
-        draft.status = "PUBLISHED"
-        draft.reviewed = True
-        async with SessionLocal() as db:
-            async with db.begin():
+                if any(not c["ok"] for c in checks):
+                    raise HTTPException(422, detail={"message": "发布检查未通过", "checklist": checks})
+                if not reviewed:
+                    raise HTTPException(422, detail={"message": "请先勾选「我已审阅这个故事」", "checklist": checks})
+                draft.drama.pressures = normalize_pressures(draft.drama.pressures)
+                draft.status = "PUBLISHED"
+                draft.reviewed = True
                 latest = (await db.execute(
                     select(ScenarioVersionRow)
                     .where(ScenarioVersionRow.scenario_id == scenario_id)
@@ -351,17 +376,30 @@ class ScenarioService:
                 if latest:
                     major, minor, _patch = (int(x) for x in latest.version.split("."))
                     draft.version = f"{major}.{minor + 1}.0"
-                row = await db.get(ScenarioRow, scenario_id)
                 row.draft = draft.model_dump(mode="json")
                 row.status = "PUBLISHED"
                 row.updated_at = now_ms()
                 db.add(ScenarioVersionRow(
                     id=version_id, scenario_id=scenario_id, version=draft.version,
                     snapshot=draft.model_dump(mode="json"), created_at=now_ms()))
+                character_assets = CharacterAssetService(self.router)
+                for character in draft.characters:
+                    if not character.global_character_id:
+                        continue
+                    try:
+                        snap = await character_assets.snapshot_for_scenario(
+                            version_id, character.global_character_id,
+                            version=character.global_character_version,
+                            overrides=character.model_dump(mode="json"), db=db)
+                    except KeyError as error:
+                        raise HTTPException(422, "角色版本暂时不可用，请刷新后重新审阅。") from error
+                    snapshot_ids.append(snap.id)
         await tracer.emit("scenario.publish", "success",
                           output={"scenario": scenario_id, "version": draft.version})
-        return {"version_id": version_id, "version": draft.version,
-                "checklist": checks}
+        result = {"version_id": version_id, "version": draft.version, "checklist": checks}
+        if snapshot_ids:
+            result["character_snapshots"] = snapshot_ids
+        return result
 
     async def latest_version(self, scenario_id: str) -> Optional[dict]:
         async with SessionLocal() as db:

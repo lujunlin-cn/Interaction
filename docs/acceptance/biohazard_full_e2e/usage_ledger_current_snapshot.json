@@ -1,0 +1,44 @@
+{
+  "items": [
+    {
+      "id": "usage_1790306956809_1",
+      "provider": "h3_max",
+      "model": "",
+      "task": "video_generation",
+      "request_id": "opening_00033_23675f_shot_1",
+      "resolution": "480P",
+      "aspect_ratio": "16:9",
+      "duration": 5.0,
+      "num_images": null,
+      "reference_summary": {
+        "images": 1,
+        "videos": 0,
+        "audios": 0
+      },
+      "status": "BLOCKED",
+      "blocked_reason": "BILLING_LOCKED",
+      "error": "",
+      "at": 1790306956809
+    },
+    {
+      "id": "usage_1790306936319_0",
+      "provider": "h3_max",
+      "model": "minimax/h3-max/reference-to-video",
+      "task": "video_generation",
+      "request_id": null,
+      "resolution": "480P",
+      "aspect_ratio": "16:9",
+      "duration": 5.0,
+      "num_images": null,
+      "reference_summary": {
+        "images": 0,
+        "videos": 0,
+        "audios": 0
+      },
+      "status": "SUBMITTED",
+      "blocked_reason": "",
+      "error": "",
+      "at": 1790306936319
+    }
+  ]
+}

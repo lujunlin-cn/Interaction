@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import math
 import shutil
 import subprocess
 from pathlib import Path
@@ -225,21 +226,25 @@ class RuntimeEngine:
                 srow = snap_by_gcid.get(gcid) if gcid else None
                 if srow is None:
                     continue
+                ch["appearance"] = (srow.data.get("frozen_identity") or {}).get("appearance", "")
                 ch.update({k: v for k, v in (srow.data.get("local_overrides") or {}).items() if k in ("identity", "personality", "desire", "fear", "secrets", "knowledge", "relationship", "visual_state")})
-                for role, ca_id in (srow.data.get("frozen_asset_refs") or {}).items():
-                    if not ca_id or ca_id in g_assets:
-                        continue
-                    crow = await db.get(CharacterAssetRow, ca_id)
-                    if crow is None:
-                        continue
-                    ca = crow.data
-                    g_assets[ca_id] = {
-                        "id": ca_id, "version": srow.data.get("character_version", 1),
-                        "role": role or ca.get("role", "identity"),
-                        "entity": cid, "binding": cid,
-                        "name": f"{ca.get('role', role)}·v{srow.data.get('character_version',1)}",
-                        "type": "image" if ca.get("url", "").startswith(("data:", "http", "/")) else "",
-                        "path": ca.get("url", "")}
+                for role, value in (srow.data.get("frozen_asset_refs") or {}).items():
+                    for ca_id in value if isinstance(value, list) else [value]:
+                        if not ca_id or f"{cid}:{ca_id}" in g_assets:
+                            continue
+                        crow = await db.get(CharacterAssetRow, ca_id)
+                        arow = None if crow is not None else await db.get(AssetRow, ca_id)
+                        if crow is None and arow is None:
+                            continue
+                        asset = crow.data if crow is not None else arow.data
+                        g_assets[f"{cid}:{ca_id}"] = {
+                            "id": ca_id, "version": srow.data.get("character_version", 1),
+                            "role": "wardrobe" if role == "outfit" else role,
+                            "entity": cid, "binding": cid,
+                            "character_snapshot_id": srow.id,
+                            "name": asset.get("name") or f"{role}·v{srow.data.get('character_version',1)}",
+                            "type": asset.get("type") or ("voice" if role == "voice" else "video" if role == "motion" else "image"),
+                            "path": asset.get("url") or asset.get("storage_path", "")}
                 # voice / motion 同样冻结进快照（frozen_asset_refs 里 role=voice/motion）
             # 兼容路径：没有 v0.6 快照的角色仍走 ref_* 槽位
             ref_asset_ids: list[tuple[str, str]] = []
@@ -274,12 +279,15 @@ class RuntimeEngine:
                         "type": arow.data.get("type", ""),
                         "path": arow.data.get("storage_path", "")}
         state = self._bootstrap(scenario_version_id, scenario_id, snapshot)
+        frozen_character_ids = {c.get("id") for c in snapshot.get("characters", [])
+                                if c.get("global_character_id") in snap_by_gcid}
         state.asset_manifest = [
             {"id": r.data.get("id"), "version": r.data.get("version", 1),
              "role": r.data.get("role", ""), "entity": r.data.get("entity", ""),
              "binding": r.data.get("binding", ""), "name": r.data.get("name", ""),
              "type": r.data.get("type", ""), "path": r.data.get("storage_path", "")}
-            for r in arows] + list(g_assets.values())
+            for r in arows if not ({r.data.get("entity"), r.data.get("binding")} & frozen_character_ids)
+        ] + list(g_assets.values())
         self.sessions[state.id] = state
         await self._persist(state)
         await tracer.emit("session.create", "success", output={"session_id": state.id},
@@ -415,7 +423,11 @@ class RuntimeEngine:
             if state.scenario_id != scenario_id:
                 continue
             async with self._lock(state.id):
-                state.asset_manifest = manifest
+                frozen = [a for a in state.asset_manifest if a.get("character_snapshot_id")]
+                frozen_ids = {c.get("id") for c in state.scenario_snapshot.get("characters", [])
+                              if c.get("global_character_id")}
+                state.asset_manifest = [a for a in manifest if not (
+                    {a.get("entity"), a.get("binding")} & frozen_ids)] + frozen
                 fp = self.compute_fingerprint(state)
                 if state.allow_media_invalidate:
                     self._invalidate_stale(state, fp)
@@ -660,8 +672,8 @@ class RuntimeEngine:
     def _next_timed_node(self, state: SessionState) -> Optional[dict]:
         """从 Scenario 声明中解析下一个待触发的限时节点。
 
-        触发条件（确定性）：本篇章未触发过、QTE 玩法启用、且已经历至少两个有效行动
-        （world.version >= 3，避免开场即倒计时）。超时结果由 Scenario 预先声明。
+        触发条件（确定性）：本篇章未触发过、QTE 玩法启用、已达到声明的行动次数，
+        且正式世界位置符合已声明的地点限制。超时结果由 Scenario 预先声明。
         """
         if not state.scenario_snapshot.get("mechanics", {}).get("qte", {}).get("enabled", True):
             return None
@@ -669,9 +681,13 @@ class RuntimeEngine:
         turns_done = len([t for t in state.turns
                           if arc and t.get("arc_seq") == arc.seq
                           and not t.get("opening")])
-        trigger_after = state.scenario_snapshot.get("mechanics", {}).get("qte", {}).get("config", {}).get("trigger_after_actions", 1)
+        config = state.scenario_snapshot.get("mechanics", {}).get("qte", {}).get("config", {})
+        trigger_after = config.get("trigger_after_actions", 1)
         if turns_done < trigger_after:
             return None   # 至少完成一个关键行动后才可能进入限时节点
+        trigger_locations = config.get("trigger_location_ids", [])
+        if trigger_locations and state.world.location not in trigger_locations:
+            return None
         raw = state.scenario_snapshot.get("drama", {}).get("timed_interactions", "")
         for line in raw.splitlines():
             parts = [p.strip() for p in line.split("｜")]
@@ -832,17 +848,22 @@ class RuntimeEngine:
             await self._set_phase(state, branch, BranchStatus.GENERATING)
 
         gen_error: Optional[str] = None
+        retryable = True
         try:
             await self._generate_branch_media(session_id, branch_id)
         except Exception as e:  # noqa: BLE001
             gen_error = f"{type(e).__name__}: {e}"
+            retryable = not branch.jobs and not getattr(e, "submit_uncertain", False) and getattr(e, "kind", "") not in {
+                "BILLING_LOCKED", "QUOTA_EXHAUSTED", "AUTH_FAILED",
+                "PAID_GENERATION_DISABLED", "INVALID_REQUEST", "CIRCUIT_OPEN",
+            }
         async with self._lock(session_id):
             state = await self.load_session(session_id)
             branch = state.branch(branch_id)
             if branch.status != BranchStatus.GENERATING:
                 return
             if gen_error:
-                if not retried:
+                if not retried and retryable:
                     # 快速重试 1 次：新 job，不沿用半成品
                     branch.status = BranchStatus.RETRYING
                     branch.retry += 1
@@ -937,18 +958,34 @@ class RuntimeEngine:
 
     async def _plan_branch(self, state: SessionState, branch: Branch) -> None:
         if branch.source == BranchSource.OPENING:
-            snapshot = state.scenario_snapshot
-            world = snapshot.get("world", {})
-            premise = snapshot.get("premise") or snapshot.get("description") or snapshot.get("title", "故事开场")
+            mechanics = state.scenario_snapshot.get("mechanics", {})
+            content, rec = await self._director_output(
+                [{"role": "user", "content": "raw_player_input: opening\n"
+                  "为这个故事设计第一幕：建立当前地点、实际在场人物与核心冲突，给玩家留下行动空间。"
+                  "这是开始展示已发布的故事，不是玩家已完成的行动：不得增加物品、线索、关系或揭露尚未知晓的秘密，"
+                  "不得提前形成结局；ops、evidence、skill_triggers 必须为空，ending 必须为 null。\n"
+                  f"scenario_context: {json.dumps(self._scenario_brief(state), ensure_ascii=False)}"}],
+                mechanics, state.id, branch.id)
+            outcome = content.get("outcome") or {}
+            directive = content.get("directive") or {}
+            if outcome.get("ops") or outcome.get("evidence") or outcome.get("skill_triggers") or outcome.get("ending"):
+                raise EngineError("Opening Director attempted an unauthorized state change")
             branch.directive = DramaticDirective(
-                id=uid("dir"), primary_function="ESTABLISH_OPENING",
+                id=uid("dir"), primary_function=directive.get("primary_function", "ESTABLISH_OPENING"),
                 player_input=branch.label,
-                hard_constraints=["不修改正式世界状态", "建立人物、地点与核心冲突"])
+                secondary_functions=directive.get("secondary_functions", []),
+                target_changes=directive.get("target_changes", []), avoid=directive.get("avoid", []),
+                hard_constraints=[*directive.get("hard_constraints", []), "不修改正式世界状态", "建立人物、地点与核心冲突"])
             branch.outcome = OutcomeSpec(
-                title=f"{snapshot.get('title', '故事')} · 开场",
-                text=f"{world.get('opening_location') or state.world.location}。{premise}",
+                title=outcome["title"], text=outcome["text"],
                 ops=[], evidence=[], kind="opening")
+            branch.context = self.build_context(state, directive)
             branch.packet = self._build_scene_packet(state, branch)
+            branch.routes.append(rec)
+            await tracer.emit("director.plan", "success", input_={"label": branch.label, "opening": True},
+                              output={"primary_function": branch.directive.primary_function},
+                              provider=rec.selected or "", model=rec.model or "",
+                              session_id=state.id, branch_id=branch.id)
             return
         mechanics = state.scenario_snapshot.get("mechanics", {})
         if branch.source == BranchSource.FALLBACK and branch.outcome is not None:
@@ -1166,82 +1203,162 @@ class RuntimeEngine:
                           output={"chars": len(branch.narrative)},
                           provider=rec.selected or "", session_id=state.id, branch_id=branch.id)
 
-    def _bound_references(self, state: SessionState) -> list[dict]:
-        """Visual Continuity Skill 的确定性部分：在场角色的绑定素材进入 references。
-
-        绑定规则：asset.binding 或 asset.entity 命中在场角色 id，或 role 为
-        identity/wardrobe/voice/motion 的全局参考。Skills 只产 Proposal，不直接改状态。
-        """
+    def _bound_references(self, state: SessionState, cast: list[str] | None = None) -> list[dict]:
+        """Select balanced, cast-scoped references within real provider limits."""
         if not skill_enabled("visual-continuity"):
-            try:
-                asyncio.get_running_loop().create_task(tracer.emit(
-                    "visual-continuity.blocked", "blocked",
-                    output={"reason": "skill disabled"},
-                    skill_id="visual-continuity"))
-            except RuntimeError:
-                pass
             return []
-        chars = {c.get("id") for c in state.scenario_snapshot.get("characters", [])}
-        # v0.6 FR-093：按标准视图优先级挑图像参考（front > 3⁄4 > side > full_*），
-        # 每角色 ≤4 张；voice/motion 不占用图像名额。
-        _IMG_ORDER = {"front": 0, "three_quarter": 1, "side": 2,
-                      "full_front": 3, "full_side": 4}
-        picked: dict[str, list[dict]] = {}      # entity → image refs
-        extras: list[dict] = []                 # voice / motion / 其他
-        for a in state.asset_manifest:
-            entity = a.get("entity") or ""
-            binding = a.get("binding") or ""
-            role = a.get("role") or ""
-            if not (entity in chars or binding in chars or
-                    role in ("identity", "wardrobe", "voice", "motion",
-                             *list(_IMG_ORDER))):
+        characters = {c.get("id") for c in state.scenario_snapshot.get("characters", []) if c.get("id")}
+        active = list(dict.fromkeys(cast if cast is not None else [
+            c.get("id") for c in state.scenario_snapshot.get("characters", []) if c.get("id")]))
+        order = {"front": 0, "identity": 0, "wardrobe": 1, "three_quarter": 2,
+                 "pose": 3, "side": 4, "full_front": 5, "full_side": 6, "other": 7}
+        buckets: dict[str, list[dict]] = {cid: [] for cid in active}
+        audio, video, environment = [], [], []
+        seen_paths: set[tuple[str, str]] = set()
+        for asset in state.asset_manifest:
+            entity = asset.get("entity") or asset.get("binding") or ""
+            if entity in characters and entity not in active:
                 continue
-            ref = {"asset_id": a.get("id"), "name": a.get("name", ""),
-                   "role": role or "reference", "entity": entity,
-                   "path": a.get("path", ""), "version": a.get("version", 1)}
-            if role in _IMG_ORDER:
-                bucket = picked.setdefault(entity or binding or "_", [])
-                bucket.append(ref)
-            else:
-                extras.append(ref)
-        refs: list[dict] = []
-        for entity, bucket in picked.items():
-            bucket.sort(key=lambda r: _IMG_ORDER.get(r["role"], 9))
-            refs.extend(bucket[:4])             # 每角色 ≤4 张（FR-093 上限）
-        refs.extend(extras[:6 - min(len(refs), 6)])
-        return refs[:6]
+            role = asset.get("role") or "reference"
+            kind = "audio" if role == "voice" or asset.get("type") in ("audio", "voice") else \
+                   "video" if role == "motion" or asset.get("type") == "video" else "image"
+            if not asset.get("path"):
+                continue
+            dedupe_key = (kind, asset["path"])
+            if dedupe_key in seen_paths:
+                continue
+            seen_paths.add(dedupe_key)
+            ref = {"asset_id": asset.get("id"), "name": asset.get("name", ""), "role": role,
+                   "entity": entity, "path": asset["path"], "version": asset.get("version", 1),
+                   "type": kind, "character_snapshot_id": asset.get("character_snapshot_id")}
+            if kind == "audio":
+                audio.append(ref)
+            elif kind == "video":
+                video.append(ref)
+            elif entity in buckets:
+                buckets[entity].append(ref)
+            elif not entity and role in ("scene", "background", "location", "reference"):
+                environment.append(ref)
+        from ..providers.real import FalH3MaxProvider
+        limits = FalH3MaxProvider.REFERENCE_LIMITS
+        image_limit = min(limits["image"], settings.max_test_reference_images) if settings.developer_test_override_enabled else limits["image"]
+        video_limit = min(limits["video"], settings.max_test_reference_videos) if settings.developer_test_override_enabled else limits["video"]
+        for bucket in buckets.values():
+            bucket.sort(key=lambda ref: order.get(ref["role"], 9))
+        # Round-robin ensures a third actor gets identity coverage before a
+        # first actor spends the whole provider allowance on four views.
+        images = [bucket[index] for index in range(4) for bucket in buckets.values() if len(bucket) > index]
+        selected_images = (images + environment)[:max(0, image_limit)]
+        extras = [group[index] for index in range(max(limits["audio"], video_limit))
+                  for group in (audio[:limits["audio"]], video[:max(0, video_limit)]) if len(group) > index]
+        return selected_images + extras[:max(0, limits["mixed"] - len(selected_images))]
+
+    def _shot_policy(self, branch: Branch) -> dict:
+        count = max(1, int(settings.effective_shots_per_branch))
+        maximum = float(settings.max_video_shot_duration)
+        if settings.developer_test_override_enabled:
+            maximum = min(maximum, float(settings.developer_test_shot_duration))
+        special = branch.source == BranchSource.OPENING or bool(branch.outcome and branch.outcome.ending)
+        target = (settings.opening_shot_duration if branch.source == BranchSource.OPENING else
+                  settings.ending_shot_duration if branch.outcome and branch.outcome.ending else
+                  settings.effective_shot_duration)
+        if not math.isfinite(maximum) or maximum <= 0:
+            raise EngineError("Video duration limit must be positive and finite")
+        minimum = min(8.0, maximum) if special else min(1.0, maximum)
+        return {"count": 1 if special else count, "minimum": minimum, "maximum": maximum,
+                "target": min(maximum, max(minimum, float(target))),
+                "developer_test_override": settings.developer_test_override_enabled}
 
     async def _shoot_branch(self, state: SessionState, branch: Branch) -> None:
+        policy = self._shot_policy(branch)
+        characters = state.scenario_snapshot.get("characters", [])
         _, rec, resp = await self.router.call_text(
             "production",
-            messages=[{"role": "system", "content": f"返回 JSON，包含 shots 数组，共 {settings.effective_shots_per_branch} 个镜头，每个 title/prompt/subtitle 为字符串，duration 为 {settings.effective_shot_duration} 秒。prompt 使用完整的具体影视描述，人物和场景保持连续。角色在本故事中的外观：" + json.dumps([{k: c.get(k, "") for k in ("identity", "visual_state")} for c in state.scenario_snapshot.get("characters", [])], ensure_ascii=False)}, {"role": "user", "content":
-                       f"raw_player_input: {branch.label}\n"
-                       f"scene_title: {branch.outcome.title if branch.outcome else branch.label}\n"
-                       f"scene_text: {branch.narrative[:120]}"}],
-            output_contract={"purpose": "production_shots"},
-            branch_id=branch.id)
-        content = json.loads(resp.content)
-        raw_shots = content.get("shots") or []
-        refs = self._bound_references(state)
-        branch.references = refs
-        branch.shots = [
-            ShotPlan(id=f"shot_{i + 1}", index=i + 1,
-                     title=s.get("title", f"镜头 {i + 1}"),
-                     duration=min(float(s.get("duration", settings.effective_shot_duration)), settings.effective_shot_duration) if settings.developer_test_override_enabled else float(s.get("duration", settings.effective_shot_duration)),
-                     trim_end=min(float(s.get("duration", settings.effective_shot_duration)), settings.effective_shot_duration) if settings.developer_test_override_enabled else float(s.get("duration", settings.effective_shot_duration)),
-                     subtitle=s.get("subtitle", ""), prompt=s.get("prompt", ""),
-                     references=refs)
-            for i, s in enumerate(raw_shots)
-        ] or [ShotPlan(id="shot_1", index=1, title=branch.label,
-                       duration=settings.effective_shot_duration,
-                       trim_end=settings.effective_shot_duration, subtitle=branch.caption,
-                       references=refs)]
-        branch.shot_count = len(branch.shots)
+            messages=[{"role": "system", "content":
+                f"返回 JSON，包含 shots 数组，必须正好 {policy['count']} 个镜头。每个 title/prompt/subtitle 为字符串，"
+                f"duration 目标 {policy['target']} 秒，允许 {policy['minimum']} 至 {policy['maximum']} 秒。"
+                "每个镜头必须给 cast:[角色ID]，只包含画面中真正可见的角色；广播、画外音不算可见角色。"
+                "prompt 使用完整具体影视描述，人物与场景保持连续。角色：" + json.dumps(
+                    [{k: c.get(k, "") for k in ("id", "identity", "appearance", "visual_state")} for c in characters], ensure_ascii=False)},
+                {"role": "user", "content": f"raw_player_input: {branch.label}\n"
+                 f"scene_title: {branch.outcome.title if branch.outcome else branch.label}\n"
+                 f"scene_text: {branch.narrative}"}],
+            output_contract={"purpose": "production_shots", "shot_policy": policy}, branch_id=branch.id)
+        from .structured_output import decode_object
+        content = decode_object(resp.content)
+        raw_shots = content.get("shots")
+        if not isinstance(raw_shots, list) or len(raw_shots) != policy["count"]:
+            await tracer.emit("production.shots", "rejected", output={"reason": "shot_count_mismatch",
+                "expected": policy["count"], "actual": len(raw_shots) if isinstance(raw_shots, list) else None},
+                provider=rec.selected or "", session_id=state.id, branch_id=branch.id)
+            raise EngineError("Production shot count differs from the approved generation limit")
+        known = {c.get("id") for c in characters if c.get("id")}
+        character_by_id = {c.get("id"): c for c in characters if c.get("id")}
+        visual_identity_cast = {c["id"] for c in characters if c.get("id") and c.get("global_character_id")}
+        visual_identity_cast.update(a.get("entity") or a.get("binding") for a in state.asset_manifest
+            if a.get("path") and a.get("type", "image") not in ("voice", "audio", "video")
+            and a.get("role") not in ("voice", "motion"))
+        shots = []
+        normalizations = []
+        for index, shot in enumerate(raw_shots):
+            if not isinstance(shot, dict):
+                raise EngineError("Production returned an invalid shot")
+            duration = float(shot.get("duration", policy["target"]))
+            if not math.isfinite(duration) or duration <= 0:
+                raise EngineError("Production duration must be positive and finite")
+            bounded = min(policy["maximum"], max(policy["minimum"], duration))
+            if settings.provider_mode != "mock" and getattr(self.router, "profile", RuntimeProfile.AGENT_LOCAL) == RuntimeProfile.AGENT_LOCAL:
+                # Fal's duration schema is integer-valued. Keep the planned
+                # beat within the approved bounds before paid submission.
+                minimum_integer, maximum_integer = math.ceil(policy["minimum"]), math.floor(policy["maximum"])
+                if minimum_integer > maximum_integer:
+                    raise EngineError("Approved shot duration range contains no Fal-supported integer")
+                bounded = min(maximum_integer, max(minimum_integer, math.floor(bounded)))
+            if bounded != duration:
+                normalizations.append({"shot": index + 1, "requested_duration": duration, "duration": bounded})
+            cast = shot.get("cast")
+            if not isinstance(cast, list) or any(not isinstance(cid, str) or cid not in known for cid in cast):
+                if settings.provider_mode != "mock":
+                    raise EngineError("Production requires a valid explicit shot cast before paid submission")
+                cast = list(known)  # Offline fixtures predate cast; never inferred for a paid provider.
+            refs = self._bound_references(state, cast)
+            covered = {ref["entity"] for ref in refs if ref["type"] == "image"}
+            if settings.provider_mode == "live" and any(cid in visual_identity_cast and cid not in covered for cid in cast):
+                raise EngineError("A visible character has no image reference within the provider limit")
+            text_only_cast = [cid for cid in cast if cid not in covered and cid not in visual_identity_cast]
+            prompt = str(shot.get("prompt") or "")
+            if not prompt.strip():
+                raise EngineError("Production requires a non-empty shot prompt")
+            visual_descriptions = [{"character_id": cid,
+                "identity": character_by_id[cid].get("identity", ""),
+                "appearance": character_by_id[cid].get("appearance", ""),
+                "visual_state": character_by_id[cid].get("visual_state", ""),
+                "reference_mode": "text_description" if cid in text_only_cast else "identity_reference"}
+                for cid in cast]
+            if visual_descriptions:
+                prompt += "\nPinned cast appearance and current visual state: " + json.dumps(visual_descriptions, ensure_ascii=False)
+            if refs:
+                names = {c.get("id"): c.get("identity") or c.get("name") or c.get("id") for c in characters}
+                binding_parts = []
+                for kind, label in (("image", "Image"), ("audio", "Audio"), ("video", "Video")):
+                    for i, ref in enumerate(ref for ref in refs if ref["type"] == kind):
+                        binding_parts.append(f"{label} {i + 1}: {ref['entity']} — {names.get(ref['entity'], ref.get('name') or 'environment')} ({ref['role']})")
+                binding = "; ".join(binding_parts)
+                prompt += "\nReference identity map: " + binding + ". Keep each character's face, body and outfit separate."
+            shots.append(ShotPlan(id=f"shot_{index + 1}", index=index + 1,
+                title=shot.get("title", f"镜头 {index + 1}"), duration=bounded, trim_end=bounded,
+                subtitle=shot.get("subtitle", ""), prompt=prompt, references=refs,
+                params={"cast": list(dict.fromkeys(cast)), "text_only_cast": text_only_cast, "shot_policy": policy,
+                        "requested_duration": duration, "normalized_duration": bounded != duration}))
+        branch.shots = shots
+        branch.references = list({(ref.get("asset_id"), ref.get("entity"), ref.get("role")): ref
+                                  for shot in shots for ref in shot.references}.values())
+        branch.shot_count = len(shots)
         branch.routes.append(rec)
-        await tracer.emit("production.shots", "success",
-                          output={"shots": len(branch.shots)},
-                          provider=rec.selected or "", session_id=state.id,
-                          branch_id=branch.id, skill_id="h3-production")
+        await tracer.emit("production.shots", "success", output={"shots": len(shots), "policy": policy,
+            "normalizations": normalizations, "cast": [shot.params["cast"] for shot in shots],
+            "text_only_cast": [shot.params["text_only_cast"] for shot in shots]},
+            provider=rec.selected or "", session_id=state.id, branch_id=branch.id, skill_id="h3-production")
 
     async def _generate_branch_media(self, session_id: str, branch_id: str) -> None:
         if not skill_enabled("h3-production"):
@@ -1254,9 +1371,20 @@ class RuntimeEngine:
             state = await self.load_session(session_id)
             branch = state.branch(branch_id)
             shots = [{"id": s.id, "title": s.title, "subtitle": s.subtitle,
-                      "duration": s.duration, "references": s.references, "prompt": s.prompt}
+                      "duration": s.duration, "references": s.references, "prompt": s.prompt,
+                      "params": s.params}
                      for s in branch.shots]
             references = branch.references
+            generation_resolution = settings.video_generation_resolution
+            generation_aspect = settings.generation_aspect_ratio
+            policy = self._shot_policy(branch)
+            if len(shots) != policy["count"] or any(not math.isfinite(s["duration"]) or
+                    not policy["minimum"] <= s["duration"] <= policy["maximum"] for s in shots):
+                raise ProviderError("INVALID_REQUEST", "Shot plan exceeds the approved generation limits")
+            if branch.jobs:
+                raise ProviderError("INVALID_REQUEST", "This branch already has submitted media jobs; inspect existing jobs before retrying")
+            if any(event.get("event") == "video_submit_uncertain" for event in branch.pipeline_events):
+                raise ProviderError("INVALID_REQUEST", "A previous submit may have created a paid job; reconcile its usage record before retrying")
         provider, rec = self.router.video_provider(branch_id, local=self.router.profile == RuntimeProfile.VIDEO_LOCAL)
         # H3 Max reference-to-video requires at least one reference asset. A
         # scenario may intentionally start without assets; in hybrid mode use
@@ -1277,18 +1405,28 @@ class RuntimeEngine:
         async def submit_one(shot: dict):
             submitted_at = now_ms()
             prompt = shot.get("prompt") or shot.get("title", "")
+            shot_refs = shot.get("references") or []
+            if getattr(provider, "name", "") == "h3_max" and not shot_refs:
+                raise ProviderError("INVALID_REQUEST", "H3 reference-to-video requires a reference; use text continuation or add an existing asset")
             try:
                 handle = await provider.submit({
                     "job_id": f"{branch_id}_{shot['id']}", "shots": [shot],
-                    "references": references, "prompt": prompt,
-                    "resolution": settings.video_generation_resolution,
-                    "aspect_ratio": settings.generation_aspect_ratio})
+                    "references": shot_refs, "prompt": prompt,
+                    "resolution": generation_resolution,
+                    "aspect_ratio": generation_aspect})
             except Exception as error:
-                await tracer.emit("video.submit", "failed", input_={"shot_id": shot["id"], "prompt": prompt, "references": references},
+                if getattr(error, "submit_uncertain", False):
+                    async with self._lock(session_id):
+                        current = await self.load_session(session_id)
+                        current.branch(branch_id).pipeline_events.append({"event": "video_submit_uncertain",
+                            "shot_id": shot["id"], "provider": rec.selected, "submitted_at": submitted_at,
+                            "usage_id": getattr(error, "usage_id", None), "error_class": getattr(error, "kind", "")})
+                        await self._persist(current)
+                await tracer.emit("video.submit", "failed", input_={"shot_id": shot["id"], "prompt": prompt, "references": shot_refs},
                     output={"error": repr(error), "submitted_at": submitted_at}, provider=rec.selected or "",
                     session_id=session_id, branch_id=branch_id)
                 raise
-            await tracer.emit("video.submit", "success", input_={"shot_id": shot["id"], "prompt": prompt, "references": references},
+            await tracer.emit("video.submit", "success", input_={"shot_id": shot["id"], "prompt": prompt, "references": shot_refs},
                 output={"provider_job_id": handle.provider_job_id, "submitted_at": submitted_at}, provider=rec.selected or "",
                 session_id=session_id, branch_id=branch_id)
             async with self._lock(session_id):
@@ -1317,7 +1455,11 @@ class RuntimeEngine:
                                             "provider_job_id": handle.provider_job_id,
                                             "request_id": handle.provider_job_id,
                                             "prompt": prompt,
-                                            "references": references,
+                                            "references": shot.get("references", []),
+                                            "cast": shot.get("params", {}).get("cast", []),
+                                            "text_only_cast": shot.get("params", {}).get("text_only_cast", []),
+                                            "resolution": generation_resolution,
+                                            "aspect_ratio": generation_aspect,
                                             "submitted_at": submitted_at,
                                             "completed_at": now_ms(),
                                             "output_clips": shot_clips,
@@ -2198,7 +2340,9 @@ class RuntimeEngine:
                         f"新篇章开启：{content.get('question', '')}")
             await self._persist(state)
             await self._push(state)
-        asyncio.get_running_loop().create_task(self._safe_prepare(session_id))
+        # Continuing creates and saves the Arc only (PRD 07.16).  The player's
+        # next explicit action enters the normal FREE pipeline; opening an Arc
+        # must not immediately purchase another speculative Top-K batch.
         return {"status": "CONTINUED", "arc": seq}
 
     async def _safe_prepare(self, session_id: str) -> None:

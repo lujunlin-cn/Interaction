@@ -1,39 +1,35 @@
 # Final Closure Report · PRD v0.6
 
-日期：2026-09-25。结论：**PARTIAL**。
+Date: 2026-09-25. Overall: **PARTIAL — Creator has been reviewed and published through Standard UI; the real multi-character video journey is blocked by the missing Image Relay credential**.
 
-- 起始/PRD SHA：`b055674aa0702fc1c1ed50f7c3ee62e4ea43dc88`
-- Final Candidate SHA：以最终 git rev-parse HEAD 为准
-- 交付提交只新增文档/证据，最终Git SHA以main和交付回复为准；不把文档提交冒充新一轮Provider测试。
+Current work Start SHA: `1eabeb6afc89e8bdcb402f5b2b452499e7089b9e`.
+Final SHA: 本报告所在最终提交；交付回复提供完整 SHA，使用 `git rev-parse HEAD` 核对。
 
-| 项目 | 结果 | 证据与范围 |
+| Scope | Status | Evidence / limitation |
 | --- | --- | --- |
-| Q105–Q122 | IMPLEMENTED 18/18 | 修改前逐项审计后实现；LATEST_PRD_UX_ACCEPTANCE.md |
-| FR-103–114 | 11 PASS / 1 PARTIAL | 对应正式React、API、数据与Runtime路径 |
-| AT-77–90 | 13 PASS / 1 PARTIAL | 真实调用、正式状态、失败注入、浏览器截图；回放范围逐项标注 |
-| Backend pytest | PASS | 63 passed / 0 failed / 6 warnings，124.62s；显式mock仅作离线契约验证 |
-| Frontend build | PASS | npm ci + tsc + Vite 6.4.3；41模块；exit 0 |
-| UI/响应式 | PASS | Firefox 35/35；五档分辨率，1920三档UI Size；无全局zoom/scale |
-| Real H3 Multi-Shot | PASS | 本轮真实Opening两job、两clip、FFmpeg、10.400s MP4 |
-| Profile / Sol-H3部署 | 历史已确认 | FINAL_E2E_ACCEPTANCE.md / PROFILE_SWITCH_ACCEPTANCE.md；本轮未重复切换，不能当新测试 |
-| Character Studio全部生图Flow | PARTIAL | 本轮角色文字AI、上传基线、Overlay/Promote已实测；Nano Banana新生图未重跑 |
-| 完整视频E2E | PARTIAL | 视频Ending因fal TOP_UP BLOCKED；真实文字恢复/Ending/Continue PASS |
-| 最新矩阵AT-01–98 | 41 PASS / 56 PARTIAL / 1 BLOCKED / 0 FAIL | 旧55 PASS归档；本轮未完整实测项严格保留PARTIAL |
+| Character management Q109–Q112 / AT-80 | PASS | Shared CharacterStudio and CharacterProfile; actual Standard UI A–F operations with persisted state, library isolation, explicit empty override, version pin/update and Promote. `CHARACTER_GRANULARITY_CLOSURE.md`. |
+| Character identity/outfit/motion/voice uploads | PASS for management | Five standard identity slots, five outfit slots, multiple pose/motion, canonical+alternate voice; explicit local fixtures only, no real-provider quality claim. |
+| Theater Mode / AT-84 | PASS for layout | Controls/Agency overlap and missing default Theater entry were fixed. Four isolated cases plus port-9000 read-only failed-Session geometry at 1920×1080 and 2560×1440 verify normal-window Theater, Stage controls, HUD and state preservation. Browser Fullscreen is not proof; no real H3 play claim. |
+| Q105–Q108 / Q113–Q122 | Prior evidence retained | AI-guided Drama, natural-language mechanics, Runtime/Player are not reimplemented or blanket-recertified by this scope change. |
+| Backend full regression | PASS | **195 passed / 0 failed / 6 warnings**, mock providers, Fal Guard OFF and lifecycle disabled. Real-provider E2E remains separately assessed. |
+| Frontend build | PASS | `npm run build`, TypeScript + Vite, 42 modules after scope UI changes. |
+| Final deployment | PASS | Final `npm ci` / build, backend compileall/pip check, service restart active on 9000. Served `index-DBDSet8X.js` / `index-C4Yk5vqH.css` match final dist by bytes/SHA-256. `deployment_final.json`. |
+| Browser character scope | PASS | 1920×1080, no page errors, exact persisted-state assertions; `docs/acceptance/character_scope_regression/scope_regression.json`. |
+| Real multi-character generation / full video Arc | PARTIAL | Complete current Provider/QA/runtime/cost evidence belongs to BIOHAZARD_FULL_E2E_ACCEPTANCE.md. |
+| Live Creator parameter review and UI Publish | PASS | World/Drama/Characters/Mechanics reviewed and corrected through Standard UI; explicit review checkbox and publication of `scn_00003_364d7e` **v0.2.0**, `ver_00001_b26e3c`; pins Leon v8 / Claire v7 / Victor v7. `docs/acceptance/biohazard_full_e2e/scenario_published_ui.json`. |
 
-## 证据入口
+## Corrected acceptance basis
 
-- [最新UX验收](LATEST_PRD_UX_ACCEPTANCE.md)、[当前矩阵](ACCEPTANCE_MATRIX.md)、[剩余缺口](FINAL_GAP_REPORT.md)。
-- [证据索引](docs/acceptance/prd_v06_latest/INDEX.md)：区分最终成功、真实媒体回放、受控故障及修复前失败。
-- [真实H3视频](docs/acceptance/prd_v06_latest/real_h3_opening.mp4)、[逐Shot provenance](docs/acceptance/prd_v06_latest/real_h3_opening_provenance.json)。
-- [部署验证](docs/acceptance/prd_v06_latest/deployment_validation.json)：推送后仅重启应用，检查本地/公网、新API与构建hash，保留模型容器。
+The earlier AT-80 PASS based on matching seven headings, counts and entry-point visibility was insufficient. This superseding regression created a character through Standard UI, uploaded and bound references, selected a scenario outfit, two of three poses, one of two motions, alternate Voice B, refreshed, verified Global unchanged, advanced the library while preserving the pin, explicitly updated, then explicitly promoted to a new immutable version. Version history remained unchanged.
 
-Remaining P0：恢复fal额度后补视频Ending和外部Character生图完整验收。
-Remaining P1：未在本轮完整重跑的历史AT边界/语义/多模态测试和真实体验者反馈。
+## Paid scope accounting
 
-## 本轮 No-Fal Product Closure
+Only the isolated 9001 character regression has **0 paid media submissions**. The broader live FULL E2E already contains historical Relay candidates and a Fal attempt; do not label all work zero cost. Its final totals must be reconstructed from usage/provenance. The user's latest instruction is to leave live paid generation available for human testing; the isolated regression remains Guard OFF.
 
-- Theater Mode 按应用内布局验收通过；旧的 `fullscreenElement=player-shell` 证据不再作为主证据。
-- 角色同颗粒度已 PASS；角色库与 Creator 的七个工作台标签、Outfit/Pose/Motion/Voice 选择和 Scenario Overlay 已完成零费用浏览器回归。
-- AT-91～AT-98：8 PASS；AT-80：PASS；AT-84：按新 Theater Mode 定义 PASS。
-- Fal paid HTTP attempts：0。付费 Character、FREE H3、Video Ending 继续 PARTIAL/BLOCKED。
-- 详细无费用报告：`PRD_V06_PRODUCT_CLOSURE_NO_FAL.md`。
+Image Relay is a **USER-approved cost optimization**. Current IMAGE_GENERATION / IMAGE_EDIT uses the configured OpenAI-compatible Relay (preferred `gpt-image-2.5-sunburst`); FalImageProvider remains in code. This E2E uses Fal only for H3.
+
+## Remaining
+
+No known non-Fal P0 remains in tested character management. Backend integration regression is green. The full real Creator→Player journey remains **PARTIAL**: `IMAGE_PROVIDER_API_KEY` is absent, Claire/Victor still need formal images, and the story has no playable H3 output. Four historical Leon 4096×4096 images were measured; Step 5 visual QA has two calls total and no major quality failure. The latest repair/review continuation submitted **0 new paid media requests**; historical usage is accounted separately in [BIOHAZARD_FULL_E2E_ACCEPTANCE.md](BIOHAZARD_FULL_E2E_ACCEPTANCE.md).
+
+Paid-01 character references/edit/separation, Paid-02 real H3 FREE/Recommendation/mechanics and Paid-03 video Ending/Continue World remain incomplete. The prior API publication is not UI E2E proof; the later v0.2.0 publication is real Standard UI proof. The discovered non-atomic ScenarioVersion/CharacterSnapshot publication gap is now fixed with one transaction and frozen reviewed-draft source; seven failure-injection/source-drift/compatibility regressions pass. No known non-Fal P0 remains in these tested scopes. Final full-suite/build/deployment verification passed; all user Scenario/Version/Session/Character objects survived restart unchanged, while existing startup seed refreshed only official rainy-apartment rows. AT-44 remains independent human feedback.

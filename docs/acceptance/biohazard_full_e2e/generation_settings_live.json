@@ -1,0 +1,12 @@
+{
+  "fal_paid_generation_enabled": true,
+  "image_resolution": "4K",
+  "video_resolution": "480P",
+  "aspect_ratio": "16:9",
+  "test_top_k": 1,
+  "test_max_shots": 1,
+  "test_shot_duration": 5.0,
+  "max_test_reference_images": 2,
+  "max_test_reference_videos": 0,
+  "test_override_enabled": false
+}

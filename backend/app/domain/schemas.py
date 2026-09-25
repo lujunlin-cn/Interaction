@@ -141,6 +141,16 @@ class MechanicConfig(BaseModel):
     state_patch_contract: list[str] = Field(default_factory=list)
 
 
+class CharacterOutfit(BaseModel):
+    """One character's outfit, reusable in library and scenario scope."""
+    id: str
+    name: str = ""
+    description: str = ""
+    reference_assets: list[str] = Field(default_factory=list)
+    reference_slots: dict[str, str | list[str] | None] = Field(default_factory=dict)
+    is_default: bool = False
+
+
 class ScenarioCharacter(BaseModel):
     """Scenario Character Instance（不是全局角色库条目）。"""
     id: str
@@ -154,12 +164,14 @@ class ScenarioCharacter(BaseModel):
     visual_state: str = ""
     global_character_id: Optional[str] = None       # 绑定全局角色库条目（版本快照）
     global_character_version: Optional[int] = None
-    # 故事级 Overlay；空值继承角色库，显式值只写当前故事。
+    # Explicit OVERRIDE preserves an empty selection; only INHERIT uses the pin.
     outfit_id: Optional[str] = None
     pose_refs: list[str] = Field(default_factory=list)
     motion_refs: list[str] = Field(default_factory=list)
     voice_id: Optional[str] = None
-    overlay_sources: dict[str, str] = Field(default_factory=dict)
+    overlay_sources: dict[str, Literal["INHERIT", "OVERRIDE"]] = Field(default_factory=dict)
+    local_outfits: list[CharacterOutfit] = Field(default_factory=list)
+    reference_overrides: dict[str, str | list[str] | None] = Field(default_factory=dict)
 
 
 class DramaSpec(BaseModel):
@@ -291,15 +303,6 @@ class CharacterAsset(BaseModel):
     created_at: int = Field(default_factory=now_ms)
 
 
-class CharacterOutfit(BaseModel):
-    """Outfit 属于同一角色版本（Q76），不复制新角色。"""
-    id: str
-    name: str = ""
-    description: str = ""
-    reference_assets: list[str] = Field(default_factory=list)  # CharacterAsset.id
-    is_default: bool = False
-
-
 class CharacterVersion(BaseModel):
     """角色可复现版本（Q84）：重要变化产生新版本，发布后不改写。"""
     id: str
@@ -308,6 +311,7 @@ class CharacterVersion(BaseModel):
     change_type: str = "METADATA"   # IDENTITY/APPEARANCE/METADATA/ASSET_ADDITION/VOICE
     identity_spec: dict[str, Any] = Field(default_factory=dict)  # name/bio/personality/appearance
     canonical_asset_refs: dict[str, Optional[str]] = Field(default_factory=dict)
+    other_refs: list[str] = Field(default_factory=list)
     outfits: list[CharacterOutfit] = Field(default_factory=list)
     pose_refs: list[str] = Field(default_factory=list)
     motion_refs: list[str] = Field(default_factory=list)

@@ -1,0 +1,26 @@
+[
+  {
+    "at": "2026-09-25T04:03:20.423Z",
+    "character": "leon",
+    "old_pin": 2,
+    "latest": 3,
+    "action": "Standard version diff then explicit Update",
+    "overlays_preserved": true
+  },
+  {
+    "at": "2026-09-25T04:03:21.026Z",
+    "character": "claire",
+    "old_pin": 1,
+    "latest": 2,
+    "action": "Standard version diff then explicit Update",
+    "overlays_preserved": true
+  },
+  {
+    "at": "2026-09-25T04:03:21.638Z",
+    "character": "victor_hale",
+    "old_pin": 1,
+    "latest": 2,
+    "action": "Standard version diff then explicit Update",
+    "overlays_preserved": true
+  }
+]

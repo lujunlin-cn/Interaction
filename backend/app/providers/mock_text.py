@@ -45,7 +45,7 @@ class MockTextProvider:
         if purpose == "narrative_beat":
             return self._narrative(user, contract)
         if purpose == "production_shots":
-            return self._shots(user)
+            return self._shots(user, (contract or {}).get("shot_policy"))
         if purpose == "mechanic_projection":
             from ..domain.mechanic_spec import CONTRACTS
             data = json.loads(user)
@@ -119,6 +119,8 @@ class MockTextProvider:
             except Exception:
                 ctx = {}
         outcome = rule_based_outcome(raw, context=ctx)
+        if raw.strip() == "opening":
+            outcome.update(ops=[], evidence=[], skill_triggers=[], ending=None, kind="opening")
         directive = {
             "primary_function": "CLOSE_CURRENT_ARC" if outcome["ending"] else
                 "REVEAL_INFORMATION" if outcome["evidence"] else
@@ -170,16 +172,20 @@ class MockTextProvider:
             "dialogue": [{"speaker": speaker, "line": caption}],
         }, ensure_ascii=False)
 
-    def _shots(self, user: str) -> str:
+    def _shots(self, user: str, policy: dict | None = None) -> str:
         raw = _extract_from_user(user, "raw_player_input") or "行动"
         text = _extract_from_user(user, "scene_text") or raw
         title = _extract_from_user(user, "scene_title") or "行动结果"
-        return json.dumps({"shots": [
+        shots = [
             {"title": "行动与空间关系", "prompt": f"{title}。{raw}。保持身份、服装、持物与场景连续性。",
              "subtitle": raw, "duration": 5},
             {"title": "人物回应与关键细节", "prompt": f"{title}。{text[:60]}。保持连续性与克制语气。",
              "subtitle": text[:60], "duration": 5},
-        ]}, ensure_ascii=False)
+        ]
+        if policy:
+            count = int(policy.get("count", 2))
+            shots = [{**shots[i % len(shots)], "duration": policy.get("target", 5)} for i in range(count)]
+        return json.dumps({"shots": shots}, ensure_ascii=False)
 
     def _projection(self, request):
         draft = request["draft"]

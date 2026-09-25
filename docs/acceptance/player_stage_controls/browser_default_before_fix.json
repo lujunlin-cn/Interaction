@@ -1,0 +1,49 @@
+{
+  "captured_at": "2026-09-25T04:47:10.035Z",
+  "evidence_scope": "Offline browser fixtures, not Real Provider E2E",
+  "external_paid_media_requests": 0,
+  "mutation_requests": [],
+  "unexpected": [],
+  "cases": [
+    {
+      "name": "1920_error",
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "fixture": "failed + 3 Ready recommendations",
+      "status": "FAIL",
+      "error": "AssertionError [ERR_ASSERTION]: Player must default to application Theater Mode\n\n'false' !== 'true'\n"
+    },
+    {
+      "name": "1920_ready",
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "fixture": "3 Ready recommendations",
+      "status": "FAIL",
+      "error": "AssertionError [ERR_ASSERTION]: Player must default to application Theater Mode\n\n'false' !== 'true'\n"
+    },
+    {
+      "name": "2560_error",
+      "viewport": {
+        "width": 2560,
+        "height": 1440
+      },
+      "fixture": "failed + 3 Ready recommendations",
+      "status": "FAIL",
+      "error": "AssertionError [ERR_ASSERTION]: Player must default to application Theater Mode\n\n'false' !== 'true'\n"
+    },
+    {
+      "name": "2560_ready",
+      "viewport": {
+        "width": 2560,
+        "height": 1440
+      },
+      "fixture": "3 Ready recommendations",
+      "status": "FAIL",
+      "error": "AssertionError [ERR_ASSERTION]: Player must default to application Theater Mode\n\n'false' !== 'true'\n"
+    }
+  ]
+}

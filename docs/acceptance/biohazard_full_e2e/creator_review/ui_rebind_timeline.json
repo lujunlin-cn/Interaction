@@ -1,0 +1,29 @@
+[
+  {
+    "at": "2026-09-25T04:26:53.977Z",
+    "operation": "remove old scenario reference and add UI-created same character; restore reviewed story-only values",
+    "old_scenario_character": "claire",
+    "old_global_id": "chr_00001_05d920",
+    "new_scenario_character": "char_204d12",
+    "new_global_id": "chr_00018_204d12",
+    "pinned_version": 7,
+    "global_unchanged": true
+  },
+  {
+    "at": "2026-09-25T04:26:56.321Z",
+    "operation": "remove old scenario reference and add UI-created same character; restore reviewed story-only values",
+    "old_scenario_character": "victor_hale",
+    "old_global_id": "chr_00003_0d75ba",
+    "new_scenario_character": "char_149758",
+    "new_global_id": "chr_00032_149758",
+    "pinned_version": 7,
+    "global_unchanged": true
+  },
+  {
+    "at": "2026-09-25T04:26:56.697Z",
+    "operation": "Leon explicit version update",
+    "from": 3,
+    "to": 8,
+    "outfit_preserved": "outfit_00005_931bd6"
+  }
+]

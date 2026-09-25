@@ -76,8 +76,9 @@ export default function Player() {
   useEffect(() => {
     // Theater Mode is an application layout state. It must never depend on
     // document.fullscreenElement and must not leak after leaving the Player.
+    if (sid) setState({ theaterMode: true });
     return () => setState({ theaterMode: false });
-  }, []);
+  }, [sid]);
   useEffect(() => {
     if (sid && developer && ui.inspectorOpen) void api.devState(sid).then(setDevState).catch(error);
   }, [sid, developer, ui.inspectorOpen, view?.player.status]);
@@ -149,21 +150,21 @@ export default function Player() {
             <button onClick={() => setWishOpen(true)}>许下或查看愿望</button>
           </div>}
         </aside>
+        <div className="player-controls" data-visible={showControls}>
+          <button className="small" onClick={() => { const v = videoRef.current; if (v) v.paused ? v.play().catch(error) : v.pause(); }}>播放 / 暂停</button>
+          <div className="player-progress grow"><div style={{width: `${p.duration ? Math.min(100, p.position / p.duration * 100) : 0}%`}} /></div>
+          <span className="player-time" aria-label="播放进度">{Math.floor(p.position)}s / {Math.floor(p.duration)}s</span>
+          <details className="player-more"><summary>··· 更多</summary><div>
+            <button onClick={() => setState({ theaterMode: !ui.theaterMode })}>{ui.theaterMode ? "退出剧场模式" : "进入剧场模式"}</button>
+            <button onClick={async () => { try { document.fullscreenElement ? await document.exitFullscreen() : await shellRef.current?.requestFullscreen(); } catch (e) { error(e); } }}>{fullscreen ? "退出浏览器全屏" : "浏览器全屏"}</button>
+            <button onClick={() => { setReplay(null); setLoadAttempt(x => x + 1); }}>重新播放</button>
+            <button onClick={finished}>跳过当前场景</button>{view.generating.length > 0 && <button onClick={() => api.cancelGeneration(sid).catch(error)}>取消生成</button>}{replay && <button onClick={() => setReplay(null)}>返回当前场景</button>}
+            <button onClick={() => setState({page: "home", sessionId: null, theaterMode: false})}>退出故事</button>
+          </div></details>
+          {developer && <button className="small" onClick={() => setState({inspectorOpen: !ui.inspectorOpen})}>Inspector</button>}
+        </div>
       </div>
       {!replay && source && media === "playing" && p.caption && <div className="scene-caption"><div className="scene-text">{(p as any).caption_speaker && <b>{(p as any).caption_speaker}： </b>}{p.caption}</div></div>}
-    </div>
-    <div className="player-controls" data-visible={showControls}>
-      <button className="small" onClick={() => { const v = videoRef.current; if (v) v.paused ? v.play().catch(error) : v.pause(); }}>播放 / 暂停</button>
-      <div className="player-progress grow"><div style={{width: `${p.duration ? Math.min(100, p.position / p.duration * 100) : 0}%`}} /></div>
-      <span className="player-time" aria-label="播放进度">{Math.floor(p.position)}s / {Math.floor(p.duration)}s</span>
-      <details className="player-more"><summary>··· 更多</summary><div>
-        <button onClick={() => setState({ theaterMode: !ui.theaterMode })}>{ui.theaterMode ? "退出剧场模式" : "进入剧场模式"}</button>
-        <button onClick={async () => { try { document.fullscreenElement ? await document.exitFullscreen() : await shellRef.current?.requestFullscreen(); } catch (e) { error(e); } }}>{fullscreen ? "退出浏览器全屏" : "浏览器全屏"}</button>
-        <button onClick={() => { setReplay(null); setLoadAttempt(x => x + 1); }}>重新播放</button>
-        <button onClick={finished}>跳过当前场景</button>{view.generating.length > 0 && <button onClick={() => api.cancelGeneration(sid).catch(error)}>取消生成</button>}{replay && <button onClick={() => setReplay(null)}>返回当前场景</button>}
-        <button onClick={() => setState({page: "home", sessionId: null, theaterMode: false})}>退出故事</button>
-      </div></details>
-      {developer && <button className="small" onClick={() => setState({inspectorOpen: !ui.inspectorOpen})}>Inspector</button>}
     </div>
     {connectionFailed && <p role="status">连接暂时中断，正在重新连接。你的行动草稿仍在这里。</p>}
     {ack && <div className="ack-toast">{ack}</div>}
