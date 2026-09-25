@@ -2,7 +2,7 @@
 
 日期：2026-09-25
 
-已将 Character Studio 的 `nano_banana_2` 逻辑槽位接入 OpenAI Images-compatible 中转站。配置项为 `IMAGE_PROVIDER_BASE_URL`、`IMAGE_PROVIDER_API_KEY`、`IMAGE_PROVIDER_MODEL`，默认模型 `gpt-image-2.5-sunburst`，备用模型 `gpt-image-2`。密钥只从环境读取。
+已将 Character Studio 的 `nano_banana_2` 逻辑槽位接入 OpenAI Images-compatible 中转站。配置项为 `IMAGE_PROVIDER_BASE_URL`、`IMAGE_PROVIDER_API_KEY`、`IMAGE_PROVIDER_MODEL`，主模型为 `gpt-image-2.5-sunburst`，失败时依次尝试 `gpt-image-2.5-flare`、`gpt-image-2.5-sunburst`、`gpt-image-2`。相同模型会去重；认证、额度和无效请求不会盲目切换。密钥只从环境读取。
 
 适配契约：
 

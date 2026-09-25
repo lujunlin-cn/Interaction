@@ -26,8 +26,8 @@ Detailed metric/file boundaries, missing required Player evidence and final depl
 | Character / capability | Evidence | Current boundary |
 | --- | --- | --- |
 | Leon text review | [AI proposals](creator_review/leon_review_proposal.json), [confirmed values](creator_review/leon_review_confirmed.json), [UI](creator_review/leon_review_confirmed.png) | Existing library character reviewed through Standard UI; stable text confirmed to v8. Existing canonical image retained. |
-| Claire AI creation | [UI creation](creator_review/claire_ui_character_creation.json), [proposals](creator_review/claire_review_proposal.json), [confirmed values](creator_review/claire_review_confirmed.json), [UI](creator_review/claire_review_confirmed.png) | New character created and text confirmed through Standard UI; pinned v7. Visual assets are still missing in this publication. |
-| Victor AI creation | [UI creation](creator_review/victor_ui_character_creation.json), [proposals](creator_review/victor_review_proposal.json), [confirmed values](creator_review/victor_review_confirmed.json), [UI](creator_review/victor_review_confirmed.png) | New character created and text confirmed through Standard UI; pinned v7. Visual assets are still missing in this publication. |
+| Claire AI creation | [UI creation](creator_review/claire_ui_character_creation.json), [proposals](creator_review/claire_review_proposal.json), [confirmed values](creator_review/claire_review_confirmed.json), [UI](creator_review/claire_review_confirmed.png), [Relay assets](relay_character_assets_final.json) | New character created and text confirmed through Standard UI; Relay produced two 4K candidates. Standard views and Outfit edit remain incomplete in this publication. |
+| Victor AI creation | [UI creation](creator_review/victor_ui_character_creation.json), [proposals](creator_review/victor_review_proposal.json), [confirmed values](creator_review/victor_review_confirmed.json), [UI](creator_review/victor_review_confirmed.png), [Relay assets](relay_character_assets_final.json) | New character created and text confirmed through Standard UI; Relay produced four recorded 4K candidates across two batches. Standard views and Outfit edit remain incomplete in this publication. |
 | Scenario binding and overlays | [Rebind timeline](creator_review/ui_rebind_timeline.json), [saved bindings](creator_review/after_ui_character_rebind.json), [characters UI](creator_review/final_characters.png) | Formal picker added the UI-created library characters; story-specific rain, dust, injury and RPD outfit remain in Scenario scope. |
 | Leon existing 4K candidates | [Candidates UI](leon_candidates.png), [canonical UI](leon_canonical.png), [asset readback](leon_assets_current.json), [measured dimensions](leon_image_dimensions.json) | Four actual Relay image artifacts from two internal generation jobs. All measured 4096 × 4096; prior declared 16:9 is not evidence of actual 16:9. Pre-fix adapter did not capture provider request IDs. |
 | Leon Step 5 candidate QA | [Structured review](visual_qa/leon_candidate_review_step5.json), [schema validation](visual_qa/leon_candidate_review_validation.json), [request summary](visual_qa/leon_candidate_review_step5_request_summary.json) | One recorded review of all four images accepts the current canonical; no major failure and no new image generation in that review. Requested reasoning effort is high; reported reasoning tokens are recorded as received. |
@@ -62,6 +62,7 @@ for multi-character video production.
 - [Provider configuration](provider_matrix.json), [provider audit](provider_audit.json), [environment health](environment_live_health.json).
 - [Generation settings snapshot](generation_settings_live.json).
 - [Usage ledger snapshot](usage_ledger_current_snapshot.json), [earlier ledger](usage_ledger_live.json).
+- [Relay continuation ledger](usage_ledger_after_relay.json) and [Relay media summary](RELAY_VISUAL_CONTINUATION.md).
 - [Measured image provenance](leon_image_dimensions.json): provider **image_relay**, recorded/configured model **gpt-image-2.5-sunburst** for the four existing assets. The pre-fix adapter did not retain independent upstream-returned model/request IDs, so those historical fields cannot be asserted as independently confirmed actual-model evidence.
 
 OpenAI-compatible Image Relay is **USER-approved cost optimization**. Images use
@@ -70,16 +71,15 @@ route and readiness flags alone do not prove a successful H3 generation. Runtime
 request IDs and actual returned video model must be recorded when execution
 occurs.
 
-Parameter review, the v0.2.0 UI publication, subsequent GET-only snapshot
-verification and the isolated publish regression made **0 new media generation
-or edit submissions**. This does not erase the earlier Relay jobs or any earlier
-Fal attempts from the full E2E usage ledger.
+Parameter review and the v0.2.0 UI publication made no new media submissions;
+the later Relay continuation is separately recorded in `usage_ledger_after_relay.json`
+and includes successful candidate generation plus failed edit attempts.
 
-Final [environment](environment.json), [provider matrix](provider_matrix_final.json) and [durable ledger](usage_ledger_final.json) confirm paid enabled/persisted, two configured Fal accounts not probed, and the missing Relay credential. An empty final ledger does not erase pre-ledger historical attempts.
+Final [environment](environment.json), [provider matrix](provider_matrix_final.json) and [durable ledger](usage_ledger_final.json) confirm paid enabled/persisted and two configured Fal accounts not probed. Relay credential values and `.env` are excluded from Git.
 
 ## 5. Final regression and deployment — PASS
 
-- [Backend full regression](backend_regression_final.txt): **195 passed / 0 failed / 6 warnings**, 96.58s; compileall/pip check also PASS.
+- [Backend full regression](backend_regression_final.txt): Latest full regression: **197 passed / 0 failed / 6 warnings**; the latest log is now archived.
 - [Final frontend build](frontend_build_final.txt): `npm ci` / build PASS, 42 modules, `index-DBDSet8X.js` / `index-C4Yk5vqH.css`.
 - [Deployment](deployment_final.json): `interaction.service` active on **9000**, served JS/CSS bytes/SHA-256 match final dist. All user Scenario/Version/Session/Character objects preserved; existing startup seed refreshed only official `rainy_apartment` / `ver_rainy_1_0_0` rows.
 - [Read-only Theater](theater_readonly.json): 1920×1080 and 2560×1440, default in-app Theater, fullscreen=false, Sidebar/Header hidden, controls inside Stage, Agency bottom, HUD/input/Session preserved. This uses the historical failed Session and proves layout, not a new successful video.
@@ -92,7 +92,7 @@ The following are **not complete at this checkpoint** and must not be marked
 PASS based on mock regression or existing configuration:
 
 - Complete Leon Standard Reference Pack and real 4K outfit edit.
-- Claire and Victor real 4K candidates, canonical/reference assets and Step 5 QA.
+- Claire and Victor reference assets and Step 5 QA; candidates and canonical selections exist, but later media versions still require explicit Scenario adoption and republication.
 - Three-character identity separation and multi-character Reference Resolver.
 - Fresh Standard Player Session, real H3 Opening and Step 5 video QA.
 - Real Jev Top-3 with three Ready H3 branches; independent FREE action while all three are visible; FREE canonical state and speculative isolation.

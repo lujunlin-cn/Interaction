@@ -31,7 +31,7 @@ The character scope regression used a separate temporary SQLite database on port
 
 ## Verification
 
-- Backend full integration suite: **195 passed / 0 failed / 6 warnings**, with mock providers, Fal Guard OFF and lifecycle disabled. This supersedes the historical 64-pass count and does not prove real-provider media quality.
+- Backend full integration suite: **197 passed / 0 failed / 6 warnings**, with mock providers, Fal Guard OFF and lifecycle disabled. This supersedes the historical 64-pass count and does not prove real-provider media quality.
 - Frontend: `npm run build` → **PASS** after shared Studio changes and checkbox layout repair (42 modules).
 - Final deployment: `npm ci` / build and backend compileall/pip check **PASS**; `interaction.service` restarted active on 9000. Served JS/CSS bytes/SHA-256 match final dist; `docs/acceptance/biohazard_full_e2e/deployment_final.json`.
 - Browser: **PASS**, 1920×1080, no page errors and zero generation/edit submission attempts.

@@ -8,7 +8,7 @@ Date: 2026-09-25. Overall result: **PARTIAL**. Main report: [BIOHAZARD_FULL_E2E_
 - `scenario_published_ui.json` is the latest real Standard UI publication, version **0.2.0**. `scenario_published.json` is an earlier **0.1.0 API checkpoint** and must not prove UI publishing.
 - `creator_review/final_parameters_assertions.json` is the pre-publication review. The subsequent UI publish is separate evidence.
 - `provider_audit.json`, `usage_ledger_current_snapshot.json`, `usage_ledger_live.json` and `provider_matrix.json` are timestamped/historical checkpoints. In-memory counters and old route-health labels do not prove current balance/readiness or erase prior attempts.
-- The continuation's new media-generation request count is **0**. Step 5 review of existing assets is recorded separately from image/video generation.
+- The parameter-review continuation made no media submissions; the later Relay continuation is recorded separately in `RELAY_VISUAL_CONTINUATION.md` and `usage_ledger_after_relay.json`.
 
 ## Creator: natural idea → understanding → confirmation
 
@@ -34,15 +34,17 @@ Full review chronology and its checkpoint boundaries: [creator_review/README.md]
 | Actual 4K dimensions | [leon_image_dimensions.json](leon_image_dimensions.json): four 4096×4096 PNG assets with SHA-256; one canonical |
 | Leon reference pack | [leon_reference_pack_before.png](leon_reference_pack_before.png) is an incomplete pre-generation view, **not pack PASS** |
 | Leon Outfit | [leon_pinned_outfit_review.png](creator_review/leon_pinned_outfit_review.png) proves selection only, **not real IMAGE_EDIT** |
-| Claire Standard AI creation | [claire_ui_character_creation.json](creator_review/claire_ui_character_creation.json), [claire_review_confirmed.json](creator_review/claire_review_confirmed.json) |
-| Victor Standard AI creation | [victor_ui_character_creation.json](creator_review/victor_ui_character_creation.json), [victor_review_confirmed.json](creator_review/victor_review_confirmed.json) |
+| Claire Standard AI creation | [claire_ui_character_creation.json](creator_review/claire_ui_character_creation.json), [claire_review_confirmed.json](creator_review/claire_review_confirmed.json), [Relay assets](relay_character_assets_final.json) |
+| Victor Standard AI creation | [victor_ui_character_creation.json](creator_review/victor_ui_character_creation.json), [victor_review_confirmed.json](creator_review/victor_review_confirmed.json), [Relay assets](relay_character_assets_final.json) |
 | Pins and Scenario overlays | [ui_rebind_timeline.json](creator_review/ui_rebind_timeline.json), [final_characters.png](creator_review/final_characters.png), [final_parameters_readback.json](creator_review/final_parameters_readback.json) |
 | Final gate / review checkbox | [publish_gate.png](publish_gate.png), [publish_reviewed.png](publish_reviewed.png) |
 | Real UI publication | [scenario_published_ui.json](scenario_published_ui.json), [published_version.png](published_version.png): v0.2.0, three snapshots, no Play/Session request |
 | Exact published snapshot verification | [character_snapshots_ui.json](character_snapshots_ui.json), [published_snapshot_verification.json](published_snapshot_verification.json): GET-only comparison proves all three pins and complete local overrides match the reviewed publication |
 | Earlier API checkpoint | [scenario_published.json](scenario_published.json), [scenario_characters.json](scenario_characters.json): historical v0.1.0, **not current UI proof** |
 
-Claire/Victor generated image files, complete standard reference packs and Outfit edit QA do not exist yet. The report leaves them PARTIAL.
+Claire/Victor standard reference packs and Outfit edit QA do not exist yet. Candidate assets and failed Relay edit attempts are recorded in `RELAY_VISUAL_CONTINUATION.md`; these capabilities remain PARTIAL.
+
+Repository copies of the returned 4K candidate assets are indexed in [relay_assets/README.md](relay_assets/README.md); they are evidence copies, not additional generation requests.
 
 ## Visual QA
 
@@ -65,10 +67,10 @@ Total Step 5 visual QA calls: **2**. No real video exists, so no opening/FREE/en
 | [provider_audit.json](provider_audit.json) | Pre-fix audit of missing historical image ledger/model/request evidence; implementation defects described there were later repaired |
 | [usage_ledger_current_snapshot.json](usage_ledger_current_snapshot.json) | Historical one H3 submit entry (5s/480P) and one local BILLING_LOCKED rejection; no accepted job |
 | [usage_ledger_live.json](usage_ledger_live.json) | Empty old process-local snapshot; must not replace historical accounting |
-| [environment.json](environment.json), [provider_matrix_final.json](provider_matrix_final.json) | Final read-only live configuration: Relay key absent, two configured Fal accounts unprobed, 4K/480P/16:9, default 5s/opening 8s/ending 8s/max 10s, paid enabled and persisted |
-| [usage_ledger_final.json](usage_ledger_final.json) | Final durable ledger snapshot; empty because the repair/review continuation made no new paid media submissions, not because historical use was zero |
+| [environment.json](environment.json), [provider_matrix_final.json](provider_matrix_final.json) | Final read-only live configuration: two configured Fal accounts unprobed, 4K/480P/16:9, default 5s/opening 8s/ending 8s/max 10s, paid enabled and persisted; credential values are excluded |
+| [usage_ledger_after_relay.json](usage_ledger_after_relay.json) | Durable Relay continuation ledger: successful candidate generations plus failed edit attempts; no secrets |
 | [deployment_final.json](deployment_final.json) | Final 9000 active restart; served JS/CSS bytes/SHA-256 match latest dist; all user objects unchanged, existing seed refreshed only official rainy-apartment rows |
-| [backend_regression_final.txt](backend_regression_final.txt), [frontend_build_final.txt](frontend_build_final.txt) | 195 passed / 0 failed / 6 warnings; final 42-module frontend build PASS |
+| [backend_regression_final.txt](backend_regression_final.txt), [frontend_build_final.txt](frontend_build_final.txt) | 197 passed / 0 failed / 6 warnings; final 42-module frontend build PASS |
 
 Final deployment/environment/ledger verification is complete in the files above. Credentials, `.env`, signed secrets and key values are excluded.
 
@@ -87,9 +89,9 @@ The following files were requested but **have not been produced as successful re
 - `free_action_trace.json`, `free_action_state_diff.json`, `recommendation_selection_trace.json`.
 - Inventory, clue, relationship, Wish and timed HUD screenshots and their Skill/Proposal/StateManager before-after traces.
 - `ending_provenance.json`, ending screenshot, Continue World screenshot and `continue_world_state.json`.
-- Leon reference/outfit QA, Claire/Victor candidate/reference QA, separation QA and all video frame/QA results.
+- Leon reference/outfit QA, Claire/Victor reference QA, separation QA and all video frame/QA results. Candidate generation evidence exists, but no Step 5 review was performed for the new Relay outputs.
 
-Do not add placeholder success files to fill this list. Resume through the real UI after the Relay credential and character visuals are available.
+Do not add placeholder success files to fill this list. Resume through the real UI after the Relay edit endpoint is healthy and generated assets are explicitly adopted and republished.
 
 ## Separate regression evidence (not real-provider success)
 
@@ -98,4 +100,4 @@ Do not add placeholder success files to fill this list. Resume through the real 
 - [Pressure contract](../pressure_contract/README.md): JSON/driver normalization and Standard UI editing.
 - [Preflight safety](../preflight_safety/README.md): actual effective settings/circuit checks and preview-only accounting.
 - Publication atomicity: `backend/tests/test_publish_atomicity.py`, seven transaction/source-drift/compatibility cases; first/second snapshot faults roll back ScenarioVersion and all snapshots together.
-- Backend full regression: **195 passed / 0 failed / 6 warnings**, 96.58s; compileall/pip check PASS. Final frontend `npm ci` / build and 9000 deployment verification after Publish-warning/Player changes **PASS**.
+- Backend full regression: **197 passed / 0 failed / 6 warnings**, 97.05s; compileall/pip check PASS. Final frontend `npm ci` / build and 9000 deployment verification after Publish-warning/Player changes **PASS**.

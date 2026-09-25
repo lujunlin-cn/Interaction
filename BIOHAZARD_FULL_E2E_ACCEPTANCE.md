@@ -2,24 +2,24 @@
 
 Date: 2026-09-25. Story: **《生化危机：黑雨隔离区》**.
 
-**Overall: PARTIAL.** The real Standard Creator path has been reviewed, corrected and published. The required three-character visual production and Creator → Player → video Ending → Continue World journey have not completed. No API checkpoint, upload fixture, old story artifact or mock result is counted as a real-provider play PASS.
+**Overall: PARTIAL.** The real Standard Creator path has been reviewed, corrected and published. The required complete three-character visual production and Creator → Player → video Ending → Continue World journey have not completed. No API checkpoint, upload fixture, old story artifact or mock result is counted as a real-provider play PASS.
 
 | Audit field | Value |
 | --- | --- |
 | Requirements SoT | `Agent_Skills_Interactive_Drama_PRD_AI_v0.6.md`, with the user's later explicit provider/quality instructions |
 | Start SHA | `1eabeb6afc89e8bdcb402f5b2b452499e7089b9e` |
 | Inspected integration base | `803efbedc4d91b406159f439bb21ae590ab4f094`; working changes are included in the final integration commit |
-| Final SHA | 本报告所在最终提交；交付回复提供完整 SHA，使用 `git rev-parse HEAD` 核对 |
+| Final SHA | Updated in the delivery commit; verify with `git rev-parse HEAD` |
 | Service | Port **9000** |
 | Latest real UI publication | Scenario `scn_00003_364d7e`, version **0.2.0**, `ver_00001_b26e3c` |
 | Latest review/publish | 1920×1080 Standard UI; final checkbox explicitly checked; one `publish` POST with `reviewed=true, play=false` |
 | Latest published character pins | Leon v8; Claire v7; Victor v7 |
-| New paid media requests during the repair/review continuation | **0** |
-| Historical paid-media boundary | Four existing Relay images, two service generation batches; exact image HTTP attempts unavailable. One H3 submit HTTP attempt failed billing, followed by one local blocked attempt. Zero accepted H3 jobs/videos. |
-| Current blocker | `IMAGE_PROVIDER_API_KEY` is absent. The requested Relay credential has not been supplied; no Fal image fallback is permitted. |
+| Relay continuation media requests | **5 image-generation HTTP attempts: 3 succeeded, 2 failed; 8 image-edit HTTP attempts failed with transient 502/network errors; no Fal image requests** |
+| Historical paid-media boundary | Four earlier Relay images plus this continuation's successful Claire/Victor candidates; the durable ledger records current Relay attempts. One H3 submit HTTP attempt failed billing, followed by one local blocked attempt. Zero accepted H3 jobs/videos. |
+| Current blocker | Relay generation succeeds for Claire/Victor candidates, but `/v1/images/edits` returns 502/network errors for standard views and Outfit; no Fal image fallback is permitted. |
 | Paid switch on live service | **Enabled**, as the user's latest instruction requires for later human testing. Two supplied Fal keys are configured; this continuation did not probe them. Old billing failure does not establish the current keys' balance. |
 
-The image route is a **USER-approved cost optimization**: `IMAGE_GENERATION / IMAGE_EDIT → configured OpenAI-compatible Image Relay`, preferred model `gpt-image-2.5-sunburst`. Fal is reserved for H3 video in this E2E. The Fal image adapter remains in code and is not used here.
+The image route is a **USER-approved cost optimization**: `IMAGE_GENERATION / IMAGE_EDIT → configured OpenAI-compatible Image Relay`, preferred model `gpt-image-2.5-sunburst`, fallback sequence documented in `IMAGE_RELAY_ACCEPTANCE.md`. Fal is reserved for H3 video in this E2E. The Fal image adapter remains in code and is not used here. The Relay credential is configured only in ignored `backend/.env`; no credential is committed.
 
 ## Evidence interpretation
 
@@ -68,9 +68,9 @@ The publication returned Leon `snap_00004_a7cb7f`, Claire `snap_00005_54ba2c`, V
 | Leon Standard Reference Pack | PARTIAL | Canonical front exists. The required complete front/three_quarter/side/full_front/full_side generated pack has not been completed. |
 | Leon Outfit Edit | PARTIAL | Named RPD outfit exists and is selected in Scenario scope. A distinct real 4K IMAGE_EDIT output and canonical-versus-outfit QA are missing; a name/selection is not an edit PASS. |
 | Claire AI Creation | PASS for text workflow | New character created and AI suggestions reviewed/confirmed through Standard UI; `claire_ui_character_creation.json`, `claire_review_confirmed.json`. |
-| Claire 4K References | PARTIAL | No generated canonical/candidates/reference pack yet. This is a text-only character with a valid publish warning. |
+| Claire 4K References | PARTIAL | Controlled Relay generation was attempted after credential configuration but returned HTTP 401; no candidate/canonical/reference pack was created. |
 | Victor AI Creation | PASS for text workflow | New character created and AI suggestions reviewed/confirmed through Standard UI; `victor_ui_character_creation.json`, `victor_review_confirmed.json`. |
-| Victor 4K References | PARTIAL | No generated canonical/candidates/reference pack yet. |
+| Victor 4K References | PARTIAL | Controlled Relay generation was attempted after credential configuration but returned HTTP 401; no candidate/canonical/reference pack was created. |
 | Three-character Identity Separation | PARTIAL | Cannot compare three visual identities until Claire/Victor have formal images. No fabricated separation QA. |
 | Scenario Snapshots | PASS for publication; production PARTIAL | GET-only checks prove the exact three returned snapshots, pinned versions and complete local overrides match the reviewed publication; `published_snapshot_verification.json`. Media identity quality/resolver use await the real production path. |
 | Scenario Overlays | PASS | Visible story edits/rebinding and readback preserve library definitions. `creator_review/ui_rebind_timeline.json`, `scenario_published_ui.json`. |
@@ -146,8 +146,8 @@ Original image bytes were measured at 4096×4096 and hashed. QA used 2048×2048 
 | Narrative | Step / `step-3.7-flash` | Configured route; no successful new opening/ending artifact used as proof. |
 | Authoring | Step / `step-5-preview` | Real UI understanding/proposal/confirmation calls, including final mechanics and character reviews. |
 | Decision | Jev / configured `jev-latest` | No actual locked Top-3 model/version response in the current play path. |
-| IMAGE_GENERATION | OpenAI-compatible `image_relay`; recorded `gpt-image-2.5-sunburst` | Four existing 4096×4096 outputs. Historical adapter recorded configured model; upstream-returned model/request ID was not retained, so independent actual-model confirmation is unavailable for those old outputs. |
-| IMAGE_EDIT | Same configured Image Relay | No completed edit request/output in the recorded E2E. |
+| IMAGE_GENERATION | OpenAI-compatible `image_relay`; `gpt-image-2.5-sunburst` | Four earlier Leon outputs plus successful 4K Claire/Victor candidate outputs, with current Relay request IDs in `relay_character_assets_final.json`. |
+| IMAGE_EDIT | Same configured Image Relay | Eight current edit attempts were recorded as failed transient 502/network errors; no output was accepted. |
 | Video | Fal `h3_max` / `minimax/h3-max/reference-to-video` | One historical POST rejected for billing. No accepted provider job ID or completed video. |
 | Visual QA | Step / `step-5-preview` | Two review calls; fresh response explicitly records actual model, completion ID, usage and structured result. |
 
@@ -157,10 +157,10 @@ Standard UI keeps provider/model/request/branch/state-machine diagnostics out of
 
 | Required metric | Recorded value | Interpretation |
 | --- | --- | --- |
-| New paid media requests in latest repair/review continuation | **0** | No new external image generation/edit or video submit; reviewing existing images does not add a media-generation request. |
-| Image Generation Requests | **2 service generation batches; exact HTTP count UNKNOWN** | Four outputs share two internal generation job IDs. Old Relay ledger/request IDs were absent; do not claim two exact external HTTP requests. |
-| Image Edit Requests | **0 recorded/completed** | No Standard View or Outfit edit output exists for this E2E. |
-| 4K Character Images | **4** | All Leon, each 4096×4096. One canonical and three candidates; Claire 0, Victor 0. |
+| New paid media requests in Relay continuation | **13 external image HTTP attempts** | Five generation attempts (three succeeded, two failed) plus eight edit attempts (all failed transiently); no Fal image request. |
+| Image Generation Requests | **5 external attempts / 3 succeeded** | Current durable ledger records two successful Claire/Victor batches plus one additional successful batch and two failed generation attempts. |
+| Image Edit Requests | **8 external attempts / 0 succeeded** | Standard-view/edit requests returned transient 502/network failures; no mock or Fal fallback was used. |
+| 4K Character Images | **10 recorded candidate outputs** | Four existing Leon assets plus six Claire/Victor candidate assets in the continuation; generated outputs report 4096×4096 where dimensions were returned. |
 | Image Retries | **0 quality retries recorded** | Historical batch duplication/fallback cannot be fully reconstructed. |
 | Historical H3 submit HTTP attempts | **1** | Billing failure; the second local blocked call did not reach HTTP. |
 | H3 accepted Jobs | **0** | No provider job accepted. |
@@ -172,7 +172,7 @@ Standard UI keeps provider/model/request/branch/state-machine diagnostics out of
 | Video Resolution | **480P requested** | No generated resolution to inspect. |
 | Any Video >480P | **NO generated video** | Do not treat the absence of output as a successful quality check. |
 | Aspect Ratio | **16:9 requested** | Historical Leon images actually returned 1:1; reported legacy aspect provenance was inaccurate. The adapter now preserves requested/submitted/actual values separately. |
-| Fal Nano Banana calls in this E2E | **0 recorded** | Image route remains Relay. No paid probe was used to validate the new credentials. |
+| Fal Nano Banana calls in this E2E | **0 recorded** | Image route remains Relay. No Fal image fallback or probe was used. |
 | Exact monetary cost | **UNKNOWN** | Provider billing data was not captured; no estimate is presented as a charged amount. |
 
 Historical sources: `leon_assets_current.json`, `leon_image_dimensions.json`, `usage_ledger_current_snapshot.json`, `provider_audit.json`. The last two are explicitly **pre-fix snapshots**, not claims about the final durable-ledger implementation. Empty process-local ledger snapshots do not erase earlier usage.
@@ -181,11 +181,11 @@ Current generic ledger fixes preserve external attempts, request IDs when return
 
 ### Regression and deployment
 
-- Backend: **195 passed / 0 failed / 6 warnings in 96.58s**, full `pytest tests/ -q` with Fal Guard OFF, mock providers and lifecycle disabled; `compileall` and `pip check` **PASS**. These tests are contract/regression evidence, not real-provider E2E evidence. See `backend_regression_final.txt`.
+- Backend: latest full regression **197 passed / 0 failed / 6 warnings** with Fal Guard OFF, mock providers and lifecycle disabled. `compileall` and `pip check` **PASS**. These tests are contract/regression evidence, not real-provider E2E evidence.
 - Frontend: final `npm ci` and `npm run build` **PASS** after Publish-warning/Player changes, 42 modules; `index-DBDSet8X.js` and `index-C4Yk5vqH.css`. See `frontend_build_final.txt`.
 - Browser: character Scope A–F regression **PASS**, 1920×1080; publish-race, pressure-editing and preflight regressions passed with isolated API/network mocks. The live Creator review/publication used port 9000. No mock browser test is counted as H3/Relay acceptance.
 - Deployment: `interaction.service` restarted and is **active on port 9000**. Served JS/CSS bytes and SHA-256 match the final `dist` build. Read-only post-restart health, route and ledger snapshots are in `deployment_final.json`, `environment.json`, `provider_matrix_final.json`, `usage_ledger_final.json`.
-- Restart preserved all user Scenario/Version/Session/Character objects. Existing startup seeding refreshed only official `rainy_apartment` / `ver_rainy_1_0_0` rows; this is not a claim that the entire database was byte-for-byte unchanged. Live paid generation remains **true and persisted**; current Relay credential remains absent; no new paid media submit was made.
+- Restart preserved all user Scenario/Version/Session/Character objects. Existing startup seeding refreshed only official `rainy_apartment` / `ver_rainy_1_0_0` rows; this is not a claim that the entire database was byte-for-byte unchanged. Live paid generation remains **true and persisted**; Relay credential values remain outside Git.
 
 ## G. Bugs Found & Fixed
 
@@ -195,9 +195,9 @@ All listed fixes are generic. Leon/Claire/Victor/Umbrella/Raccoon City content i
 | --- | --- | --- |
 | Creator character management below library granularity | Shared `CharacterStudio`, reference slots, outfit/pose/motion/voice operations, explicit inherited/empty overrides, pinned-version resolver and Promote; A–F persisted UI regression and character-scope tests. | Paid image/video quality not implied. |
 | Promote could roll back newer library text from inherited old pin | `overlay_sources` controls promoted identity/personality/appearance fields; explicit overrides including empty values are allowed; inherited/unchanged legacy fields are not promoted. Three regressions. | No remaining reproduced case in tested scope. |
-| AI Character Create combined text and paid image work | Text understanding/confirmation is distinct from media submission; Standard UI creation of Claire/Victor verified. Pending proposals survive same-session page closure. | New image creation waits for Relay credential. |
+| AI Character Create combined text and paid image work | Text understanding/confirmation is distinct from media submission; Standard UI creation of Claire/Victor verified. Pending proposals survive same-session page closure. | Claire/Victor Relay candidates exist; reference views, Outfit edits and QA remain incomplete. |
 | Publish raced pending save, stale review and duplicate clicks | Wait/read saved draft, invalidate review when content changes, recheck before publish, synchronous shared submit lock; nine browser regressions, including missing-image warning visibility when the check itself is valid. | Real Standard UI v0.2.0 publication and snapshot readback passed. |
-| ScenarioVersion and snapshots were not atomic | Publication now creates ScenarioVersion and all CharacterSnapshots in the same AsyncSession transaction from the frozen reviewed draft. Seven `test_publish_atomicity.py` regressions pass: injected first/second snapshot failures roll back first/existing publication; post-commit draft pin drift cannot alter the published snapshot source; compatibility preserved. | Closed for reproduced transaction/source-drift cases; final full suite **195 passed / 0 failed**. |
+| ScenarioVersion and snapshots were not atomic | Publication now creates ScenarioVersion and all CharacterSnapshots in the same AsyncSession transaction from the frozen reviewed draft. Seven `test_publish_atomicity.py` regressions pass: injected first/second snapshot failures roll back first/existing publication; post-commit draft pin drift cannot alter the published snapshot source; compatibility preserved. | Closed for reproduced transaction/source-drift cases; final full suite **197 passed / 0 failed**. |
 | Video controls covered Agency; Player did not default to Theater | Controls now remain in Stage, and Player entry defaults to in-app Theater. Four isolated cases changed from FAIL to PASS, covering both resolutions, error/Ready states, menu hit targets, Agency, HUD, navigation/reentry and input/session/progress preservation. Fresh deployed read-only error-state geometry also passes both resolutions. `docs/acceptance/player_stage_controls/browser.json`, `theater_readonly.json`. | Final build/deployment and default-entry checks pass; zero paid media submitted. |
 | Step pressure output leaked JSON or used an invalid driver | Shared lossless pressure normalization across generation/projection/confirmation/instruction/save/publish; explicit action/story-time drivers, no silent guessed semantics; 27 backend cases and five UI cases. | Current malformed live draft repaired through Standard UI and republished. |
 | Preflight ignored actual formal settings and circuit | Effective K/shot/duration/reference limits, explicit unresolved counts, guard/circuit/credential checks; preview does not create fake ledger usage. Eleven backend cases and Settings UI regression. | An estimate is not an actual paid plan. |
@@ -209,11 +209,11 @@ All listed fixes are generic. Leon/Claire/Victor/Umbrella/Raccoon City content i
 
 ### Remaining blockers and residual risks
 
-1. **Relay credential missing:** restore `IMAGE_PROVIDER_API_KEY` through the secret configuration mechanism. Keep Relay for all 4K images/edits. Do not route to Fal Nano Banana or generate speculative “test” media.
+1. **Relay edits incomplete:** the credential is configured outside Git and candidate generation succeeded, but standard-view edits returned transient 502/network errors. Ordered Relay fallback is offline-tested; paid fallback is not yet verified. Keep Relay for all 4K images/edits. Do not route to Fal Nano Banana or generate speculative “test” media.
 2. **Paid-01 incomplete:** complete Leon reference pack/outfit edit, Claire/Victor candidates/canonicals/reference packs, 3-character separation and Step 5 identity QA. Explicitly update Scenario pins to newly approved media versions and republish after review.
 3. **Paid-02 incomplete:** new UI Session, real opening, real Jev Top-3 with 3/3 H3 READY, FREE while three options remain visible, selected recommendation and all five mechanisms with canonical diffs. Restore exact job/request/duration/cost evidence from the new ledger.
 4. **Paid-03 incomplete:** real video Ending, Arc CLOSED, explicit Continue World and inherited canonical state, preserving old ending/history without auto-submitting Arc 2 media.
-5. **No known remaining non-Fal P0 in the verified scope:** publication atomicity and Theater control/default-entry defects were fixed. Seven publication cases, four Player layout cases, final 195-test suite and final build/deployment checks pass. No real-provider PASS is inferred from them.
+5. **No known remaining non-Fal P0 in the verified scope:** publication atomicity and Theater control/default-entry defects were fixed. Seven publication cases, four Player layout cases, final 197-test suite and final build/deployment checks pass. No real-provider PASS is inferred from them.
 6. **Historical audit gaps:** exact image HTTP count, external image request IDs and independent upstream model confirmation cannot be recovered; they remain UNKNOWN. Final application SHA is the containing integration commit supplied in the delivery reply.
 7. **AT-44:** independent human feedback remains separate. The user's latest instruction keeps live paid generation enabled for that later testing; this overrides the earlier request to turn it off.
 

@@ -47,7 +47,9 @@ class Settings(BaseSettings):
     image_provider_base_url: str = ""
     image_provider_api_key: str = ""
     image_provider_model: str = "gpt-image-2.5-sunburst"
-    image_provider_fallback_model: str = "gpt-image-2"
+    image_provider_fallback_model: str = "gpt-image-2.5-flare"
+    image_provider_fallback_model_2: str = "gpt-image-2.5-sunburst"
+    image_provider_fallback_model_3: str = "gpt-image-2"
 
     jev_api_key: str = ""
     jev_base_url: str = "https://api.typesafe.ai"   # Jev（TypeSafe SystemOne）API

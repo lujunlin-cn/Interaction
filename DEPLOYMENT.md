@@ -76,7 +76,7 @@ npm run build
 | `FAL_KEY_SECONDARY` | Fal 额度耗尽后的第二 Key；仅服务端读取，按 Key 独立熔断后自动轮换 |
 | `FAL_PAID_GENERATION_ENABLED` | 付费 H3/Nano Banana 总开关；默认 `false`，充值并完成付费验收前保持关闭 |
 | `IMAGE_PROVIDER_BASE_URL` / `IMAGE_PROVIDER_API_KEY` | OpenAI-compatible 生图中转站；配置后 Character Studio 优先使用中转站 |
-| `IMAGE_PROVIDER_MODEL` / `IMAGE_PROVIDER_FALLBACK_MODEL` | 默认 `gpt-image-2.5-sunburst` / `gpt-image-2` |
+| `IMAGE_PROVIDER_MODEL` / `IMAGE_PROVIDER_FALLBACK_MODEL` / `_2` / `_3` | 默认主模型 `gpt-image-2.5-sunburst`，备用依次为 `gpt-image-2.5-flare`、`gpt-image-2.5-sunburst`、`gpt-image-2` |
 | `IMAGE_GENERATION_RESOLUTION` / `VIDEO_GENERATION_RESOLUTION` | 新任务默认图片/视频分辨率（0.5K / 480P） |
 | `GENERATION_ASPECT_RATIO` | 新任务比例（默认 16:9） |
 | `SOL_H3_*` | Sol-H3 本地 adapter 端点/token |

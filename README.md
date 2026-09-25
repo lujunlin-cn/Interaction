@@ -1,5 +1,7 @@
 # Interactive Drama · 互动短剧平台
 
+完整本地报告与验收证据见 [报告总索引](REPORTS_INDEX.md)。
+
 基于 PRD v0.6 Final Closure 的可运行实现：React+TypeScript 前端 + FastAPI + PostgreSQL 后端，
 部署目标为 DGX Spark（`/home/hajimi2025/interaction`）。
 
@@ -32,7 +34,7 @@ mock模式使用确定性规则和FFmpeg占位视频，不能证明真实模型/
 
 Character Studio 的 IMAGE_GENERATION / IMAGE_EDIT → configured image provider；当前部署优先使用 OpenAI-compatible Image Relay，这是 **USER-approved cost optimization**。FalImageProvider 仍保留，本次 FULL E2E 中 Fal 仅用于 H3。设置
 `IMAGE_PROVIDER_BASE_URL`、`IMAGE_PROVIDER_API_KEY`、`IMAGE_PROVIDER_MODEL`（默认
-`gpt-image-2.5-sunburst`，备用 `gpt-image-2`）。密钥只放在 `backend/.env`，不要提交到 Git。
+`gpt-image-2.5-sunburst`，备用依次为 `gpt-image-2.5-flare`、`gpt-image-2.5-sunburst`、`gpt-image-2`）。密钥只放在 `backend/.env`，不要提交到 Git。
 
 Fal 云生成支持服务端 `FAL_KEY` + `FAL_KEY_SECONDARY` 双 Key。额度或账单错误会按 Key 独立熔断并自动轮换；两把 Key 都不可用时本地快速失败。历史小额真实图片 smoke 见 [`FAL_KEY_ROTATION_ACCEPTANCE.md`](FAL_KEY_ROTATION_ACCEPTANCE.md)；该历史记录不改变当前 FULL E2E 的 Relay 图片 / Fal H3 视频分工，也不证明当前 Key 余额。
 
@@ -72,9 +74,9 @@ Standard Creator先展示AI理解与建议，确认后写正式Drama/Character/M
 
 Player 默认使用应用内 Theater Mode；Browser Fullscreen 为二级可选能力（位于“更多”菜单）、隐藏HUD、Lead后Ready快捷行动与持续自由输入；生成、加载、失败可区分，原始错误只进Developer。用户选择文字恢复后生成明确的text artifact，通过原有状态提交，不把它计作视频成功。
 
-当前 AT-80 已由1920×1080实际 A–F角色作用域回归重新验证，上传/选择/刷新/版本/Promote均以持久化数据断言，隔离测试媒体生成请求0；详见 `CHARACTER_GRANULARITY_CLOSURE.md`。前端 `npm ci` / build 通过，整合后全套 Backend 为 **195 passed / 0 failed / 6 warnings**。当前《生化危机：黑雨隔离区》已通过 Standard UI 逐页检查参数并显式审阅发布 v0.2.0；完整媒体游玩仍为 PARTIAL。历史真实H3与35项响应式证据保留，但不替代该故事完整E2E；Provider/费用/Ending与最终部署结果以 `BIOHAZARD_FULL_E2E_ACCEPTANCE.md` 为准。
+当前 AT-80 已由1920×1080实际 A–F角色作用域回归重新验证，上传/选择/刷新/版本/Promote均以持久化数据断言，隔离测试媒体生成请求0；详见 `CHARACTER_GRANULARITY_CLOSURE.md`。前端 `npm ci` / build 通过，整合后全套 Backend 为 **197 passed / 0 failed / 6 warnings**。当前《生化危机：黑雨隔离区》已通过 Standard UI 逐页检查参数并显式审阅发布 v0.2.0；完整媒体游玩仍为 PARTIAL。历史真实H3与35项响应式证据保留，但不替代该故事完整E2E；Provider/费用/Ending与最终部署结果以 `BIOHAZARD_FULL_E2E_ACCEPTANCE.md` 为准。
 
-最终后端 compileall / pip check 通过，服务重启于 **9000**；实际返回的 JS/CSS 与最终构建逐字节/SHA-256 一致。用户要求的付费开关保持开启；当前完整媒体 E2E 仍缺 Image Relay key，不能用 Fal 图片替代。部署证据见 `docs/acceptance/biohazard_full_e2e/deployment_final.json`。
+最终后端 compileall / pip check 通过，服务重启于 **9000**；实际返回的 JS/CSS 与最终构建逐字节/SHA-256 一致。用户要求的付费开关保持开启；当前 Relay 凭据已配置；标准视图、Outfit 编辑及完整真实 H3 游玩仍未完成。部署证据见 `docs/acceptance/biohazard_full_e2e/deployment_final.json`。
 
 ## 关键契约
 

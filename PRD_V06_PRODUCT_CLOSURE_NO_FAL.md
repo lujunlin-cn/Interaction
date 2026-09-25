@@ -30,7 +30,7 @@ Final SHA：本报告所在最终提交；交付回复提供完整 SHA，使用 
 
 ## 验证
 
-- Backend：当前整合全套 **195 passed / 0 failed / 6 warnings**，Fal Guard OFF、mock providers、lifecycle disabled；历史 No-Fal 的 63 passed 仅保留为历史记录。
+- Backend：当前整合全套 **197 passed / 0 failed / 6 warnings**，Fal Guard OFF、mock providers、lifecycle disabled；历史 No-Fal 的 63 passed 仅保留为历史记录。
 - Frontend：`npm run build` → **PASS**（TypeScript + Vite）。
 - 最终部署：`npm ci` / build、Backend compileall/pip check PASS；9000服务重启active，JS/CSS响应与最终dist逐字节/SHA-256一致。用户对象保持不变，既有seed启动逻辑仅刷新官方rainy-apartment两行。见 `docs/acceptance/biohazard_full_e2e/deployment_final.json`。
 - Browser UI：1920×1080 mock runtime，无页面异常；Theater、退出、角色 tabs、媒体 Settings、Developer Preflight/Usage Ledger 通过，见 `no_fal_ui_browser.json` 与对应截图。
@@ -44,7 +44,7 @@ Final SHA：本报告所在最终提交；交付回复提供完整 SHA，使用 
 
 这些项目的真实闭环继续独立判定；隔离角色 Scope 回归没有产生任何媒体 generation/edit 请求。当前真实 FULL E2E 已获授权，不能把历史充值阻塞当作最新账号状态。
 
-当前真实故事已通过 Standard UI 逐页检查参数、显式勾选审阅并发布 **v0.2.0**（`ver_00001_b26e3c`），三名角色 pin 为 Leon v8 / Claire v7 / Victor v7。完整 E2E 仍为 PARTIAL：缺少 `IMAGE_PROVIDER_API_KEY`，Claire/Victor 视觉资产及真实 H3 游玩尚未完成。本次修复/复查 continuation 新媒体付费请求为 0；不抹去此前四张 Relay 图片与一次 Fal HTTP attempt。详见 `BIOHAZARD_FULL_E2E_ACCEPTANCE.md`。
+当前真实故事已通过 Standard UI 逐页检查参数、显式勾选审阅并发布 **v0.2.0**（`ver_00001_b26e3c`），三名角色 pin 为 Leon v8 / Claire v7 / Victor v7。完整 E2E 仍为 PARTIAL：Relay 已生成 UI 创建的 Claire/Victor 4K candidates，但标准视图/Outfit 编辑返回 transient 502/network failures，真实 H3 游玩尚未完成。本轮没有 Fal 图片请求；凭据只存在忽略的 `backend/.env`。详见 `BIOHAZARD_FULL_E2E_ACCEPTANCE.md` 与 `docs/acceptance/biohazard_full_e2e/RELAY_VISUAL_CONTINUATION.md`。
 
 ## 仍存在的非 Fal P0
 

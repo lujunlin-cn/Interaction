@@ -12,7 +12,7 @@
 
 历史无费用复验见 [NO_COST_E2E_ACCEPTANCE.md](NO_COST_E2E_ACCEPTANCE.md)。2026-09-25 新增的角色 Scope A–F 浏览器回归独立使用 mock / Fal Guard OFF，付费媒体请求 0；不代表正在进行的真实 FULL E2E 总请求为 0。完整付费验收与计费记录以 BIOHAZARD_FULL_E2E_ACCEPTANCE.md 为准。当前图片 Relay 是 USER-approved cost optimization；该轮图片必须走 Relay，Fal 仅用于 H3。
 
-2026-09-25 最终整合回归：**Backend 195 passed / 0 failed / 6 warnings**（mock providers、Fal Guard OFF、lifecycle disabled）；`compileall` / `pip check` / `npm ci` / frontend build PASS。9000服务已重启，JS/CSS实际响应与最终dist逐字节/SHA-256一致；`docs/acceptance/biohazard_full_e2e/deployment_final.json`。当前生化危机故事已通过真实 Standard UI 参数复查、显式审阅与发布 **v0.2.0**（`ver_00001_b26e3c`）；角色 pin 为 Leon v8 / Claire v7 / Victor v7。其 FULL E2E 仍为 **PARTIAL**：Relay key 缺失，三角色视觉资产未齐、无成功 H3 视频；不得借历史缓存或上述离线测试提升真实 Player 验收状态。详见 [BIOHAZARD_FULL_E2E_ACCEPTANCE.md](BIOHAZARD_FULL_E2E_ACCEPTANCE.md)。
+2026-09-25 最终整合回归：**Backend 197 passed / 0 failed / 6 warnings**（mock providers、Fal Guard OFF、lifecycle disabled）；`compileall` / `pip check` / `npm ci` / frontend build PASS。9000服务已重启，JS/CSS实际响应与最终dist逐字节/SHA-256一致；`docs/acceptance/biohazard_full_e2e/deployment_final.json`。当前生化危机故事已通过真实 Standard UI 参数复查、显式审阅与发布 **v0.2.0**（`ver_00001_b26e3c`）；角色 pin 为 Leon v8 / Claire v7 / Victor v7。其 FULL E2E 仍为 **PARTIAL**：Relay 已生成三角色共 10 张 4K Candidate 证据，但标准视图、Outfit 编辑未完成，无成功 H3 视频；不得借历史缓存或上述离线测试提升真实 Player 验收状态。详见 [BIOHAZARD_FULL_E2E_ACCEPTANCE.md](BIOHAZARD_FULL_E2E_ACCEPTANCE.md)。
 
 | AT | 用例 | 最新判定 | 本轮证据/限制 |
 | --- | --- | --- | --- |

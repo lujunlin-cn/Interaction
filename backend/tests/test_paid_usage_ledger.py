@@ -140,6 +140,32 @@ def test_explicit_model_rejection_counts_two_attempts(monkeypatch):
     assert sum(e["external_http_attempts"] for e in entries) == 2
 
 
+@pytest.mark.parametrize("edit", [False, True])
+def test_relay_uses_ordered_three_model_fallback(monkeypatch, edit):
+    from app.config import settings
+    from app.providers.real import OpenAIImageProvider, usage_ledger
+
+    monkeypatch.setattr(settings, "image_provider_fallback_model", "gpt-image-2.5-flare")
+    monkeypatch.setattr(settings, "image_provider_fallback_model_2", "gpt-image-2.5-sunburst")
+    monkeypatch.setattr(settings, "image_provider_fallback_model_3", "gpt-image-2")
+    calls = []
+
+    def responder(method, url, kwargs):
+        calls.append(kwargs["json"]["model"])
+        if len(calls) < 4:
+            return response(503, {"error": {"message": "temporarily unavailable"}}, url, f"failed-{len(calls)}")
+        return response(200, {"model": "gpt-image-2", "data": [{"url": "https://example.invalid/image"}]}, url, "accepted")
+
+    stub_http(monkeypatch, responder)
+    request = {"resolution": "4K", "prompt": "portrait"}
+    if edit:
+        request["image_urls"] = ["https://example.invalid/reference"]
+    result = asyncio.run((OpenAIImageProvider("https://example.invalid", "secret", "preferred").edit if edit else OpenAIImageProvider("https://example.invalid", "secret", "preferred").generate)(request))
+    assert calls == ["preferred", "gpt-image-2.5-flare", "gpt-image-2.5-sunburst", "gpt-image-2"]
+    assert result["model"] == "gpt-image-2"
+    assert len(usage_ledger()) == 4
+
+
 def test_fal_guard_and_request_id_are_durable(monkeypatch):
     from app.config import settings
     from app.providers.real import FalGenerationError, FalH3MaxProvider, reset_fal_circuit, usage_ledger

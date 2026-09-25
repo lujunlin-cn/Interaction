@@ -857,7 +857,9 @@ class OpenAIImageProvider:
         return {"image_generation": "openai_compatible", "image_edit": "openai_compatible",
                 "endpoint_generation": f"{self.base_url}/v1/images/generations",
                 "endpoint_edit": f"{self.base_url}/v1/images/edits",
-                "model": self.model, "fallback_model": settings.image_provider_fallback_model}
+                "model": self.model, "fallback_model": settings.image_provider_fallback_model,
+                "fallback_model_2": settings.image_provider_fallback_model_2,
+                "fallback_model_3": settings.image_provider_fallback_model_3}
 
     @staticmethod
     def _size(resolution: str) -> str:
@@ -986,16 +988,7 @@ class OpenAIImageProvider:
                    "style": request.get("style", "vivid"),
                    "n": max(1, min(int(request.get("num_images", request.get("n", 2))), 10)),
                    "response_format": "url"}
-        try:
-            data = await self._request("generations", payload)
-        except httpx.HTTPStatusError as exc:
-            # The relay's alternate model is only used for an explicit model
-            # rejection; transient/auth failures are surfaced unchanged.
-            if not self._unsupported_model(exc) or not settings.image_provider_fallback_model \
-                    or payload["model"] == settings.image_provider_fallback_model:
-                raise
-            payload["model"] = settings.image_provider_fallback_model
-            data = await self._request("generations", payload)
+        data = await self._request_with_model_fallback("generations", payload)
         return self._result(data, payload, request, resolution)
 
     async def edit(self, request: dict) -> dict:
@@ -1009,8 +1002,40 @@ class OpenAIImageProvider:
             raise RuntimeError("IMAGE_EDIT requires image_urls")
         # Many OpenAI-compatible relays accept image[] as URL strings.
         payload["image"] = urls[:4]
-        data = await self._request("edits", payload)
+        data = await self._request_with_model_fallback("edits", payload)
         return self._result(data, payload, request, resolution)
+
+    async def _request_with_model_fallback(self, path: str, payload: dict) -> dict:
+        """Try the configured Relay model, then explicit Relay fallbacks.
+
+        A fallback is allowed only for provider/model rejection or transient
+        provider failure. Authentication, quota and invalid-request failures
+        stop immediately; Fal is never consulted by this path.
+        """
+        requested_model = payload["model"]
+        models = [requested_model]
+        for model in (settings.image_provider_fallback_model,
+                      settings.image_provider_fallback_model_2,
+                      settings.image_provider_fallback_model_3):
+            if model and model not in models:
+                models.append(model)
+        last: Exception | None = None
+        for index, model in enumerate(models):
+            payload["model"] = model
+            try:
+                return await self._request(path, payload)
+            except httpx.HTTPStatusError as exc:
+                last = exc
+                code = exc.response.status_code
+                retryable = self._unsupported_model(exc) or code in (500, 502, 503, 504)
+                if not retryable or index == len(models) - 1:
+                    raise
+            except (httpx.TimeoutException, httpx.RequestError) as exc:
+                last = exc
+                if index == len(models) - 1:
+                    raise
+        assert last is not None
+        raise last
 
     async def health(self) -> bool:
         return bool(self.base_url and self.api_key)
