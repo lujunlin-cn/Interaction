@@ -3,7 +3,7 @@
 日期：2026-09-25。结论：**PARTIAL**。
 
 - 起始/PRD SHA：`b055674aa0702fc1c1ed50f7c3ee62e4ea43dc88`
-- Final Candidate SHA：`以最终 `git rev-parse HEAD` 为准`
+- Final Candidate SHA：以最终 git rev-parse HEAD 为准
 - 交付提交只新增文档/证据，最终Git SHA以main和交付回复为准；不把文档提交冒充新一轮Provider测试。
 
 | 项目 | 结果 | 证据与范围 |

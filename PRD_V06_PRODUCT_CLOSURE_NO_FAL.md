@@ -1,7 +1,7 @@
 # PRD v0.6 Product Closure（No-Fal 本轮）
 
 Start SHA：`deb92fdbb9c7b6f9b56e517b35add290f8d3063f`
-Final SHA：`以最终 `git rev-parse HEAD` 为准`
+Final SHA：以最终 git rev-parse HEAD 为准
 
 Fal Paid Generation Enabled：`false`
 Fal paid HTTP attempts：**0**
