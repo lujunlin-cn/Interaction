@@ -1,6 +1,6 @@
 # Final Gap Report · PRD v0.6
 
-最终应用代码候选：`15855a658a63626a0f17d64239ee3b3aecd25f57`。需求冻结/起点：`b055674aa0702fc1c1ed50f7c3ee62e4ea43dc88`。
+最终应用代码候选：`以最终 `git rev-parse HEAD` 为准`。需求冻结/起点：`b055674aa0702fc1c1ed50f7c3ee62e4ea43dc88`。
 本报告取代此前旧SHA和“旧现状→新修复”混合结论。详细验收见 [LATEST_PRD_UX_ACCEPTANCE.md](LATEST_PRD_UX_ACCEPTANCE.md)。
 
 ## CLOSED

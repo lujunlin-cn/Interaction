@@ -3,7 +3,7 @@
 基于 PRD v0.6 Final Closure 的可运行实现：React+TypeScript 前端 + FastAPI + PostgreSQL 后端，
 部署目标为 DGX Spark（`/home/hajimi2025/interaction`）。
 
-最新应用代码候选：`15855a658a63626a0f17d64239ee3b3aecd25f57`。PRD冻结基线包含Q01–Q129、FR-001–120、AT-01–98。整体结论 **PARTIAL**，详见 [最新UX验收](LATEST_PRD_UX_ACCEPTANCE.md) 与 [封版报告](FINAL_CLOSURE_REPORT.md)。
+最新应用代码候选：`以最终 `git rev-parse HEAD` 为准`。PRD冻结基线包含Q01–Q129、FR-001–120、AT-01–98。整体结论 **PARTIAL**，详见 [最新UX验收](LATEST_PRD_UX_ACCEPTANCE.md) 与 [封版报告](FINAL_CLOSURE_REPORT.md)。
 
 ## 架构
 
