@@ -1,0 +1,65 @@
+{
+  "started_at": "2026-09-24T23:49:19.692Z",
+  "checks": [
+    {
+      "name": "AT-84 Theater Mode",
+      "status": "PASS",
+      "theater": true,
+      "fullscreen": false,
+      "sidebar": false,
+      "stage": {
+        "x": 0,
+        "y": 0,
+        "width": 1920,
+        "height": 997.75,
+        "top": 0,
+        "right": 1920,
+        "bottom": 997.75,
+        "left": 0
+      },
+      "decision": false,
+      "agency": true,
+      "hud": true
+    },
+    {
+      "name": "Theater exit state",
+      "status": "PASS",
+      "theater": false,
+      "fullscreen": false,
+      "sidebar": true,
+      "input": true
+    },
+    {
+      "name": "Character Studio tabs",
+      "status": "PASS",
+      "tabs": [
+        "概览",
+        "身份",
+        "造型",
+        "姿势与动作",
+        "声音",
+        "使用记录",
+        "版本"
+      ]
+    },
+    {
+      "name": "Outfit and asset actions",
+      "status": "PASS"
+    },
+    {
+      "name": "Voice tab",
+      "status": "PASS"
+    },
+    {
+      "name": "Media settings standard",
+      "status": "PASS"
+    },
+    {
+      "name": "Developer test override and preflight",
+      "status": "PASS"
+    }
+  ],
+  "errors": [],
+  "fal_paid_enabled": false,
+  "usage_ledger_items": 0
+}

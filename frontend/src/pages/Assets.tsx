@@ -17,6 +17,7 @@ export default function Assets() {
   const [filter, setFilter] = useState("all");
   const [binding, setBinding] = useState("");
   const [role, setRole] = useState("identity");
+  const [generation, setGeneration] = useState<any>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const sid = ui.editId;
@@ -24,6 +25,7 @@ export default function Assets() {
     if (sid) api.listAssets(sid).then((r) => setItems(r.items)).catch(() => {});
   };
   useEffect(reload, [sid]);
+  useEffect(() => { api.devGenerationSettings().then(setGeneration).catch(() => {}); }, []);
   useEffect(() => { if (sid) api.getScenario(sid).then(d => setBindings([
     ...d.characters.map(c => ({ id: c.id, label: c.identity })),
     ...d.world.locations.split("\n").filter(Boolean).map(l => { const [id, label] = l.split("｜"); return { id, label: label || "故事地点" }; }),
@@ -34,6 +36,13 @@ export default function Assets() {
   const shown = items.filter((a) => filter === "all" || a.type === filter);
   return (
     <>
+      <section className="card asset-ai-generation">
+        <div className="row"><div className="grow"><h3>AI 生成图片</h3><p className="muted">用于场景、物件、背景或其他通用素材。当前云端生成受保险丝控制，已有素材和上传入口不受影响。</p></div>
+          <button className="primary" onClick={() => generation?.fal_paid_generation_enabled
+            ? toast("请在素材生成流程中确认提示词和分辨率后继续。")
+            : toast("当前云端图片生成暂时不可用，可以上传已有素材，稍后再试。")}>AI 生成图片</button></div>
+        {ui.mode === "developer" && <p className="muted">Guard：{generation?.fal_paid_generation_enabled ? "可用" : "已暂停"} · 默认 {generation?.image_resolution ?? "0.5K"}</p>}
+      </section>
       <div className="card">
         <div className="row">
           <h3 className="grow">素材（{items.length}）</h3>

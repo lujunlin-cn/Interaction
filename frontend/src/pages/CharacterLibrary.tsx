@@ -5,7 +5,8 @@ import { setState, toast, useUi } from "../store";
 import CharacterProfile from "../components/CharacterProfile";
 import type { Asset, CharacterAsset, CharacterVersion, GlobalCharacter } from "../types";
 
-const ROLE_LABELS: Record<string,string> = {front:"正面主图",three_quarter:"四分之三视图",side:"侧面视图",back:"背面视图",full_front:"全身正面",full_side:"全身侧面",outfit:"造型参考",pose:"姿势参考",motion:"动作参考",voice:"声音参考",derived:"编辑后的形象"};
+const ROLE_LABELS: Record<string,string> = {front:"主身份图",three_quarter:"四分之三视图",side:"侧面视图",back:"背面视图",full_front:"全身正面",full_side:"全身侧面",outfit:"造型参考",pose:"姿势参考",motion:"动作参考",voice:"声音参考",derived:"编辑后的形象"};
+const STUDIO_TABS = [["overview", "概览"], ["identity", "身份"], ["appearance", "造型"], ["motion", "姿势与动作"], ["voice", "声音"], ["usage", "使用记录"], ["versions", "版本"]] as const;
 export default function CharacterLibrary() {
   const ui = useUi();
   const [items, setItems] = useState<GlobalCharacter[]>([]);
@@ -24,7 +25,7 @@ export default function CharacterLibrary() {
     <>
       <div className="task-head">
         <div className="grow">
-          <p className="muted">跨故事共享稳定的角色身份资产。故事使用的是角色快照，不会被角色库的后续修改自动覆盖。</p>
+          <p className="muted">角色库保存角色长期稳定的身份；故事可以继承它，也可以只在当前故事里覆盖。</p>
         </div>
         <button className="primary" onClick={() => setCreateOpen(true)}>新建角色</button>
       </div>
@@ -71,6 +72,8 @@ function CharacterCreate({ onClose, onCreated }: { onClose: () => void; onCreate
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [createdId, setCreatedId] = useState<string | null>(null);
+  const [paidEnabled, setPaidEnabled] = useState(false);
+  useEffect(() => { api.devGenerationSettings().then((v) => setPaidEnabled(Boolean(v.fal_paid_generation_enabled))).catch(() => {}); }, []);
   const submit = async () => {
     if (!name.trim() || busy) return;
     setBusy(true);
@@ -78,8 +81,12 @@ function CharacterCreate({ onClose, onCreated }: { onClose: () => void; onCreate
       const created = createdId ? { id: createdId } : await api.createCharacter({ name: name.trim(), bio, personality });
       setCreatedId(created.id);
       if (kind === "ai") {
-        await api.aiGenerateCharacter(created.id, prompt || bio, 2);
-        toast("角色已创建，2 张候选图正在角色 Studio 中展示。请选图并确认主形象。");
+        if (!paidEnabled) {
+          toast("角色已创建。当前云端形象生成暂时不可用，可先使用文字角色或上传已有图片。");
+        } else {
+          await api.aiGenerateCharacter(created.id, prompt || bio, 2);
+          toast("角色已创建，2 张候选图正在角色 Studio 中展示。请选图并确认主形象。");
+        }
       } else if (kind === "image" && file) {
         const asset = await api.importCharacterBaseline(created.id, file);
         toast("图片已作为身份参考保存，请在 Studio 中确认主形象。");
@@ -129,6 +136,8 @@ function CharacterDetail({ ch, onBack, onSaved }: {
   const [scenarioId, setScenarioId] = useState("");
   const [snapshots, setSnapshots] = useState<any[]>([]);
   const [resolver, setResolver] = useState<any>(null);
+  const [tab, setTab] = useState<(typeof STUDIO_TABS)[number][0]>("overview");
+  const [paidEnabled, setPaidEnabled] = useState(false);
   const [diff, setDiff] = useState<any>(null);
   const [overrideJson, setOverrideJson] = useState('{"appearance":""}');
   const [overrideText, setOverrideText] = useState("");
@@ -160,6 +169,7 @@ function CharacterDetail({ ch, onBack, onSaved }: {
     ? api.listCharacterSnapshots(scenarioVersionId).then((r) => setSnapshots(r.items)).catch(() => {})
     : undefined;
   useEffect(() => { if (scenarioVersionId) void loadSnapshots(); }, [scenarioVersionId]);
+  useEffect(() => { api.devGenerationSettings().then((v) => setPaidEnabled(Boolean(v.fal_paid_generation_enabled))).catch(() => {}); }, []);
 
   const run = async (label: string, action: () => Promise<unknown>) => {
     setBusy(label);
@@ -220,18 +230,22 @@ function CharacterDetail({ ch, onBack, onSaved }: {
         <div className="grow">
           <button className="text-button" onClick={onBack}>← 返回角色库</button>
           <h2>{ch.name}</h2>
-          <p className="muted">全局角色 · v{ch.version}</p>
+          <p className="muted">角色库定义 · v{ch.version}</p>
         </div>
         <span className="avatar large">{ch.name.slice(0, 1)}</span>
       </div>
-      <section className="card"><h3>AI 对这个角色的理解</h3><p>{ch.bio}</p>
+      <nav className="studio-tabs" aria-label="角色工作台">
+        {STUDIO_TABS.map(([id, label]) => <button key={id} className={tab === id ? "active" : ""} onClick={() => setTab(id)}>{label}</button>)}
+      </nav>
+      {tab === "overview" && <section className="card"><h3>AI 对这个角色的理解</h3><p>{ch.bio}</p>
         <button disabled={!!busy} onClick={() => run("已整理角色建议", async () => setUnderstanding(await api.characterUnderstanding(ch.id)))}>让 AI 补充可选信息</button>
         {understanding && <div className="understanding-grid">{Object.entries(understanding).map(([key, value]) => <div className="understanding-item" key={key}><p>{value}</p><button onClick={() => run("已确认角色建议", async () => { await api.updateCharacter(ch.id, { [key]: value }); setUnderstanding(old => { const n = { ...old }; delete n[key]; return n; }); })}>接受</button><button onClick={() => setUnderstanding(old => { const n = { ...old }; delete n[key]; return n; })}>忽略</button></div>)}</div>}
-      </section>
-      <CharacterProfile scope="global" values={{ identity: ch.name, bio: ch.bio, personality: ch.personality,
+      </section>}
+      {tab === "identity" && <CharacterProfile scope="global" onlySections={["身份", "人格与动机", "认知与秘密", "关系"]} values={{ identity: ch.name, bio: ch.bio, personality: ch.personality,
         visual_state: ch.appearance, ...Object.fromEntries(["desire", "fear", "secrets", "knowledge", "relationship"].map(k => [k, (ch as any)[`default_${k}`]])) }}
-        onChange={patch => run("已保存为全局新版本", () => api.updateCharacter(ch.id, Object.fromEntries(Object.entries(patch).map(([k, v]) => [k === "identity" ? "name" : k === "visual_state" ? "appearance" : ["desire", "fear", "secrets", "knowledge", "relationship"].includes(k) ? `default_${k}` : k, v]))))}
-        extras={{ "外观与造型": <a href="#studio-images">管理形象与造型</a>, "声音与动作": <a href="#studio-voice">管理声音与动作参考</a>, "使用与版本": <a href="#studio-versions">查看使用记录与版本</a> }} />
+        onChange={patch => run("已保存为角色库新版本", () => api.updateCharacter(ch.id, Object.fromEntries(Object.entries(patch).map(([k, v]) => [k === "identity" ? "name" : k === "visual_state" ? "appearance" : ["desire", "fear", "secrets", "knowledge", "relationship"].includes(k) ? `default_${k}` : k, v]))))}
+        extras={{}} />}
+      {tab === "appearance" && <>
       <section id="studio-images" className="focus-section">
         <h3>{developer ? "Outfit 管理" : "造型管理"}</h3>
         <div className="row">
@@ -241,7 +255,8 @@ function CharacterDetail({ ch, onBack, onSaved }: {
             const next = await api.listCharacterOutfits(ch.id); setOutfits(next.items);
           })}>添加造型</button>
         </div>
-        <div className="pillrow">{outfits.map((o) => <span className="soft-tag" key={o.id}>{o.name}</span>)}</div>
+        <div className="pillrow">{outfits.map((o) => <span className="soft-tag" key={o.id}>{o.name}{o.is_default ? " · 默认造型" : ""}</span>)}</div>
+        <p className="muted">每套造型可继续上传 front / side / back / full body 参考图。生成按钮遵守当前云端保险丝。</p>
       </section>
       <section className="focus-section">
         <h3>Character Studio</h3>
@@ -252,7 +267,9 @@ function CharacterDetail({ ch, onBack, onSaved }: {
               placeholder="例如：深色雨衣、短发、疲惫但警觉" /></label>
           <div className="row" style={{ alignItems: "end" }}>
             <button className="primary" disabled={!!busy}
-              onClick={() => run("已生成 2 张候选图", () => api.aiGenerateCharacter(ch.id, prompt, 2))}>
+              onClick={() => paidEnabled
+                ? run("已生成 2 张候选图", () => api.aiGenerateCharacter(ch.id, prompt, 2))
+                : toast("当前云端形象生成暂时不可用。你仍可以上传已有素材或编辑角色文字信息。")}>
               {busy === "已生成 2 张候选图" ? "生成中…" : "AI 生成 2 张候选图"}
             </button>
             <button disabled={!!busy || !studioAssets.find((a) => a.status === "CANONICAL" && a.role === "front")}
@@ -276,12 +293,15 @@ function CharacterDetail({ ch, onBack, onSaved }: {
           <option value="">选择候选图或主形象</option>
           {studioAssets.map((a) => <option value={a.id} key={a.id}>{ROLE_LABELS[a.role] || (developer ? a.role : "参考图")} · {developer ? `${a.status} · ${a.id}` : (a.status === "CANONICAL" ? "主形象" : "候选图")}</option>)}
         </select></label>
+        <div className="toolbar quick-edit-actions" aria-label="快捷编辑">
+          {([['换装','换成黄色雨衣，保持身份不变'], ['换背景','更换为故事场景背景'], ['换表情','调整为克制、警觉的表情'], ['换姿势','调整为站立观察姿势'], ['换视角','改为三分之四视角']] as const).map(([label, instruction]) => <button key={label} className="small" onClick={() => { setEditInstruction(instruction); if (!paidEnabled) toast("当前云端形象生成暂时不可用。快捷编辑已保留为待执行意图。"); }}>{label}</button>)}
+        </div>
         {confirmViews && <div className="notice">
-          <b>生成标准参考图？将基于主图生成其他视角，请确认后继续。</b>
+              <b>{paidEnabled ? "生成标准参考图？将基于主图生成其他视角，请确认后继续。" : "当前云端形象生成暂时不可用。"}</b>
           <div className="row">
-            <button className="primary" onClick={() => run("标准视图已生成", async () => {
-              await api.standardCharacterViews(ch.id, confirmViews); setConfirmViews(null);
-            })}>确认生成</button>
+            <button className="primary" onClick={() => paidEnabled
+              ? run("标准视图已生成", async () => { await api.standardCharacterViews(ch.id, confirmViews); setConfirmViews(null); })
+              : toast("当前云端形象生成暂时不可用，请稍后重试或上传已有标准参考图。")}>确认生成</button>
             <button onClick={() => setConfirmViews(null)}>取消</button>
           </div>
         </div>}
@@ -291,11 +311,14 @@ function CharacterDetail({ ch, onBack, onSaved }: {
               placeholder="例如：保持身份不变，换成黄色雨衣，背景改为楼梯间" /></label>
           <div className="row" style={{ alignItems: "end" }}>
             <button disabled={!!busy || !editInstruction || !editSourceId}
-              onClick={() => run(developer ? "编辑 Candidate 已生成" : "新的编辑形象已生成", () => api.editCharacterImage(ch.id, editSourceId, editInstruction))}>{developer ? "生成编辑 Candidate" : "生成编辑形象"}</button>
+              onClick={() => paidEnabled
+                ? run(developer ? "编辑 Candidate 已生成" : "新的编辑形象已生成", () => api.editCharacterImage(ch.id, editSourceId, editInstruction))
+                : toast("当前云端形象生成暂时不可用。原始形象保持不变。")}>{developer ? "生成编辑 Candidate" : "生成编辑形象"}</button>
           </div>
         </div>
-      </section>
-      <section id="studio-versions" className="focus-section">
+        {!paidEnabled && <div className="notice warn">当前云端形象生成暂时不可用。可上传已有图片、编辑文字资料，或稍后重试。</div>}
+      </section></>}
+      {(tab === "usage" || tab === "versions") && <section id="studio-versions" className="focus-section">
         <h3>{developer ? "Character Version / Diff" : "版本与变化"}</h3>
         {versions.length === 0 ? <p className="muted">保存资料或主形象后会形成版本。</p> : <table className="dev"><thead><tr><th>版本</th><th>变更</th><th>时间</th></tr></thead><tbody>
           {versions.map((v) => <tr key={v.id}><td>v{v.version}</td><td>{developer ? v.change_type : ({ IDENTITY: "身份变化", APPEARANCE: "造型变化", METADATA: "资料变化", ASSET_ADDITION: "新增参考图" } as Record<string, string>)[v.change_type] || "角色更新"}</td><td>{new Date(v.created_at).toLocaleString()}</td></tr>)}
@@ -318,20 +341,20 @@ function CharacterDetail({ ch, onBack, onSaved }: {
         </div>
         {snapshots.filter((s) => s.global_character_id === ch.id).map((s) => <div className="notice" key={s.id}>
           <div className="row"><b className="grow">当前故事正在使用角色 v{s.character_version}</b>{developer && <span className="status-pill">Snapshot {s.id}</span>}</div>
-          {!developer && <p className="muted">全局角色已有 v{ch.version}。故事快照会保持当前版本，直到你选择更新。</p>}
-          {developer ? <label><span>Local Override JSON</span><textarea value={overrideJson} onChange={(e) => setOverrideJson(e.target.value)} /></label>
+          {!developer && <p className="muted">角色库已有 v{ch.version}。故事快照会保持当前版本，直到你选择更新。</p>}
+          {developer ? <><label><span>Local Override JSON</span><textarea value={overrideJson} onChange={(e) => setOverrideJson(e.target.value)} /></label><ReferenceOverrideEditor snapshot={s} onResolved={setResolver} /></>
             : <label><span>本故事专属修改</span><textarea value={overrideText} onChange={(e) => setOverrideText(e.target.value)} placeholder="例如：本故事中换成黄色雨衣，但保持身份不变" /></label>}
           <div className="row">
             <button className="small" onClick={() => run(developer ? "Local Override 已保存" : "本故事修改已保存", async () => {
               await api.overrideCharacterSnapshot(s.id, developer ? JSON.parse(overrideJson) : { appearance: overrideText }); loadSnapshots();
             })}>{developer ? "Local Override" : "保存本故事修改"}</button>
-            <button className="small" onClick={() => run(developer ? "已提升到全局角色" : "已保存为全局新版本", () => api.promoteCharacterSnapshot(s.id))}>{developer ? "Promote Global" : "保存为全局新版本"}</button>
+            <button className="small" onClick={() => run(developer ? "已提升到全局角色" : "已保存为角色库新版本", () => api.promoteCharacterSnapshot(s.id))}>{developer ? "Promote Global" : "保存为角色库新版本"}</button>
             {developer && <button className="small" onClick={() => api.resolveCharacterReferences(s.id, "studio-preview").then(setResolver).then(() => toast("已更新本故事的参考图"))}>{developer ? "Resolve References" : "更新制作参考"}</button>}
           </div>
         </div>)}
         {resolver && (developer ? <pre className="mono" style={{ whiteSpace: "pre-wrap" }}>{JSON.stringify(resolver, null, 2)}</pre> : <div className="notice">制作参考已解析，可用于本故事后续场景。</div>)}
-      </section>
-      <section className="focus-section">
+      </section>}
+      {tab === "appearance" && <section className="focus-section">
         <h3>视觉身份</h3>
         <RefSlotGrid ch={ch} assets={assets} onPick={bindRef} onUpload={uploadRef}
           slots={[
@@ -341,18 +364,43 @@ function CharacterDetail({ ch, onBack, onSaved }: {
           ]} />
         <RefSlotGrid ch={ch} assets={assets} onPick={bindRef} onUpload={uploadRef} multi
           slots={[{ key: "ref_other_assets", title: "其他参考图片", accept: "image" }]} />
-        <p className="muted">形象参考绑定后随角色快照固定；上传的素材保存在角色全局素材池。</p>
-      </section>
-      <section id="studio-voice" className="focus-section">
-        <h3>声音 / 动作身份</h3>
+        <p className="muted">形象参考绑定后随角色快照固定；上传的素材保存在角色库素材池。</p>
+      </section>}
+      {(tab === "motion" || tab === "voice") && <section id="studio-voice" className="focus-section">
+        <h3>{tab === "voice" ? "声音" : "姿势与动作"}</h3>
         <RefSlotGrid ch={ch} assets={assets} onPick={bindRef} onUpload={uploadRef}
-          slots={[
-            { key: "ref_voice_asset", title: "主声音参考", accept: "voice" },
-            { key: "ref_motion_asset", title: "动作参考（视频）", accept: "video" },
-          ]} />
-      </section>
+          slots={tab === "voice" ? [
+            { key: "ref_voice_asset", title: "主声音（Canonical）", accept: "voice" },
+            { key: "alternate_voice_assets", title: "备用声音", accept: "voice" },
+          ] : [
+            { key: "ref_pose_assets", title: "静态姿势参考", accept: "image" },
+            { key: "ref_motion_assets", title: "动作视频参考", accept: "video" },
+          ]} multi />
+      </section>}
     </>
   );
+}
+
+function ReferenceOverrideEditor({ snapshot, onResolved }: { snapshot: any; onResolved: (v: any) => void }) {
+  const initial = snapshot.frozen_asset_refs || {};
+  const [images, setImages] = useState<string[]>(() => ["front", "three_quarter", "side", "full_front"].map(k => initial[k]).filter(Boolean));
+  const [voice, setVoice] = useState(String(initial.voice || ""));
+  const [motion, setMotion] = useState(String(initial.motion || ""));
+  const [newRef, setNewRef] = useState("");
+  const save = async () => {
+    const override = { image_refs: images, voice_ref: voice || null, motion_ref: motion || null };
+    await api.overrideCharacterSnapshot(snapshot.id, { reference_override: override });
+    const resolved = await api.resolveCharacterReferences(snapshot.id, "studio-preview", undefined, override);
+    onResolved(resolved); toast("Reference Override 已应用到本次制作预览。");
+  };
+  return <div className="reference-override-editor">
+    <h4>Developer Reference Override</h4>
+    <p className="muted">可移除、添加、调整顺序，并指定 Voice / Motion；只影响本次制作参考。</p>
+    <div className="override-list">{images.map((ref, i) => <div className="row" key={`${ref}-${i}`}><span className="mono grow">{i + 1}. {ref}</span><button className="small" disabled={i === 0} onClick={() => setImages(v => { const n = [...v]; [n[i - 1], n[i]] = [n[i], n[i - 1]]; return n; })}>上移</button><button className="small" disabled={i === images.length - 1} onClick={() => setImages(v => { const n = [...v]; [n[i + 1], n[i]] = [n[i], n[i + 1]]; return n; })}>下移</button><button className="small danger" onClick={() => setImages(v => v.filter((_, j) => j !== i))}>移除</button></div>)}</div>
+    <div className="row"><input value={newRef} onChange={e => setNewRef(e.target.value)} placeholder="输入图片 asset/ref" /><button className="small" disabled={!newRef.trim()} onClick={() => { setImages(v => [...v, newRef.trim()].slice(0, 4)); setNewRef(""); }}>添加</button></div>
+    <div className="two"><label><span>Voice</span><input value={voice} onChange={e => setVoice(e.target.value)} placeholder="Voice A asset/ref" /></label><label><span>Motion</span><input value={motion} onChange={e => setMotion(e.target.value)} placeholder="run_01 asset/ref" /></label></div>
+    <button className="small" onClick={() => void save()}>使用此 Override</button>
+  </div>;
 }
 
 /** ref_* 槽位组：已绑定素材缩略预览 + 从角色素材池选择 / 直接上传 / 解绑 */

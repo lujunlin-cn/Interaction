@@ -154,6 +154,12 @@ class ScenarioCharacter(BaseModel):
     visual_state: str = ""
     global_character_id: Optional[str] = None       # 绑定全局角色库条目（版本快照）
     global_character_version: Optional[int] = None
+    # 故事级 Overlay；空值继承角色库，显式值只写当前故事。
+    outfit_id: Optional[str] = None
+    pose_refs: list[str] = Field(default_factory=list)
+    motion_refs: list[str] = Field(default_factory=list)
+    voice_id: Optional[str] = None
+    overlay_sources: dict[str, str] = Field(default_factory=dict)
 
 
 class DramaSpec(BaseModel):
@@ -245,6 +251,12 @@ class GlobalCharacter(BaseModel):
     ref_other_assets: list[str] = Field(default_factory=list)
     ref_voice_asset: Optional[str] = None
     ref_motion_asset: Optional[str] = None
+    # v0.6 shared Character Studio granularity. These fields are optional so
+    # existing rows and text-only characters remain valid.
+    ref_pose_assets: list[str] = Field(default_factory=list)
+    ref_motion_assets: list[str] = Field(default_factory=list)
+    alternate_voice_assets: list[str] = Field(default_factory=list)
+    outfits: list[dict[str, Any]] = Field(default_factory=list)
     current_version_id: Optional[str] = None        # CharacterVersion.id（v0.6）
     version: int = 1
     created_at: int = Field(default_factory=now_ms)

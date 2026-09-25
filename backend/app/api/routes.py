@@ -755,13 +755,15 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
 
     @api.get("/dev/providers")
     async def dev_providers():
+        from ..providers.real import usage_ledger
         return {"mode": router.mode, "profile": router.profile.value,
                 "health": router.health_snapshot(), "matrix": router.route_matrix(),
                 "events": router.events[-100:],
                 "generation": {"fal_paid_generation_enabled": settings.fal_paid_generation_enabled,
                                "image_resolution": settings.image_generation_resolution,
                                "video_resolution": settings.video_generation_resolution,
-                               "aspect_ratio": settings.generation_aspect_ratio}}
+                               "aspect_ratio": settings.generation_aspect_ratio,
+                               "usage_ledger": usage_ledger(50)}}
 
     @api.get("/dev/generation-settings")
     async def dev_generation_settings():
@@ -773,7 +775,8 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
                 "test_max_shots": settings.developer_test_max_shots,
                 "test_shot_duration": settings.developer_test_shot_duration,
                 "max_test_reference_images": settings.max_test_reference_images,
-                "max_test_reference_videos": settings.max_test_reference_videos}
+                "max_test_reference_videos": settings.max_test_reference_videos,
+                "test_override_enabled": settings.developer_test_override_enabled}
 
     @api.post("/dev/generation-settings")
     async def update_generation_settings(data: dict):
@@ -786,6 +789,7 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
             "test_shot_duration": ("developer_test_shot_duration", None),
             "max_test_reference_images": ("max_test_reference_images", range(0, 10)),
             "max_test_reference_videos": ("max_test_reference_videos", range(0, 4)),
+            "test_override_enabled": ("developer_test_override_enabled", {True, False}),
         }
         for key, (attr, choices) in allowed.items():
             if key not in data:
@@ -805,12 +809,26 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
         shots = max(1, int(data.get("shots", settings.developer_test_max_shots)))
         duration = float(data.get("duration", settings.developer_test_shot_duration))
         resolution = data.get("resolution") or settings.video_generation_resolution
-        return {"provider": role, "branches": branches, "shots_per_branch": shots,
+        result = {"provider": role, "branches": branches, "shots_per_branch": shots,
                 "jobs": branches * shots, "total_requested_duration": branches * shots * duration,
                 "resolution": resolution, "aspect_ratio": data.get("aspect_ratio") or settings.generation_aspect_ratio,
                 "reference_images": min(int(data.get("reference_images", 0)), settings.max_test_reference_images),
                 "reference_videos": min(int(data.get("reference_videos", 0)), settings.max_test_reference_videos),
+                "guard": "OPEN" if not settings.fal_paid_generation_enabled else "CLOSED",
+                "circuit": "CLOSED",
+                "test_override_enabled": settings.developer_test_override_enabled,
                 "fal_request_allowed": bool(settings.fal_paid_generation_enabled)}
+        from ..providers.real import fal_circuit_status, _record_usage
+        circuit = fal_circuit_status()
+        result["circuit"] = circuit.get("state", "UNKNOWN")
+        if role in ("h3_max", "nano_banana_2") and not settings.fal_paid_generation_enabled:
+            _record_usage(role, str(data.get("model", "")), "preflight", result, "BLOCKED", "PAID_GENERATION_DISABLED")
+        return result
+
+    @api.get("/dev/usage-ledger")
+    async def dev_usage_ledger(limit: int = 200):
+        from ..providers.real import usage_ledger
+        return {"items": usage_ledger(limit)}
 
     @api.post("/dev/providers/recover")
     async def dev_providers_recover():

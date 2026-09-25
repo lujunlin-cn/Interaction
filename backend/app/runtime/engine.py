@@ -565,7 +565,7 @@ class RuntimeEngine:
             if ready_left:
                 return  # 还有可展示的推荐，等玩家选择
 
-        candidates = (await self.candidate_actions(state))[: settings.target_k]
+        candidates = (await self.candidate_actions(state))[: settings.effective_target_k]
         state.hint_chips = [c["label"] for c in candidates[:3]]
         # 限时互动触发（I02/I03）：Scenario 预先声明 + 时机条件（至少已完成两个有效行动）
         timed_node = self._next_timed_node(state)
@@ -574,7 +574,7 @@ class RuntimeEngine:
         mode = InteractionMode.TIMED if timed_node else InteractionMode.UNTIMED
         source = BranchSource.TIMED if timed_node else BranchSource.RECOMMENDATION
         for cand in candidates:
-            estimated = settings.shots_per_branch * settings.shot_unit_cost
+            estimated = settings.effective_shots_per_branch * settings.shot_unit_cost
             if state.budget.available() < estimated:
                 break  # 预算不足：减少 K，不静默超支
             branch = Branch(
@@ -594,7 +594,7 @@ class RuntimeEngine:
             state.budget.reserved += estimated
             branch_ids.append(branch.id)
         state.epoch = RecommendationEpoch(
-            id=epoch_id, k=len(branch_ids), target_k=settings.target_k,
+            id=epoch_id, k=len(branch_ids), target_k=settings.effective_target_k,
             status="PLANNING", branch_ids=branch_ids, timed=bool(timed_node))
         if timed_node:
             # 确定性超时 fallback 分支（Scenario 预先声明，不允许模型临场改判）
@@ -612,7 +612,7 @@ class RuntimeEngine:
                 expires_at=now_ms() + settings.branch_ttl_seconds * 1000,
             )
             state.branches.append(fb)
-            state.budget.reserved += settings.shots_per_branch * settings.shot_unit_cost
+            state.budget.reserved += settings.effective_shots_per_branch * settings.shot_unit_cost
             state.timed = TimedState(
                 active=True, node_id=timed_node["id"], kind=timed_node["kind"],
                 branch_ids=branch_ids, timeout_seconds=timeout_s,
@@ -650,7 +650,7 @@ class RuntimeEngine:
 
     def _release_budget(self, state: SessionState, branch: Branch) -> None:
         spent = state.budget.spent_by_branch.get(branch.id, 0)
-        estimated = settings.shots_per_branch * settings.shot_unit_cost
+        estimated = settings.effective_shots_per_branch * settings.shot_unit_cost
         releasable = max(0, estimated - spent)
         state.budget.reserved = max(0, state.budget.reserved - releasable)
 
@@ -878,7 +878,7 @@ class RuntimeEngine:
             branch.status = BranchStatus.READY
             branch.ready_at = now_ms()
             branch.pipeline_events.append({"at": now_ms(), "status": "READY"})
-            spent = settings.shots_per_branch * settings.shot_unit_cost
+            spent = settings.effective_shots_per_branch * settings.shot_unit_cost
             state.budget.spent_by_branch[branch.id] = spent
             state.budget.reserved = max(0, state.budget.reserved - spent)
             state.budget.used += spent
@@ -1214,7 +1214,7 @@ class RuntimeEngine:
     async def _shoot_branch(self, state: SessionState, branch: Branch) -> None:
         _, rec, resp = await self.router.call_text(
             "production",
-            messages=[{"role": "system", "content": f"返回 JSON，包含 shots 数组，共 {settings.shots_per_branch} 个镜头，每个 title/prompt/subtitle 为字符串，duration 为 {settings.mock_shot_duration} 秒。prompt 使用完整的具体影视描述，人物和场景保持连续。角色在本故事中的外观：" + json.dumps([{k: c.get(k, "") for k in ("identity", "visual_state")} for c in state.scenario_snapshot.get("characters", [])], ensure_ascii=False)}, {"role": "user", "content":
+            messages=[{"role": "system", "content": f"返回 JSON，包含 shots 数组，共 {settings.effective_shots_per_branch} 个镜头，每个 title/prompt/subtitle 为字符串，duration 为 {settings.effective_shot_duration} 秒。prompt 使用完整的具体影视描述，人物和场景保持连续。角色在本故事中的外观：" + json.dumps([{k: c.get(k, "") for k in ("identity", "visual_state")} for c in state.scenario_snapshot.get("characters", [])], ensure_ascii=False)}, {"role": "user", "content":
                        f"raw_player_input: {branch.label}\n"
                        f"scene_title: {branch.outcome.title if branch.outcome else branch.label}\n"
                        f"scene_text: {branch.narrative[:120]}"}],
@@ -1227,14 +1227,14 @@ class RuntimeEngine:
         branch.shots = [
             ShotPlan(id=f"shot_{i + 1}", index=i + 1,
                      title=s.get("title", f"镜头 {i + 1}"),
-                     duration=float(s.get("duration", settings.mock_shot_duration)),
-                     trim_end=float(s.get("duration", settings.mock_shot_duration)),
+                     duration=min(float(s.get("duration", settings.effective_shot_duration)), settings.effective_shot_duration) if settings.developer_test_override_enabled else float(s.get("duration", settings.effective_shot_duration)),
+                     trim_end=min(float(s.get("duration", settings.effective_shot_duration)), settings.effective_shot_duration) if settings.developer_test_override_enabled else float(s.get("duration", settings.effective_shot_duration)),
                      subtitle=s.get("subtitle", ""), prompt=s.get("prompt", ""),
                      references=refs)
             for i, s in enumerate(raw_shots)
         ] or [ShotPlan(id="shot_1", index=1, title=branch.label,
-                       duration=settings.mock_shot_duration,
-                       trim_end=settings.mock_shot_duration, subtitle=branch.caption,
+                       duration=settings.effective_shot_duration,
+                       trim_end=settings.effective_shot_duration, subtitle=branch.caption,
                        references=refs)]
         branch.shot_count = len(branch.shots)
         branch.routes.append(rec)
@@ -1400,7 +1400,7 @@ class RuntimeEngine:
                         "final_output": str(target),
                         "final_duration": self._ffprobe_duration(target)},
             duration=self._ffprobe_duration(target) or sum(clip_durations) or
-                    sum(s.duration for s in branch.shots) or settings.mock_shot_duration)
+                    sum(s.duration for s in branch.shots) or settings.effective_shot_duration)
         await tracer.emit("assembly.concat", "success",
                           output={"scene": scene_id, "clips": len(clips)},
                           provider="runtime", session_id=state.id, branch_id=branch.id)
@@ -1623,7 +1623,7 @@ class RuntimeEngine:
                     p.progress = min(100.0, p.progress + state.world.fiction_minutes / 4)
 
     def _present(self, state: SessionState, branch: Branch) -> None:
-        duration = branch.artifact.duration if branch.artifact else settings.mock_shot_duration
+        duration = branch.artifact.duration if branch.artifact else settings.effective_shot_duration
         state.player.status = "PLAYING"
         state.player.scene_title = branch.outcome.title if branch.outcome else branch.label
         state.player.scene_text = branch.narrative
@@ -2345,7 +2345,7 @@ class RuntimeEngine:
         family = last.ending_family if last else None
         chars = {c.get("id"): c for c in state.scenario_snapshot.get("characters", [])}
         arc_seq = last.seq if last else 1
-        min_branch_cost = settings.shots_per_branch * settings.shot_unit_cost
+        min_branch_cost = settings.effective_shots_per_branch * settings.shot_unit_cost
         return {
             "family": family,
             "title": _ending_families(state).get(family or "", "篇章收束"),

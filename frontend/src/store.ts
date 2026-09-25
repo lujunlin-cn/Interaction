@@ -34,6 +34,7 @@ export interface UiState {
   characterId: string | null;       // 创作者 tab 里选中的故事角色
   globalCharacterId: string | null; // 角色库里打开的全局角色
   inspectorOpen: boolean;
+  theaterMode: boolean;
   toast: string | null;
   playerView: PlayerView | null;    // WS 推送的最新玩家视图
   display: DisplayPrefs;
@@ -84,6 +85,7 @@ const initial: UiState = {
   characterId: null,
   globalCharacterId: null,
   inspectorOpen: false,
+  theaterMode: false,
   toast: null,
   playerView: null,
   display: loadDisplay(),

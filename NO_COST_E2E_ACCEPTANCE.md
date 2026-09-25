@@ -1,8 +1,8 @@
 # No-cost E2E Acceptance · Fal Safety and Offline Regression
 
 日期：2026-09-25  
-Start SHA：`266520898a296c0b26e25b7cbc79cfbded14b484`  
-Final SHA：最新交付提交（见 `git rev-parse HEAD`）
+Start SHA：`deb92fdbb9c7b6f9b56e517b35add290f8d3063f`
+Final SHA：`15855a658a63626a0f17d64239ee3b3aecd25f57`
 
 ## 费用边界
 

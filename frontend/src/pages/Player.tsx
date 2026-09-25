@@ -74,6 +74,11 @@ export default function Player() {
     document.addEventListener("fullscreenchange", fn); return () => document.removeEventListener("fullscreenchange", fn);
   }, []);
   useEffect(() => {
+    // Theater Mode is an application layout state. It must never depend on
+    // document.fullscreenElement and must not leak after leaving the Player.
+    return () => setState({ theaterMode: false });
+  }, []);
+  useEffect(() => {
     if (sid && developer && ui.inspectorOpen) void api.devState(sid).then(setDevState).catch(error);
   }, [sid, developer, ui.inspectorOpen, view?.player.status]);
 
@@ -114,7 +119,7 @@ export default function Player() {
     <button onClick={() => setState({page: "home", sessionId: null})}>退出故事</button>
   </div>;
   return <div className="player-shell immersive-player" ref={shellRef} data-testid="player-shell" onPointerMove={() => setControlActivity(Date.now())} onPointerDown={() => setControlActivity(Date.now())} onKeyDown={() => setControlActivity(Date.now())}>
-    <header className="player-head"><b className="grow">{view.scenario.title}</b><span className="muted">第 {view.arc.seq} 篇章</span><button className="small" onClick={() => setState({page: "home", sessionId: null})}>退出</button></header>
+    <header className="player-head"><b className="grow">{view.scenario.title}</b><span className="muted">第 {view.arc.seq} 篇章</span><button className="small" onClick={() => setState({page: "home", sessionId: null, theaterMode: false})}>退出</button></header>
     <div className="immersion-layer" data-layer="immersion">
       <div className="player-stage">
         {source && <video key={`${source}:${loadAttempt}`} ref={videoRef} src={source} autoPlay playsInline
@@ -150,8 +155,14 @@ export default function Player() {
     <div className="player-controls" data-visible={showControls}>
       <button className="small" onClick={() => { const v = videoRef.current; if (v) v.paused ? v.play().catch(error) : v.pause(); }}>播放 / 暂停</button>
       <div className="player-progress grow"><div style={{width: `${p.duration ? Math.min(100, p.position / p.duration * 100) : 0}%`}} /></div>
-      <details className="player-more"><summary>更多</summary><div><button onClick={finished}>跳过当前场景</button>{view.generating.length > 0 && <button onClick={() => api.cancelGeneration(sid).catch(error)}>取消生成</button>}{replay && <button onClick={() => setReplay(null)}>返回当前场景</button>}</div></details>
-      <button className="small" onClick={async () => { try { document.fullscreenElement ? await document.exitFullscreen() : await shellRef.current?.requestFullscreen(); } catch (e) { error(e); } }}>{fullscreen ? "退出全屏" : "沉浸全屏"}</button>
+      <span className="player-time" aria-label="播放进度">{Math.floor(p.position)}s / {Math.floor(p.duration)}s</span>
+      <details className="player-more"><summary>··· 更多</summary><div>
+        <button onClick={() => setState({ theaterMode: !ui.theaterMode })}>{ui.theaterMode ? "退出剧场模式" : "进入剧场模式"}</button>
+        <button onClick={async () => { try { document.fullscreenElement ? await document.exitFullscreen() : await shellRef.current?.requestFullscreen(); } catch (e) { error(e); } }}>{fullscreen ? "退出浏览器全屏" : "浏览器全屏"}</button>
+        <button onClick={() => { setReplay(null); setLoadAttempt(x => x + 1); }}>重新播放</button>
+        <button onClick={finished}>跳过当前场景</button>{view.generating.length > 0 && <button onClick={() => api.cancelGeneration(sid).catch(error)}>取消生成</button>}{replay && <button onClick={() => setReplay(null)}>返回当前场景</button>}
+        <button onClick={() => setState({page: "home", sessionId: null, theaterMode: false})}>退出故事</button>
+      </div></details>
       {developer && <button className="small" onClick={() => setState({inspectorOpen: !ui.inspectorOpen})}>Inspector</button>}
     </div>
     {connectionFailed && <p role="status">连接暂时中断，正在重新连接。你的行动草稿仍在这里。</p>}
@@ -159,7 +170,7 @@ export default function Player() {
     {view.last_failed_action && !failed && <div className="notice"><p>这个行动暂时没有生成成功。</p>{recover}</div>}
     {view.messages.length > 0 && <div className="msg-list">{view.messages.slice(-2).map((m,i) => <p key={i}>{m.text}</p>)}</div>}
     {view.pending_intent && <IntentCard key={view.pending_intent.raw_text} sid={sid} intent={view.pending_intent} />}
-    {view.ended && view.ending && <EndingPanel sid={sid} view={view} onReplay={setReplay} />}
+      {view.ended && view.ending && <EndingPanel sid={sid} view={view} onReplay={setReplay} />}
     {!view.ended && <div className="interaction-dock">
       {view.timed?.active && <div className="qte-composer"><b>{remaining == null ? "准备快速决定" : `${Math.ceil(remaining / 1000)} 秒`}</b><p>{view.timed.fallback_hint}</p></div>}
       {view.selected && view.selected.status !== "CANONICAL" ? <div className="decision-layer" data-layer="decision">✓ {view.selected.label} · 正在继续故事……</div>

@@ -53,8 +53,8 @@ export default function App() {
   }
 
   return (
-    <div className="appframe">
-      <Sidebar />
+    <div className={`appframe${ui.theaterMode ? " theater-mode" : ""}`} data-theater-mode={ui.theaterMode ? "true" : "false"}>
+      {!ui.theaterMode && <Sidebar />}
       <main className={`workspace-main${isPlayer ? " player-mode" : ""}`}>
         {isPlayer ? content : (
           <>

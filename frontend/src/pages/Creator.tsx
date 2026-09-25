@@ -437,8 +437,8 @@ function CharactersTab({ draft, globals, onSave, selectedId, onSelect }: {
           <StoryUnderstanding key={`${draft.id}:${selected.id}`} draft={draft} scope="character" characterId={selected.id} onDraft={onSave} />
           <CharacterProfile scope="scenario" values={selected} inherited={inherited} onChange={updateChar}
             onPromote={selected.global_character_id ? async () => {
-              try { const v = await api.promoteStoryCharacter(draft.id, selected.id); toast(`已保存为全局角色 v${v.version}；本故事仍保留原版本。`); } catch (e: any) { toast(e.message); }
-            } : undefined} extras={{ "声音与动作": selected.global_character_id ? <button onClick={() => setState({ page: "characterLibrary", globalCharacterId: selected.global_character_id! })}>在角色库查看声音与动作</button> : <p className="muted">绑定全局角色后可继承声音与动作参考。</p> }} />
+              try { const v = await api.promoteStoryCharacter(draft.id, selected.id); toast(`已保存为角色库 v${v.version}；本故事仍保留原版本。`); } catch (e: any) { toast(e.message); }
+            } : undefined} extras={{ "声音与动作": selected.global_character_id ? <StoryCharacterOverlay character={selected} globalCharacter={globals.find(g => g.id === selected.global_character_id)} onUpdate={updateChar} /> : <p className="muted">先选择角色库中的角色，当前故事再决定自己的造型、姿势和声音。</p> }} />
           <button className="danger small" onClick={() => {
             onSave({ ...draft, characters: draft.characters.filter((c) => c.id !== selected.id) });
           }}>删除这个角色</button>
@@ -446,6 +446,26 @@ function CharactersTab({ draft, globals, onSave, selectedId, onSelect }: {
       )}
     </>
   );
+}
+
+function StoryCharacterOverlay({ character, globalCharacter, onUpdate }: {
+  character: ScenarioCharacter; globalCharacter?: GlobalCharacter; onUpdate: (patch: Partial<ScenarioCharacter>) => void;
+}) {
+  const outfits = globalCharacter?.outfits ?? [];
+  return <div className="character-overlay-card">
+    <h4>本故事覆盖</h4>
+    <p className="muted">角色库定义继续保留；这里的选择只写入当前故事。</p>
+    <label><span>本故事造型</span><select value={character.outfit_id ?? ""} onChange={e => onUpdate({ outfit_id: e.target.value || null, overlay_sources: { ...(character.overlay_sources ?? {}), outfit: e.target.value ? "OVERRIDE" : "INHERIT" } })}>
+      <option value="">继承默认造型</option>{outfits.map(o => <option value={o.id} key={o.id}>{o.name}</option>)}
+    </select></label>
+    <label><span>本故事视觉状态</span><textarea value={character.visual_state} onChange={e => onUpdate({ visual_state: e.target.value, overlay_sources: { ...(character.overlay_sources ?? {}), visual_state: e.target.value ? "OVERRIDE" : "INHERIT" } })} placeholder="例如：本故事中穿黄色雨衣，但保持身份不变" /></label>
+    <div className="row">
+      <span className="soft-tag">姿势参考 {globalCharacter?.ref_pose_assets?.length ?? 0} 项可继承</span>
+      <span className="soft-tag">动作参考 {globalCharacter?.ref_motion_assets?.length ?? (globalCharacter?.ref_motion_asset ? 1 : 0)} 项可继承</span>
+      <span className="soft-tag">声音 {globalCharacter?.ref_voice_asset ? "继承主声音" : "未设置"}</span>
+    </div>
+    <p className="muted">保存后显示“仅本故事”；使用外层“保存为角色库新版本”才会显式提升全局。</p>
+  </div>;
 }
 
 function GlobalBindingPanel({ character, globals, onUpdate }: {
@@ -457,10 +477,10 @@ function GlobalBindingPanel({ character, globals, onUpdate }: {
   if (!g) {
     return (
       <div className="character-origin-panel">
-        <div className="row"><b className="grow">故事角色</b><span className="badge">未绑定角色库</span></div>
-        <p className="muted">这个角色只存在于当前故事。绑定角色库后，故事内的动机、秘密和外观仍只属于本故事。</p>
-        <select aria-label="绑定全局角色" value="" onChange={e => { const picked = globals.find(x => x.id === e.target.value); if (picked) onUpdate({ global_character_id: picked.id, global_character_version: picked.version }); }}>
-          <option value="">选择要继承的全局角色…</option>{globals.map(item => <option value={item.id} key={item.id}>{item.name} · v{item.version}</option>)}
+        <div className="row"><b className="grow">角色</b><span className="badge">未绑定角色库</span></div>
+        <p className="muted">这个角色只存在于当前故事。绑定角色库后，动机、秘密、关系和造型仍可仅在本故事覆盖。</p>
+        <select aria-label="绑定角色库角色" value="" onChange={e => { const picked = globals.find(x => x.id === e.target.value); if (picked) onUpdate({ global_character_id: picked.id, global_character_version: picked.version }); }}>
+          <option value="">选择要继承的角色库角色…</option>{globals.map(item => <option value={item.id} key={item.id}>{item.name} · v{item.version}</option>)}
         </select>
       </div>
     );
@@ -472,7 +492,7 @@ function GlobalBindingPanel({ character, globals, onUpdate }: {
         <span className="avatar small">{g.name.slice(0, 1)}</span>
         <div className="grow">
           <b>{g.name}</b>
-          <div className="muted">角色库快照 v{character.global_character_version} · {g.bio?.slice(0, 40) || "未填写简介"}</div>
+          <div className="muted">继承角色库 v{character.global_character_version} · {g.bio?.slice(0, 40) || "未填写简介"}</div>
         </div>
         <span className={`badge ${hasUpdate ? "warn" : ""}`}>
           {hasUpdate ? "角色库存在新版本" : "角色快照已固定"}

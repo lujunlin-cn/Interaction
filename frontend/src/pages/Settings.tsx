@@ -10,12 +10,15 @@ export default function Settings() {
   const [profile, setProfile] = useState<any>(null);
   const [switching, setSwitching] = useState(false);
   const [generation, setGeneration] = useState<any>(null);
+  const [preflight, setPreflight] = useState<any>(null);
+  const [ledger, setLedger] = useState<any[]>([]);
   useEffect(() => {
     api.health().then(setHealth).catch(() => {});
     api.devProviders().then(setProviders).catch(() => {});
     api.devProfile().then(setProfile).catch(() => {});
     api.devGenerationSettings().then(setGeneration).catch(() => {});
-  }, []);
+    if (ui.mode === "developer") api.devUsageLedger().then((r) => setLedger(r.items)).catch(() => {});
+  }, [ui.mode]);
   const switchProfile = async (target: string) => {
     setSwitching(true);
     try {
@@ -143,22 +146,27 @@ export default function Settings() {
 
       <div className="card">
         <h3>媒体生成</h3>
-        {ui.mode === "standard" ? (
-          <p className="muted">云端媒体生成当前受部署策略控制；已有素材仍可正常播放。</p>
-        ) : (
-          <>
-            <p className="muted">仅影响之后的新任务，旧素材不会改变。当前付费保险丝：{generation?.fal_paid_generation_enabled ? "已开启" : "已暂停"}。</p>
-            <div className="two">
-              <label><span>图片生成分辨率</span><select value={generation?.image_resolution ?? "0.5K"} onChange={e => updateGeneration({ image_resolution: e.target.value })}>{["0.5K", "1K", "2K", "4K"].map(v => <option key={v}>{v}</option>)}</select></label>
-              <label><span>视频生成分辨率</span><select value={generation?.video_resolution ?? "480P"} onChange={e => updateGeneration({ video_resolution: e.target.value })}>{["480P", "768P", "1080P"].map(v => <option key={v}>{v}</option>)}</select></label>
-              <label><span>视频比例</span><select value={generation?.aspect_ratio ?? "16:9"} onChange={e => updateGeneration({ aspect_ratio: e.target.value })}>{["16:9", "9:16", "1:1", "auto"].map(v => <option key={v}>{v}</option>)}</select></label>
-              <label><span>测试 Top-K</span><select value={generation?.test_top_k ?? 1} onChange={e => updateGeneration({ test_top_k: Number(e.target.value) })}>{[1, 2, 3].map(v => <option key={v}>{v}</option>)}</select></label>
-              <label><span>每分支最大 Shot</span><select value={generation?.test_max_shots ?? 1} onChange={e => updateGeneration({ test_max_shots: Number(e.target.value) })}>{[1, 2, 3].map(v => <option key={v}>{v}</option>)}</select></label>
-              <label><span>单 Shot 最大时长</span><select value={generation?.test_shot_duration ?? 5} onChange={e => updateGeneration({ test_shot_duration: Number(e.target.value) })}>{[5, 10, 15].map(v => <option key={v}>{v}s</option>)}</select></label>
-            </div>
-            <p className="muted">测试参考上限：图片 {generation?.max_test_reference_images ?? 2} 张，视频 {generation?.max_test_reference_videos ?? 0} 个。</p>
-          </>
-        )}
+        <p className="muted">只影响之后的新任务，旧素材不会改变。当前云端保险丝：{generation?.fal_paid_generation_enabled ? "已开启" : "已暂停"}。</p>
+        <div className="two">
+          <label><span>图片生成分辨率</span><select value={generation?.image_resolution ?? "0.5K"} onChange={e => updateGeneration({ image_resolution: e.target.value })}>{["0.5K", "1K", "2K", "4K"].map(v => <option key={v}>{v}</option>)}</select></label>
+          <label><span>视频生成分辨率</span><select value={generation?.video_resolution ?? "480P"} onChange={e => updateGeneration({ video_resolution: e.target.value })}>{["480P", "768P", "1080P"].map(v => <option key={v}>{v}</option>)}</select></label>
+          <label><span>视频比例</span><select value={generation?.aspect_ratio ?? "16:9"} onChange={e => updateGeneration({ aspect_ratio: e.target.value })}>{["auto", "16:9", "9:16", "1:1"].map(v => <option key={v}>{v}</option>)}</select></label>
+        </div>
+        {ui.mode === "standard" && <p className="muted">当前云端媒体生成暂时不可用时，可以继续播放已有素材、上传素材或选择文字模式。</p>}
+        {ui.mode === "developer" && <>
+          <h4>开发测试覆盖</h4>
+          <p className="muted">仅用于测试/验收，不会修改已发布故事的正式配置。</p>
+          <div className="two">
+            <label className="toggle-line"><span>启用测试生成覆盖</span><input type="checkbox" checked={Boolean(generation?.test_override_enabled)} onChange={e => updateGeneration({ test_override_enabled: e.target.checked })} /> <small>仅开发测试上下文</small></label>
+            <label><span>测试 Top-K</span><select value={generation?.test_top_k ?? 1} onChange={e => updateGeneration({ test_top_k: Number(e.target.value) })}>{[1, 2, 3].map(v => <option key={v}>{v}</option>)}</select></label>
+            <label><span>每分支最大 Shot</span><select value={generation?.test_max_shots ?? 1} onChange={e => updateGeneration({ test_max_shots: Number(e.target.value) })}>{[1, 2, 3].map(v => <option key={v}>{v}</option>)}</select></label>
+            <label><span>单 Shot 最大时长</span><select value={generation?.test_shot_duration ?? 5} onChange={e => updateGeneration({ test_shot_duration: Number(e.target.value) })}>{[5, 10, 15].map(v => <option key={v}>{v}s</option>)}</select></label>
+          </div>
+          <p className="muted">测试参考上限：图片 {generation?.max_test_reference_images ?? 2} 张，视频 {generation?.max_test_reference_videos ?? 0} 个。</p>
+          <div className="toolbar"><button onClick={async () => setPreflight(await api.devGenerationPreflight({ role: "h3_max", branches: generation?.test_top_k ?? 1, shots: generation?.test_max_shots ?? 1, duration: generation?.test_shot_duration ?? 5, reference_images: generation?.max_test_reference_images ?? 2 }))}>查看付费 Preflight</button><button onClick={() => api.devUsageLedger().then(r => setLedger(r.items))}>刷新 Usage Ledger</button></div>
+          {preflight && <pre>{JSON.stringify(preflight, null, 2)}</pre>}
+          {ledger.length > 0 && <details><summary>最近 Usage Ledger（{ledger.length}）</summary><pre>{JSON.stringify(ledger, null, 2)}</pre></details>}
+        </>}
       </div>
     </>
   );

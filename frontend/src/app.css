@@ -209,6 +209,11 @@ pre { background: #0f1418; color: #d7e0e8; padding: 10px; border-radius: 6px; ov
 .snapshot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
 .snapshot-grid span { display: block; font-size: var(--font-xs); color: var(--muted); }
 .character-origin-panel { border: 1px solid var(--line); border-radius: 6px; padding: 12px; background: #fafbfc; margin-bottom: 12px; }
+.studio-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+.studio-tabs button { min-height: 34px; }
+.cloud-generation-action { position: relative; }
+.reference-override-editor { margin: 10px 0; padding: 12px; border: 1px dashed var(--accent); border-radius: 6px; background: color-mix(in srgb, var(--panel) 92%, var(--accent)); }
+.reference-override-editor .override-list { display: grid; gap: 6px; margin-bottom: 8px; }
 .task-head { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 14px; }
 
 /* Player */
@@ -474,6 +479,29 @@ body[data-subtitle-pos="bottomOutside"] .immersive-player:fullscreen .player-sta
 .immersive-player .player-controls { transition: opacity .2s; }
 .immersive-player .player-controls[data-visible="false"] { opacity: 0; pointer-events: none; }
 .immersive-player .player-controls:focus-within { opacity: 1; pointer-events: auto; }
+
+/* PRD Q116 / FR-110: application Theater Mode. Browser fullscreen is a
+   secondary control in the More menu; this layout never calls it. */
+.appframe.theater-mode { height: 100dvh; min-height: 100dvh; overflow: hidden; }
+.appframe.theater-mode .workspace-main { min-width: 0; height: 100dvh; }
+.appframe.theater-mode .player-shell {
+  height: 100dvh; max-width: none; width: 100%; padding: 0;
+  display: grid; grid-template-rows: minmax(0, 1fr) auto auto;
+  overflow: hidden; background: var(--player-bg);
+}
+.appframe.theater-mode .player-head { display: none; }
+.appframe.theater-mode .immersion-layer { min-height: 0; height: 100%; position: relative; }
+.appframe.theater-mode .player-stage { height: 100%; min-height: 0; max-height: none; aspect-ratio: auto; border-radius: 0; }
+.appframe.theater-mode .interaction-dock { display: contents; }
+.appframe.theater-mode .decision-layer { grid-row: 2; margin: 0; padding: 10px max(18px, 4vw); background: var(--player-panel); border-top: 1px solid var(--player-line); }
+.appframe.theater-mode .agency-layer { grid-row: 3; margin: 0; padding: 10px max(18px, 4vw) 14px; background: var(--player-panel); border-top: 1px solid var(--player-line); }
+.appframe.theater-mode .agency-layer > .muted { display: none; }
+.appframe.theater-mode .qte-composer { grid-row: 2; margin: 0; border-radius: 0; }
+.appframe.theater-mode .player-controls { position: absolute; z-index: 8; left: 18px; right: 18px; bottom: 12px; margin: 0; }
+.appframe.theater-mode .player-controls .player-progress { margin-top: 0; }
+.appframe.theater-mode .scene-caption { bottom: 42px; }
+.appframe.theater-mode .player-more > div { bottom: auto; top: 100%; }
+.player-time { color: var(--player-muted); font-size: var(--font-xs); white-space: nowrap; }
 @media (min-width: 2300px) {
   body[data-uisize="standard"] { --font-xs: 14px; --font-sm: 16px; --font-md: 18px; --font-lg: 22px; --font-xl: 28px; --sidebar-w: 260px; --control-h: 42px; --space-md: 16px; --card-pad: 22px; }
   body[data-uisize="large"] { --font-xs: 15px; --font-sm: 18px; --font-md: 21px; --font-lg: 25px; --font-xl: 32px; --sidebar-w: 300px; --control-h: 48px; --space-md: 20px; --card-pad: 26px; }

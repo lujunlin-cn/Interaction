@@ -133,7 +133,7 @@ FlashInfer/vLLM 编译缓存持久化到 `/home/hajimi2025/.cache/interaction-vl
 ```bash
 cd backend
 DATABASE_URL="sqlite+aiosqlite:///./itest.db" PROVIDER_MODE=mock \
-  PROFILE_LIFECYCLE_ENABLED=false .venv/bin/python -m pytest tests/ -q     # 60 passed, 6 warnings（2026-09-25最终应用候选）
+  PROFILE_LIFECYCLE_ENABLED=false .venv/bin/python -m pytest tests/ -q     # 63 passed, 6 warnings（2026-09-25最新候选）
 ```
 
 真实双向 Profile 证据见 `PROFILE_SWITCH_ACCEPTANCE.md`；真实 H3 Max 双 Shot 证据见

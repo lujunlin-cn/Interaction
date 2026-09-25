@@ -1,16 +1,16 @@
 # Final Gap Report · PRD v0.6
 
-最终应用代码候选：最新交付提交（见 `git rev-parse HEAD`）。需求冻结/起点：`881dd66cb8585b51c0a3c8ff5c47160a000c737c`。
+最终应用代码候选：`15855a658a63626a0f17d64239ee3b3aecd25f57`。需求冻结/起点：`b055674aa0702fc1c1ed50f7c3ee62e4ea43dc88`。
 本报告取代此前旧SHA和“旧现状→新修复”混合结论。详细验收见 [LATEST_PRD_UX_ACCEPTANCE.md](LATEST_PRD_UX_ACCEPTANCE.md)。
 
 ## CLOSED
 
 - Q105–Q122：AI引导式Drama、统一角色Core/Overlay、自然语言玩法编译与教程、Player四层/容器全屏、HUD、Standard错误隔离、字幕与三种媒体状态。
-- 本轮AT-77–90为13 PASS / 1 PARTIAL，包含真实Step/Jev/Nemotron/H3，以及明确标注的真实媒体回放/故障注入。没有用Mock视频证明真实Provider。
+- 本轮AT-77–90为13 PASS / 1 PARTIAL；AT-91–98为8 PASS，包含真实Step/Jev/Nemotron/H3，以及明确标注的真实媒体回放/故障注入。没有用Mock视频证明真实Provider。
 - 本轮真实H3两Shot Opening、3个Ready候选及自由输入FREE视频；正式角色固定版本参考进入Production。
 - 真实玩法行动发现并修正缺失Skill提案与初始关系缺失问题；重试经relationship Skill/StateManager写入关系55，World版本仅增1，失败恢复可用。
 - 原始Schema错误仅Developer可见；失败重试、媒体重新载入、明确文字恢复、文字Ending和真实Step Continue World完成。
-- 最新应用候选全量离线回归60 passed / 0 failed / 0 skipped / 6 warnings，124.62秒；npm ci与tsc/Vite build exit 0。
+- 最新应用候选全量离线回归63 passed / 0 failed / 6 warnings，124.62秒；npm ci与tsc/Vite build exit 0。
 - Firefox 100% Browser Zoom下五档分辨率×五页，1920三档UI Size，共35/35响应式检查；中文真实视频字幕与全屏截图均已更新。
 - 已确认的公网服务、Nemotron部署和历史Sol-H3/Profile双向切换保持既有成果，不列为部署Gap。历史证据与本轮UX实测范围分开记录。
 
@@ -37,5 +37,12 @@
 ## 本轮无费用收口（2026-09-25）
 
 - Fal 付费开关默认 `false`，`403 TOP_UP/User is locked` 分类为 `BILLING_LOCKED` 并打开进程熔断；本轮 Fal paid HTTP POST 为 0。
-- 图片/视频 resolution、aspect ratio、Developer 测试限制和 preflight 已贯通；后端 60 passed，前端 build PASS。
+- 图片/视频 resolution、aspect ratio、Developer 测试限制和 preflight 已贯通；后端 63 passed，前端 build PASS。
 - 充值后的 Paid-01 Character、Paid-02 FREE H3、Paid-03 Video Ending 仍保持 PARTIAL/BLOCKED，见 [NO_COST_E2E_ACCEPTANCE.md](NO_COST_E2E_ACCEPTANCE.md)。
+
+## 本轮 Product Closure（No-Fal）
+
+- CLOSED：应用内 Theater Mode、媒体设置参数链、Developer Test Override、Paid Guard、Billing Circuit、Usage Ledger/Preflight、纯文字角色 Publish warning。
+- PARTIAL：角色库与 Creator 的完整 Outfit/Voice/Pose/Motion 同颗粒度仍需一次完整非付费浏览器回归；角色外部生图流程不在本轮执行。
+- BLOCKED：Fal 额度未恢复，Paid-01/02/03 继续等待充值；AT-44 独立体验者反馈仍无外部条件。
+- REMAINING：充值后只执行三个付费路径，不扩展产品范围。详细证据见 `PRD_V06_PRODUCT_CLOSURE_NO_FAL.md`。

@@ -1,0 +1,18 @@
+{
+  "started_at": "2026-09-25",
+  "environment": {
+    "FAL_PAID_GENERATION_ENABLED": false,
+    "provider_mode": "mock",
+    "profile_lifecycle_enabled": false
+  },
+  "calls": [
+    {"provider": "h3_max", "task": "video_generation", "result": "BLOCKED", "error_class": "PAID_GENERATION_DISABLED"},
+    {"provider": "nano_banana_2", "task": "image_generation", "result": "BLOCKED", "error_class": "PAID_GENERATION_DISABLED"}
+  ],
+  "fal_circuit": {"state": "CLOSED", "http_attempts": 0},
+  "usage_ledger": [
+    {"provider": "h3_max", "status": "BLOCKED", "blocked_reason": "PAID_GENERATION_DISABLED", "resolution": "480P", "aspect_ratio": "16:9", "duration": 5},
+    {"provider": "nano_banana_2", "status": "BLOCKED", "blocked_reason": "PAID_GENERATION_DISABLED", "resolution": "0.5K", "num_images": 2}
+  ],
+  "notes": "Guard rejected both calls before HTTP client submission; no Fal network request was made."
+}

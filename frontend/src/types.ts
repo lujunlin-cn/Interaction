@@ -18,6 +18,11 @@ export interface ScenarioCharacter {
   visual_state: string;
   global_character_id?: string | null;
   global_character_version?: number | null;
+  outfit_id?: string | null;
+  pose_refs?: string[];
+  motion_refs?: string[];
+  voice_id?: string | null;
+  overlay_sources?: Record<string, string>;
 }
 
 export interface WorldSpec {
@@ -111,6 +116,10 @@ export interface GlobalCharacter {
   ref_other_assets: string[];
   ref_voice_asset?: string | null;
   ref_motion_asset?: string | null;
+  ref_pose_assets?: string[];
+  ref_motion_assets?: string[];
+  alternate_voice_assets?: string[];
+  outfits?: Array<{ id: string; name: string; description?: string; reference_assets?: string[]; is_default?: boolean }>;
   version: number;
   created_at: number;
   updated_at: number;

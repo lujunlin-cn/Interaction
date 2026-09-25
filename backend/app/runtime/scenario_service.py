@@ -269,8 +269,11 @@ class ScenarioService:
             all((not c.global_character_id) or c.global_character_version
                 for c in draft.characters),
             "绑定全局角色需记录版本号")
-        add("char_assets", "角色 Canonical 资产", True,
-            "绑定全局角色必须存在 Canonical 主资产")
+        # 纯文字角色是合法产品路径（Q94）。视觉资产缺失是警告，只有
+        # 真正进入视频 Production 时才要求补图或选择文字呈现。
+        add("char_assets", "角色视觉资产", True,
+            "提示：存在无图片角色；进入视频制作时需要补充视觉身份或选择文字模式" if any(
+                c.global_character_id for c in draft.characters) else "纯文字角色可正常发布")
         try:
             from ..domain.mechanic_spec import validate_mechanics
             validate_mechanics(draft.mechanics)
@@ -324,8 +327,8 @@ class ScenarioService:
                             check["ok"] = False
                             check["detail"] = "角色没有有效 Character Version：" + ", ".join(invalid_snapshot)
                         if check["id"] == "char_assets" and invalid_assets:
-                            check["ok"] = False
-                            check["detail"] = "角色缺少 CANONICAL 资产：" + ", ".join(invalid_assets)
+                            check["ok"] = True
+                            check["detail"] = "警告：角色缺少 CANONICAL 资产（视频制作时需补充或使用文字模式）：" + ", ".join(invalid_assets)
         failed = [c for c in checks if not c["ok"]]
         if failed:
             from fastapi import HTTPException

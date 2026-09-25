@@ -3,7 +3,7 @@
 基于 PRD v0.6 Final Closure 的可运行实现：React+TypeScript 前端 + FastAPI + PostgreSQL 后端，
 部署目标为 DGX Spark（`/home/hajimi2025/interaction`）。
 
-最新应用代码候选：`2e548769d0960d901075eca46ac2f7ec63409512`。PRD冻结基线包含Q01–Q122、FR-001–114、AT-01–90。整体结论 **PARTIAL**，详见 [最新UX验收](LATEST_PRD_UX_ACCEPTANCE.md) 与 [封版报告](FINAL_CLOSURE_REPORT.md)。
+最新应用代码候选：`15855a658a63626a0f17d64239ee3b3aecd25f57`。PRD冻结基线包含Q01–Q129、FR-001–120、AT-01–98。整体结论 **PARTIAL**，详见 [最新UX验收](LATEST_PRD_UX_ACCEPTANCE.md) 与 [封版报告](FINAL_CLOSURE_REPORT.md)。
 
 ## 架构
 
@@ -70,7 +70,7 @@ Standard Creator先展示AI理解与建议，确认后写正式Drama/Character/M
 
 Player支持整个容器全屏、隐藏HUD、Lead后Ready快捷行动与持续自由输入；生成、加载、失败可区分，原始错误只进Developer。用户选择文字恢复后生成明确的text artifact，通过原有状态提交，不把它计作视频成功。
 
-最新离线回归60 passed / 0 failed / 6 warnings；npm ci与build通过；AT-77–90为13 PASS / 1 PARTIAL（最后修复后的新FREE视频因fal锁未重测），35项响应式检查通过。真实H3开场、推荐与FREE视频成功；视频Ending被fal `403 TOP_UP`阻塞，文字Ending与继续世界已实测。Nano Banana新生图完整Flow本轮未重跑。
+最新离线回归63 passed / 0 failed / 6 warnings；npm ci与build通过；AT-77–90为13 PASS / 1 PARTIAL；AT-91–98为8 PASS（最后修复后的新FREE视频因fal锁未重测），35项响应式检查通过。真实H3开场、推荐与FREE视频成功；视频Ending被fal `403 TOP_UP`阻塞，文字Ending与继续世界已实测。Nano Banana新生图完整Flow本轮未重跑。
 
 ## 关键契约
 

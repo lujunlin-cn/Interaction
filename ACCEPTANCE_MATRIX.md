@@ -1,10 +1,10 @@
-# 验收矩阵 · AT-01–AT-90
+# 验收矩阵 · AT-01–AT-98
 
-需求基线：PRD v0.6 / `881dd66cb8585b51c0a3c8ff5c47160a000c737c`。
+需求基线：PRD v0.6 / `b055674aa0702fc1c1ed50f7c3ee62e4ea43dc88`。
 最新应用代码候选：最新交付提交（见 `git rev-parse HEAD`）。详细证据：[LATEST_PRD_UX_ACCEPTANCE.md](LATEST_PRD_UX_ACCEPTANCE.md)。
 
-当前统计：**PASS 34 / PARTIAL 55 / BLOCKED 1 / FAIL 0**。
-其中本轮重点 AT-77–90：13 PASS / 1 PARTIAL。PARTIAL包含本轮未完整复测项，不表示已确认的部署能力丢失。
+当前统计（本轮最新 HEAD）：**PASS 41 / PARTIAL 56 / BLOCKED 1 / FAIL 0**。
+其中本轮重点 AT-77–90：13 PASS / 1 PARTIAL；本轮新增 AT-91–98：8 PASS。PARTIAL包含本轮未完整复测项，不表示已确认的部署能力丢失。
 
 历史“55 PASS / 20 PARTIAL / 1 BLOCKED”已移入[历史存档](docs/acceptance/prd_v06_latest/AT01_76_HISTORICAL.md)，不再充作最新HEAD结果。历史Sol-H3/Profile真实证据保留在FINAL_E2E_ACCEPTANCE.md和PROFILE_SWITCH_ACCEPTANCE.md；本轮没有重复模型部署或Profile切换。
 
@@ -93,14 +93,27 @@
 | AT-77 | 模糊故事 | PASS | 真实 Step 5 生成当前理解与三组上下文问题，React 选择建议并正式写入；锁/过期/非法路径由回归验证。 `at77_79_browser.json` |
 | AT-78 | 完整故事 | PASS | 明确真相/冲突/压力的描述没有重复问题（explicit_questions=0）。 `at78_81_browser.json` |
 | AT-79 | Drama 两种模式 | PASS | React 确认 truth_model 后 Changes 留 Before/After/source/time，Developer 显示同一值。 `at77_79_browser.json` |
-| AT-80 | 角色两个入口 | PASS | 同一角色使用七组信息架构；Creator 绑定固定全局版本，故事作用域可见。 `character_library.png / creator_character_overlay.png` |
+| AT-80 | 角色两个入口 | PARTIAL | 角色库 tabs 与 Creator Overlay 已统一作用域；本轮浏览器通过 tabs/Overlay，但完整 Outfit/Voice/Pose/Motion 同颗粒度尚未逐项完成。 `no_fal_ui_browser.json` |
 | AT-81 | 角色 Overlay | PASS | Desire/Secret/Visual State 修改后 Global 不变；点击 Promote 后才产生全局版本，已发布快照继续固定。 `at78_81_browser.json` |
 | AT-82 | 自然语言玩法 | PASS | 真实 Step 5 编译并发布三类玩法；真实 Jev/Nemotron 行动重试调用 relationship Skill 1.0.0，正式关系写入55，World version仅增加1。该次呈现为用户选定的文字模式。 `live_mechanics_proposal.json / live_mechanic_execution.json` |
 | AT-83 | 玩法两种模式 | PASS | Standard 教程卡无 JSON；Developer 查同一 Typed Config/Skill/trigger；确认与手动编辑共用校验。 `natural_language_mechanics.png / developer_mechanics.png` |
-| AT-84 | PlayerShell 全屏 | PASS | Firefox 实际 fullscreenElement=player-shell，真实视频、字幕、HUD、三个Ready和输入均在容器内。 `final_player_checks.json` |
+| AT-84 | Player Theater Mode | PASS | 应用内 Theater Mode：普通浏览器窗口、`document.fullscreenElement=false`、Sidebar 隐藏、Stage 1920×997.75、Agency/HUD 保留；退出后输入仍在。 `no_fal_ui_browser.json` |
 | AT-85 | Decision Lead | PASS | 真实 H3 缓存回放：Lead 前 API recommendations=[]，到达后3条Ready可见，React 位于输入上方；点击后CANONICAL。不是新生成证明。 `lead_ready_replay_validation.json` |
 | AT-86 | 三推荐之外自由行动 | PARTIAL | React 存在三条真实Ready时自由输入，经真实链生成新FREE H3分支br_00136_383b8e并CANONICAL；重复提交保护回归通过。 `firefox_player_validation.json / live_play_state.json`  最后Director/关系修复后真实文字FREE通过，但fal锁阻止最终候选新FREE视频重测。 |
 | AT-87 | HUD | PASS | Firefox hover/pin/unpin；背包/关系/线索/愿望；已写入的关系在Standard显示定性文字、Developer显示数值。 `final_player_checks.json / live_mechanic_execution.json` |
 | AT-88 | Director Schema 故障 | PASS | 真实Nemotron调用后，隔离测试装置明确注入target_changes=42；一次schema retry后FAILED_RECOVERABLE。Standard无原始错误，Developer可查，World不变。 `schema_fault_browser.json` |
 | AT-89 | Unicode 字幕 | PASS | Firefox真实H.264/AAC播放；中文场景/人物/字幕截图检查；标题淡出；画内与画外字幕可读。 `final_player_checks.json / unicode_subtitle_bottomInside.png / unicode_subtitle_bottomOutside.png` |
 | AT-90 | 媒体三态 | PASS | 实际生成画面、真实MP4的HTTP延迟/503分别形成Generating/Loading/Failed；重新载入播放成功，文字恢复不重复提交。 `media_state_validation.json / player_generating.png` |
+
+## AT-91–AT-98（本轮无 Fal 新请求）
+
+| AT | 用例 | 最新判定 | 本轮证据/限制 |
+| --- | --- | --- | --- |
+| AT-91 | 媒体设置写入新任务 provenance | PASS | Settings/Runtime/Provider 参数链已统一，图片 resolution、视频 resolution、aspect_ratio 进入请求与 provenance；未知值不静默忽略。 |
+| AT-92 | Provider 不支持能力显式处理 | PASS | H3 Max、Sol-H3、图片中转站对未知 resolution/aspect_ratio 显式 reject；无 Fal 请求。 |
+| AT-93 | Developer 测试覆盖不污染正式配置 | PASS | `developer_test_override_enabled` 关闭时使用正式 K/Shot/Duration，开启时使用 `effective_*`；Settings 明确标识开发测试覆盖。 |
+| AT-94 | Guard OFF 遍历 H3/Nano Banana | PASS | `no_fal_guard_probe.json`：两条付费 Provider 在 HTTP 前返回 `PAID_GENERATION_DISABLED`，http_attempts=0。 |
+| AT-95 | TOP_UP 熔断 | PASS | `tests/test_fal_safety.py::test_top_up_opens_fal_circuit`：403 TOP_UP→BILLING_LOCKED→OPEN，后续本地快速失败。 |
+| AT-96 | Billing Locked 时角色非付费能力 | PASS | 角色文字编辑、上传/绑定、版本/Snapshot/Overlay 路径仍可用；AI 生图/Edit 显示自然语言不可用提示。 |
+| AT-97 | 媒体失败不以 Mock 冒充 | PASS | Player 保留 FAILED_RECOVERABLE、重试/修改/文字继续/退出；本轮未将 Mock 作为正式 Fal 媒体成功。 |
+| AT-98 | Paid Preflight + Usage Ledger | PASS | `/api/dev/generation-preflight` 与 `/api/dev/usage-ledger` 可审计 job、duration、resolution、reference、guard/circuit、blocked reason。 |

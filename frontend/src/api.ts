@@ -105,9 +105,9 @@ export const api = {
     req<CharacterSnapshot>(`/api/character-snapshots/${snapshotId}/override`, { method: "POST", body: JSON.stringify(overrides) }),
   promoteCharacterSnapshot: (snapshotId: string) =>
     req<CharacterVersion>(`/api/character-snapshots/${snapshotId}/promote`, { method: "POST" }),
-  resolveCharacterReferences: (snapshotId: string, sceneId: string, providerLimits?: Record<string, number>) =>
+  resolveCharacterReferences: (snapshotId: string, sceneId: string, providerLimits?: Record<string, number>, developerOverride?: Record<string, any>) =>
     req<CharacterReferenceSelection>(`/api/character-snapshots/${snapshotId}/resolve-references`, {
-      method: "POST", body: JSON.stringify({ scene_or_shot_id: sceneId, provider_limits: providerLimits }),
+      method: "POST", body: JSON.stringify({ scene_or_shot_id: sceneId, provider_limits: providerLimits, developer_override: developerOverride }),
     }),
 
   listAssets: (sid: string) => req<{ items: Asset[] }>(`/api/scenarios/${sid}/assets`),
@@ -162,6 +162,7 @@ export const api = {
   devGenerationSettings: () => req<Record<string, any>>("/api/dev/generation-settings"),
   devGenerationPreflight: (data: Record<string, any>) =>
     req<Record<string, any>>("/api/dev/generation-preflight", { method: "POST", body: JSON.stringify(data) }),
+  devUsageLedger: (limit = 50) => req<{ items: any[] }>(`/api/dev/usage-ledger?limit=${limit}`),
   devRecoverProviders: () => req("/api/dev/providers/recover", { method: "POST" }),
   devInject: (provider: string, kind: string) =>
     req("/api/dev/providers/inject", { method: "POST", body: JSON.stringify({ provider, kind }) }),

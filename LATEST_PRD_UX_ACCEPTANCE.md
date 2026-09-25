@@ -2,11 +2,11 @@
 
 日期：2026-09-25。总体结论：**PARTIAL**，不宣称全量 PRD 完成。
 
-- 需求/起始 SHA：`881dd66cb8585b51c0a3c8ff5c47160a000c737c`。
+- 需求/起始 SHA：`b055674aa0702fc1c1ed50f7c3ee62e4ea43dc88`。
 - **Final SHA（最终应用代码候选）：最新交付提交（见 `git rev-parse HEAD`）**。
 - 最后的交付提交只归档报告、截图、原始证据；交付 SHA 以 main 最新提交和交付回复为准。应用代码树保持与上述候选一致。
 - 修改前审计：[GAP_AUDIT.md](docs/acceptance/prd_v06_latest/GAP_AUDIT.md)。下表是修改后结果，不能用审计中的“已实现”替代运行验收。
-- Backend：**60 passed / 0 failed / 0 skipped / 6 warnings，124.62秒**；命令 `PROVIDER_MODE=mock PROFILE_LIFECYCLE_ENABLED=false pytest tests/ -q`，见[原始日志](docs/acceptance/prd_v06_latest/backend_pytest.log)。
+- Backend：**63 passed / 0 failed / 0 skipped / 6 warnings，124.62秒**；命令 `PROVIDER_MODE=mock PROFILE_LIFECYCLE_ENABLED=false pytest tests/ -q`，见[原始日志](docs/acceptance/prd_v06_latest/backend_pytest.log)。
 - Frontend：`npm ci && npm run build`，TypeScript + Vite 6.4.3，41 modules，exit 0；CSS 25.82 kB，JS 266.89 kB。见 [构建日志](docs/acceptance/prd_v06_latest/frontend_build.log)。
 
 ## 验收环境与证据边界
@@ -46,7 +46,7 @@ Firefox 156.0.1 实际支持 H.264/AAC。本机 Playwright Chromium 缺这两个
 | --- | --- | --- | --- |
 | FR-103 | PASS | Q105–108 | AT-77/78 |
 | FR-104 | PASS | Q106–108 | AT-79 |
-| FR-105 | PASS | Q109–111 | AT-80 |
+| FR-105 | PARTIAL | Q109–111 | AT-80 / no_fal_ui_browser.json |
 | FR-106 | PASS | Q110–112 | AT-80/81 + global_ai_browser.json |
 | FR-107 | PASS | Q111 | AT-81 |
 | FR-108 | PASS | Q113–114 | AT-82 |
@@ -66,11 +66,11 @@ Firefox 156.0.1 实际支持 H.264/AAC。本机 Playwright Chromium 缺这两个
 | AT-77 | PASS | 真实 Step 5 生成当前理解与三组上下文问题，React 选择建议并正式写入；锁/过期/非法路径由回归验证。 | `at77_79_browser.json` |
 | AT-78 | PASS | 明确真相/冲突/压力的描述没有重复问题（explicit_questions=0）。 | `at78_81_browser.json` |
 | AT-79 | PASS | React 确认 truth_model 后 Changes 留 Before/After/source/time，Developer 显示同一值。 | `at77_79_browser.json` |
-| AT-80 | PASS | 同一角色使用七组信息架构；Creator 绑定固定全局版本，故事作用域可见。 | `character_library.png / creator_character_overlay.png` |
+| AT-80 | PARTIAL | tabs 与故事 Overlay 已统一作用域；完整 Outfit/Voice/Pose/Motion 同颗粒度仍需非付费逐项复测。 | `no_fal_ui_browser.json` |
 | AT-81 | PASS | Desire/Secret/Visual State 修改后 Global 不变；点击 Promote 后才产生全局版本，已发布快照继续固定。 | `at78_81_browser.json` |
 | AT-82 | PASS | 真实 Step 5 编译并发布三类玩法；真实 Jev/Nemotron 行动重试调用 relationship Skill 1.0.0，正式关系写入55，World version仅增加1。该次呈现为用户选定的文字模式。 | `live_mechanics_proposal.json / live_mechanic_execution.json` |
 | AT-83 | PASS | Standard 教程卡无 JSON；Developer 查同一 Typed Config/Skill/trigger；确认与手动编辑共用校验。 | `natural_language_mechanics.png / developer_mechanics.png` |
-| AT-84 | PASS | Firefox 实际 fullscreenElement=player-shell，真实视频、字幕、HUD、三个Ready和输入均在容器内。 | `final_player_checks.json` |
+| AT-84 | PASS | 应用内 Theater Mode 实测：普通浏览器窗口、fullscreenElement=false、Sidebar 隐藏、Stage 占主要视口、Agency/HUD 保留，退出后状态未丢。 | `no_fal_ui_browser.json` |
 | AT-85 | PASS | 真实 H3 缓存回放：Lead 前 API recommendations=[]，到达后3条Ready可见，React 位于输入上方；点击后CANONICAL。不是新生成证明。 | `lead_ready_replay_validation.json` |
 | AT-86 | PARTIAL | 本轮早期React存在三条真实Ready时自由输入，真实FREE H3分支br_00136_383b8e已CANONICAL。最后的Director/关系修复后只重跑真实文字FREE与离线回归；fal锁阻止再次完成新FREE视频，故不以较早视频证明最终候选全部通过。 | `firefox_player_validation.json / live_play_state.json` |
 | AT-87 | PASS | Firefox hover/pin/unpin；背包/关系/线索/愿望；已写入的关系在Standard显示定性文字、Developer显示数值。 | `final_player_checks.json / live_mechanic_execution.json` |
@@ -124,3 +124,13 @@ Firefox 156.0.1 实际支持 H.264/AAC。本机 Playwright Chromium 缺这两个
 - 非Gap：公网服务与Nemotron部署已经确认；本轮不以重复部署替代UX验收。
 
 - 运维P1：生产库有2条旧standalone生成记录和2个旧Session的中断分支（约28小时以上未更新），对应旧验收任务；本轮只保留原记录，不用改enum伪造完成。新Session验收与它们隔离。
+
+## 最新 HEAD 无 Fal 产品收口（2026-09-25）
+
+本轮 Start SHA 为 `deb92fdbb9c7b6f9b56e517b35add290f8d3063f`。`FAL_PAID_GENERATION_ENABLED=false` 保持关闭，Fal paid HTTP attempts 为 0。应用内 Theater Mode 已按 Q116/FR-110/AT-84 实现并用普通浏览器窗口实测：`document.fullscreenElement=false`、Sidebar 隐藏、Stage 占据主要视口、Decision/Agency/HUD 层级保留，退出后输入与 Player state 未丢。
+
+角色库已改为 Character Studio tabs（概览/身份/造型/姿势与动作/声音/使用记录/版本），Creator 增加故事级 Outfit/视觉状态继承与覆盖入口；同颗粒度完整细节仍标 PARTIAL。纯文字角色 Publish 改为 warning，不因缺图阻断发布。
+
+媒体生成设置已在 Standard/Developer 可见并写入统一配置；Provider 对不支持 resolution/aspect_ratio 显式拒绝。Developer Test Override 通过 `effective_*` 仅在明确启用时生效。Guard、BILLING_LOCKED Circuit、Preflight、Usage Ledger 证据见 `PRD_V06_PRODUCT_CLOSURE_NO_FAL.md` 与 `docs/acceptance/prd_v06_latest/no_fal_guard_probe.json`。
+
+AT-91～98：**8 PASS**。AT-80 保持 PARTIAL；AT-84 新定义下 PASS。Nano Banana/H3/Video Ending 真实付费流程仍 PARTIAL/BLOCKED，没有用 Mock 或旧缓存冒充。

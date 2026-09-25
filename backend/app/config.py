@@ -111,6 +111,19 @@ class Settings(BaseSettings):
     developer_test_shot_duration: float = 5.0
     max_test_reference_images: int = 2
     max_test_reference_videos: int = 0
+    developer_test_override_enabled: bool = False
+
+    @property
+    def effective_target_k(self) -> int:
+        return self.developer_test_top_k if self.developer_test_override_enabled else self.target_k
+
+    @property
+    def effective_shots_per_branch(self) -> int:
+        return self.developer_test_max_shots if self.developer_test_override_enabled else self.shots_per_branch
+
+    @property
+    def effective_shot_duration(self) -> float:
+        return self.developer_test_shot_duration if self.developer_test_override_enabled else self.mock_shot_duration
 
     @property
     def data_path(self) -> Path:

@@ -20,21 +20,50 @@ class FalGenerationError(RuntimeError):
         self.kind = kind
 
 
-_fal_circuit = {"state": "CLOSED", "reason": "", "opened_at": None}
+_fal_circuit = {"state": "CLOSED", "reason": "", "opened_at": None, "http_attempts": 0}
+_usage_ledger: list[dict] = []
 
 
 def fal_circuit_status() -> dict:
     return dict(_fal_circuit)
 
 
+def usage_ledger(limit: int = 200) -> list[dict]:
+    """Developer-only audit of paid submissions and local guard blocks."""
+    return list(reversed(_usage_ledger[-limit:]))
+
+
+def _record_usage(provider: str, model: str, task: str, request: dict,
+                  status: str, blocked_reason: str = "", error: str = "") -> None:
+    _usage_ledger.append({
+        "id": f"usage_{int(time.time() * 1000)}_{len(_usage_ledger)}",
+        "provider": provider, "model": model, "task": task,
+        "request_id": request.get("request_id") or request.get("job_id"),
+        "resolution": request.get("resolution"),
+        "aspect_ratio": request.get("aspect_ratio"),
+        "duration": request.get("duration") or ((request.get("shots") or [{}])[0].get("duration")),
+        "num_images": request.get("num_images") or request.get("n"),
+        "reference_summary": {"images": len(request.get("references") or request.get("image_urls") or []),
+                               "videos": len(request.get("reference_video_urls") or []),
+                               "audios": len(request.get("reference_audio_urls") or [])},
+        "status": status, "blocked_reason": blocked_reason, "error": error,
+        "at": int(time.time() * 1000),
+    })
+    del _usage_ledger[:-500]
+
+
 def reset_fal_circuit() -> None:
-    _fal_circuit.update({"state": "CLOSED", "reason": "", "opened_at": None})
+    _fal_circuit.update({"state": "CLOSED", "reason": "", "opened_at": None, "http_attempts": 0})
 
 
-def _ensure_fal_paid_allowed() -> None:
+def _ensure_fal_paid_allowed(task: str = "paid_generation", request: dict | None = None,
+                             provider: str = "fal") -> None:
+    request = request or {}
     if not settings.fal_paid_generation_enabled:
+        _record_usage(provider, "", task, request, "BLOCKED", "PAID_GENERATION_DISABLED")
         raise FalGenerationError("PAID_GENERATION_DISABLED", "provider unavailable: paid generation disabled")
     if _fal_circuit["state"] == "OPEN":
+        _record_usage(provider, "", task, request, "BLOCKED", _fal_circuit["reason"] or "CIRCUIT_OPEN")
         raise FalGenerationError(_fal_circuit["reason"] or "BILLING_LOCKED",
                                  f"provider unavailable: {_fal_circuit['reason'] or 'Fal circuit open'}")
 
@@ -179,17 +208,23 @@ class FalH3MaxProvider:
         return {k: v[: caps[k]] for k, v in out.items() if v}
 
     async def submit(self, request: dict) -> VideoJobHandle:
-        _ensure_fal_paid_allowed()
+        _ensure_fal_paid_allowed("video_generation", request, self.name)
         prompt = request.get("prompt", "")
         shots = request.get("shots") or []
+        resolution = request.get("resolution") or settings.video_generation_resolution
+        aspect_ratio = request.get("aspect_ratio") or settings.generation_aspect_ratio
+        if resolution not in {"480P", "768P", "1080P"}:
+            raise ValueError(f"H3 Max unsupported resolution: {resolution}")
+        if aspect_ratio not in {"auto", "16:9", "9:16", "1:1"}:
+            raise ValueError(f"H3 Max unsupported aspect_ratio: {aspect_ratio}")
         # H3 Max requires duration for each independent Shot request.  Runtime
         # deliberately submits one-shot payloads for real multi-shot assembly.
         payload: dict = {
             "prompt": prompt,
             "duration": float(shots[0].get("duration", settings.mock_shot_duration))
             if shots else settings.mock_shot_duration,
-            "resolution": request.get("resolution") or settings.video_generation_resolution,
-            "aspect_ratio": request.get("aspect_ratio") or settings.generation_aspect_ratio,
+            "resolution": resolution,
+            "aspect_ratio": aspect_ratio,
         }
         for key in ("image_url", "reference_image_urls", "reference_audio_urls", "reference_video_urls"):
             if request.get(key):
@@ -199,8 +234,10 @@ class FalH3MaxProvider:
             payload.setdefault(key, [])
             payload[key] = list(dict.fromkeys(payload[key] + urls))
         headers = {"Authorization": f"Key {self.api_key}", "Content-Type": "application/json"}
+        _record_usage(self.name, self.model, "video_generation", payload, "SUBMITTED")
         async with httpx.AsyncClient(timeout=settings.provider_timeout_seconds) as client:
             try:
+                _fal_circuit["http_attempts"] += 1
                 resp = await client.post(self.base, json=payload, headers=headers)
                 resp.raise_for_status()
             except httpx.HTTPStatusError as exc:
@@ -351,9 +388,14 @@ class SolH3LocalProvider:
         prompt = request.get("prompt") or " / ".join(
             s.get("title") or s.get("subtitle") or "" for s in shots)
         duration = float(shots[0].get("duration", settings.mock_shot_duration)) if shots else 5.0
+        resolution = request.get("resolution") or settings.video_generation_resolution
+        aspect_ratio = request.get("aspect_ratio") or settings.generation_aspect_ratio
+        if resolution not in {"480P", "768P", "1080P"}:
+            raise ValueError(f"Sol-H3 unsupported resolution: {resolution}")
+        if aspect_ratio not in {"auto", "16:9", "9:16", "1:1"}:
+            raise ValueError(f"Sol-H3 unsupported aspect_ratio: {aspect_ratio}")
         payload: dict = {"prompt": prompt, "duration": duration,
-                         "resolution": request.get("resolution") or settings.video_generation_resolution,
-                         "aspect_ratio": request.get("aspect_ratio") or settings.generation_aspect_ratio}
+                         "resolution": resolution, "aspect_ratio": aspect_ratio}
         payload.update(self._adapt_references(request))
         async with httpx.AsyncClient(timeout=settings.provider_timeout_seconds) as client:
             resp = await client.post(f"{self.base_url}/v1/videos/generations",
@@ -576,7 +618,10 @@ class OpenAIImageProvider:
 
     @staticmethod
     def _size(resolution: str) -> str:
-        return {"0.5K": "512x512", "1K": "1024x1024", "2K": "2048x2048", "4K": "4096x4096"}.get(resolution, "1024x1024")
+        sizes = {"0.5K": "512x512", "1K": "1024x1024", "2K": "2048x2048", "4K": "4096x4096"}
+        if resolution not in sizes:
+            raise ValueError(f"image provider unsupported resolution: {resolution}")
+        return sizes[resolution]
 
     def _headers(self) -> dict:
         return {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
@@ -670,12 +715,15 @@ class FalImageProvider:
     async def _submit_and_wait(self, endpoint: str, payload: dict,
                                timeout_s: int = 300) -> dict:
         """提交 queue 任务并轮询到 COMPLETED；返回 result JSON。"""
-        _ensure_fal_paid_allowed()
+        task = "image_edit" if endpoint.endswith("/edit") else "image_generation"
+        _ensure_fal_paid_allowed(task, payload, self.name)
         headers = {"Authorization": f"Key {self.api_key}",
                    "Content-Type": "application/json"}
         base = f"https://queue.fal.run/{endpoint}"
         async with httpx.AsyncClient(timeout=settings.provider_timeout_seconds) as client:
             try:
+                _record_usage(self.name, endpoint, task, payload, "SUBMITTED")
+                _fal_circuit["http_attempts"] += 1
                 resp = await client.post(base, json=payload, headers=headers)
                 resp.raise_for_status()
             except httpx.HTTPStatusError as exc:

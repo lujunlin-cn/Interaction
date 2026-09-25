@@ -333,7 +333,10 @@ class CharacterAssetService:
                                    **{k: data.get(k, "") for k in ("default_desire", "default_fear", "default_secrets", "default_knowledge", "default_relationship")}},
                     canonical_asset_refs=canonical,
                     outfits=[CharacterOutfit(**o) for o in data.get("outfits", [])],
+                    pose_refs=list(data.get("ref_pose_assets", [])),
+                    motion_refs=list(data.get("ref_motion_assets", [])) or ([data["ref_motion_asset"]] if data.get("ref_motion_asset") else []),
                     canonical_voice_ref=data.get("ref_voice_asset"),
+                    alternate_voice_refs=list(data.get("alternate_voice_assets", [])),
                     source_version_id=last.id if last else None,
                     breaking_identity_change=breaking)
                 db.add(CharacterVersionRow(
