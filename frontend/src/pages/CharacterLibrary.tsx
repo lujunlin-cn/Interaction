@@ -1,4 +1,4 @@
-/** 全局角色库：跨故事共享的稳定角色身份资产；故事使用快照，不被后续修改覆盖。 */
+/** 角色库：跨故事共享的稳定角色身份资产；故事使用快照，不被后续修改覆盖。 */
 import React, { useEffect, useRef, useState } from "react";
 import { api } from "../api";
 import { setState, toast, useUi } from "../store";
@@ -336,7 +336,7 @@ function CharacterDetail({ ch, onBack, onSaved }: {
               {scenarioChoices.map((s) => <option key={s.version} value={s.version} data-scenario={s.id}>{s.title} · 已发布版本</option>)}
             </select></label>}
           <div className="row" style={{ alignItems: "end" }}>
-            <button disabled={!scenarioVersionId || !!busy} onClick={() => run(developer ? "Scenario Snapshot 已创建" : "故事角色版本已记录", async () => {
+            <button disabled={!scenarioVersionId || !!busy} onClick={() => run(developer ? "Scenario Snapshot 已创建" : "角色版本已记录", async () => {
               await api.characterSnapshot(scenarioVersionId, ch.id); loadSnapshots();
             })}>{developer ? "创建快照" : "记录故事使用版本"}</button>
             <button disabled={!scenarioVersionId} onClick={loadSnapshots}>{developer ? "查看快照" : "查看使用记录"}</button>

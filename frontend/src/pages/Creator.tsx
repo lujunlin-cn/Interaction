@@ -480,7 +480,7 @@ function StoryCharacterOverlay({ character, globalCharacter, onUpdate }: {
     <fieldset><legend>本故事姿势参考</legend>{poses.length ? poses.map((id, i) => <label className="check-row" key={id}><input type="checkbox" checked={(character.pose_refs ?? []).includes(id)} onChange={() => toggle("pose_refs", id)} /><span>姿势参考 {i + 1}</span><small className="muted">{(character.pose_refs ?? []).includes(id) ? "仅本故事" : "继承角色库"}</small></label>) : <p className="muted">角色库暂未绑定姿势参考。</p>}</fieldset>
     <fieldset><legend>本故事动作参考</legend>{motions.length ? motions.map((id, i) => <label className="check-row" key={id}><input type="checkbox" checked={(character.motion_refs ?? []).includes(id)} onChange={() => toggle("motion_refs", id)} /><span>动作参考 {i + 1}</span><small className="muted">{(character.motion_refs ?? []).includes(id) ? "仅本故事" : "继承角色库"}</small></label>) : <p className="muted">角色库暂未绑定动作视频。</p>}</fieldset>
     <fieldset><legend>本故事声音</legend>{voices.length ? voices.map(v => <label className="check-row" key={v.id}><input type="radio" name={`voice-${character.id}`} checked={(character.voice_id ?? globalCharacter?.ref_voice_asset) === v.id} onChange={() => onUpdate({ voice_id: v.id, overlay_sources: { ...(character.overlay_sources ?? {}), voice: v.id === globalCharacter?.ref_voice_asset ? "INHERIT" : "OVERRIDE" } })} /><span>{v.label}</span><small className="muted">{v.id === globalCharacter?.ref_voice_asset ? "继承角色库" : "仅本故事选择"}</small></label>) : <p className="muted">角色库暂未绑定声音。</p>}</fieldset>
-    <p className="muted">保存后显示“仅本故事”；使用外层“保存为角色库新版本”才会显式提升全局。</p>
+    <p className="muted">保存后显示“仅本故事”；使用外层“保存为角色库新版本”才会显式更新角色库。</p>
   </div>;
 }
 

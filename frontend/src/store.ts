@@ -31,8 +31,8 @@ export interface UiState {
   editId: string | null;            // 正在编辑的 Scenario
   sessionId: string | null;         // 当前游玩 Session
   scenarioVersionId: string | null;
-  characterId: string | null;       // 创作者 tab 里选中的故事角色
-  globalCharacterId: string | null; // 角色库里打开的全局角色
+  characterId: string | null;       // 创作者 tab 里选中的角色
+  globalCharacterId: string | null; // 角色库里打开的角色
   inspectorOpen: boolean;
   theaterMode: boolean;
   toast: string | null;
