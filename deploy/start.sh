@@ -33,5 +33,20 @@ fi
 echo "== 5/5 启动服务（单端口 9000，前端+API+媒体） =="
 mkdir -p backend/data
 cd backend
-set -a; . ./.env; set +a
-exec .venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port 9000
+# Parse dotenv values without evaluating shell commands. This keeps lifecycle
+# hooks such as `pkill -f ...` as data and prevents a malformed .env from
+# aborting deployment before uvicorn starts.
+exec .venv/bin/python - <<'PY'
+import os
+from pathlib import Path
+
+for raw in Path('.env').read_text(encoding='utf-8').splitlines():
+    line = raw.strip()
+    if not line or line.startswith('#') or '=' not in line:
+        continue
+    key, value = line.split('=', 1)
+    os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+
+import uvicorn
+uvicorn.run('app.main:app', host='0.0.0.0', port=9000)
+PY

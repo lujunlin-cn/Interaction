@@ -17,7 +17,7 @@
 
 ## 启动 / 重启
 
-后端由 `/tmp/start_backend.sh` 拉起（DGX 本地）：
+后端由 `/tmp/start_backend.sh` 或 `deploy/start.sh` 拉起（DGX 本地）。启动脚本使用非求值 dotenv 解析；`VIDEO_LOCAL_*_COMMAND` 等包含 shell 语法的配置会作为字符串传入，不会破坏启动：
 
 ```bash
 #!/bin/bash
