@@ -73,6 +73,7 @@ npm run build
 | `STEP_BASE_URL` | OpenAI-compatible endpoint: `https://api.stepfun.com/step_plan/v1` |
 | `JEV_API_KEY` | Jev 决策 |
 | `FAL_KEY` | fal h3_max 云视频 |
+| `FAL_KEY_SECONDARY` | Fal 额度耗尽后的第二 Key；仅服务端读取，按 Key 独立熔断后自动轮换 |
 | `FAL_PAID_GENERATION_ENABLED` | 付费 H3/Nano Banana 总开关；默认 `false`，充值并完成付费验收前保持关闭 |
 | `IMAGE_PROVIDER_BASE_URL` / `IMAGE_PROVIDER_API_KEY` | OpenAI-compatible 生图中转站；配置后 Character Studio 优先使用中转站 |
 | `IMAGE_PROVIDER_MODEL` / `IMAGE_PROVIDER_FALLBACK_MODEL` | 默认 `gpt-image-2.5-sunburst` / `gpt-image-2` |
@@ -133,12 +134,14 @@ FlashInfer/vLLM 编译缓存持久化到 `/home/hajimi2025/.cache/interaction-vl
 ```bash
 cd backend
 DATABASE_URL="sqlite+aiosqlite:///./itest.db" PROVIDER_MODE=mock \
-  PROFILE_LIFECYCLE_ENABLED=false .venv/bin/python -m pytest tests/ -q     # 63 passed, 6 warnings（2026-09-25最新候选）
+  PROFILE_LIFECYCLE_ENABLED=false .venv/bin/python -m pytest tests/ -q     # 64 passed, 6 warnings（2026-09-25最新候选）
 ```
 
 真实双向 Profile 证据见 `PROFILE_SWITCH_ACCEPTANCE.md`；真实 H3 Max 双 Shot 证据见
 `REAL_MULTISHOT_ACCEPTANCE.md`。线上当前服务：`http://139.199.69.46:9000`，不再作为
 本轮 Gap。
+
+Fal 双 Key 轮换与最近一次 0.5K / n=1 真实 smoke 见 `FAL_KEY_ROTATION_ACCEPTANCE.md`。
 
 ## 已知限制（详见 `SECURITY_KNOWN_LIMITATIONS.md`）
 

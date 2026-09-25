@@ -1,0 +1,43 @@
+{
+  "started_at": "2026-09-25T00:48:15Z",
+  "provider": "nano_banana_2",
+  "task": "image_generation",
+  "resolution": "0.5K",
+  "num_images": 1,
+  "keys": [
+    {
+      "index": 0,
+      "fingerprint": "49838f0961"
+    },
+    {
+      "index": 1,
+      "fingerprint": "20901bf4f9"
+    }
+  ],
+  "status": "READY",
+  "model": "fal-ai/nano-banana-2",
+  "images": 1,
+  "fal_circuit": {
+    "state": "CLOSED",
+    "reason": "",
+    "opened_at": null,
+    "http_attempts": 1,
+    "active_key_index": 0,
+    "rotation_count": 0,
+    "keys": [
+      {
+        "index": 0,
+        "fingerprint": "49838f0961",
+        "state": "CLOSED",
+        "reason": ""
+      },
+      {
+        "index": 1,
+        "fingerprint": "20901bf4f9",
+        "state": "CLOSED",
+        "reason": ""
+      }
+    ]
+  },
+  "http_attempts_after": 1
+}

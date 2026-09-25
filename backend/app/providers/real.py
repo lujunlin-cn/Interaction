@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import time
 
 import httpx
@@ -20,12 +21,70 @@ class FalGenerationError(RuntimeError):
         self.kind = kind
 
 
-_fal_circuit = {"state": "CLOSED", "reason": "", "opened_at": None, "http_attempts": 0}
+_fal_circuit = {"state": "CLOSED", "reason": "", "opened_at": None, "http_attempts": 0,
+                "active_key_index": 0, "rotation_count": 0}
+_fal_key_states: list[dict] = []
 _usage_ledger: list[dict] = []
 
 
 def fal_circuit_status() -> dict:
-    return dict(_fal_circuit)
+    keys = _configured_fal_keys()
+    _sync_fal_key_states(keys)
+    return {**_fal_circuit, "keys": [
+        {"index": i, "fingerprint": _key_fingerprint(k), "state": _fal_key_states[i]["state"],
+         "reason": _fal_key_states[i]["reason"]}
+        for i, k in enumerate(keys)
+    ]}
+
+
+def _configured_fal_keys() -> list[str]:
+    return [k for k in (settings.fal_key, settings.fal_key_secondary) if k]
+
+
+def _key_fingerprint(key: str) -> str:
+    return hashlib.sha256(key.encode()).hexdigest()[:10] if key else "none"
+
+
+def _sync_fal_key_states(keys: list[str] | None = None) -> None:
+    keys = keys if keys is not None else _configured_fal_keys()
+    while len(_fal_key_states) < len(keys):
+        _fal_key_states.append({"state": "CLOSED", "reason": "", "opened_at": None})
+    del _fal_key_states[len(keys):]
+
+
+def _next_fal_key() -> tuple[int, str] | None:
+    keys = _configured_fal_keys()
+    _sync_fal_key_states(keys)
+    if not keys:
+        return None
+    start = int(_fal_circuit.get("active_key_index", 0)) % len(keys)
+    for offset in range(len(keys)):
+        idx = (start + offset) % len(keys)
+        if _fal_key_states[idx]["state"] != "OPEN":
+            _fal_circuit["active_key_index"] = idx
+            _fal_circuit["state"] = "CLOSED"
+            return idx, keys[idx]
+    _fal_circuit["state"] = "OPEN"
+    return None
+
+
+def _rotate_fal_key(index: int, reason: str) -> bool:
+    keys = _configured_fal_keys()
+    _sync_fal_key_states(keys)
+    if index < len(_fal_key_states):
+        _fal_key_states[index].update({"state": "OPEN", "reason": reason, "opened_at": time.time()})
+    _fal_circuit["reason"] = reason
+    _fal_circuit["rotation_count"] = int(_fal_circuit.get("rotation_count", 0)) + 1
+    if not keys:
+        _fal_circuit["state"] = "OPEN"
+        return False
+    for offset in range(1, len(keys) + 1):
+        nxt = (index + offset) % len(keys)
+        if _fal_key_states[nxt]["state"] != "OPEN":
+            _fal_circuit.update({"state": "CLOSED", "active_key_index": nxt})
+            return True
+    _fal_circuit["state"] = "OPEN"
+    return False
 
 
 def usage_ledger(limit: int = 200) -> list[dict]:
@@ -53,11 +112,14 @@ def _record_usage(provider: str, model: str, task: str, request: dict,
 
 
 def reset_fal_circuit() -> None:
-    _fal_circuit.update({"state": "CLOSED", "reason": "", "opened_at": None, "http_attempts": 0})
+    _fal_circuit.update({"state": "CLOSED", "reason": "", "opened_at": None, "http_attempts": 0,
+                         "active_key_index": 0, "rotation_count": 0})
+    for state in _fal_key_states:
+        state.update({"state": "CLOSED", "reason": "", "opened_at": None})
 
 
 def _ensure_fal_paid_allowed(task: str = "paid_generation", request: dict | None = None,
-                             provider: str = "fal") -> None:
+                             provider: str = "fal", explicit_key: str = "") -> tuple[int | None, str]:
     request = request or {}
     if not settings.fal_paid_generation_enabled:
         _record_usage(provider, "", task, request, "BLOCKED", "PAID_GENERATION_DISABLED")
@@ -66,17 +128,30 @@ def _ensure_fal_paid_allowed(task: str = "paid_generation", request: dict | None
         _record_usage(provider, "", task, request, "BLOCKED", _fal_circuit["reason"] or "CIRCUIT_OPEN")
         raise FalGenerationError(_fal_circuit["reason"] or "BILLING_LOCKED",
                                  f"provider unavailable: {_fal_circuit['reason'] or 'Fal circuit open'}")
+    if explicit_key:
+        return None, explicit_key
+    selected = _next_fal_key()
+    if selected is None:
+        _record_usage(provider, "", task, request, "BLOCKED", _fal_circuit["reason"] or "CIRCUIT_OPEN")
+        raise FalGenerationError(_fal_circuit["reason"] or "BILLING_LOCKED", "provider unavailable: all Fal keys are circuit-open")
+    return selected
 
 
-def _fal_http_error(exc: httpx.HTTPStatusError) -> FalGenerationError:
+def _fal_http_error(exc: httpx.HTTPStatusError, key_index: int | None = None) -> FalGenerationError:
     code = exc.response.status_code
     body = exc.response.text[:1000]
     upper = body.upper()
     if "QUOTA" in upper or "INSUFFICIENT" in upper or code == 402:
-        _fal_circuit.update({"state": "OPEN", "reason": "QUOTA_EXHAUSTED", "opened_at": time.time()})
+        if key_index is None:
+            _fal_circuit.update({"state": "OPEN", "reason": "QUOTA_EXHAUSTED", "opened_at": time.time()})
+        else:
+            _rotate_fal_key(key_index, "QUOTA_EXHAUSTED")
         return FalGenerationError("QUOTA_EXHAUSTED", "provider unavailable: quota exhausted")
     if code == 403 and ("TOP_UP" in upper or "USER IS LOCKED" in upper or "BILLING" in upper):
-        _fal_circuit.update({"state": "OPEN", "reason": "BILLING_LOCKED", "opened_at": time.time()})
+        if key_index is None:
+            _fal_circuit.update({"state": "OPEN", "reason": "BILLING_LOCKED", "opened_at": time.time()})
+        else:
+            _rotate_fal_key(key_index, "BILLING_LOCKED")
         return FalGenerationError("BILLING_LOCKED", "provider unavailable: billing locked")
     if code == 403:
         return FalGenerationError("AUTH_FAILED", "provider authentication failed")
@@ -157,6 +232,7 @@ class FalH3MaxProvider:
     name = "h3_max"
 
     def __init__(self, api_key: str = "", model: str = ""):
+        self._explicit_key = api_key
         self.api_key = api_key or settings.fal_key
         self.model = model or settings.fal_h3_model
         # submit 用完整 endpoint id；status/result/cancel 优先用 submit 响应
@@ -208,7 +284,7 @@ class FalH3MaxProvider:
         return {k: v[: caps[k]] for k, v in out.items() if v}
 
     async def submit(self, request: dict) -> VideoJobHandle:
-        _ensure_fal_paid_allowed("video_generation", request, self.name)
+        _ensure_fal_paid_allowed("video_generation", request, self.name, self._explicit_key)
         prompt = request.get("prompt", "")
         shots = request.get("shots") or []
         resolution = request.get("resolution") or settings.video_generation_resolution
@@ -233,23 +309,39 @@ class FalH3MaxProvider:
         for key, urls in self._adapt_references(request).items():
             payload.setdefault(key, [])
             payload[key] = list(dict.fromkeys(payload[key] + urls))
-        headers = {"Authorization": f"Key {self.api_key}", "Content-Type": "application/json"}
-        _record_usage(self.name, self.model, "video_generation", payload, "SUBMITTED")
-        async with httpx.AsyncClient(timeout=settings.provider_timeout_seconds) as client:
+        keys = [self._explicit_key] if self._explicit_key else _configured_fal_keys()
+        attempts = max(1, len(keys))
+        last_error: Exception | None = None
+        for _ in range(attempts):
+            selected = _ensure_fal_paid_allowed("video_generation", request, self.name, self._explicit_key)
+            key_index, key = selected
             try:
-                _fal_circuit["http_attempts"] += 1
-                resp = await client.post(self.base, json=payload, headers=headers)
-                resp.raise_for_status()
-            except httpx.HTTPStatusError as exc:
-                raise _fal_http_error(exc) from exc
-            except httpx.TimeoutException as exc:
-                raise FalGenerationError("TIMEOUT", "provider request timed out") from exc
-            data = resp.json()
-        return VideoJobHandle(
-            provider_job_id=data["request_id"], provider=self.name,
-            status_url=data.get("status_url"),
-            response_url=data.get("response_url"),
-            cancel_url=data.get("cancel_url"))
+                headers = {"Authorization": f"Key {key}", "Content-Type": "application/json"}
+                _record_usage(self.name, self.model, "video_generation", payload, "SUBMITTED")
+                async with httpx.AsyncClient(timeout=settings.provider_timeout_seconds) as client:
+                    try:
+                        _fal_circuit["http_attempts"] += 1
+                        resp = await client.post(self.base, json=payload, headers=headers)
+                        resp.raise_for_status()
+                    except httpx.HTTPStatusError as exc:
+                        raise _fal_http_error(exc, key_index) from exc
+                    except httpx.TimeoutException as exc:
+                        raise FalGenerationError("TIMEOUT", "provider request timed out") from exc
+                    data = resp.json()
+                return VideoJobHandle(
+                    provider_job_id=data["request_id"], provider=self.name,
+                    status_url=data.get("status_url"), response_url=data.get("response_url"),
+                    cancel_url=data.get("cancel_url"),
+                    metadata={"fal_key_index": key_index, "fal_key_fingerprint": _key_fingerprint(key)})
+            except FalGenerationError as exc:
+                last_error = exc
+                if self._explicit_key or exc.kind not in {"QUOTA_EXHAUSTED", "BILLING_LOCKED"}:
+                    raise
+                if _next_fal_key() is None:
+                    raise
+        if last_error:
+            raise last_error
+        raise FalGenerationError("BILLING_LOCKED", "provider unavailable: all Fal keys are circuit-open")
 
     def _status_url(self, handle: VideoJobHandle) -> str:
         if handle.status_url:
@@ -259,7 +351,10 @@ class FalH3MaxProvider:
             "support); resubmit the job to obtain queue URLs")
 
     async def status(self, handle: VideoJobHandle) -> VideoJobResult:
-        headers = {"Authorization": f"Key {self.api_key}"}
+        key_index = handle.metadata.get("fal_key_index")
+        keys = _configured_fal_keys()
+        key = keys[int(key_index)] if key_index is not None and int(key_index) < len(keys) else self.api_key
+        headers = {"Authorization": f"Key {key}"}
         async with httpx.AsyncClient(timeout=settings.provider_timeout_seconds) as client:
             resp = await client.get(self._status_url(handle), headers=headers)
             resp.raise_for_status()
@@ -302,7 +397,10 @@ class FalH3MaxProvider:
         if not handle.cancel_url:
             return False
         try:
-            headers = {"Authorization": f"Key {self.api_key}"}
+            key_index = handle.metadata.get("fal_key_index")
+            keys = _configured_fal_keys()
+            key = keys[int(key_index)] if key_index is not None and int(key_index) < len(keys) else self.api_key
+            headers = {"Authorization": f"Key {key}"}
             async with httpx.AsyncClient(timeout=10) as client:
                 resp = await client.put(handle.cancel_url, headers=headers)
                 return resp.status_code < 300
@@ -310,7 +408,7 @@ class FalH3MaxProvider:
             return False
 
     async def health(self) -> bool:
-        return bool(self.api_key)
+        return bool(self._explicit_key or _configured_fal_keys())
 
 
 class SolH3LocalProvider:
@@ -704,6 +802,7 @@ class FalImageProvider:
     EDIT_ENDPOINT = "fal-ai/nano-banana-2/edit"
 
     def __init__(self, api_key: str = ""):
+        self._explicit_key = api_key
         self.api_key = api_key or settings.fal_key
 
     def capabilities(self) -> dict:
@@ -716,41 +815,47 @@ class FalImageProvider:
                                timeout_s: int = 300) -> dict:
         """提交 queue 任务并轮询到 COMPLETED；返回 result JSON。"""
         task = "image_edit" if endpoint.endswith("/edit") else "image_generation"
-        _ensure_fal_paid_allowed(task, payload, self.name)
-        headers = {"Authorization": f"Key {self.api_key}",
-                   "Content-Type": "application/json"}
         base = f"https://queue.fal.run/{endpoint}"
-        async with httpx.AsyncClient(timeout=settings.provider_timeout_seconds) as client:
+        keys = [self._explicit_key] if self._explicit_key else _configured_fal_keys()
+        attempts = max(1, len(keys))
+        for _ in range(attempts):
+            key_index, key = _ensure_fal_paid_allowed(task, payload, self.name, self._explicit_key)
+            headers = {"Authorization": f"Key {key}", "Content-Type": "application/json"}
             try:
-                _record_usage(self.name, endpoint, task, payload, "SUBMITTED")
-                _fal_circuit["http_attempts"] += 1
-                resp = await client.post(base, json=payload, headers=headers)
-                resp.raise_for_status()
-            except httpx.HTTPStatusError as exc:
-                raise _fal_http_error(exc) from exc
-            except httpx.TimeoutException as exc:
-                raise FalGenerationError("TIMEOUT", "provider request timed out") from exc
-            sub = resp.json()
-            status_url = sub.get("status_url")
-            response_url = sub.get("response_url")
-            if not status_url or not response_url:
-                raise RuntimeError(f"fal submit missing queue urls: {sub}")
-            deadline = time.time() + timeout_s
-            while time.time() < deadline:
-                st = await client.get(status_url,
-                                      headers={"Authorization": f"Key {self.api_key}"})
-                st.raise_for_status()
-                body = st.json()
-                s = body.get("status", "")
-                if s == "COMPLETED":
-                    rr = await client.get(response_url,
-                                          headers={"Authorization": f"Key {self.api_key}"})
-                    rr.raise_for_status()
-                    return rr.json()
-                if s not in ("IN_QUEUE", "IN_PROGRESS"):
-                    raise RuntimeError(f"fal job terminal status={s}: {body}")
-                await asyncio.sleep(3)
-        raise RuntimeError(f"fal image job timeout after {timeout_s}s")
+                async with httpx.AsyncClient(timeout=settings.provider_timeout_seconds) as client:
+                    try:
+                        _record_usage(self.name, endpoint, task, payload, "SUBMITTED")
+                        _fal_circuit["http_attempts"] += 1
+                        resp = await client.post(base, json=payload, headers=headers)
+                        resp.raise_for_status()
+                    except httpx.HTTPStatusError as exc:
+                        raise _fal_http_error(exc, key_index) from exc
+                    except httpx.TimeoutException as exc:
+                        raise FalGenerationError("TIMEOUT", "provider request timed out") from exc
+                    sub = resp.json()
+                    status_url = sub.get("status_url")
+                    response_url = sub.get("response_url")
+                    if not status_url or not response_url:
+                        raise RuntimeError(f"fal submit missing queue urls: {sub}")
+                    deadline = time.time() + timeout_s
+                    while time.time() < deadline:
+                        st = await client.get(status_url, headers={"Authorization": f"Key {key}"})
+                        st.raise_for_status()
+                        body = st.json()
+                        s = body.get("status", "")
+                        if s == "COMPLETED":
+                            rr = await client.get(response_url, headers={"Authorization": f"Key {key}"})
+                            rr.raise_for_status()
+                            return rr.json()
+                        if s not in ("IN_QUEUE", "IN_PROGRESS"):
+                            raise RuntimeError(f"fal job terminal status={s}: {body}")
+                        await asyncio.sleep(3)
+            except FalGenerationError as exc:
+                if self._explicit_key or exc.kind not in {"QUOTA_EXHAUSTED", "BILLING_LOCKED"}:
+                    raise
+                if _next_fal_key() is None:
+                    raise
+        raise FalGenerationError("BILLING_LOCKED", "provider unavailable: all Fal keys are circuit-open")
 
     async def generate(self, request: dict) -> dict:
         """IMAGE_GENERATION：{prompt, num_images?, resolution?} → images + provenance。"""
@@ -781,7 +886,7 @@ class FalImageProvider:
                 "raw": {k: v for k, v in data.items() if k != "images"}}
 
     async def health(self) -> bool:
-        return bool(self.api_key)
+        return bool(self._explicit_key or _configured_fal_keys())
 
 
 def build_provider_registry(mode: str) -> dict:
@@ -813,6 +918,7 @@ def build_provider_registry(mode: str) -> dict:
         registry["mock_video"] = MockVideoProvider()
         # mock 模式（或 hybrid 缺 FAL_KEY 时）用确定性生图桩，保证角色链路可测
         if (mode == "mock" and not (settings.image_provider_base_url and settings.image_provider_api_key)) \
-                or (not settings.fal_key and not (settings.image_provider_base_url and settings.image_provider_api_key)):
+                or (not (settings.fal_key or settings.fal_key_secondary)
+                    and not (settings.image_provider_base_url and settings.image_provider_api_key)):
             registry["nano_banana_2"] = MockImageProvider()
     return registry

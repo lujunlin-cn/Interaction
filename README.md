@@ -34,6 +34,8 @@ Character Studio 的生图可配置 OpenAI-compatible 中转站：设置
 `IMAGE_PROVIDER_BASE_URL`、`IMAGE_PROVIDER_API_KEY`、`IMAGE_PROVIDER_MODEL`（默认
 `gpt-image-2.5-sunburst`，备用 `gpt-image-2`）。密钥只放在 `backend/.env`，不要提交到 Git。
 
+Fal 云生成支持服务端 `FAL_KEY` + `FAL_KEY_SECONDARY` 双 Key。额度或账单错误会按 Key 独立熔断并自动轮换；两把 Key 都不可用时本地快速失败。最新小额真实图片 smoke 见 [`FAL_KEY_ROTATION_ACCEPTANCE.md`](FAL_KEY_ROTATION_ACCEPTANCE.md)。
+
 ## Provider 模式
 
 | 模式 | 文本（Director/Narrative/Authoring） | 视频 | 决策 |

@@ -29,6 +29,10 @@ class Settings(BaseSettings):
     step5_model: str = "step-5-preview"        # 同上
 
     fal_key: str = ""
+    # Optional second Fal account. Keys are only read from environment/.env
+    # and are never exposed in traces or UI. The provider rotates on quota or
+    # billing lock and keeps each key's circuit state independently.
+    fal_key_secondary: str = ""
     # 付费媒体生成总开关。默认关闭，避免账单锁定时重复提交云任务。
     fal_paid_generation_enabled: bool = False
     # fal 官方 endpoint id 不带 fal-ai/ 前缀（fal-ai/ 命名空间会 404
