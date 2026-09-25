@@ -19,6 +19,8 @@ Start SHA：`0135e6fe0c31da9c5cabd213d49bd3f6ed068f1e`
 - Circuit：CLOSED
 - 证据：`docs/acceptance/fal_key_live_smoke.json`
 
+说明：第一次同规格调用完成后，本地证据写入路径错误，结果没有保存；随后只重跑了一次同规格调用并得到上述 READY。因此本轮最多发起 2 次最小 smoke submit，未继续扩大测试规模。
+
 未保存返回的签名 URL，也未把 API key 写入代码、Git、Trace 或报告。
 
 ## 自动轮换
