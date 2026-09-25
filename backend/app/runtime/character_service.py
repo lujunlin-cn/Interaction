@@ -17,6 +17,7 @@ from typing import Any, Optional
 
 from sqlalchemy import select
 
+from ..config import settings
 from ..db import SessionLocal
 from ..db_models import (AssetRow, CharacterAssetRow, CharacterVersionRow,
                          GlobalCharacterRow, ScenarioCharacterSnapshotRow)

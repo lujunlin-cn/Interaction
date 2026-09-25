@@ -76,6 +76,44 @@ def test_pinned_overlay_and_explicit_promote(client):
     assert promoted['version'] > current['version']
     assert client.portal.call(service.list_snapshots, 'ver_overlay_contract')[0].character_version == version['version']
 
+def test_character_ai_generation_uses_configured_resolution(client, monkeypatch):
+    """Exercise the real API seam so generation settings cannot regress to a NameError."""
+    from app.config import settings
+    from app.main import provider_router
+
+    character = client.post('/api/characters', json={
+        'name': '配置回归角色', 'bio': '验证角色生图参数贯通'}).json()
+    seen = {}
+
+    class FakeImageProvider:
+        name = 'nano_banana_2'
+
+        async def generate(self, request):
+            seen.update(request)
+            return {
+                'images': [{'url': 'https://example.invalid/candidate.png'}],
+                'model': 'test-image-model',
+                'resolution': request['resolution'],
+                'aspect_ratio': request['aspect_ratio'],
+            }
+
+    monkeypatch.setitem(provider_router.registry, 'nano_banana_2', FakeImageProvider())
+    previous_resolution = settings.image_generation_resolution
+    previous_ratio = settings.generation_aspect_ratio
+    settings.image_generation_resolution = '4K'
+    settings.generation_aspect_ratio = '16:9'
+    try:
+        response = client.post(f"/api/characters/{character['id']}/ai-generate",
+                               json={'prompt': '测试角色', 'num_images': 1})
+    finally:
+        settings.image_generation_resolution = previous_resolution
+        settings.generation_aspect_ratio = previous_ratio
+
+    assert response.status_code == 200, response.text
+    assert seen['resolution'] == '4K'
+    assert seen['aspect_ratio'] == '16:9'
+    assert response.json()['items'][0]['provenance']['resolution'] == '4K'
+
 def test_safe_player_error_preserves_dev_evidence(client):
     from app.main import runtime_engine
     from app.domain.schemas import Branch, BranchSource, BranchStatus, ResolvedIntent
