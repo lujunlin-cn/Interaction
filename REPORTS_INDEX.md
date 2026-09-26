@@ -4,7 +4,7 @@
 
 ## 最新状态
 
-- Backend：197 passed / 0 failed / 6 warnings；Frontend build：PASS。
+- Backend：当前审计重跑 274 passed / 0 failed / 7 warnings；Frontend build：PASS。
 - 生化危机 FULL E2E：PARTIAL。真实 H3 游玩、Ending、Continue World、完整角色参考图组与视觉 QA 尚未完成。
 - 已归档 10 张 4096×4096 Relay Candidate：Leon 4、Claire 2、Victor 4。
 - 当前图片走用户批准的 Image Relay，Fal 仅用于 H3；付费开关按用户要求保持开启。
@@ -46,6 +46,10 @@
 - [Effective generation preflight regression](docs/acceptance/preflight_safety/README.md)
 - [Creator pressure contract regression](docs/acceptance/pressure_contract/README.md)
 - [Creator publish safety regression](docs/acceptance/publish_safety/README.md)
+- [Trajectory-driven skill optimization report](TRAJECTORY_DRIVEN_SKILL_OPTIMIZATION_REPORT.md)
+- [Trajectory analysis evidence index](docs/trajectory-analysis/EVIDENCE_INDEX.md)
+- [Current trajectory capture and replay benchmark](docs/trajectory-analysis/current_capture_20260926/README.md)
+- [Trajectory-driven architecture decisions](docs/architecture/trajectory-driven/)
 
 ## 原始证据
 

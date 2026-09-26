@@ -1,6 +1,6 @@
 # Regression and deployment report
 
-Date: 2026-09-26. Backend: **257 passed, 0 failed**, 96.19 seconds, six existing warnings. Frontend production build: **PASS**. Targeted new/relevant suite: **19 passed**. Final isolated browser regression: **PASS**, seven checks, no live writes and no paid media requests.
+Date: 2026-09-26. Frozen trajectory implementation evidence: Backend **257 passed, 0 failed**, 96.19 seconds, six existing warnings. Current audit rerun: Backend **274 passed, 0 failed**, 94.03 seconds, seven existing warnings (including the two read-only benchmark contract tests). Frontend production build: **PASS**. Targeted new/relevant suite: **21 passed**. Final isolated browser regression: **PASS**, seven checks, no live writes and no paid media requests.
 
 Artifacts: backend_regression.txt, targeted_regression.txt, frontend_build.txt, browser/results.json, browser/*.png.
 

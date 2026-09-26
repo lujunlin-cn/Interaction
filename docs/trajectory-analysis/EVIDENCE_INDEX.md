@@ -24,9 +24,13 @@ Start SHA: c22d14bceea3930e2dd2c25eaaf449bc85fbbd0a. Root report: ../../TRAJECTO
 | backend_regression.txt / frontend_build.txt | Final complete regression/build |
 | REGRESSION_REPORT.md | Isolation incident, correction, deployment |
 | human_test_handoff.json | Real service/model/config, tiny inference; secrets redacted |
+| current_capture_20260926/ | Current live DB/source inventory at the audit Start SHA; kept separate from the frozen benchmark |
+| ../../tools/trajectory_replay_benchmark.py | Read-only typed replay benchmark; validates 214 turns and records zero media/network/database writes |
 | PLAYER_FEEDBACK_SCOPE.md | PDF issues 4/5/7/8 ownership |
 
 Related: ../skills/CURRENT_SKILL_AUDIT.md, ../skills/AGENT_SKILL_OPPORTUNITIES.md, ../skills/SKILL_ARCHITECTURE_V2.md, ../skills/SKILL_EVALUATION.md, ../architecture/trajectory-driven/ADR-*.md.
+
+The frozen/live boundary is specified in [ADR-004](../architecture/trajectory-driven/ADR-004-frozen-replay-and-live-capture-boundary.md).
 
 ## Reproduction
 

@@ -1,14 +1,16 @@
 # Trajectory-Driven Skill Optimization Report
 
-研究日期：2026-09-26。Start SHA：c22d14bceea3930e2dd2c25eaaf449bc85fbbd0a。
+研究日期：2026-09-26。冻结研究基线 SHA：c22d14bceea3930e2dd2c25eaaf449bc85fbbd0a；本次现状审计 Start SHA：e4ecb92474953614def564c09743431494c1fbb2。
 
 本轮完成“历史数据 → 分析 → 能力边界 → 实现 → 隔离回放 → 反例复验”的研究闭环。**确定性契约、安全与恢复回归通过；剧情质量全面改善及无质量退化门槛仍为 PARTIAL。** 不把模型偏好票数、有效 JSON 或旧视频当成完整 Gameplay PASS。
+
+本次现状审计另外保存了只读点时快照：[current_capture_20260926](docs/trajectory-analysis/current_capture_20260926/)。它记录当前 live SQLite 的 49 个 Session、76 个持久 Trace Span、6 个 Job、207 条分支和 32 个玩家输入事件；这些新增人工测试/恢复数据没有回写冻结的 42 Session / 214 条 TrajectoryTurn 基准，也没有被当成新的因果回放样本。
 
 用户指定产品范围：PLAYER_UX_FEEDBACK_REPORT.pdf 的 **4、5、7、8**。其他 Agent 的玩家/创作者/开发者分离及开场呈现改动已保留，不在本报告中冒领。最终 SHA 以包含本报告的 Git 提交与交付回复为准。
 
 ## 1. 数据集与重建范围
 
-- 数据库 41 个 Session；合并验收证据去重后 42 个。
+- 冻结研究捕获时数据库 41 个 Session；合并验收证据去重后 42 个。当前审计快照另有 49 个 live Session，二者不混合计数。
 - Session provenance：25 real_provider_observed、14 mixed、2 mock_or_fixture、1 unknown。真实 Provider 不等于真人操作，旧自动验收与用户操作无法全部区分。
 - 全体 214 条分支记录：40 acted turns、146 speculative、28 opening。**不把 214 叫作 214 次玩家行动。**
 - 真实 Provider 分支子集 119 条：26 acted turns、69 speculative、24 opening。包括 16 FREE，其中 13 最终 canonical。

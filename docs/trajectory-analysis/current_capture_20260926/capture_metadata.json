@@ -1,0 +1,118 @@
+{
+  "capture_id": "current_capture_20260926",
+  "captured_at": "2026-09-26T10:27:57.045693+00:00",
+  "repository_head": "e4ecb92474953614def564c09743431494c1fbb2",
+  "frozen_benchmark_head": "c22d14bceea3930e2dd2c25eaaf449bc85fbbd0a",
+  "frozen_benchmark_files": 474,
+  "frozen_benchmark_sessions": 42,
+  "notes": [
+    "Read-only inventory. No image/video/text provider requests were made.",
+    "Live DB is mutable; this capture is a point-in-time snapshot and must not be merged into frozen replay hashes.",
+    "Provider presence proves observed routing/configuration, not that a human operated the session.",
+    "Acceptance evidence can include fixture/mock and recovery artifacts; provenance is classified per source/session and kept separate.",
+    "Secrets and full provider credentials are excluded; request IDs are retained only where already present in persisted traces."
+  ],
+  "source_file_counts": {
+    "acceptance_evidence": 485,
+    "trajectory_artifact": 84,
+    "root_acceptance_report": 9,
+    "usage_ledger": 1,
+    "runtime_database": 1,
+    "acceptance_media": 348,
+    "trajectory_artifact_media": 3
+  },
+  "acceptance_evidence_files": 485,
+  "trajectory_artifact_files": 84,
+  "root_report_files": 9,
+  "usage_ledger_files": 1,
+  "runtime_database_files": 1,
+  "db": {
+    "sessions": 49,
+    "spans": 76,
+    "jobs": 6,
+    "branches": 207,
+    "player_input_events": 32,
+    "branch_status_counts": {
+      "FAILED": 62,
+      "CANONICAL": 37,
+      "INVALIDATED": 46,
+      "READY": 53,
+      "NARRATIVE": 4,
+      "PRODUCTION": 1,
+      "PLANNING": 3,
+      "GENERATING": 1
+    },
+    "branch_source_counts": {
+      "recommendation": 125,
+      "free": 23,
+      "timed": 18,
+      "fallback": 6,
+      "opening": 35
+    },
+    "session_provenance": {
+      "mixed": 14,
+      "real_provider_observed": 32,
+      "mock_or_fixture": 2,
+      "unknown": 1
+    },
+    "scenario_counts": {
+      "rainy_apartment": 26,
+      "scn_00003_364d7e": 23
+    },
+    "session_provider_presence": {
+      "mock_text": 9,
+      "mock_video": 16,
+      "step_37": 43,
+      "nemotron_local": 24,
+      "step_5": 16,
+      "h3_max": 14,
+      "runtime": 8
+    },
+    "span_names": {
+      "session.create": 8,
+      "provider.text": 30,
+      "director.plan": 9,
+      "narrative.beat": 9,
+      "production.shots": 8,
+      "video.submit": 7,
+      "narrative.interstitial": 3,
+      "video.resume": 2
+    },
+    "span_providers": {
+      "runtime": 8,
+      "nemotron_local": 35,
+      "step_37": 24,
+      "h3_max": 9
+    },
+    "job_status_counts": {
+      "GENERATING": 2,
+      "READY": 4
+    }
+  },
+  "usage_ledger": {
+    "rows": 241,
+    "unique_operation_ids": 76,
+    "statuses": {
+      "SUBMITTED": 76,
+      "ACCEPTED": 48,
+      "GENERATING": 48,
+      "SUCCEEDED": 57,
+      "FAILED": 12
+    },
+    "providers": {
+      "h3_max": 189,
+      "image_relay": 52
+    },
+    "http_statuses": {
+      "200": 153,
+      "401": 2,
+      "502": 6
+    }
+  },
+  "acceptance_media_files": 348,
+  "trajectory_media_files": 3,
+  "media_bytes": 364468081,
+  "source_entries_total": 931,
+  "source_entries_complete": 0,
+  "completeness_policy": "Strict causal completeness is false unless before/after state, provider attempts, and attribution are all present; no current source meets every condition."
+}
