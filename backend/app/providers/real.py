@@ -1135,7 +1135,11 @@ class OpenAIImageProvider:
                     extension, mime = "webp", "image/webp"
                 else:
                     raise ValueError("IMAGE_EDIT requires a PNG, JPEG or WebP image")
-                files.append(("image" if len(urls) == 1 else "image[]", (f"reference-{index}.{extension}", content, mime)))
+                # The relay follows the OpenAI multipart contract: repeated
+                # ``image`` fields carry multiple source images.  Some
+                # clients use ``image[]``, but this relay ignores that field
+                # name and reports image_input_required.
+                files.append(("image", (f"reference-{index}.{extension}", content, mime)))
         return files
 
     async def edit(self, request: dict) -> dict:

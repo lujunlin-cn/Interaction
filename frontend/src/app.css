@@ -442,7 +442,7 @@ body[data-appearance="dark"] .notice { background: var(--player-surface); }
 .immersive-player .player-stage { aspect-ratio: 16 / 9; max-height: 68dvh; min-height: 260px; }
 .immersive-player video { display: block; }
 .immersive-player .scene-caption { pointer-events: none; text-align: center; padding: 28px 8% 4%; }
-.immersive-player .scene-text { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-shadow: 0 2px 5px #000; font-family: system-ui, "Noto Sans CJK SC", "Microsoft YaHei", sans-serif; }
+.immersive-player .scene-text { width: fit-content; max-width: 100%; margin: 4px auto 0; padding: 6px 10px; background: rgba(0,0,0,.8); border-radius: 4px; overflow-wrap: anywhere; line-height: 1.5; text-shadow: none; font-family: system-ui, "Noto Sans CJK SC", "Microsoft YaHei", sans-serif; }
 .scene-intro { position: absolute; top: 8%; right: 5%; max-width: 65%; color: #fff; opacity: 0; transition: opacity 1s; text-shadow: 0 2px 6px #000; pointer-events: none; }
 .scene-intro.visible { opacity: 1; }
 .scene-intro b, .scene-intro span { display: block; }

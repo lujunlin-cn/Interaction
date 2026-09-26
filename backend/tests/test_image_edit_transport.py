@@ -46,6 +46,34 @@ def test_edit_uploads_binary_and_records_transport(monkeypatch, tmp_path):
     assert "offline-token" not in str(result) and "existing-asset" not in str(result)
 
 
+def test_edit_repeats_openai_image_field_for_multiple_sources(monkeypatch, tmp_path):
+    """Relays accept repeated ``image`` parts; ``image[]`` is ignored by api-top."""
+    from app.config import settings
+    from app.providers.real import OpenAIImageProvider
+    monkeypatch.setattr(settings, "data_dir", tmp_path)
+    original_client = httpx.AsyncClient
+    seen = []
+
+    async def respond(request):
+        if request.method == "GET":
+            return httpx.Response(200, content=b"\x89PNG\r\n\x1a\nsource")
+        body = await request.aread()
+        message = BytesParser(policy=policy.default).parsebytes(
+            b"Content-Type: " + request.headers["content-type"].encode() + b"\r\n\r\n" + body)
+        seen.extend(part.get_param("name", header="content-disposition")
+                    for part in message.iter_parts())
+        return httpx.Response(200, json={"data": [{"url": "https://assets.test/out.png"}]})
+
+    monkeypatch.setattr(httpx, "AsyncClient", lambda **kwargs:
+                        original_client(transport=httpx.MockTransport(respond), **kwargs))
+    provider = OpenAIImageProvider("https://relay.test", "offline-token", "primary")
+    asyncio.run(provider.edit({"prompt": "preserve identity", "resolution": "4K",
+                               "image_urls": ["https://assets.test/a.png",
+                                               "https://assets.test/b.png"]}))
+    assert seen.count("image") == 2
+    assert "image[]" not in seen
+
+
 def test_local_source_cannot_escape_public_asset_root(monkeypatch, tmp_path):
     from app.config import settings
     from app.providers.real import OpenAIImageProvider, usage_ledger

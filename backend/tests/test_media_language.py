@@ -32,6 +32,7 @@ def test_language_and_authorized_dialogue_survive_narrative_production(monkeypat
     monkeypatch.setattr(settings, "data_dir", tmp_path)
     save_language_settings(MediaLanguage(video_language=video, subtitle_language=subtitle))
     engine, state, branch, route = fixture_engine(monkeypatch)
+
     caption = "We should check the door." if subtitle == "en" else "我们应该检查这扇门。"
     line = "Check the door." if video == "en" else "检查这扇门。"
     calls = []
@@ -70,6 +71,7 @@ def test_language_and_authorized_dialogue_survive_narrative_production(monkeypat
 def test_silent_shot_forbids_invented_speech(monkeypatch, tmp_path):
     monkeypatch.setattr(settings, "data_dir", tmp_path)
     engine, state, branch, route = fixture_engine(monkeypatch)
+    state.scenario_snapshot["characters"][0]["identity"] = "Alpha · Player character, young officer"
 
     async def text(role, **kw):
         return None, route, TextResponse(content=json.dumps({"shots": [{"title": "Hallway",
@@ -78,6 +80,10 @@ def test_silent_shot_forbids_invented_speech(monkeypatch, tmp_path):
     engine.router = SimpleNamespace(call_text=text)
     asyncio.run(engine._shoot_branch(state, branch))
     assert "No speech or voiceover" in branch.shots[0].prompt
+    assert "Stage the shot in the described story location from its first frame" in branch.shots[0].prompt
+    assert "Use the reference images only for character identity and clothing" in branch.shots[0].prompt
+    assert "Do not render subtitles" in branch.shots[0].prompt
+    assert "Player character, young officer" not in branch.shots[0].prompt
 
 
 def test_invented_dialogue_reference_blocks_before_video(monkeypatch, tmp_path):

@@ -1713,6 +1713,10 @@ class RuntimeEngine:
             raise EngineError("Production shot count differs from the approved generation limit")
         known = {c.get("id") for c in characters if c.get("id")}
         character_by_id = {c.get("id"): c for c in characters if c.get("id")}
+        # Library identities may append role descriptions after a separator.
+        # Those are planning metadata, not text for the video to reproduce.
+        visual_names = {cid: re.split(r"[·|｜]\s+", str(c.get("identity") or c.get("name") or cid), maxsplit=1)[0].strip()
+                        for cid, c in character_by_id.items()}
         visual_identity_cast = {c["id"] for c in characters if c.get("id") and c.get("global_character_id")}
         visual_identity_cast.update(a.get("entity") or a.get("binding") for a in state.asset_manifest
             if a.get("path") and a.get("type", "image") not in ("voice", "audio", "video")
@@ -1780,7 +1784,7 @@ class RuntimeEngine:
             if not prompt.strip():
                 raise EngineError("Production requires a non-empty shot prompt")
             visual_descriptions = [{"character_id": cid,
-                "identity": character_by_id[cid].get("identity", ""),
+                "identity": visual_names[cid],
                 "appearance": character_by_id[cid].get("appearance", ""),
                 "visual_state": character_by_id[cid].get("visual_state", ""),
                 "reference_mode": "text_description" if cid in text_only_cast else "identity_reference"}
@@ -1788,13 +1792,19 @@ class RuntimeEngine:
             if visual_descriptions:
                 prompt += "\nPinned cast appearance and current visual state: " + json.dumps(visual_descriptions, ensure_ascii=False)
             if refs:
-                names = {c.get("id"): c.get("identity") or c.get("name") or c.get("id") for c in characters}
+                names = visual_names
                 binding_parts = []
                 for kind, label in (("image", "Image"), ("audio", "Audio"), ("video", "Video")):
                     for i, ref in enumerate(ref for ref in refs if ref["type"] == kind):
                         binding_parts.append(f"{label} {i + 1}: {ref['entity']} — {names.get(ref['entity'], ref.get('name') or 'environment')} ({ref['role']})")
                 binding = "; ".join(binding_parts)
                 prompt += "\nReference identity map: " + binding + ". Keep each character's face, body and outfit separate."
+                prompt += ("\nUse the reference images only for character identity and clothing. "
+                           "Stage the shot in the described story location from its first frame; "
+                           "do not recreate a reference photo's studio background, static portrait crop, or pose. "
+                           "Keep the requested action and surroundings visible throughout the shot. "
+                           "Character names and reference labels are binding instructions only: "
+                           "never display them, cast lists, role descriptions, or reference annotations as visible text.")
             dialogue_indices = shot.get("dialogue_indices", [])
             if not isinstance(dialogue_indices, list) or any(
                 type(i) is not int or not 0 <= i < len(branch.dialogue) for i in dialogue_indices
