@@ -1,6 +1,6 @@
 /** 设置：标准 / 开发者模式 + 全局显示（外观/字号/密度/字幕）+ 运行信息。 */
 import React, { useEffect, useState } from "react";
-import { api } from "../api";
+import { api, type MediaLanguage } from "../api";
 import { setDisplay, setState, toast, useUi } from "../store";
 
 export default function Settings() {
@@ -12,6 +12,24 @@ export default function Settings() {
   const [generation, setGeneration] = useState<any>(null);
   const [preflight, setPreflight] = useState<any>(null);
   const [ledger, setLedger] = useState<any[]>([]);
+  const [language, setLanguage] = useState<MediaLanguage | null>(null);
+  const [savingLanguage, setSavingLanguage] = useState(false);
+  const [languageError, setLanguageError] = useState("");
+  const loadLanguage = async () => {
+    try { setLanguage(await api.languageSettings()); setLanguageError(""); }
+    catch { setLanguageError("语言设置暂时无法载入，请重试。"); }
+  };
+  useEffect(() => { void loadLanguage(); }, []);
+  const updateLanguage = async (patch: Partial<MediaLanguage>) => {
+    if (!language || savingLanguage) return;
+    setSavingLanguage(true);
+    try {
+      setLanguage(await api.saveLanguageSettings({ ...language, ...patch }));
+      setLanguageError("");
+      toast("语言设置已保存，将用于之后新制作的场景。");
+    } catch { setLanguageError("语言设置未保存，请重试。"); }
+    finally { setSavingLanguage(false); }
+  };
   useEffect(() => {
     api.health().then(setHealth).catch(() => {});
     api.devProviders().then(setProviders).catch(() => {});
@@ -148,10 +166,20 @@ export default function Settings() {
         <h3>媒体生成</h3>
         <p className="muted">只影响之后的新任务，旧素材不会改变。当前云端保险丝：{generation?.fal_paid_generation_enabled ? "已开启" : "已暂停"}。</p>
         <div className="two">
+          <label><span>视频语言（角色对白 / 旁白）</span><select aria-label="视频语言" value={language?.video_language ?? "zh-CN"}
+            disabled={!language || savingLanguage} onChange={e => updateLanguage({ video_language: e.target.value as MediaLanguage["video_language"] })}>
+            <option value="zh-CN">中文（普通话）</option><option value="en">English</option>
+          </select></label>
+          <label><span>字幕语言</span><select aria-label="字幕语言" value={language?.subtitle_language ?? "zh-CN"}
+            disabled={!language || savingLanguage} onChange={e => updateLanguage({ subtitle_language: e.target.value as MediaLanguage["subtitle_language"] })}>
+            <option value="zh-CN">中文（简体）</option><option value="en">English</option>
+          </select></label>
           <label><span>图片生成分辨率</span><select value={generation?.image_resolution ?? "0.5K"} onChange={e => updateGeneration({ image_resolution: e.target.value })}>{["0.5K", "1K", "2K", "4K"].map(v => <option key={v}>{v}</option>)}</select></label>
           <label><span>视频生成分辨率</span><select value={generation?.video_resolution ?? "480P"} onChange={e => updateGeneration({ video_resolution: e.target.value })}>{["480P", "768P", "1080P"].map(v => <option key={v}>{v}</option>)}</select></label>
           <label><span>视频比例</span><select value={generation?.aspect_ratio ?? "16:9"} onChange={e => updateGeneration({ aspect_ratio: e.target.value })}>{["auto", "16:9", "9:16", "1:1"].map(v => <option key={v}>{v}</option>)}</select></label>
         </div>
+        <p className="muted">语言设置保存在此部署，供之后新制作的场景使用。视频语言也用于新叙事与推荐文案；字幕可独立选择。已生成或正在制作的场景保留原语言。字幕是场景摘要，并非逐字听写；本设置不会翻译旧视频或改变界面语言。</p>
+        {languageError && <p role="alert">{languageError}{!language && <button onClick={loadLanguage}>重新载入语言设置</button>}</p>}
         {ui.mode === "standard" && <p className="muted">当前云端媒体生成暂时不可用时，可以继续播放已有素材、上传素材或选择文字模式。</p>}
         {ui.mode === "developer" && <>
           <h4>开发测试覆盖</h4>

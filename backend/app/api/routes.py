@@ -9,6 +9,8 @@ from pydantic import BaseModel
 from sqlalchemy import select
 
 from ..config import settings
+from ..domain.media_language import MediaLanguage
+from ..runtime.language_settings import read_language_settings, save_language_settings
 from ..db import SessionLocal
 from ..db_models import AssetRow, FeedbackRow
 from ..domain.ids import uid
@@ -96,6 +98,17 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
     @api.get("/health")
     async def health():
         return {"ok": True, "provider_mode": router.mode, "profile": router.profile.value}
+
+    @api.get("/settings/language", response_model=MediaLanguage)
+    async def language_settings():
+        return read_language_settings()
+
+    @api.put("/settings/language", response_model=MediaLanguage)
+    async def update_language_settings(data: MediaLanguage):
+        try:
+            return save_language_settings(data)
+        except OSError:
+            raise HTTPException(503, "语言设置暂时无法保存，请稍后重试。") from None
 
     # ---------------- Scenario ----------------
     @api.get("/scenarios")

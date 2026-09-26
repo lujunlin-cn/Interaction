@@ -27,6 +27,7 @@ from ..db_models import AssetRow, ScenarioVersionRow, SessionRow
 from ..domain.drama_manager import DramaStateManager
 from ..domain.fingerprint import fingerprint_of
 from ..domain.ids import uid
+from ..domain.media_language import obvious_language_mismatch
 from ..domain.schemas import (
     RuntimeProfile, BaseVersions, Branch, BranchSource, BranchStatus, DramaticDirective, DramaPatchProposal,
     DramaState, Event, ForeshadowEntry, InteractionMode, OutcomeSpec, PatchOperation,
@@ -40,6 +41,7 @@ from ..skills.registry import is_enabled as skill_enabled
 from ..skills import mechanic as mechanic_skill
 from .session_state import Arc, BudgetLedger, SessionState, TimedState
 from .tracer import tracer
+from .language_settings import read_language_settings
 
 PHASE_LABELS = {
     BranchStatus.PLANNING: "正在理解你的行动",
@@ -517,25 +519,26 @@ class RuntimeEngine:
         npcs = _npc_ids(state)
         chars = {c.get("id"): c for c in state.scenario_snapshot.get("characters", [])}
         here = loc_names.get(world.location, world.location)
+        english = read_language_settings().video_language == "en"
         candidates: list[dict] = [
-            dict(label=f"仔细观察{here}的细节", confidence=0.6,
-                 summary="不承诺立场，先收集眼前可观察的信息", kind="investigation"),
+            dict(label=f"Examine {here}" if english else f"仔细观察{here}的细节", confidence=0.6,
+                 summary="Gather observable information first" if english else "不承诺立场，先收集眼前可观察的信息", kind="investigation"),
         ]
         for cid in npcs[:1]:
             name = chars.get(cid, {}).get("identity", cid).split(" /")[0]
             candidates.append(
-                dict(label=f"和{name}谈谈，听 TA 怎么说", confidence=0.6,
-                     summary="不推进调查，让关系自然流动", kind="social"))
+                dict(label=f"Talk to {name}" if english else f"和{name}谈谈，听 TA 怎么说", confidence=0.6,
+                     summary="Listen to their perspective" if english else "不推进调查，让关系自然流动", kind="social"))
         other_locs = [l for l in loc_ids if l != world.location]
         if other_locs:
             dest = loc_names.get(other_locs[-1], other_locs[-1])
             candidates.append(
-                dict(label=f"离开这里，去{dest}", confidence=0.55,
-                     summary="主动改变自己所处的位置", kind="withdrawal"))
+                dict(label=f"Leave for {dest}" if english else f"离开这里，去{dest}", confidence=0.55,
+                     summary="Move to another location" if english else "主动改变自己所处的位置", kind="withdrawal"))
         else:
             candidates.append(
-                dict(label="主动退出眼前的故事", confidence=0.55,
-                     summary="不再参与眼前的矛盾", kind="withdrawal"))
+                dict(label="Withdraw from the situation" if english else "主动退出眼前的故事", confidence=0.55,
+                     summary="Stop participating in the conflict" if english else "不再参与眼前的矛盾", kind="withdrawal"))
         return candidates
 
     async def candidate_actions(self, state: SessionState) -> list[dict]:
@@ -562,7 +565,7 @@ class RuntimeEngine:
             "phase": state.drama.phase.value,
             "wishes": [w.raw for w in state.wishes if w.status == WishStatus.ACTIVE],
             "recent_events": [e.summary for e in state.events[-5:]],
-            "instruction": "生成 3-5 个玩家此刻可采取的行动候选，"
+            "instruction": read_language_settings().text_instruction() + "生成 3-5 个玩家此刻可采取的行动候选，"
                            "返回 JSON: {\"candidates\": [{\"label\",\"summary\",\"kind\"}]}，"
                            "kind ∈ investigation/social/risk/withdrawal",
         }
@@ -1036,9 +1039,13 @@ class RuntimeEngine:
             "新物品和线索trigger.label必须用玩家语言给出可读名称；不要把内部ID当显示名。"
             "这是行动裁定而不是最终旁白；text控制在200字以内，把预算留给完整的结构化提案与directive。"
         )
+        state = self.sessions.get(session_id)
+        branch = state.branch(branch_id) if state and branch_id else None
+        language = self._branch_language(branch) if branch else read_language_settings()
+        messages[0]["content"] += language.text_instruction()
         for attempt in range(2):
             _, rec, resp = await self.router.call_text("director", messages=messages,
-                output_contract={"purpose": "director_plan", "mechanics": mechanics,
+                output_contract={"purpose": "director_plan", "media_language": language.model_dump(), "mechanics": mechanics,
                                  "json_schema": DirectorOutput.model_json_schema()}, branch_id=branch_id)
             try:
                 result = normalize_director_output(resp.content)
@@ -1267,12 +1274,29 @@ class RuntimeEngine:
                                  "at": now_ms()}})
         return ops
 
+    @staticmethod
+    def _branch_language(branch: Branch):
+        if branch.media_language is None:
+            branch.media_language = read_language_settings()
+        return branch.media_language
+
     async def _narrate_branch(self, state: SessionState, branch: Branch) -> None:
+        language = self._branch_language(branch)
         outcome = branch.outcome
-        base_messages = [{"role": "system", "content": "只返回 JSON {title:字符串,text:本幕短叙事,caption:简短中文字幕,dialogue:[{speaker:角色ID,line:台词}]}。旁白无 speaker，不泄露授权范围以外的信息，不替玩家做下一步决定。场景包：" + json.dumps(branch.packet.model_dump(exclude={"forbidden_revelations"}) if branch.packet else {}, ensure_ascii=False)}, {"role": "user", "content":
+        characters = state.scenario_snapshot.get("characters", [])
+        proper_names = tuple(name for c in characters for name in (
+            str(c.get("identity") or ""), str(c.get("name") or ""),
+            *re.findall(r"[A-Za-z][A-Za-z .'-]{2,}", str(c.get("identity") or ""))))
+        base_messages = [{"role": "system", "content": "只返回 JSON {title:字符串,text:本幕短叙事,caption:简短字幕,dialogue:[{speaker:角色ID,line:台词}]}。"
+                         "caption 必须是本幕内容的字幕，不可复制行动建议。dialogue 只包含本幕确实说出的简短台词，"
+                         "不得为凑台词添加新的剧情事实；无台词返回空数组。speaker 必须使用场景中的角色ID。"
+                         "旁白无 speaker，不泄露授权范围以外的信息，不替玩家做下一步决定。"
+                         + language.text_instruction() + "允许的角色：" + json.dumps(
+                             [{"id": c.get("id"), "identity": c.get("identity", "")} for c in characters], ensure_ascii=False)
+                         + "场景包：" + json.dumps(branch.packet.model_dump(exclude={"forbidden_revelations"}) if branch.packet else {}, ensure_ascii=False)}, {"role": "user", "content":
                           f"scene_title: {outcome.title if outcome else branch.label}\n"
                           f"scene_text: {outcome.text if outcome else branch.summary}\n"
-                          f"caption: {branch.summary}"}]
+                          f"action_summary (not a subtitle): {branch.summary}"}]
         leaked: list[str] = []
         resp = None
         rec = None
@@ -1284,7 +1308,7 @@ class RuntimeEngine:
                  "不要解释任何未揭示的背景。"}]
             _, rec, resp = await self.router.call_text(
                 "narrative", messages=messages,
-                output_contract={"purpose": "narrative_beat", "context": branch.context,
+                output_contract={"purpose": "narrative_beat", "media_language": language.model_dump(), "context": branch.context,
                                  "packet": branch.packet.model_dump(mode="json")
                                  if branch.packet else {},
                                  "scenario_brief": self._scenario_brief(state)},
@@ -1295,19 +1319,35 @@ class RuntimeEngine:
                 text = content.get("text") or content.get("scene_text")
                 if not isinstance(text, str) or not text.strip():
                     raise ValueError("Narrative output requires non-empty text")
+                caption = content.get("caption")
+                if not isinstance(caption, str) or not caption.strip():
+                    raise ValueError("Narrative output requires a caption in the selected subtitle language")
+                if obvious_language_mismatch(caption, language.subtitle_language, proper_names):
+                    raise ValueError("Narrative caption uses the wrong subtitle language")
+                dialogue = content.get("dialogue", [])
+                known_speakers = {c.get("id") for c in state.scenario_snapshot.get("characters", [])}
+                if not isinstance(dialogue, list) or any(
+                    not isinstance(line, dict) or not isinstance(line.get("line"), str)
+                    or not line["line"].strip() or not isinstance(line.get("speaker"), str)
+                    or line["speaker"] not in known_speakers for line in dialogue
+                ):
+                    raise ValueError("Narrative dialogue requires known speakers and non-empty lines")
+                if any(obvious_language_mismatch(line["line"], language.video_language, proper_names) for line in dialogue):
+                    raise ValueError("Narrative dialogue uses the wrong video language")
             except ValueError as error:
                 await tracer.emit("narrative.schema", "failed", output={"error": str(error), "raw_output": resp.content, "attempt": attempt + 1},
                                   provider=rec.selected or "", model=resp.model, session_id=state.id, branch_id=branch.id)
                 if attempt:
                     branch.fail_stage = "NARRATIVE"
                     raise EngineError("Narrative output failed schema validation") from error
-                base_messages += [{"role": "user", "content": "上次缺少有效 text。请返回完整 JSON {title,text,caption,dialogue}；正文只能描述场景包授权的可观察信息。"}]
+                base_messages += [{"role": "user", "content": "上次输出字段无效。请返回完整 JSON {title,text,caption,dialogue}；text/caption不能为空，dialogue为数组且speaker必须来自场景。遵守指定语言与授权信息范围。"}]
                 continue
-            leaked = self._forbidden_hits(state, branch, text)
+            leaked = self._forbidden_hits(state, branch, "\n".join([text, caption, *[line["line"] for line in dialogue]]))
             if not leaked:
                 branch.narrative = text
-                branch.caption = content.get("caption") or branch.summary
-                dialogue = content.get("dialogue") or []
+                branch.caption = caption
+                branch.dialogue = [{"speaker": line["speaker"], "line": line["line"]} for line in dialogue]
+                branch.caption_speaker = ""
                 if dialogue and isinstance(dialogue[0], dict) and dialogue[0].get("line") == branch.caption:
                     branch.caption_speaker = str(dialogue[0].get("speaker") or "")
                 break
@@ -1321,7 +1361,7 @@ class RuntimeEngine:
             raise EngineError(f"narrative leak rejected: {leaked[0]}")
         branch.routes.append(rec)
         await tracer.emit("narrative.beat", "success",
-                          output={"chars": len(branch.narrative)},
+                          output={"chars": len(branch.narrative), "media_language": language.model_dump(), "dialogue_count": len(branch.dialogue)},
                           provider=rec.selected or "", session_id=state.id, branch_id=branch.id)
 
     def _bound_references(self, state: SessionState, cast: list[str] | None = None) -> list[dict]:
@@ -1391,6 +1431,7 @@ class RuntimeEngine:
                 "developer_test_override": settings.developer_test_override_enabled}
 
     async def _shoot_branch(self, state: SessionState, branch: Branch) -> None:
+        language = self._branch_language(branch)
         policy = self._shot_policy(branch)
         characters = state.scenario_snapshot.get("characters", [])
         cast_ids = sorted({c["id"] for c in characters if c.get("id")})
@@ -1401,10 +1442,11 @@ class RuntimeEngine:
                 "type": "array", "minItems": policy["count"], "maxItems": policy["count"],
                 "items": {
                     "type": "object", "additionalProperties": False,
-                    "required": ["title", "prompt", "subtitle", "duration", "cast"],
+                    "required": ["title", "prompt", "subtitle", "duration", "cast", "dialogue_indices"],
                     "properties": {
                         "title": {"type": "string"}, "prompt": {"type": "string", "minLength": 1},
                         "subtitle": {"type": "string"}, "cast": cast_schema,
+                        "dialogue_indices": {"type": "array", "items": {"type": "integer", "enum": list(range(len(branch.dialogue)))}} if branch.dialogue else {"type": "array", "maxItems": 0},
                         "duration": {"type": "number", "minimum": policy["minimum"], "maximum": policy["maximum"]},
                     },
                 },
@@ -1417,12 +1459,16 @@ class RuntimeEngine:
                 f"duration 目标 {policy['target']} 秒，允许 {policy['minimum']} 至 {policy['maximum']} 秒。"
                 "每个镜头必须给 cast:[角色ID]，只包含画面中真正可见的角色；广播、画外音不算可见角色。"
                 f"cast 中每一项只能逐字使用这些 ID，禁止用姓名或自创缩写替代：{json.dumps(cast_ids)}。"
-                "prompt 使用完整具体影视描述，人物与场景保持连续。角色：" + json.dumps(
+                "dialogue_indices 选择该镜头要使用的授权台词序号(从0开始)；不说话返回空数组，"
+                "跨镜头不得重复同一句台词，不得虚构或翻译台词。prompt只描述画面与音效，不包含新台词或文字字幕。"
+                + language.text_instruction() + "prompt 使用完整具体影视描述，人物与场景保持连续。角色：" + json.dumps(
                     [{k: c.get(k, "") for k in ("id", "identity", "appearance", "visual_state")} for c in characters], ensure_ascii=False)},
                 {"role": "user", "content": f"raw_player_input: {branch.label}\n"
                  f"scene_title: {branch.outcome.title if branch.outcome else branch.label}\n"
-                 f"scene_text: {branch.narrative}"}],
-            output_contract={"purpose": "production_shots", "shot_policy": policy, "json_schema": schema}, branch_id=branch.id)
+                 f"scene_text: {branch.narrative}\n"
+                 f"approved_caption: {branch.caption}\n"
+                 f"authorized_dialogue: {json.dumps(branch.dialogue, ensure_ascii=False)}"}],
+            output_contract={"purpose": "production_shots", "media_language": language.model_dump(), "shot_policy": policy, "json_schema": schema}, branch_id=branch.id)
         from .structured_output import decode_object
         content = decode_object(resp.content)
         raw_shots = content.get("shots")
@@ -1439,6 +1485,7 @@ class RuntimeEngine:
             and a.get("role") not in ("voice", "motion"))
         shots = []
         normalizations = []
+        used_dialogue: set[int] = set()
         for index, shot in enumerate(raw_shots):
             if not isinstance(shot, dict):
                 raise EngineError("Production returned an invalid shot")
@@ -1514,17 +1561,28 @@ class RuntimeEngine:
                         binding_parts.append(f"{label} {i + 1}: {ref['entity']} — {names.get(ref['entity'], ref.get('name') or 'environment')} ({ref['role']})")
                 binding = "; ".join(binding_parts)
                 prompt += "\nReference identity map: " + binding + ". Keep each character's face, body and outfit separate."
+            dialogue_indices = shot.get("dialogue_indices", [])
+            if not isinstance(dialogue_indices, list) or any(
+                type(i) is not int or not 0 <= i < len(branch.dialogue) for i in dialogue_indices
+            ):
+                raise EngineError("Production contains an invalid authorized dialogue reference")
+            if len(set(dialogue_indices)) != len(dialogue_indices) or used_dialogue.intersection(dialogue_indices):
+                raise EngineError("Production repeats authorized dialogue across shots")
+            used_dialogue.update(dialogue_indices)
+            spoken_lines = [{"speaker": character_by_id[line["speaker"]].get("identity") or line["speaker"], "line": line["line"]}
+                            for i in dialogue_indices for line in [branch.dialogue[i]]]
+            prompt += language.video_instruction(spoken_lines)
             shots.append(ShotPlan(id=f"shot_{index + 1}", index=index + 1,
                 title=shot.get("title", f"镜头 {index + 1}"), duration=bounded, trim_end=bounded,
-                subtitle=shot.get("subtitle", ""), prompt=prompt, references=refs,
-                params={"cast": list(dict.fromkeys(cast)), "text_only_cast": text_only_cast, "shot_policy": policy,
+                subtitle=branch.caption if len(raw_shots) == 1 and branch.caption else shot.get("subtitle", ""), prompt=prompt, references=refs,
+                params={"cast": list(dict.fromkeys(cast)), "media_language": language.model_dump(), "dialogue_indices": dialogue_indices, "text_only_cast": text_only_cast, "shot_policy": policy,
                         "requested_duration": duration, "normalized_duration": bounded != duration}))
         branch.shots = shots
         branch.references = list({(ref.get("asset_id"), ref.get("entity"), ref.get("role")): ref
                                   for shot in shots for ref in shot.references}.values())
         branch.shot_count = len(shots)
         branch.routes.append(rec)
-        await tracer.emit("production.shots", "success", output={"shots": len(shots), "policy": policy,
+        await tracer.emit("production.shots", "success", output={"shots": len(shots), "policy": policy, "media_language": language.model_dump(),
             "normalizations": normalizations, "cast": [shot.params["cast"] for shot in shots],
             "text_only_cast": [shot.params["text_only_cast"] for shot in shots]},
             provider=rec.selected or "", session_id=state.id, branch_id=branch.id, skill_id="h3-production")
@@ -1591,11 +1649,11 @@ class RuntimeEngine:
                             "shot_id": shot["id"], "provider": rec.selected, "submitted_at": submitted_at,
                             "usage_id": getattr(error, "usage_id", None), "error_class": getattr(error, "kind", "")})
                         await self._persist(current)
-                await tracer.emit("video.submit", "failed", input_={"shot_id": shot["id"], "prompt": prompt, "references": shot_refs},
+                await tracer.emit("video.submit", "failed", input_={"shot_id": shot["id"], "prompt": prompt, "references": shot_refs, "media_language": shot.get("params", {}).get("media_language")},
                     output={"error": repr(error), "submitted_at": submitted_at}, provider=rec.selected or "",
                     session_id=session_id, branch_id=branch_id)
                 raise
-            await tracer.emit("video.submit", "success", input_={"shot_id": shot["id"], "prompt": prompt, "references": shot_refs},
+            await tracer.emit("video.submit", "success", input_={"shot_id": shot["id"], "prompt": prompt, "references": shot_refs, "media_language": shot.get("params", {}).get("media_language")},
                 output={"provider_job_id": handle.provider_job_id, "submitted_at": submitted_at}, provider=rec.selected or "",
                 session_id=session_id, branch_id=branch_id)
             async with self._lock(session_id):
@@ -1624,6 +1682,7 @@ class RuntimeEngine:
                                             "provider_job_id": handle.provider_job_id,
                                             "request_id": handle.provider_job_id,
                                             "prompt": prompt,
+                                            "media_language": shot.get("params", {}).get("media_language"),
                                             "references": shot.get("references", []),
                                             "cast": shot.get("params", {}).get("cast", []),
                                             "text_only_cast": shot.get("params", {}).get("text_only_cast", []),
@@ -1703,6 +1762,7 @@ class RuntimeEngine:
             clip_refs=[c.name for c in clips],
             assembled_path=f"scenes/{scene_id}.mp4", quality_status="READY",
             provenance={"assembler": "ffmpeg-concat",
+                        "media_language": branch.media_language.model_dump() if branch.media_language else None,
                         "providers": [r.selected for r in branch.routes],
                         "jobs": branch.jobs,
                         "shot_provenance": shot_provenance,

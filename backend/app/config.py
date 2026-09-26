@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Literal
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -118,6 +119,8 @@ class Settings(BaseSettings):
     image_generation_resolution: str = "0.5K"
     video_generation_resolution: str = "480P"
     generation_aspect_ratio: str = "16:9"
+    video_language: Literal["zh-CN", "en"] = "zh-CN"
+    subtitle_language: Literal["zh-CN", "en"] = "zh-CN"
     developer_test_top_k: int = 1
     developer_test_max_shots: int = 1
     developer_test_shot_duration: float = 5.0

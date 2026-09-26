@@ -5,6 +5,8 @@ import time
 from enum import Enum
 from typing import Any, Literal, Optional
 
+from .media_language import MediaLanguage
+
 from pydantic import BaseModel, Field
 
 
@@ -657,6 +659,8 @@ class Branch(BaseModel):
     narrative: str = ""                          # NARRATIVE 阶段产出的 beat 文本
     caption: str = ""
     caption_speaker: str = ""
+    media_language: Optional[MediaLanguage] = None  # Frozen before this beat is authored.
+    dialogue: list[dict[str, str]] = Field(default_factory=list)
     media_clips: list[str] = Field(default_factory=list)   # GENERATING 产出的镜头文件
     shots: list[ShotPlan] = Field(default_factory=list)
     shot_count: int = 2

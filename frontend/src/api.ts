@@ -6,6 +6,7 @@ import type {
 } from "./types";
 
 const BASE = "";
+export type MediaLanguage = { video_language: "zh-CN" | "en"; subtitle_language: "zh-CN" | "en" };
 
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const resp = await fetch(BASE + path, {
@@ -26,6 +27,8 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   health: () => req<{ ok: boolean; provider_mode: string; profile: string }>("/api/health"),
+  languageSettings: () => req<MediaLanguage>("/api/settings/language"),
+  saveLanguageSettings: (data: MediaLanguage) => req<MediaLanguage>("/api/settings/language", { method: "PUT", body: JSON.stringify(data) }),
 
   listScenarios: () => req<{ items: ScenarioDraft[] }>("/api/scenarios"),
   getScenario: (id: string) => req<ScenarioDraft>(`/api/scenarios/${id}`),

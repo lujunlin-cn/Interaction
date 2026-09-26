@@ -1,0 +1,90 @@
+{
+  "at_utc": "2026-09-26T07:13:00.874196+00:00",
+  "read_only": true,
+  "sessions_scanned": 41,
+  "shots_scanned": 145,
+  "prompt_script_counts": {
+    "zh-dominant": 74,
+    "latin-dominant": 17,
+    "empty": 54
+  },
+  "method": "Inspect persisted prompt/caption/subtitle only; no audio transcription, no paid generation.",
+  "examples": {
+    "zh-dominant": {
+      "session_id": "sess_00876_839552",
+      "branch_id": "opening_00881_8465f6",
+      "shot_id": "shot_1",
+      "prompt_excerpt": "暴雨夜的地下检疫停车场入口，厚重的金属格栅被暴雨砸得溅起细碎水花，冷白色应急灯在湿漉漉的水泥地面投下晃动的光影。穿着带雨水与污迹RPD制服的李昂指尖蹭过警用通讯器表面的湿痕，侧头看向身旁的克莱尔，克莱尔的红色机车夹克肩头沾着泥点与雨水，利落马尾被风吹得微乱，两人神情都带着警觉。突然头顶的金属扩音器亮起红色警示灯，发出刺耳的嗡鸣，李昂瞬间收紧手指扣向腰间的配枪，克莱尔也立刻侧过脸压着声音凑到李昂耳边，背景隐约传来走廊深处冷藏系统不稳的低频嗡鸣，整个空间弥漫着消毒水混着铁锈的压抑氛围。",
+      "player_caption": "1998 年浣熊市全面失控的当夜，李昂·S·肯尼迪在警察局地下更深层发现 Umbrella 与当地机构秘密合作建造的医疗检疫设施，并与克莱尔·雷德菲尔德重新会合。他们寻找失踪幸存者和危险病毒样本，在调查、有限物资、同伴信任与 T-103 型追踪实验体的压力下，面对救人、销毁样本、保存 Umbrella 犯罪证据之间的真实取舍。研究主管 Dr. Victor",
+      "shot_subtitle": "暴雨夜抵达地下检疫入口的李昂与克莱尔，突然收到广播指令",
+      "media_language": null,
+      "has_persisted_dialogue": false,
+      "submitted_jobs": [
+        "01a0d96c-9349-7171-8d6b-3716b5e80138"
+      ]
+    },
+    "latin-dominant": {
+      "session_id": "sess_00101_7db4d3",
+      "branch_id": "br_00152_18c8ec",
+      "shot_id": "shot_1",
+      "prompt_excerpt": "A dimly lit underground corridor drenched in rainwater and debris. Leon S. Kennedy and Claire Redfield move forward, their figures illuminated by flickering red emergency lights from a massive, faulty steel door ahead. They stop short of the door, exchanging a brief, tense glance. Both grip their weapons tightly, checking their supplies. In the background, the hum of generators and the distorted voice of Victor over the intercom hints at the power restoration controls inside. The atmosphere is heavy with suspense and the smell of damp concrete.",
+      "player_caption": "在配电室排查断路，恢复监控与大门锁闭，暂时挡住T-103的追踪，但会进一步恶化冷却系统压力。",
+      "shot_subtitle": "控制室内设有恢复供电的总闸与应急发电机",
+      "media_language": null,
+      "has_persisted_dialogue": false,
+      "submitted_jobs": []
+    },
+    "empty": {
+      "session_id": "sess_00076_d08233",
+      "branch_id": "opening_00081_04d8b1",
+      "shot_id": "shot_1",
+      "prompt_excerpt": "",
+      "player_caption": "午夜前，Alice 准备离开公寓。走廊的脚步声、磨损的钥匙和一段尚未找到的录音，指向同一件旧事。你扮演邻居，自行决定信任、调查或离开。",
+      "shot_subtitle": "午夜前，Alice 准备离开公寓。走廊的脚步声、磨损的钥匙和一段尚未找到的录音，指向同一件旧事。你扮演邻居，自行决定信任、调查或离开。",
+      "media_language": null,
+      "has_persisted_dialogue": false,
+      "submitted_jobs": [
+        "opening_00081_04d8b1_shot_1"
+      ]
+    }
+  },
+  "mixed_prompt_caption_examples": [
+    {
+      "session_id": "sess_00101_7db4d3",
+      "branch_id": "br_00152_18c8ec",
+      "shot_id": "shot_1",
+      "prompt_excerpt": "A dimly lit underground corridor drenched in rainwater and debris. Leon S. Kennedy and Claire Redfield move forward, their figures illuminated by flickering red emergency lights from a massive, faulty steel door ahead. They stop short of the door, exchanging a brief, tense glance. Both grip their weapons tightly, checking their supplies. In the background, the hum of generators and the distorted voice of Victor over the intercom hints at the power restoration controls inside. The atmosphere is heavy with suspense and the smell of damp concrete.",
+      "player_caption": "在配电室排查断路，恢复监控与大门锁闭，暂时挡住T-103的追踪，但会进一步恶化冷却系统压力。",
+      "shot_subtitle": "控制室内设有恢复供电的总闸与应急发电机",
+      "media_language": null,
+      "has_persisted_dialogue": false,
+      "submitted_jobs": []
+    },
+    {
+      "session_id": "sess_00101_7db4d3",
+      "branch_id": "br_00156_bbf9cb",
+      "shot_id": "shot_1",
+      "prompt_excerpt": "Leon S. Kennedy stands in a damp underground archive room, the air thick with the scent of disinfectant and mold. He places Umbrella-marked experiment records and sealed virus samples into a blast-proof locker one by one. The snap of the latch echoes clearly in the vast space. His fingertips brush the cold condensation on the locker's edge. He looks up at the flickering monitor in the corner, his expression focused. In the background, the heavy, oppressive silhouette of a Tyrant looms, footsteps audible but distant. The scene is wet, dimly lit, and tense, emphasizing the weight of the evidence",
+      "player_caption": "在实验档案室锁存病毒样本与实验记录，确保证据保存完整，但需要牺牲部分时间，可能错过与T-103的直接交锋窗口。",
+      "shot_subtitle": "潮湿的地下档案室，证据的重量与追踪的威胁并存。",
+      "media_language": null,
+      "has_persisted_dialogue": false,
+      "submitted_jobs": [
+        "01a0d91e-8279-7e41-9b64-be26830fb278"
+      ]
+    },
+    {
+      "session_id": "sess_00101_7db4d3",
+      "branch_id": "br_00256_6f0a53",
+      "shot_id": "shot_1",
+      "prompt_excerpt": "Leon S. Kennedy and Claire Redfield push open the metal door to the power room, a musty scent mixed with rain humidity rushing into the cramped space. Leon quickly moves to the distribution box, his gloved fingers brushing over the switches covered in dust. Claire stands sideways at the door, her eyes scanning every corner of the power room vigilantly. As Leon turns the key, a low hum of current echoes through the space, and emergency lights light up one by one, casting a dim yellow glow over the pitted walls. The power system is overloaded, the control panel flashing ominous red warnings, ind",
+      "player_caption": "在生化危机笼罩下，设施供电已恶化，恢复电力可解锁重型门锁、冷藏系统与应急照明，直接影响冷藏样本的保存与逃生路径的安全。",
+      "shot_subtitle": "配电室内，应急灯亮起，红色警告闪烁。",
+      "media_language": null,
+      "has_persisted_dialogue": false,
+      "submitted_jobs": []
+    }
+  ],
+  "usage_total_records": 69,
+  "usage_http_attempts": 69
+}
