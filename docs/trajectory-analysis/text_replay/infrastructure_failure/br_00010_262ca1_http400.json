@@ -1,0 +1,232 @@
+{
+  "turn_id": "br_00010_262ca1",
+  "raw_input": "我继续在已经打开的档案终端中读取原始实验日志，只记录屏幕上实际出现的异常时间和撤离命令。",
+  "visible_before": {
+    "title": "生化危机：黑雨隔离区",
+    "premise": "1998 年浣熊市全面失控的当夜，李昂·S·肯尼迪在警察局地下更深层发现 Umbrella 与当地机构秘密合作建造的医疗检疫设施，并与克莱尔·雷德菲尔德重新会合。他们寻找失踪幸存者和危险病毒样本，在调查、有限物资、同伴信任与 T-103 型追踪实验体的压力下，面对救人、销毁样本、保存 Umbrella 犯罪证据之间的真实取舍。研究主管 Dr. Victor Hale 通过监控与广播提供指引，却隐瞒了事故前样本异常及事故后延误撤离的责任。",
+    "genre": "生存恐怖／调查冒险",
+    "tone": "压抑、紧迫、疑云重重",
+    "core_question": "在T-103追踪、供电恶化与冷藏失效的压力下，李昂与克莱尔如何在救出幸存者、阻止病毒样本扩散、保留Umbrella犯罪证据之间做出无法两全的取舍，并承担相应后果？",
+    "central_conflict": "救出眼前生命、阻止样本扩散、保留 Umbrella 犯罪证据与有限时间无法同时保证。克莱尔有自主判断，会反对无证据盲信 Victor；李昂的行动、分享信息和救援取舍影响双方信任，而不是预设玩家一定轻信他。Victor 希望借两人之力带着成果活着离开，与他们的救援和调查目标发生冲突。",
+    "ending_families": {
+      "rescue_burn": "李昂和克莱尔救出幸存者并销毁样本但部分证据丢失",
+      "evidence_first": "取得犯罪证据但错失部分救援机会",
+      "sample_escape": "取得并带走样本但承担扩散风险",
+      "lockdown_destroy": "彻底封锁并摧毁设施"
+    },
+    "truth_model": "fact_01：Victor Hale是研究主管，团队事故前已知道样本异常；事故后他仍命令保留实验数据，间接延误撤离。\nfact_02：Victor Hale声称的病毒抑制剂并不可靠；他的真实目标是带着研究成果与样本活着离开。\nfact_03：T-103型追踪实验体只是追杀威胁，未经证据确认其起源或特殊执念。\nfact_04：设施内有失踪幸存者，具体人数与生存状态必须通过调查确认，不得预设唯一幸存者数量。\nfact_05：所有关键真相必须经实际线索、对话或现场证据获得，不得无证据泄露。",
+    "authored_anchors": "先在地下检疫入口与克莱尔会合并听到 Victor 广播；通过医疗观察区和实验档案室的实际证据，逐步核实异常时间与撤离延误。进入冷藏样本库或安全控制中心后，T-103突破封锁触发一次限时追逐；玩家可掩护搭档、利用供电与门禁或另寻通道，后果由行动和现有资源决定，不预设固定关系奖励。最后围绕救援、销毁样本、保留证据或封锁设施作取舍。",
+    "forbidden_outcomes": "李昂不得感染变异；浣熊市不得提前遭核打击；Victor Hale不得无动机作恶；不得出现超自然力量；不得预设李昂阵亡；不得设定T-103对特定角色发色或枪声的执念；不得强行规定唯一幸存者数量。",
+    "world_rules": "感染者不能靠普通谈判停止攻击。\n普通草药只能处理外伤，不能治愈病毒感染。\n安全门必须通过有效门禁、电力恢复或合理物理手段处理。\n已确认死亡或毁灭的实体不能无原因复活。\n李昂、克莱尔、Victor 等角色必须沿可达通道移动，不能瞬间传送。\nVictor 只能操控他仍保有权限、且仍有供电的设施系统。\n角色只能通过实际发现的线索、对话或可见证据获得信息，秘密不能凭空变成已知事实。",
+    "world_constraints": "弹药、急救物资、门禁用品和保险丝有限，搜寻与使用必须符合现场因果。T-103 是高威胁追踪实验体，不能无依据被轻易击败；可利用门、电力、地形与协作争取逃生时间。冷藏供电恶化威胁样本稳定性，被困幸存者的救援窗口持续缩短。Victor 的权限会随供电和安全系统状态变化，不得全知全能。关键秘密必须经过线索核实，克莱尔有自己的判断与行动立场。倒计时失败会造成受伤、消耗、路线封锁或救援延误等后果，但不得直接强制游戏结束。",
+    "player": {
+      "id": "leon",
+      "fear": "因无能导致他人死亡",
+      "desire": "找到幸存者，查明地下设施发生了什么，阻止危险病毒样本流出。",
+      "secrets": "无已确认的个人秘密；不预设玩家尚未做出的选择。",
+      "identity": "李昂·S·肯尼迪（Leon S. Kennedy）· 玩家角色，年轻 RPD 警员",
+      "voice_id": null,
+      "knowledge": "掌握基础警务、枪械与急救；进入地下时不知道 Victor 隐瞒的事故真相，需要通过现场证据逐步获知。",
+      "outfit_id": "outfit_00005_931bd6",
+      "pose_refs": [],
+      "appearance": "",
+      "motion_refs": [],
+      "personality": "冷静、有责任感与同情心，灾难中仍坚持救人；经验不足但应变能力强，愿意为自己的决定承担后果。",
+      "relationship": "克莱尔是有独立判断的合作伙伴；愿意与她共同决定，不替她做所有选择。对 Victor 保持审慎，信任须由证据支持。",
+      "visual_state": "本故事使用 RPD 执勤装备；保持主身份的脸、年龄、发型与体型，制服带雨水和污迹，没有感染特征。",
+      "local_outfits": [],
+      "overlay_sources": {
+        "pose": "INHERIT",
+        "voice": "INHERIT",
+        "desire": "OVERRIDE",
+        "motion": "INHERIT",
+        "outfit": "OVERRIDE",
+        "secrets": "OVERRIDE",
+        "identity": "OVERRIDE",
+        "knowledge": "OVERRIDE",
+        "appearance": "OVERRIDE",
+        "personality": "OVERRIDE",
+        "relationship": "OVERRIDE"
+      },
+      "reference_overrides": {},
+      "global_character_version": 13
+    },
+    "locations": {
+      "loc_parking": "地下检疫入口",
+      "loc_lab_a": "医疗观察区",
+      "loc_control": "配电室",
+      "loc_holding": "实验档案室",
+      "loc_exit": "冷藏样本库",
+      "location_5": "安全控制中心",
+      "location_6": "紧急逃生通道"
+    },
+    "location": "loc_control",
+    "inventory": [
+      "ammunition",
+      "keycard_access",
+      "medical_supplies"
+    ],
+    "clues": [
+      "clue_repair_path",
+      "clue_power_restored"
+    ],
+    "knowledge": [
+      "配电室需要恢复供电才能打开相关门禁",
+      "维修通道是绕过主通道的替代路线",
+      "样本库后方可能藏有未被主通道发现的线索",
+      "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1"
+    ],
+    "canonical_facts": {},
+    "objects": {},
+    "recent_canonical_beats": [
+      {
+        "title": "行动确认",
+        "result": "李昂放弃暂时听从 Victor 的指引，带领克莱尔前往配电室恢复局部供电，随后通过维修通道绕至样本库后方。这一决定切断了与 Victor 实时广播的直接联系，转而依赖现场的线索与通道。",
+        "evidence": [
+          "配电室需要恢复供电才能打开相关门禁",
+          "维修通道是绕过主通道的替代路线",
+          "样本库后方可能藏有未被主通道发现的线索"
+        ]
+      },
+      {
+        "title": "潜入样本库",
+        "result": "李昂沿维修通道潜入，避开了主通道的监控与门禁。阴森的管道中散落着残留的医疗废料，偶尔有滴水声回荡。他成功潜入冷藏样本库的外围，但前方并未发现预期的样本，只看到标有警示的生化容器架子。",
+        "evidence": [
+          "维修通道是绕过主通道的替代路线"
+        ]
+      },
+      {
+        "title": "物资搜寻完成",
+        "result": "李昂和克莱尔在维修通道旁的值班室内搜寻，收集了几盒尚未过期的急救物资、一盒子弹和一套门禁钥匙卡。这些物资虽不多，但足以应对接下来的短期危机。",
+        "evidence": [
+          "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1"
+        ]
+      },
+      {
+        "title": "调查实验档案室",
+        "result": "李昂和克莱尔沿维修通道潜行至实验档案室。李昂插入门禁卡，锁舌咔哒一声回响，金属门缓缓滑开。室内弥漫着陈旧的化学味，荧光灯闪烁不定。满架的文件柜和翻倒的实验记录表明这里曾是混乱的现场。李昂走向主终端，克莱尔则侧面留意走廊。终端屏幕亮起，显示登录提示。李昂输入凭证，档案开始卷动。监控录像和实验日志逐条呈现，李昂仔细浏览每一条条目，试图寻找Victor是否在事故前隐瞒了什么。",
+        "presented_narrative": "李昂与克莱尔沿维修通道潜行至实验档案室。李昂插入门禁卡，锁舌咔哒一声回响，金属门缓缓滑开。室内弥漫着陈旧的化学味，荧光灯闪烁不定。满架的文件柜和翻倒的实验记录表明这里曾是混乱的现场。李昂走向主终端，克莱尔则侧面留意走廊。终端屏幕亮起，显示登录提示。李昂输入凭证，档案开始卷动。监控录像和实验日志逐条呈现，李昂仔细浏览每一条条目，试图寻找Victor是否在事故前隐瞒了什么。",
+        "evidence": []
+      }
+    ],
+    "wishes": [
+      {
+        "text": "我希望最后能和 Claire 一起把被困的幸存者救出去。",
+        "status": "ACTIVE"
+      }
+    ],
+    "relationships": {
+      "stalker": 50,
+      "char_149758": 50,
+      "char_204d12": 50
+    },
+    "phase": "ESCALATION",
+    "npcs": [
+      {
+        "id": "stalker",
+        "fear": "不预设未经证实的特定恐惧或弱点；玩家只能根据实际观察尝试利用环境。",
+        "desire": "追踪设施内的目标并构成持续压迫。",
+        "secrets": "没有“由某位设施研究员变异”或“对克莱尔发色执念”的已确认设定。",
+        "identity": "T-103 型追踪实验体 · 高威胁敌对实体",
+        "voice_id": null,
+        "knowledge": "只依据实际感知与可达通道追踪，不全知、不瞬间传送。",
+        "outfit_id": null,
+        "pose_refs": [],
+        "motion_refs": [],
+        "personality": "危险而持续的追踪威胁，不能用普通谈判停止攻击。",
+        "relationship": "对李昂、克莱尔与幸存者构成威胁，是追逐和限时遭遇的压力来源。",
+        "visual_state": "高大的 T-103 型人形追踪实验体，轮廓与保护性服装形成沉重压迫感，不与任何人类角色混淆。",
+        "local_outfits": [],
+        "overlay_sources": {
+          "fear": "OVERRIDE",
+          "desire": "OVERRIDE",
+          "secrets": "OVERRIDE",
+          "identity": "OVERRIDE",
+          "knowledge": "OVERRIDE",
+          "appearance": "OVERRIDE",
+          "personality": "OVERRIDE",
+          "relationship": "OVERRIDE"
+        },
+        "reference_overrides": {},
+        "global_character_version": null
+      },
+      {
+        "id": "char_204d12",
+        "fear": "再次与亲人失散",
+        "desire": "找到被困幸存者，帮助他们离开设施，并查明 Umbrella 非法实验的证据。",
+        "secrets": "尚未掌握事故全部证据，但已强烈怀疑 Victor 的解释；怀疑不等于已经知道真相。",
+        "identity": "克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者",
+        "voice_id": null,
+        "knowledge": "熟悉基础急救与求生，知道有人在设施失踪；Victor 事故前后责任必须通过调查获知。",
+        "outfit_id": null,
+        "pose_refs": [],
+        "appearance": "年轻成年女性，棕红色长发利落束成马尾，脸部年轻自然，身形匀称而矫健，眼神坚定、警觉而温和。常见实用红色机车夹克与便于行动的服装；无伤势、无感染特征。保持独立于李昂与Victor的女性身份、年龄、发型和体型。",
+        "motion_refs": [],
+        "personality": "勇敢、机敏、有行动力，有自己的判断与立场，保护弱者，不只是跟随李昂的剧情工具。",
+        "relationship": "李昂救人、分享真相并尊重她的意见会增强信任；李昂在证据不足时盲从 Victor，她会明确反对并可能独立行动。",
+        "visual_state": "本故事覆盖：红色夹克沾有雨水与少量灰尘",
+        "local_outfits": [],
+        "overlay_sources": {
+          "fear": "OVERRIDE",
+          "desire": "OVERRIDE",
+          "secrets": "OVERRIDE",
+          "identity": "OVERRIDE",
+          "knowledge": "OVERRIDE",
+          "appearance": "OVERRIDE",
+          "personality": "OVERRIDE",
+          "relationship": "OVERRIDE"
+        },
+        "reference_overrides": {},
+        "global_character_version": 12
+      },
+      {
+        "id": "char_149758",
+        "fear": "死亡、实验成果毁灭、责任暴露而失去控制。",
+        "desire": "利用李昂取回实验数据与危险样本，并带着研究成果活着离开；不是单纯毁灭城市。",
+        "secrets": "团队事故前已知道样本异常。事故后他仍命令保留实验数据，间接延误撤离。他声称的病毒抑制剂并不完全可靠；他知道这些事实但会隐瞒。",
+        "identity": "Dr. Victor Hale · Umbrella 地下设施研究主管",
+        "voice_id": null,
+        "knowledge": "知道设施实验、样本异常和撤离延误；只掌握仍在线的监控与系统信息，不知道所有盲区或玩家未透露的发现。",
+        "outfit_id": null,
+        "pose_refs": [],
+        "appearance": "中年男性，脸部轮廓清瘦，深色短发整齐向后梳理，鬓角少量灰白，戴细框眼镜，目光冷静锐利。身形瘦高、姿态端正，通常穿整洁白色实验服。稳定身份不带血迹、伤势或当前故事事件，清晰区别于年轻的Leon与Claire。",
+        "motion_refs": [],
+        "personality": "冷静、克制、极度功利，擅长用看似合理的解释争取合作，会为保存成果合理化他人的牺牲。",
+        "relationship": "以广播、监控和剩余安全权限影响李昂与克莱尔，希望他们取回数据和样本；面对证据可能辩解或交易，不具备无限系统权限。",
+        "visual_state": "本故事覆盖：实验服有少量血迹，右臂受伤",
+        "local_outfits": [],
+        "overlay_sources": {
+          "fear": "OVERRIDE",
+          "desire": "OVERRIDE",
+          "secrets": "OVERRIDE",
+          "identity": "OVERRIDE",
+          "knowledge": "OVERRIDE",
+          "appearance": "OVERRIDE",
+          "personality": "OVERRIDE",
+          "relationship": "OVERRIDE"
+        },
+        "reference_overrides": {},
+        "global_character_version": 12
+      }
+    ]
+  },
+  "old": {
+    "outcome": {
+      "ops": [],
+      "text": "李昂在已打开的档案终端中继续阅读原始实验日志。屏幕上依次滚动出几条异常时间戳与撤离命令记录。这些记录证实了 Victor 曾在事故前知晓样本异常，却在事故后仍命令保留数据，间接延误了撤离时间。日志并未出现关于 T-103 起源的特殊说明，仅列出了常规监控与应急指令。",
+      "title": "档案读取完成",
+      "evidence": [
+        "实验日志记录：异常时间戳、撤离命令序列",
+        "确认 Victor 于事故前知晓样本异常，事故后仍命令保留数据"
+      ],
+      "skill_triggers": []
+    },
+    "narrative": "李昂盯着终端屏幕上滚动的实验日志，冷光映得他眉眼发沉。逐条跳出的异常时间戳与撤离命令序列铁证如山——Victor早在事故前就知晓样本异常，却在事故后仍强令保留数据，直接延误了黄金撤离窗口。可翻遍整份档案，关于T-103起源的关键信息踪迹全无，只有干巴巴的常规监控记录与应急指令，压抑的空气里仿佛压着无数未说出口的秘密。"
+  },
+  "provider_mode": "real_text_only",
+  "canonical_db_written": false,
+  "paid_media_requests": 0,
+  "error": "HTTPStatusError: Client error '400 Bad Request' for url 'http://127.0.0.1:8001/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400",
+  "calls": [],
+  "canonical_state_unchanged": true
+}

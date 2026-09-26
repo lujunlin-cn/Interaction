@@ -1,0 +1,20 @@
+{
+  "baseline_sha": "c22d14bceea3930e2dd2c25eaaf449bc85fbbd0a",
+  "historical_records": 119,
+  "outcomes": {
+    "neutral": 116,
+    "improved": 3
+  },
+  "policy_outcomes_available": 56,
+  "old_context_chars": 678125,
+  "new_context_chars": 635864,
+  "lost_required_context": 0,
+  "additional_llm_calls": 0,
+  "new_paid_media_requests": 0,
+  "limitations": [
+    "Recorded-output policy comparison is not new model inference.",
+    "Context bytes are not token counts.",
+    "Before state reconstructed from fingerprint and receipts; missing memory/pressure marked unknown.",
+    "No live Ready latency measured."
+  ]
+}

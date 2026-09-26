@@ -1,0 +1,29 @@
+{
+  "real_branch_records": 119,
+  "acted_turns": 26,
+  "observed_ready_elapsed_ms": {
+    "n": 74,
+    "median": 97062.5,
+    "min": 29860,
+    "max": 635829
+  },
+  "observed_canonical_elapsed_ms": {
+    "n": 31,
+    "median": 84948,
+    "min": 5486,
+    "max": 635880
+  },
+  "free_share_among_acted_records": 0.6153846153846154,
+  "free_canonical_count": 13,
+  "free_total": 16,
+  "latency_change_after": null,
+  "llm_calls_change_after": null,
+  "production_waste_seconds": null,
+  "limitations": [
+    "Some branch routes are real inside mixed sessions; real does not mean human-operated.",
+    "created-to-Ready includes media and waiting; no reliable Jev-to-visible timestamps.",
+    "Failure recovery and user elapsed time are not separated from canonical latency.",
+    "No ground-truth trigger labels; precision/recall cannot be computed.",
+    "No complete HTTP-attempt-to-branch join; media waste ratio cannot be reliably computed."
+  ]
+}

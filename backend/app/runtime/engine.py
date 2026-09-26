@@ -1274,7 +1274,8 @@ class RuntimeEngine:
             "context": self._scenario_brief(state)}, output={"proposal": branch.state_patch_proposal.model_dump() if branch.state_patch_proposal else None},
             session_id=state.id, branch_id=branch.id, trace_id=branch.trace_id)
         await tracer.emit("director.plan", "success", input_={"label": branch.label},
-                          output={"primary_function": branch.directive.primary_function},
+                          output={"directive": branch.directive.model_dump(), "outcome": branch.outcome.model_dump(),
+                                  "skill_decisions": branch.skill_decisions},
                           provider=rec.selected or "", model=rec.model or "",
                           session_id=state.id, branch_id=branch.id)
 
@@ -1332,6 +1333,13 @@ class RuntimeEngine:
             allowed_revelations=allowed,
             forbidden_revelations=forbidden,
             relationship_context=dict(state.world.relationships),
+            known_state={"location": state.world.location,
+                         "location_name": _scenario_location_names(state).get(state.world.location, state.world.location),
+                         "inventory": list(state.world.inventory),
+                         "clues": dict(state.world.clues),
+                         "knowledge": list(state.world.knowledge)},
+            authorized_changes=[op.model_dump(mode="json") for op in branch.state_patch_proposal.operations]
+                if branch.state_patch_proposal else [],
             style={"tone": state.scenario_snapshot.get("tone", ""),
                    "genre": state.scenario_snapshot.get("genre", "")})
 
@@ -2092,7 +2100,8 @@ class RuntimeEngine:
             if not state:
                 raise EngineError("session not found")
             prior = state.branch(branch_id)
-            if prior and prior.status == BranchStatus.CANONICAL and prior.commit_event:
+            if (prior and prior.status == BranchStatus.CANONICAL and prior.commit_event
+                    and state.player.branch_id == branch_id):
                 return {"status": "CANONICAL", "branch_id": branch_id, "idempotent": True}
             if state.selection_lock and state.pending_selected_branch_id == branch_id:
                 return {"status": "SELECTING", "branch_id": branch_id, "idempotent": True}
@@ -2606,10 +2615,12 @@ class RuntimeEngine:
         """自由输入的规划路径：Director 判定三档响应 → QUICK_ACK 立即提交 / 完整分支生成。"""
         mechanics = state.scenario_snapshot.get("mechanics", {})
         packet = understand_action(text, intent_obs, label_override)
-        await tracer.emit("skill.intent-reconciliation", "success",
-            input_={"raw_input": text, "why": "preserve original and confirmed player intent"},
-            output=packet.model_dump(), session_id=state.id,
-            skill_id="intent-reconciliation", skill_version="2.0.0")
+        async def trace_intent(branch: Branch | None = None):
+            await tracer.emit("skill.intent-reconciliation", "success",
+                input_={"raw_input": text, "why": "preserve original and confirmed player intent"},
+                output=packet.model_dump(), session_id=state.id,
+                branch_id=branch.id if branch else None, trace_id=branch.trace_id if branch else None,
+                skill_id="intent-reconciliation", skill_version="2.0.0")
         try:
             content, rec = await self._director_output(
                 [{"role": "user", "content": f"raw_player_input: {packet.action}\n"
@@ -2625,6 +2636,7 @@ class RuntimeEngine:
                 fingerprint=self.compute_fingerprint(state),
                 expires_at=now_ms() + settings.branch_ttl_seconds * 1000,
                 status=BranchStatus.FAILED, fail_stage="PLANNING", last_error=str(error))
+            await trace_intent(branch)
             state.branches.append(branch)
             state.pending_freeform_id = branch.id
             state.player.status = "FAILED_RECOVERABLE"
@@ -2639,6 +2651,7 @@ class RuntimeEngine:
         if mode == "QUICK_ACK" and outcome.get("skill_triggers"):
             mode = "FULL_BEAT"
         if mode == "QUICK_ACK":
+            await trace_intent()
             # 轻量回应：确定性 patch 直接提交，不产生媒体分支
             ops = _to_patch_ops(outcome.get("ops", []))
             if ops:
@@ -2693,6 +2706,7 @@ class RuntimeEngine:
             read_set=self.build_read_set(state),
             fingerprint=self.compute_fingerprint(state),
             expires_at=now_ms() + settings.branch_ttl_seconds * 1000)
+        await trace_intent(branch)
         state.branches.append(branch)
         state.player.status = "GENERATING_NEXT"
         state.pending_freeform_id = branch.id   # 就绪后自动选中（玩家已通过输入选择）

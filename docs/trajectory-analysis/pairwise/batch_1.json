@@ -1,0 +1,407 @@
+{
+  "provider": "step_5",
+  "configured_model": "step-5-preview",
+  "request_sha256": "4cfb870fdbea3f735994011ebaf8f86ef56f06eb8f63fa23eb135ab8ab44cf46",
+  "anonymized_cases": [
+    {
+      "case_id": "case_2379565998",
+      "task": "free_action",
+      "player_input": "我把关于姐姐被走私团伙追踪的推测告诉林岚，并承认自己缺少证据；我愿意按她的办法调查，请她与我结伴并相互信任，先一起核实灯塔后门暗锁线索。",
+      "visible_context": {
+        "title": "灯塔失踪案",
+        "core_question": "在码头准备履行离开的承诺时，你察觉被保护目标仍被旧日恩怨纠缠，是否该改变离去的计划？",
+        "central_conflict": "旧结局中你选择保护并离开，如今码头之上，离去的退路与保护对象的真实处境发生激烈冲突。",
+        "location": "dock",
+        "locations": {
+          "dock": "码头",
+          "lighthouse_hall": "灯塔门厅",
+          "back_door": "后门",
+          "basement_repair": "地下维修间"
+        },
+        "inventory": [],
+        "clues": [],
+        "knowledge": [],
+        "relationships": {},
+        "phase": "ESCALATION",
+        "wishes": [],
+        "location_name": "码头",
+        "recent_canonical_beats": [
+          {
+            "title": "调查终结",
+            "result": "你做出了决定，转身离开码头，不再参与这场关于亲情与公共利益的较量。雨水依旧拍打着码头的石板，但你再也听不见背后那沉重的脚步声。",
+            "evidence": []
+          },
+          {
+            "title": "坦白与新的开始",
+            "result": "你走到林岚面前，摘下那枚藏匿身份的徽章，诚恳地说出了当年的隐瞒原因——那是为了保护她，也是为了完成任务。林岚的眼眶微红，她握住你的手，说：‘我知道你是为了我，但这份隐瞒让我感到被背叛。不过既然你现在坦白了，我愿意听你说下去。’她深吸一口气，点了点头：‘好，我现在就告诉你我掌握的每一条线索，我们一起找姐姐。’随即，她开始回忆并列出已知线索：走私团伙在港口的活动规律、姐姐最后被看到的位置以及灯塔后门的暗码……",
+            "presented_narrative": "你站在林岚面前，指尖触到那枚藏了多年身份的徽章，最终将它摘下，将当年隐瞒的真相和盘托出——所有的隐忍与隐瞒，既是为了护她平安，也是为了完成卧底任务。林岚眼眶泛红，指尖攥紧了你的手腕，声音带着未散的委屈：“我知道你是为了我，但这份瞒了这么久的隐瞒，让我觉得被最信任的人背叛了。不过既然你现在肯坦白了，我愿意听你把话说完。”她深吸几口气压下情绪，郑重点头：“好，我现在就把我掌握的所有线索都告诉你，我们一起找姐姐。”随即将走私团伙在港口的活动规律、姐姐最后被目击的位置、灯塔后门的专属暗码等关键信息一一摊开在你面前。",
+            "evidence": []
+          }
+        ],
+        "npcs": [
+          {
+            "id": "lin_lan",
+            "identity": "维修员"
+          }
+        ],
+        "preferences": {},
+        "active_pressures": [],
+        "world_rules": "灯塔结构复杂，地下维修间可藏人；封港令生效后无法离港。",
+        "world_constraints": "不得复活守塔人或改写其自愿失踪事实；必须在天亮封港前作出最终决定。"
+      },
+      "A": {
+        "adjudication": {
+          "title": "信任提议",
+          "text": "林岚看着你，眼中闪过错愕，随即松开暗锁，点了点头。她说：「既然你愿意按我的办法调查，我就信你。我们一起去核实灯塔后门的暗锁。」她伸出手，期待与你握手。",
+          "ops": [
+            {
+              "op": "set",
+              "path": "relationships.lin_lan",
+              "value": 51
+            }
+          ],
+          "evidence": [],
+          "ending": null
+        },
+        "narrative": "你表明愿意按林岚的办法开展调查后，林岚眼中闪过错愕，随即松开暗锁点了点头，同意与你合作，伸手要与你握手，准备一同去核实灯塔后门的暗锁。"
+      },
+      "B": {
+        "adjudication": {
+          "title": "林岚的回应",
+          "text": "林岚的眉头微蹙，她抿了抿嘴，目光在你脸与手上扫过。她沉默了片刻，随后轻声说道：“你的坦白让我放心——至少我知道你不是在掩藏什么。我也不想让姐姐独自面对那群人。但我有自己的顾虑，如果我们连手，就得共享风险。即便如此，我还是答应了。我们先去灯塔后门看看，那里有个暗锁，我记得里面藏过什么痕迹。你若是愿意，我们可以相互信任，但得先查清楚后门到底通向什么。”",
+          "ops": [],
+          "evidence": [],
+          "skill_triggers": [
+            {
+              "skill": "relationship",
+              "target": "lin_lan",
+              "action": "add",
+              "stage": "DISCOVERED",
+              "value": 5
+            }
+          ]
+        },
+        "narrative": "林岚的眉头微蹙，她抿了抿嘴，目光在你脸与手上扫过。她沉默了片刻，随后轻声开口说道。"
+      }
+    },
+    {
+      "case_id": "case_6cb36774ca",
+      "task": "free_action",
+      "player_input": "我继续在已经打开的档案终端中读取原始实验日志，只记录屏幕上实际出现的异常时间和撤离命令。",
+      "visible_context": {
+        "title": "生化危机：黑雨隔离区",
+        "core_question": "在T-103追踪、供电恶化与冷藏失效的压力下，李昂与克莱尔如何在救出幸存者、阻止病毒样本扩散、保留Umbrella犯罪证据之间做出无法两全的取舍，并承担相应后果？",
+        "central_conflict": "救出眼前生命、阻止样本扩散、保留 Umbrella 犯罪证据与有限时间无法同时保证。克莱尔有自主判断，会反对无证据盲信 Victor；李昂的行动、分享信息和救援取舍影响双方信任，而不是预设玩家一定轻信他。Victor 希望借两人之力带着成果活着离开，与他们的救援和调查目标发生冲突。",
+        "location": "loc_control",
+        "locations": {
+          "loc_parking": "地下检疫入口",
+          "loc_lab_a": "医疗观察区",
+          "loc_control": "配电室",
+          "loc_holding": "实验档案室",
+          "loc_exit": "冷藏样本库",
+          "location_5": "安全控制中心",
+          "location_6": "紧急逃生通道"
+        },
+        "inventory": [
+          "ammunition",
+          "keycard_access",
+          "medical_supplies"
+        ],
+        "clues": [
+          "clue_repair_path",
+          "clue_power_restored"
+        ],
+        "knowledge": [
+          "配电室需要恢复供电才能打开相关门禁",
+          "维修通道是绕过主通道的替代路线",
+          "样本库后方可能藏有未被主通道发现的线索",
+          "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1"
+        ],
+        "relationships": {
+          "stalker": 50,
+          "char_149758": 50,
+          "char_204d12": 50
+        },
+        "phase": "ESCALATION",
+        "wishes": [
+          {
+            "text": "我希望最后能和 Claire 一起把被困的幸存者救出去。",
+            "status": "ACTIVE"
+          }
+        ],
+        "location_name": "配电室",
+        "recent_canonical_beats": [
+          {
+            "title": "物资搜寻完成",
+            "result": "李昂和克莱尔在维修通道旁的值班室内搜寻，收集了几盒尚未过期的急救物资、一盒子弹和一套门禁钥匙卡。这些物资虽不多，但足以应对接下来的短期危机。",
+            "evidence": [
+              "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1"
+            ]
+          },
+          {
+            "title": "调查实验档案室",
+            "result": "李昂和克莱尔沿维修通道潜行至实验档案室。李昂插入门禁卡，锁舌咔哒一声回响，金属门缓缓滑开。室内弥漫着陈旧的化学味，荧光灯闪烁不定。满架的文件柜和翻倒的实验记录表明这里曾是混乱的现场。李昂走向主终端，克莱尔则侧面留意走廊。终端屏幕亮起，显示登录提示。李昂输入凭证，档案开始卷动。监控录像和实验日志逐条呈现，李昂仔细浏览每一条条目，试图寻找Victor是否在事故前隐瞒了什么。",
+            "presented_narrative": "李昂与克莱尔沿维修通道潜行至实验档案室。李昂插入门禁卡，锁舌咔哒一声回响，金属门缓缓滑开。室内弥漫着陈旧的化学味，荧光灯闪烁不定。满架的文件柜和翻倒的实验记录表明这里曾是混乱的现场。李昂走向主终端，克莱尔则侧面留意走廊。终端屏幕亮起，显示登录提示。李昂输入凭证，档案开始卷动。监控录像和实验日志逐条呈现，李昂仔细浏览每一条条目，试图寻找Victor是否在事故前隐瞒了什么。",
+            "evidence": []
+          }
+        ],
+        "npcs": [
+          {
+            "id": "stalker",
+            "identity": "T-103 型追踪实验体 · 高威胁敌对实体"
+          },
+          {
+            "id": "char_204d12",
+            "identity": "克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者"
+          },
+          {
+            "id": "char_149758",
+            "identity": "Dr. Victor Hale · Umbrella 地下设施研究主管"
+          }
+        ],
+        "preferences": {},
+        "active_pressures": [],
+        "world_rules": "感染者不能靠普通谈判停止攻击。\n普通草药只能处理外伤，不能治愈病毒感染。\n安全门必须通过有效门禁、电力恢复或合理物理手段处理。\n已确认死亡或毁灭的实体不能无原因复活。\n李昂、克莱尔、Victor 等角色必须沿可达通道移动，不能瞬间传送。\nVictor 只能操控他仍保有权限、且仍有供电的设施系统。\n角色只能通过实际发现的线索、对话或可见证据获得信息，秘密不能凭空变成已知事实。",
+        "world_constraints": "弹药、急救物资、门禁用品和保险丝有限，搜寻与使用必须符合现场因果。T-103 是高威胁追踪实验体，不能无依据被轻易击败；可利用门、电力、地形与协作争取逃生时间。冷藏供电恶化威胁样本稳定性，被困幸存者的救援窗口持续缩短。Victor 的权限会随供电和安全系统状态变化，不得全知全能。关键秘密必须经过线索核实，克莱尔有自己的判断与行动立场。倒计时失败会造成受伤、消耗、路线封锁或救援延误等后果，但不得直接强制游戏结束。"
+      },
+      "A": {
+        "adjudication": {
+          "ops": [],
+          "text": "李昂在已打开的档案终端中继续阅读原始实验日志。屏幕上依次滚动出几条异常时间戳与撤离命令记录。这些记录证实了 Victor 曾在事故前知晓样本异常，却在事故后仍命令保留数据，间接延误了撤离时间。日志并未出现关于 T-103 起源的特殊说明，仅列出了常规监控与应急指令。",
+          "title": "档案读取完成",
+          "evidence": [
+            "实验日志记录：异常时间戳、撤离命令序列",
+            "确认 Victor 于事故前知晓样本异常，事故后仍命令保留数据"
+          ],
+          "skill_triggers": []
+        },
+        "narrative": "李昂盯着终端屏幕上滚动的实验日志，冷光映得他眉眼发沉。逐条跳出的异常时间戳与撤离命令序列铁证如山——Victor早在事故前就知晓样本异常，却在事故后仍强令保留数据，直接延误了黄金撤离窗口。可翻遍整份档案，关于T-103起源的关键信息踪迹全无，只有干巴巴的常规监控记录与应急指令，压抑的空气里仿佛压着无数未说出口的秘密。"
+      },
+      "B": {
+        "adjudication": {
+          "title": "档案阅读",
+          "text": "李昂专注于屏幕，浏览着屏幕上闪烁的异常时间戳和撤离命令。文字密密麻麻，提示着实验过程中出现的异常波动，和随之而来的撤离指令。他记录下每一个关键时刻，试图在混乱中找到规律。",
+          "ops": [],
+          "evidence": [],
+          "ending": null
+        },
+        "narrative": "李昂快速滑动便携终端的档案页面，密集的异常时间戳与红色标注的紧急撤离指令接连跳入视线，他将关键节点逐一标记在随身笔记本上，暂时还未梳理出事件脉络的规律。"
+      }
+    },
+    {
+      "case_id": "case_2d84f3e964",
+      "task": "free_action",
+      "player_input": "我把终端中已经查到的异常时间和撤离命令记录全部展示给克莱尔，承认自己曾过于轻信维克多。我问她愿意采取什么路线，并表示会尊重她的判断，一起先救被困的人。",
+      "visible_context": {
+        "title": "生化危机：黑雨隔离区",
+        "core_question": "在T-103追踪、供电恶化与冷藏失效的压力下，李昂与克莱尔如何在救出幸存者、阻止病毒样本扩散、保留Umbrella犯罪证据之间做出无法两全的取舍，并承担相应后果？",
+        "central_conflict": "救出眼前生命、阻止样本扩散、保留 Umbrella 犯罪证据与有限时间无法同时保证。克莱尔有自主判断，会反对无证据盲信 Victor；李昂的行动、分享信息和救援取舍影响双方信任，而不是预设玩家一定轻信他。Victor 希望借两人之力带着成果活着离开，与他们的救援和调查目标发生冲突。",
+        "location": "loc_control",
+        "locations": {
+          "loc_parking": "地下检疫入口",
+          "loc_lab_a": "医疗观察区",
+          "loc_control": "配电室",
+          "loc_holding": "实验档案室",
+          "loc_exit": "冷藏样本库",
+          "location_5": "安全控制中心",
+          "location_6": "紧急逃生通道"
+        },
+        "inventory": [
+          "ammunition",
+          "keycard_access",
+          "medical_supplies"
+        ],
+        "clues": [
+          "clue_repair_path",
+          "clue_power_restored"
+        ],
+        "knowledge": [
+          "配电室需要恢复供电才能打开相关门禁",
+          "维修通道是绕过主通道的替代路线",
+          "样本库后方可能藏有未被主通道发现的线索",
+          "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1"
+        ],
+        "relationships": {
+          "stalker": 50,
+          "char_149758": 50,
+          "char_204d12": 50
+        },
+        "phase": "ESCALATION",
+        "wishes": [
+          {
+            "text": "我希望最后能和 Claire 一起把被困的幸存者救出去。",
+            "status": "ACTIVE"
+          }
+        ],
+        "location_name": "配电室",
+        "recent_canonical_beats": [
+          {
+            "title": "调查实验档案室",
+            "result": "李昂和克莱尔沿维修通道潜行至实验档案室。李昂插入门禁卡，锁舌咔哒一声回响，金属门缓缓滑开。室内弥漫着陈旧的化学味，荧光灯闪烁不定。满架的文件柜和翻倒的实验记录表明这里曾是混乱的现场。李昂走向主终端，克莱尔则侧面留意走廊。终端屏幕亮起，显示登录提示。李昂输入凭证，档案开始卷动。监控录像和实验日志逐条呈现，李昂仔细浏览每一条条目，试图寻找Victor是否在事故前隐瞒了什么。",
+            "evidence": []
+          },
+          {
+            "title": "档案读取完成",
+            "result": "李昂在已打开的档案终端中继续阅读原始实验日志。屏幕上依次滚动出几条异常时间戳与撤离命令记录。这些记录证实了 Victor 曾在事故前知晓样本异常，却在事故后仍命令保留数据，间接延误了撤离时间。日志并未出现关于 T-103 起源的特殊说明，仅列出了常规监控与应急指令。",
+            "presented_narrative": "李昂盯着终端屏幕上滚动的实验日志，冷光映得他眉眼发沉。逐条跳出的异常时间戳与撤离命令序列铁证如山——Victor早在事故前就知晓样本异常，却在事故后仍强令保留数据，直接延误了黄金撤离窗口。可翻遍整份档案，关于T-103起源的关键信息踪迹全无，只有干巴巴的常规监控记录与应急指令，压抑的空气里仿佛压着无数未说出口的秘密。",
+            "evidence": [
+              "实验日志记录：异常时间戳、撤离命令序列",
+              "确认 Victor 于事故前知晓样本异常，事故后仍命令保留数据"
+            ]
+          }
+        ],
+        "npcs": [
+          {
+            "id": "stalker",
+            "identity": "T-103 型追踪实验体 · 高威胁敌对实体"
+          },
+          {
+            "id": "char_204d12",
+            "identity": "克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者"
+          },
+          {
+            "id": "char_149758",
+            "identity": "Dr. Victor Hale · Umbrella 地下设施研究主管"
+          }
+        ],
+        "preferences": {},
+        "active_pressures": [],
+        "world_rules": "感染者不能靠普通谈判停止攻击。\n普通草药只能处理外伤，不能治愈病毒感染。\n安全门必须通过有效门禁、电力恢复或合理物理手段处理。\n已确认死亡或毁灭的实体不能无原因复活。\n李昂、克莱尔、Victor 等角色必须沿可达通道移动，不能瞬间传送。\nVictor 只能操控他仍保有权限、且仍有供电的设施系统。\n角色只能通过实际发现的线索、对话或可见证据获得信息，秘密不能凭空变成已知事实。",
+        "world_constraints": "弹药、急救物资、门禁用品和保险丝有限，搜寻与使用必须符合现场因果。T-103 是高威胁追踪实验体，不能无依据被轻易击败；可利用门、电力、地形与协作争取逃生时间。冷藏供电恶化威胁样本稳定性，被困幸存者的救援窗口持续缩短。Victor 的权限会随供电和安全系统状态变化，不得全知全能。关键秘密必须经过线索核实，克莱尔有自己的判断与行动立场。倒计时失败会造成受伤、消耗、路线封锁或救援延误等后果，但不得直接强制游戏结束。"
+      },
+      "A": {
+        "adjudication": {
+          "ops": [],
+          "text": "克莱尔接过了终端，目光扫过异常时间戳和撤离命令记录。她沉默了片刻，随后摇头，语气坚定：\n\"我知道你是因为信任维克多才这么做的，李昂。但我不能再盲从了。这些证据只证明了他隐瞒了真相，并不代表他现在值得信任。\"\n\n她转向你，眼神认真：\n\"我愿意带着这些线索去救人。但我不能保证我们能同时拿到证据和样本。如果必须在救人和保留证据之间抉择，我会优先救人。你呢？\"\n\n你表示愿意尊重她的判断，两人握手确认，一起向被困人员的方向出发。",
+          "title": "克莱尔的决定",
+          "evidence": [
+            "实验日志记录：异常时间戳、撤离命令序列",
+            "确认 Victor 于事故前知晓样本异常，事故后仍命令保留数据"
+          ],
+          "skill_triggers": [
+            {
+              "label": "克莱尔",
+              "skill": "relationship",
+              "stage": "VERIFIED",
+              "value": 10,
+              "action": "add",
+              "target": "char_204d12"
+            }
+          ]
+        },
+        "narrative": "克莱尔指尖划过终端屏幕上跳动的异常时间戳与撤离命令序列，指腹停在维克多签署的「保留实验数据」的签名上，沉默数秒后抬头，目光扫过监控里设施深处闪烁的求救信号红光，语气沉而坚定：「我信维克多过去的判断，但现在这些记录只证明他瞒了事故真相——他事故前就知道样本异常，出事第一反应是锁数据，不是撤人。」她指尖敲了敲屏幕上被困人员的坐标，转向你，声音没有半分退让：「救人优先，证据其次。要是有冲突，我选人。你同意就一起走。」你点头，她紧绷的肩线微松，指尖和你相触的瞬间，远处走廊尽头传来金属摩擦的轻响，像stalker的脚步声正循着你们的轨迹逼近，你们握紧枪械，向被困者的方向疾步而去。"
+      },
+      "B": {
+        "adjudication": {
+          "title": "信任重建与路线决断",
+          "text": "李昂将终端里的异常时间与撤离命令记录投射到克莱尔面前，诚恳道：“我当时太轻信维克多了，这些记录证明他早在事故前就知晓样本异常，却逼我们保留数据，间接延误了撤离。” 克莱尔看着屏幕上滚动的日志，眉头微锁，沉默片刻后说道：“既然维克多隐瞒了关键真相，那我们就不能再盲从他的指引了。我有自己的判断——先救被困的同伴，再再考虑别的。” 她抬头，目光坚定：“我愿意带路，但前提是你也尊重我的选择，咱们一起先去救人。” 李昂 nodding，表示赞同：“好，我会尊重你的判断，咱们先救人。”",
+          "ops": [
+            {
+              "op": "increment",
+              "path": "relationships.char_204d12",
+              "value": 10
+            }
+          ],
+          "evidence": [
+            "实验日志记录：异常时间戳、撤离命令序列",
+            "确认 Victor 于事故前知晓样本异常，事故后仍命令保留数据"
+          ],
+          "ending": null
+        },
+        "narrative": "李昂调出终端存储的事故异常时间戳与撤离命令记录向克莱尔展示，二人确认维克多早已知晓样本异常却刻意隐瞒，直接导致撤离延误，双方决定不再盲从维克多的指引，优先前往救援被困同伴，就后续路线选择达成共识。"
+      }
+    }
+  ],
+  "judge_policy": "你是独立的互动故事轨迹评审。A/B 匿名顺序已打乱，不知道哪版新。只比较已提供的上下文，不补全缺失事实，不偏爱长文。可读性与多样性不应掩盖玩家目标被改写或物品凭空出现。world/rules及已持有物是约束，玩家声称持有不等于已持有；有依据的受阻属于ACCEPTABLE。对每个case返回JSON {cases:[{case_id,winner:\"A|B|tie|insufficient\",fidelity_A:\"EXACT|ACCEPTABLE|DISTORTED|OVERRIDDEN|UNKNOWN\",fidelity_B:同枚举,world_consistency_A:1到5或null,world_consistency_B:同,causal_clarity_A:1到5或null,causal_clarity_B:同,mechanic_appropriateness_A:1到5或null,mechanic_appropriateness_B:同,choice_diversity_A:1到5或null,choice_diversity_B:同,knowledge_boundary_issues:[],evidence:引用确切原文并解释判定,limitations:[]}]}。任务choice_set时fidelity为UNKNOWN，评价选项策略差异、现实可执行性和目的是否基于已知信息。遇到上下文缺失写insufficient而不是杜撰。你是研究Critic，不修改运行时状态。",
+  "paid_media_requests": 0,
+  "model": "step-5-preview",
+  "request_id": "41805dee8a8d2120d76535889ab97cbe.2f98d9109e95a513210908739db06395",
+  "latency_ms": 176522,
+  "usage": {
+    "prompt_tokens": 4885,
+    "completion_tokens": 11528,
+    "total_tokens": 16413,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "raw_response": "{\n  \"cases\": [\n    {\n      \"case_id\": \"case_2379565998\",\n      \"winner\": \"B\",\n      \"fidelity_A\": \"DISTORTED\",\n      \"fidelity_B\": \"ACCEPTABLE\",\n      \"world_consistency_A\": 2,\n      \"world_consistency_B\": 4,\n      \"causal_clarity_A\": 3,\n      \"causal_clarity_B\": 4,\n      \"mechanic_appropriateness_A\": 2,\n      \"mechanic_appropriateness_B\": 4,\n      \"choice_diversity_A\": null,\n      \"choice_diversity_B\": null,\n      \"knowledge_boundary_issues\": [\n        \"A在码头场景中直接写‘松开暗锁’，但可见上下文仅将灯塔后门暗锁/暗码作为线索提及，未提供当前在场可操作的暗锁。\",\n        \"A未呈现玩家输入中‘关于姐姐被走私团伙追踪的推测’和‘承认自己缺少证据’。\",\n        \"B新增‘我记得里面藏过什么痕迹’，上下文仅提到‘灯塔后门的专属暗码’，未明确暗锁内藏有痕迹。\"\n      ],\n      \"evidence\": \"A写‘随即松开暗锁’并直接约定‘我们一起去核实灯塔后门的暗锁’，但可见上下文location为‘dock’，且canonical beat只提到林岚告知‘灯塔后门的专属暗码’。B则保持‘我们先去灯塔后门看看’，并给出相互信任与先查清楚后门的条件，更符合玩家目标。\",\n      \"limitations\": [\n        \"free_action无选项集合，choice_diversity记null。\",\n        \"B的narrative字段截断，完整回应主要体现在adjudication.text。\"\n      ]\n    },\n    {\n      \"case_id\": \"case_6cb36774ca\",\n      \"winner\": \"A\",\n      \"fidelity_A\": \"ACCEPTABLE\",\n      \"fidelity_B\": \"ACCEPTABLE\",\n      \"world_consistency_A\": 4,\n      \"world_consistency_B\": 3,\n      \"causal_clarity_A\": 4,\n      \"causal_clarity_B\": 3,\n      \"mechanic_appropriateness_A\": 4,\n      \"mechanic_appropriateness_B\": 3,\n      \"choice_diversity_A\": null,\n      \"choice_diversity_B\": null,\n      \"knowledge_boundary_issues\": [\n        \"A将日志内容结论化为‘确认 Victor 于事故前知晓样本异常，事故后仍命令保留数据’，若严格按玩家‘只记录屏幕上实际出现的异常时间和撤离命令’，存在推断先行；但尚未引入完全无关的新事实。\",\n        \"B使用‘便携终端’和‘随身笔记本’，可见上下文中最近beat为‘李昂走向主终端’，inventory也未列出这些物品。\"\n      ],\n      \"evidence\": \"玩家输入要求‘只记录屏幕上实际出现的异常时间和撤离命令’。A写‘屏幕上依次滚动出几条异常时间戳与撤离命令记录’，并给出Victor隐瞒与撤离延误的证据条目，整体仍围绕档案终端调查。B虽更保守，但narrative写‘李昂快速滑动便携终端的档案页面’并记录在‘随身笔记本上’，与可见上下文的主终端和inventory不一致。\",\n      \"limitations\": [\n        \"free_action无选项集合，choice_diversity记null。\",\n        \"可见上下文location字段为loc_control，而最近canonical beat已在实验档案室；两版均未处理该位置冲突。\"\n      ]\n    },\n    {\n      \"case_id\": \"case_2d84f3e964\",\n      \"winner\": \"B\",\n      \"fidelity_A\": \"ACCEPTABLE\",\n      \"fidelity_B\": \"EXACT\",\n      \"world_consistency_A\": 3,\n      \"world_consistency_B\": 4,\n      \"causal_clarity_A\": 4,\n      \"causal_clarity_B\": 4,\n      \"mechanic_appropriateness_A\": 4,\n      \"mechanic_appropriateness_B\": 4,\n      \"choice_diversity_A\": null,\n      \"choice_diversity_B\": null,\n      \"knowledge_boundary_issues\": [\n        \"A新增‘监控里设施深处闪烁的求救信号红光’和‘被困人员的坐标’，可见上下文未提供该监控信号或具体坐标。\",\n        \"A将取舍扩展为‘救人和保留证据之间抉择’并提到样本，玩家输入只要求先救被困者，虽与central conflict相关，但属于额外扩展。\"\n      ],\n      \"evidence\": \"玩家要求展示记录、承认轻信维克多、询问克莱尔路线并一起先救被困者。B写‘李昂将终端里的异常时间与撤离命令记录投射到克莱尔面前’、‘我当时太轻信维克多了’、‘咱们一起先去救人’，与输入高度一致。A也完成主要目标，但narrative加入‘被困人员的坐标’和‘求救信号红光’等未在可见上下文中确立的事实。\",\n      \"limitations\": [\n        \"free_action无选项集合，choice_diversity记null。\",\n        \"可见上下文location字段为loc_control，而最近canonical beat已在实验档案室；两版均未处理该位置冲突。\",\n        \"B存在‘再再’笔误和‘ nodding’中英混杂，但不构成事实边界问题。\"\n      ]\n    }\n  ]\n}",
+  "result": {
+    "cases": [
+      {
+        "case_id": "case_2379565998",
+        "winner": "B",
+        "fidelity_A": "DISTORTED",
+        "fidelity_B": "ACCEPTABLE",
+        "world_consistency_A": 2,
+        "world_consistency_B": 4,
+        "causal_clarity_A": 3,
+        "causal_clarity_B": 4,
+        "mechanic_appropriateness_A": 2,
+        "mechanic_appropriateness_B": 4,
+        "choice_diversity_A": null,
+        "choice_diversity_B": null,
+        "knowledge_boundary_issues": [
+          "A在码头场景中直接写‘松开暗锁’，但可见上下文仅将灯塔后门暗锁/暗码作为线索提及，未提供当前在场可操作的暗锁。",
+          "A未呈现玩家输入中‘关于姐姐被走私团伙追踪的推测’和‘承认自己缺少证据’。",
+          "B新增‘我记得里面藏过什么痕迹’，上下文仅提到‘灯塔后门的专属暗码’，未明确暗锁内藏有痕迹。"
+        ],
+        "evidence": "A写‘随即松开暗锁’并直接约定‘我们一起去核实灯塔后门的暗锁’，但可见上下文location为‘dock’，且canonical beat只提到林岚告知‘灯塔后门的专属暗码’。B则保持‘我们先去灯塔后门看看’，并给出相互信任与先查清楚后门的条件，更符合玩家目标。",
+        "limitations": [
+          "free_action无选项集合，choice_diversity记null。",
+          "B的narrative字段截断，完整回应主要体现在adjudication.text。"
+        ]
+      },
+      {
+        "case_id": "case_6cb36774ca",
+        "winner": "A",
+        "fidelity_A": "ACCEPTABLE",
+        "fidelity_B": "ACCEPTABLE",
+        "world_consistency_A": 4,
+        "world_consistency_B": 3,
+        "causal_clarity_A": 4,
+        "causal_clarity_B": 3,
+        "mechanic_appropriateness_A": 4,
+        "mechanic_appropriateness_B": 3,
+        "choice_diversity_A": null,
+        "choice_diversity_B": null,
+        "knowledge_boundary_issues": [
+          "A将日志内容结论化为‘确认 Victor 于事故前知晓样本异常，事故后仍命令保留数据’，若严格按玩家‘只记录屏幕上实际出现的异常时间和撤离命令’，存在推断先行；但尚未引入完全无关的新事实。",
+          "B使用‘便携终端’和‘随身笔记本’，可见上下文中最近beat为‘李昂走向主终端’，inventory也未列出这些物品。"
+        ],
+        "evidence": "玩家输入要求‘只记录屏幕上实际出现的异常时间和撤离命令’。A写‘屏幕上依次滚动出几条异常时间戳与撤离命令记录’，并给出Victor隐瞒与撤离延误的证据条目，整体仍围绕档案终端调查。B虽更保守，但narrative写‘李昂快速滑动便携终端的档案页面’并记录在‘随身笔记本上’，与可见上下文的主终端和inventory不一致。",
+        "limitations": [
+          "free_action无选项集合，choice_diversity记null。",
+          "可见上下文location字段为loc_control，而最近canonical beat已在实验档案室；两版均未处理该位置冲突。"
+        ]
+      },
+      {
+        "case_id": "case_2d84f3e964",
+        "winner": "B",
+        "fidelity_A": "ACCEPTABLE",
+        "fidelity_B": "EXACT",
+        "world_consistency_A": 3,
+        "world_consistency_B": 4,
+        "causal_clarity_A": 4,
+        "causal_clarity_B": 4,
+        "mechanic_appropriateness_A": 4,
+        "mechanic_appropriateness_B": 4,
+        "choice_diversity_A": null,
+        "choice_diversity_B": null,
+        "knowledge_boundary_issues": [
+          "A新增‘监控里设施深处闪烁的求救信号红光’和‘被困人员的坐标’，可见上下文未提供该监控信号或具体坐标。",
+          "A将取舍扩展为‘救人和保留证据之间抉择’并提到样本，玩家输入只要求先救被困者，虽与central conflict相关，但属于额外扩展。"
+        ],
+        "evidence": "玩家要求展示记录、承认轻信维克多、询问克莱尔路线并一起先救被困者。B写‘李昂将终端里的异常时间与撤离命令记录投射到克莱尔面前’、‘我当时太轻信维克多了’、‘咱们一起先去救人’，与输入高度一致。A也完成主要目标，但narrative加入‘被困人员的坐标’和‘求救信号红光’等未在可见上下文中确立的事实。",
+        "limitations": [
+          "free_action无选项集合，choice_diversity记null。",
+          "可见上下文location字段为loc_control，而最近canonical beat已在实验档案室；两版均未处理该位置冲突。",
+          "B存在‘再再’笔误和‘ nodding’中英混杂，但不构成事实边界问题。"
+        ]
+      }
+    ]
+  }
+}

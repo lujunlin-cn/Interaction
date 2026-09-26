@@ -1,0 +1,15 @@
+npm notice run interactive-drama-frontend@0.5.0 build
+npm notice run tsc -b && vite build --outDir /tmp/interaction-trajectory-dist
+vite v6.4.3 building for production...
+
+(!) outDir /tmp/interaction-trajectory-dist is not inside project root and will not be emptied.
+Use --emptyOutDir to override.
+
+transforming...
+✓ 42 modules transformed.
+rendering chunks...
+computing gzip size...
+../../../../tmp/interaction-trajectory-dist/index.html                   0.42 kB │ gzip:  0.30 kB
+../../../../tmp/interaction-trajectory-dist/assets/index-BIcsoDI4.css   32.18 kB │ gzip:  7.22 kB
+../../../../tmp/interaction-trajectory-dist/assets/index-whTlGUDu.js   305.13 kB │ gzip: 93.73 kB
+✓ built in 460ms

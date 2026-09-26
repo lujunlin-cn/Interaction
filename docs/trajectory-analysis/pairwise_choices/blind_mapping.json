@@ -1,0 +1,17 @@
+[
+  {
+    "case_id": "case_b8781abd15",
+    "source": "docs/trajectory-analysis/choice_replay/span_00011_5e886d.json",
+    "new_version": "B"
+  },
+  {
+    "case_id": "case_ae86c977f2",
+    "source": "docs/trajectory-analysis/choice_replay/span_00045_f3ef20.json",
+    "new_version": "A"
+  },
+  {
+    "case_id": "case_a8b4f0c6ce",
+    "source": "docs/trajectory-analysis/choice_replay/span_00059_7aac49.json",
+    "new_version": "A"
+  }
+]

@@ -1,0 +1,2 @@
+critic batch_2.json PASS
+critic batch_1.json PASS

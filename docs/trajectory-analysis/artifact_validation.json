@@ -1,0 +1,6 @@
+{
+  "files_checked": 93,
+  "credential_pattern_matches": [],
+  "invalid_json": [],
+  "note": "Pattern scan plus explicit staging review; secrets/config files are excluded."
+}

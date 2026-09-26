@@ -1,0 +1,6190 @@
+{
+  "summary": {
+    "baseline_sha": "c22d14bceea3930e2dd2c25eaaf449bc85fbbd0a",
+    "historical_records": 119,
+    "outcomes": {
+      "neutral": 116,
+      "improved": 3
+    },
+    "policy_outcomes_available": 56,
+    "old_context_chars": 678125,
+    "new_context_chars": 635864,
+    "lost_required_context": 0,
+    "additional_llm_calls": 0,
+    "new_paid_media_requests": 0,
+    "limitations": [
+      "Recorded-output policy comparison is not new model inference.",
+      "Context bytes are not token counts.",
+      "Before state reconstructed from fingerprint and receipts; missing memory/pressure marked unknown.",
+      "No live Ready latency measured."
+    ]
+  },
+  "results": [
+    {
+      "turn_id": "opening_00008_d88b8a",
+      "session_id": "sess_00003_25930d",
+      "record_kind": "opening",
+      "raw_input": "opening",
+      "old_context_chars": 1634,
+      "new_context_chars": 1569,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00085_377edf",
+      "session_id": "sess_00003_7e1bf3",
+      "record_kind": "speculative_branch",
+      "raw_input": "搜查302房间",
+      "old_context_chars": 1851,
+      "new_context_chars": 1786,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00087_b54285",
+      "session_id": "sess_00003_7e1bf3",
+      "record_kind": "speculative_branch",
+      "raw_input": "立刻离开",
+      "old_context_chars": 1851,
+      "new_context_chars": 1786,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00089_c43370",
+      "session_id": "sess_00003_7e1bf3",
+      "record_kind": "speculative_branch",
+      "raw_input": "询问离城真相",
+      "old_context_chars": 1851,
+      "new_context_chars": 1786,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00091_ebab10",
+      "session_id": "sess_00003_7e1bf3",
+      "record_kind": "speculative_branch",
+      "raw_input": "保持沉默，不作回应",
+      "old_context_chars": 1851,
+      "new_context_chars": 1786,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "opening_00008_275d84",
+      "session_id": "sess_00003_a0ed4a",
+      "record_kind": "opening",
+      "raw_input": "opening",
+      "old_context_chars": 1634,
+      "new_context_chars": 1569,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "opening_00008_f09e83",
+      "session_id": "sess_00003_e8a091",
+      "record_kind": "opening",
+      "raw_input": "opening",
+      "old_context_chars": 1826,
+      "new_context_chars": 1761,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "opening_00008_0ae6d4",
+      "session_id": "sess_00003_ebe93c",
+      "record_kind": "opening",
+      "raw_input": "opening",
+      "old_context_chars": 1922,
+      "new_context_chars": 1857,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00016_fac3e6",
+      "session_id": "sess_00004_b28f5d",
+      "record_kind": "speculative_branch",
+      "raw_input": "搜查门厅角落",
+      "old_context_chars": 1634,
+      "new_context_chars": 1569,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00018_b9d23e",
+      "session_id": "sess_00004_b28f5d",
+      "record_kind": "speculative_branch",
+      "raw_input": "保持沉默观察",
+      "old_context_chars": 1634,
+      "new_context_chars": 1569,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00020_bee161",
+      "session_id": "sess_00004_b28f5d",
+      "record_kind": "speculative_branch",
+      "raw_input": "询问钥匙去向",
+      "old_context_chars": 1634,
+      "new_context_chars": 1569,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "opening_00011_8a86b8",
+      "session_id": "sess_00006_6051ee",
+      "record_kind": "opening",
+      "raw_input": "opening",
+      "old_context_chars": 5978,
+      "new_context_chars": 5820,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00057_333e2c",
+      "session_id": "sess_00006_6051ee",
+      "record_kind": "speculative_branch",
+      "raw_input": "搜查控制中心获取钥匙",
+      "old_context_chars": 6976,
+      "new_context_chars": 6818,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00059_35f225",
+      "session_id": "sess_00006_6051ee",
+      "record_kind": "speculative_branch",
+      "raw_input": "护送幸存者至避难所",
+      "old_context_chars": 6976,
+      "new_context_chars": 6818,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00061_8b5055",
+      "session_id": "sess_00006_6051ee",
+      "record_kind": "speculative_branch",
+      "raw_input": "破坏样本冷藏以阻止扩散",
+      "old_context_chars": 6976,
+      "new_context_chars": 6818,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00012_e5b104",
+      "session_id": "sess_00006_6051ee",
+      "record_kind": "player_turn",
+      "raw_input": "我先不听 Victor 的。我和 Claire 先去配电室恢复局部供电，然后从维修通道绕到样本库后方。",
+      "old_context_chars": 6976,
+      "new_context_chars": 6818,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [
+        {
+          "op": "add",
+          "path": "/location",
+          "value": "loc_control"
+        },
+        {
+          "op": "add",
+          "path": "/clues",
+          "value": [
+            "clue_power_restored",
+            "clue_repair_path"
+          ]
+        },
+        {
+          "op": "set",
+          "path": "clues.clue_power_restored",
+          "value": "DISCOVERED"
+        },
+        {
+          "op": "set",
+          "path": "clues.clue_repair_path",
+          "value": "DISCOVERED"
+        }
+      ],
+      "new_proposal": [
+        {
+          "op": "add",
+          "path": "/location",
+          "value": "loc_control"
+        },
+        {
+          "op": "set",
+          "path": "clues.clue_power_restored",
+          "value": "DISCOVERED"
+        },
+        {
+          "op": "set",
+          "path": "clues.clue_repair_path",
+          "value": "DISCOVERED"
+        }
+      ],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_control",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {
+            "clue_power_restored": "DISCOVERED",
+            "clue_repair_path": "DISCOVERED"
+          },
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_control",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {
+            "clue_power_restored": "DISCOVERED",
+            "clue_repair_path": "DISCOVERED"
+          },
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": [
+        {
+          "skill": "clue-system",
+          "target": "clue_power_restored",
+          "trigger": {
+            "skill": "clue-system",
+            "stage": "DISCOVERED",
+            "target": "clue_power_restored"
+          },
+          "status": "proposed",
+          "reason": "explicit_director_proposal_validated"
+        },
+        {
+          "skill": "clue-system",
+          "target": "clue_repair_path",
+          "trigger": {
+            "skill": "clue-system",
+            "stage": "DISCOVERED",
+            "target": "clue_repair_path"
+          },
+          "status": "proposed",
+          "reason": "explicit_director_proposal_validated"
+        }
+      ],
+      "semantic_packet": {
+        "version": "2.0.0",
+        "raw_input": "我先不听 Victor 的。我和 Claire 先去配电室恢复局部供电，然后从维修通道绕到样本库后方。",
+        "action": "我先不听 Victor 的。我和 Claire 先去配电室恢复局部供电，然后从维修通道绕到样本库后方。",
+        "action_source": "PLAYER_RAW",
+        "desire": "",
+        "strategy": "",
+        "route": "unknown",
+        "confidence": 0.98,
+        "impact": "MEDIUM",
+        "quoted_constraints": [
+          "我先不听 Victor 的。",
+          "我和 Claire 先去配电室恢复局部供电，然后从维修通道绕到样本库后方。"
+        ],
+        "observation": {
+          "action": "我先不听 Victor 的。我和 Claire 先去配电室恢复局部供电，然后从维修通道绕到样本库后方。",
+          "desire": "",
+          "impact": "MEDIUM",
+          "raw_text": "我先不听 Victor 的。我和 Claire 先去配电室恢复局部供电，然后从维修通道绕到样本库后方。",
+          "strategy": "",
+          "calibrated": false,
+          "confidence": 0.98,
+          "desire_source": "UNKNOWN",
+          "clarification_required": false
+        },
+        "policy": "Original and player-confirmed intent are authoritative preferences, not world facts. Preserve targets, sequence, strategy and negative constraints. Explain any world-grounded obstruction. Never grant an item or evidence simply because the player claims it exists."
+      },
+      "original_preserved": true
+    },
+    {
+      "turn_id": "br_00014_5436a7",
+      "session_id": "sess_00006_6051ee",
+      "record_kind": "speculative_branch",
+      "raw_input": "恢复配电与分流电力",
+      "old_context_chars": 7350,
+      "new_context_chars": 6859,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00016_971354",
+      "session_id": "sess_00006_6051ee",
+      "record_kind": "player_turn",
+      "raw_input": "从维修通道潜入样本库",
+      "old_context_chars": 7350,
+      "new_context_chars": 6859,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00018_cd8309",
+      "session_id": "sess_00006_6051ee",
+      "record_kind": "speculative_branch",
+      "raw_input": "优先保护幸存者并撤离",
+      "old_context_chars": 7350,
+      "new_context_chars": 6859,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00014_c29e0e",
+      "session_id": "sess_00006_6051ee",
+      "record_kind": "speculative_branch",
+      "raw_input": "重新分配剩余电力",
+      "old_context_chars": 7743,
+      "new_context_chars": 7126,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00016_0227c3",
+      "session_id": "sess_00006_6051ee",
+      "record_kind": "speculative_branch",
+      "raw_input": "撤离与撤退",
+      "old_context_chars": 7743,
+      "new_context_chars": 7126,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00018_480454",
+      "session_id": "sess_00006_6051ee",
+      "record_kind": "speculative_branch",
+      "raw_input": "潜入样本库取回关键证据",
+      "old_context_chars": 7743,
+      "new_context_chars": 7126,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00135_4d42ef",
+      "session_id": "sess_00006_6051ee",
+      "record_kind": "player_turn",
+      "raw_input": "我和 Claire 搜索维修通道旁的值班室，把还能用的急救物资、弹药和门禁用品带走。",
+      "old_context_chars": 7743,
+      "new_context_chars": 7126,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [
+        {
+          "op": "addItem",
+          "value": "medical_supplies"
+        },
+        {
+          "op": "addItem",
+          "value": "ammunition"
+        },
+        {
+          "op": "addItem",
+          "value": "keycard_access"
+        }
+      ],
+      "new_proposal": [
+        {
+          "op": "addItem",
+          "value": "medical_supplies"
+        },
+        {
+          "op": "addItem",
+          "value": "ammunition"
+        },
+        {
+          "op": "addItem",
+          "value": "keycard_access"
+        }
+      ],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 4,
+          "location": "loc_control",
+          "inventory": [
+            "medical_supplies",
+            "ammunition",
+            "keycard_access"
+          ],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [
+            "配电室需要恢复供电才能打开相关门禁",
+            "维修通道是绕过主通道的替代路线",
+            "样本库后方可能藏有未被主通道发现的线索"
+          ],
+          "clues": {
+            "clue_repair_path": "DISCOVERED",
+            "clue_power_restored": "DISCOVERED"
+          },
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 4,
+          "location": "loc_control",
+          "inventory": [
+            "medical_supplies",
+            "ammunition",
+            "keycard_access"
+          ],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [
+            "配电室需要恢复供电才能打开相关门禁",
+            "维修通道是绕过主通道的替代路线",
+            "样本库后方可能藏有未被主通道发现的线索"
+          ],
+          "clues": {
+            "clue_repair_path": "DISCOVERED",
+            "clue_power_restored": "DISCOVERED"
+          },
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": [
+        {
+          "skill": "inventory",
+          "target": "medical_supplies",
+          "trigger": {
+            "skill": "inventory",
+            "value": 3,
+            "action": "add",
+            "target": "medical_supplies"
+          },
+          "status": "proposed",
+          "reason": "explicit_director_proposal_validated"
+        },
+        {
+          "skill": "inventory",
+          "target": "ammunition",
+          "trigger": {
+            "skill": "inventory",
+            "value": 1,
+            "action": "add",
+            "target": "ammunition"
+          },
+          "status": "proposed",
+          "reason": "explicit_director_proposal_validated"
+        },
+        {
+          "skill": "inventory",
+          "target": "keycard_access",
+          "trigger": {
+            "skill": "inventory",
+            "value": 1,
+            "action": "add",
+            "target": "keycard_access"
+          },
+          "status": "proposed",
+          "reason": "explicit_director_proposal_validated"
+        }
+      ],
+      "semantic_packet": {
+        "version": "2.0.0",
+        "raw_input": "我和 Claire 搜索维修通道旁的值班室，把还能用的急救物资、弹药和门禁用品带走。",
+        "action": "我和 Claire 搜索维修通道旁的值班室，把还能用的急救物资、弹药和门禁用品带走。",
+        "action_source": "PLAYER_RAW",
+        "desire": "",
+        "strategy": "",
+        "route": "action",
+        "confidence": 1.0,
+        "impact": "MEDIUM",
+        "quoted_constraints": [],
+        "observation": {
+          "action": "我和 Claire 搜索维修通道旁的值班室，把还能用的急救物资、弹药和门禁用品带走。",
+          "desire": "",
+          "strategy": "",
+          "desire_source": "UNKNOWN",
+          "route": "action",
+          "confidence": 1,
+          "impact": "MEDIUM",
+          "clarification_required": false,
+          "clarification": ""
+        },
+        "policy": "Original and player-confirmed intent are authoritative preferences, not world facts. Preserve targets, sequence, strategy and negative constraints. Explain any world-grounded obstruction. Never grant an item or evidence simply because the player claims it exists."
+      },
+      "original_preserved": true
+    },
+    {
+      "turn_id": "br_00187_55f559",
+      "session_id": "sess_00006_6051ee",
+      "record_kind": "speculative_branch",
+      "raw_input": "维修通道防线",
+      "old_context_chars": 8076,
+      "new_context_chars": 7285,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00189_e7f016",
+      "session_id": "sess_00006_6051ee",
+      "record_kind": "speculative_branch",
+      "raw_input": "档案室伏击",
+      "old_context_chars": 8076,
+      "new_context_chars": 7285,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00191_ddf574",
+      "session_id": "sess_00006_6051ee",
+      "record_kind": "speculative_branch",
+      "raw_input": "真相交涉",
+      "old_context_chars": 8076,
+      "new_context_chars": 7285,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00078_d75c60",
+      "session_id": "sess_00006_6051ee",
+      "record_kind": "player_turn",
+      "raw_input": "我和 Claire 沿维修通道前往实验档案室，用找到的门禁卡进入。我检查终端里的实验日志和监控记录，看看 Victor 有没有对我们隐瞒事故发生前的信息。",
+      "old_context_chars": 8112,
+      "new_context_chars": 7321,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [],
+      "new_proposal": [],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 5,
+          "location": "loc_control",
+          "inventory": [
+            "ammunition",
+            "keycard_access",
+            "medical_supplies"
+          ],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [
+            "配电室需要恢复供电才能打开相关门禁",
+            "维修通道是绕过主通道的替代路线",
+            "样本库后方可能藏有未被主通道发现的线索",
+            "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1"
+          ],
+          "clues": {
+            "clue_repair_path": "DISCOVERED",
+            "clue_power_restored": "DISCOVERED"
+          },
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 5,
+          "location": "loc_control",
+          "inventory": [
+            "ammunition",
+            "keycard_access",
+            "medical_supplies"
+          ],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [
+            "配电室需要恢复供电才能打开相关门禁",
+            "维修通道是绕过主通道的替代路线",
+            "样本库后方可能藏有未被主通道发现的线索",
+            "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1"
+          ],
+          "clues": {
+            "clue_repair_path": "DISCOVERED",
+            "clue_power_restored": "DISCOVERED"
+          },
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": [],
+      "semantic_packet": {
+        "version": "2.0.0",
+        "raw_input": "我和 Claire 沿维修通道前往实验档案室，用找到的门禁卡进入。我检查终端里的实验日志和监控记录，看看 Victor 有没有对我们隐瞒事故发生前的信息。",
+        "action": "我和 Claire 沿维修通道前往实验档案室，用找到的门禁卡进入。我检查终端里的实验日志和监控记录，看看 Victor 有没有对我们隐瞒事故发生前的信息。",
+        "action_source": "PLAYER_RAW",
+        "desire": "",
+        "strategy": "",
+        "route": "action",
+        "confidence": 1.0,
+        "impact": "MEDIUM",
+        "quoted_constraints": [],
+        "observation": {
+          "action": "我和 Claire 沿维修通道前往实验档案室，用找到的门禁卡进入。我检查终端里的实验日志和监控记录，看看 Victor 有没有对我们隐瞒事故发生前的信息。",
+          "desire": "",
+          "strategy": "",
+          "desire_source": "UNKNOWN",
+          "route": "action",
+          "confidence": 1,
+          "impact": "MEDIUM",
+          "clarification_required": false,
+          "clarification": ""
+        },
+        "policy": "Original and player-confirmed intent are authoritative preferences, not world facts. Preserve targets, sequence, strategy and negative constraints. Explain any world-grounded obstruction. Never grant an item or evidence simply because the player claims it exists."
+      },
+      "original_preserved": true
+    },
+    {
+      "turn_id": "br_00155_bbf735",
+      "session_id": "sess_00006_6051ee",
+      "record_kind": "speculative_branch",
+      "raw_input": "深入检查配电箱",
+      "old_context_chars": 7563,
+      "new_context_chars": 6977,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [],
+      "new_proposal": [],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 5,
+          "location": "loc_control",
+          "inventory": [
+            "ammunition",
+            "keycard_access",
+            "medical_supplies"
+          ],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [
+            "配电室需要恢复供电才能打开相关门禁",
+            "维修通道是绕过主通道的替代路线",
+            "样本库后方可能藏有未被主通道发现的线索",
+            "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1"
+          ],
+          "clues": {
+            "clue_repair_path": "DISCOVERED",
+            "clue_power_restored": "DISCOVERED"
+          },
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 5,
+          "location": "loc_control",
+          "inventory": [
+            "ammunition",
+            "keycard_access",
+            "medical_supplies"
+          ],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [
+            "配电室需要恢复供电才能打开相关门禁",
+            "维修通道是绕过主通道的替代路线",
+            "样本库后方可能藏有未被主通道发现的线索",
+            "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1"
+          ],
+          "clues": {
+            "clue_repair_path": "DISCOVERED",
+            "clue_power_restored": "DISCOVERED"
+          },
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": []
+    },
+    {
+      "turn_id": "br_00157_2ebe77",
+      "session_id": "sess_00006_6051ee",
+      "record_kind": "speculative_branch",
+      "raw_input": "优先转移幸存者",
+      "old_context_chars": 7563,
+      "new_context_chars": 6977,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [],
+      "new_proposal": [],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 5,
+          "location": "loc_control",
+          "inventory": [
+            "ammunition",
+            "keycard_access",
+            "medical_supplies"
+          ],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [
+            "配电室需要恢复供电才能打开相关门禁",
+            "维修通道是绕过主通道的替代路线",
+            "样本库后方可能藏有未被主通道发现的线索",
+            "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1"
+          ],
+          "clues": {
+            "clue_repair_path": "DISCOVERED",
+            "clue_power_restored": "DISCOVERED"
+          },
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 5,
+          "location": "loc_control",
+          "inventory": [
+            "ammunition",
+            "keycard_access",
+            "medical_supplies"
+          ],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [
+            "配电室需要恢复供电才能打开相关门禁",
+            "维修通道是绕过主通道的替代路线",
+            "样本库后方可能藏有未被主通道发现的线索",
+            "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1"
+          ],
+          "clues": {
+            "clue_repair_path": "DISCOVERED",
+            "clue_power_restored": "DISCOVERED"
+          },
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": []
+    },
+    {
+      "turn_id": "br_00159_53d1e8",
+      "session_id": "sess_00006_6051ee",
+      "record_kind": "speculative_branch",
+      "raw_input": "威胁 Victor 的实验记录",
+      "old_context_chars": 7563,
+      "new_context_chars": 6977,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "loc_control"
+        },
+        {
+          "op": "increment",
+          "path": "relationships.char_149758",
+          "value": -20
+        }
+      ],
+      "new_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "loc_control"
+        },
+        {
+          "op": "increment",
+          "path": "relationships.char_149758",
+          "value": -20
+        }
+      ],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 5,
+          "location": "loc_control",
+          "inventory": [
+            "ammunition",
+            "keycard_access",
+            "medical_supplies"
+          ],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 30,
+            "char_204d12": 50
+          },
+          "knowledge": [
+            "配电室需要恢复供电才能打开相关门禁",
+            "维修通道是绕过主通道的替代路线",
+            "样本库后方可能藏有未被主通道发现的线索",
+            "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1"
+          ],
+          "clues": {
+            "clue_repair_path": "DISCOVERED",
+            "clue_power_restored": "DISCOVERED"
+          },
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 5,
+          "location": "loc_control",
+          "inventory": [
+            "ammunition",
+            "keycard_access",
+            "medical_supplies"
+          ],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 30,
+            "char_204d12": 50
+          },
+          "knowledge": [
+            "配电室需要恢复供电才能打开相关门禁",
+            "维修通道是绕过主通道的替代路线",
+            "样本库后方可能藏有未被主通道发现的线索",
+            "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1"
+          ],
+          "clues": {
+            "clue_repair_path": "DISCOVERED",
+            "clue_power_restored": "DISCOVERED"
+          },
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": [
+        {
+          "skill": "relationship",
+          "target": "char_149758",
+          "trigger": {
+            "skill": "relationship",
+            "stage": "DISCOVERED",
+            "value": -20,
+            "action": "add",
+            "target": "char_149758"
+          },
+          "status": "proposed",
+          "reason": "explicit_director_proposal_validated"
+        }
+      ]
+    },
+    {
+      "turn_id": "br_00010_cb8111",
+      "session_id": "sess_00006_6051ee",
+      "record_kind": "player_turn",
+      "raw_input": "我继续在已经打开的档案终端中读取原始实验日志，把样本异常的最早时间、撤离命令时间和抑制剂试验结果逐项比对，保存能实际查到的记录作为证据。",
+      "old_context_chars": 7563,
+      "new_context_chars": 6977,
+      "lost_required_context": [],
+      "outcome": "improved",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [
+        {
+          "op": "set",
+          "path": "clues",
+          "value": [
+            "clue_experiment_log_compare"
+          ]
+        },
+        {
+          "op": "set",
+          "path": "clues.clue_experiment_log_compare",
+          "value": "DISCOVERED"
+        }
+      ],
+      "new_proposal": [
+        {
+          "op": "set",
+          "path": "clues.clue_experiment_log_compare",
+          "value": "DISCOVERED"
+        }
+      ],
+      "old_validation": {
+        "valid": false,
+        "reason": "forbidden patch path: clues"
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 5,
+          "location": "loc_control",
+          "inventory": [
+            "ammunition",
+            "keycard_access",
+            "medical_supplies"
+          ],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [
+            "配电室需要恢复供电才能打开相关门禁",
+            "维修通道是绕过主通道的替代路线",
+            "样本库后方可能藏有未被主通道发现的线索",
+            "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1"
+          ],
+          "clues": {
+            "clue_repair_path": "DISCOVERED",
+            "clue_power_restored": "DISCOVERED",
+            "clue_experiment_log_compare": "DISCOVERED"
+          },
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": [
+        {
+          "skill": "clue-system",
+          "target": "clue_experiment_log_compare",
+          "trigger": {
+            "label": "样本异常时间与撤离命令对比记录",
+            "skill": "clue-system",
+            "stage": "DISCOVERED",
+            "value": 1,
+            "target": "clue_experiment_log_compare"
+          },
+          "status": "proposed",
+          "reason": "explicit_director_proposal_validated"
+        }
+      ],
+      "reason": "unambiguous duplicate envelope reconciled",
+      "semantic_packet": {
+        "version": "2.0.0",
+        "raw_input": "我继续在已经打开的档案终端中读取原始实验日志，把样本异常的最早时间、撤离命令时间和抑制剂试验结果逐项比对，保存能实际查到的记录作为证据。",
+        "action": "我继续在已经打开的档案终端中读取原始实验日志，把样本异常的最早时间、撤离命令时间和抑制剂试验结果逐项比对，保存能实际查到的记录作为证据。",
+        "action_source": "PLAYER_RAW",
+        "desire": "",
+        "strategy": "",
+        "route": "unknown",
+        "confidence": 1.0,
+        "impact": "MEDIUM",
+        "quoted_constraints": [],
+        "observation": {
+          "action": "我继续在已经打开的档案终端中读取原始实验日志，把样本异常的最早时间、撤离命令时间和抑制剂试验结果逐项比对，保存能实际查到的记录作为证据。",
+          "desire": "",
+          "impact": "MEDIUM",
+          "raw_text": "我继续在已经打开的档案终端中读取原始实验日志，把样本异常的最早时间、撤离命令时间和抑制剂试验结果逐项比对，保存能实际查到的记录作为证据。",
+          "strategy": "",
+          "calibrated": false,
+          "confidence": 1.0,
+          "desire_source": "UNKNOWN",
+          "clarification_required": false
+        },
+        "policy": "Original and player-confirmed intent are authoritative preferences, not world facts. Preserve targets, sequence, strategy and negative constraints. Explain any world-grounded obstruction. Never grant an item or evidence simply because the player claims it exists."
+      },
+      "original_preserved": true
+    },
+    {
+      "turn_id": "br_00010_262ca1",
+      "session_id": "sess_00006_6051ee",
+      "record_kind": "player_turn",
+      "raw_input": "我继续在已经打开的档案终端中读取原始实验日志，只记录屏幕上实际出现的异常时间和撤离命令。",
+      "old_context_chars": 7563,
+      "new_context_chars": 6977,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [],
+      "new_proposal": [],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 5,
+          "location": "loc_control",
+          "inventory": [
+            "ammunition",
+            "keycard_access",
+            "medical_supplies"
+          ],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [
+            "配电室需要恢复供电才能打开相关门禁",
+            "维修通道是绕过主通道的替代路线",
+            "样本库后方可能藏有未被主通道发现的线索",
+            "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1"
+          ],
+          "clues": {
+            "clue_repair_path": "DISCOVERED",
+            "clue_power_restored": "DISCOVERED"
+          },
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 5,
+          "location": "loc_control",
+          "inventory": [
+            "ammunition",
+            "keycard_access",
+            "medical_supplies"
+          ],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [
+            "配电室需要恢复供电才能打开相关门禁",
+            "维修通道是绕过主通道的替代路线",
+            "样本库后方可能藏有未被主通道发现的线索",
+            "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1"
+          ],
+          "clues": {
+            "clue_repair_path": "DISCOVERED",
+            "clue_power_restored": "DISCOVERED"
+          },
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": [],
+      "semantic_packet": {
+        "version": "2.0.0",
+        "raw_input": "我继续在已经打开的档案终端中读取原始实验日志，只记录屏幕上实际出现的异常时间和撤离命令。",
+        "action": "我继续在已经打开的档案终端中读取原始实验日志，只记录屏幕上实际出现的异常时间和撤离命令。",
+        "action_source": "PLAYER_RAW",
+        "desire": "",
+        "strategy": "",
+        "route": "unknown",
+        "confidence": 1.0,
+        "impact": "MEDIUM",
+        "quoted_constraints": [
+          "我继续在已经打开的档案终端中读取原始实验日志，只记录屏幕上实际出现的异常时间和撤离命令。"
+        ],
+        "observation": {
+          "action": "我继续在已经打开的档案终端中读取原始实验日志，只记录屏幕上实际出现的异常时间和撤离命令。",
+          "desire": "",
+          "impact": "MEDIUM",
+          "raw_text": "我继续在已经打开的档案终端中读取原始实验日志，只记录屏幕上实际出现的异常时间和撤离命令。",
+          "strategy": "",
+          "calibrated": false,
+          "confidence": 1.0,
+          "desire_source": "UNKNOWN",
+          "clarification_required": false
+        },
+        "policy": "Original and player-confirmed intent are authoritative preferences, not world facts. Preserve targets, sequence, strategy and negative constraints. Explain any world-grounded obstruction. Never grant an item or evidence simply because the player claims it exists."
+      },
+      "original_preserved": true
+    },
+    {
+      "turn_id": "br_00010_a0a79c",
+      "session_id": "sess_00006_6051ee",
+      "record_kind": "player_turn",
+      "raw_input": "我把终端中已经查到的异常时间和撤离命令记录全部展示给克莱尔，承认自己曾过于轻信维克多。我问她愿意采取什么路线，并表示会尊重她的判断，一起先救被困的人。",
+      "old_context_chars": 7661,
+      "new_context_chars": 6988,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [
+        {
+          "op": "increment",
+          "path": "relationships.char_204d12",
+          "value": 10
+        }
+      ],
+      "new_proposal": [
+        {
+          "op": "increment",
+          "path": "relationships.char_204d12",
+          "value": 10
+        }
+      ],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 5,
+          "location": "loc_control",
+          "inventory": [
+            "ammunition",
+            "keycard_access",
+            "medical_supplies"
+          ],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 60
+          },
+          "knowledge": [
+            "配电室需要恢复供电才能打开相关门禁",
+            "维修通道是绕过主通道的替代路线",
+            "样本库后方可能藏有未被主通道发现的线索",
+            "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1"
+          ],
+          "clues": {
+            "clue_repair_path": "DISCOVERED",
+            "clue_power_restored": "DISCOVERED"
+          },
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 5,
+          "location": "loc_control",
+          "inventory": [
+            "ammunition",
+            "keycard_access",
+            "medical_supplies"
+          ],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 60
+          },
+          "knowledge": [
+            "配电室需要恢复供电才能打开相关门禁",
+            "维修通道是绕过主通道的替代路线",
+            "样本库后方可能藏有未被主通道发现的线索",
+            "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1"
+          ],
+          "clues": {
+            "clue_repair_path": "DISCOVERED",
+            "clue_power_restored": "DISCOVERED"
+          },
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": [
+        {
+          "skill": "relationship",
+          "target": "char_204d12",
+          "trigger": {
+            "label": "克莱尔",
+            "skill": "relationship",
+            "stage": "VERIFIED",
+            "value": 10,
+            "action": "add",
+            "target": "char_204d12"
+          },
+          "status": "proposed",
+          "reason": "explicit_director_proposal_validated"
+        }
+      ],
+      "semantic_packet": {
+        "version": "2.0.0",
+        "raw_input": "我把终端中已经查到的异常时间和撤离命令记录全部展示给克莱尔，承认自己曾过于轻信维克多。我问她愿意采取什么路线，并表示会尊重她的判断，一起先救被困的人。",
+        "action": "我把终端中已经查到的异常时间和撤离命令记录全部展示给克莱尔，承认自己曾过于轻信维克多。我问她愿意采取什么路线，并表示会尊重她的判断，一起先救被困的人。",
+        "action_source": "PLAYER_RAW",
+        "desire": "",
+        "strategy": "",
+        "route": "dialogue",
+        "confidence": 0.75,
+        "impact": "HIGH",
+        "quoted_constraints": [
+          "我问她愿意采取什么路线，并表示会尊重她的判断，一起先救被困的人。"
+        ],
+        "observation": {
+          "action": "我把终端中已经查到的异常时间和撤离命令记录全部展示给克莱尔，承认自己曾过于轻信维克多。我问她愿意采取什么路线，并表示会尊重她的判断，一起先救被困的人。",
+          "desire": "",
+          "strategy": "",
+          "desire_source": "UNKNOWN",
+          "route": "dialogue",
+          "confidence": 0.75,
+          "impact": "HIGH",
+          "clarification_required": false,
+          "clarification": ""
+        },
+        "policy": "Original and player-confirmed intent are authoritative preferences, not world facts. Preserve targets, sequence, strategy and negative constraints. Explain any world-grounded obstruction. Never grant an item or evidence simply because the player claims it exists."
+      },
+      "original_preserved": true
+    },
+    {
+      "turn_id": "br_00010_de1567",
+      "session_id": "sess_00006_6051ee",
+      "record_kind": "player_turn",
+      "raw_input": "我趁离开前把终端上显示的实验日志异常时间与撤离命令签署时间逐项核对，将实际找到的记录存进随身册，注明每条线索的来源，再和克莱尔沿维修通道前往冷藏样本库寻找幸存者。",
+      "old_context_chars": 7972,
+      "new_context_chars": 7287,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [
+        {
+          "op": "set",
+          "path": "clues.clue_experiment_log_anomaly",
+          "value": "VERIFIED"
+        }
+      ],
+      "new_proposal": [
+        {
+          "op": "set",
+          "path": "clues.clue_experiment_log_anomaly",
+          "value": "VERIFIED"
+        }
+      ],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 6,
+          "location": "loc_control",
+          "inventory": [
+            "ammunition",
+            "keycard_access",
+            "medical_supplies"
+          ],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 60
+          },
+          "knowledge": [
+            "配电室需要恢复供电才能打开相关门禁",
+            "维修通道是绕过主通道的替代路线",
+            "样本库后方可能藏有未被主通道发现的线索",
+            "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1"
+          ],
+          "clues": {
+            "clue_repair_path": "DISCOVERED",
+            "clue_power_restored": "DISCOVERED",
+            "clue_experiment_log_anomaly": "VERIFIED"
+          },
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 6,
+          "location": "loc_control",
+          "inventory": [
+            "ammunition",
+            "keycard_access",
+            "medical_supplies"
+          ],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 60
+          },
+          "knowledge": [
+            "配电室需要恢复供电才能打开相关门禁",
+            "维修通道是绕过主通道的替代路线",
+            "样本库后方可能藏有未被主通道发现的线索",
+            "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1"
+          ],
+          "clues": {
+            "clue_repair_path": "DISCOVERED",
+            "clue_power_restored": "DISCOVERED",
+            "clue_experiment_log_anomaly": "VERIFIED"
+          },
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": [
+        {
+          "skill": "clue-system",
+          "target": "clue_experiment_log_anomaly",
+          "trigger": {
+            "label": "实验日志异常时间戳与撤离命令记录",
+            "skill": "clue-system",
+            "stage": "VERIFIED",
+            "value": 1,
+            "target": "clue_experiment_log_anomaly"
+          },
+          "status": "proposed",
+          "reason": "explicit_director_proposal_validated"
+        }
+      ],
+      "semantic_packet": {
+        "version": "2.0.0",
+        "raw_input": "我趁离开前把终端上显示的实验日志异常时间与撤离命令签署时间逐项核对，将实际找到的记录存进随身册，注明每条线索的来源，再和克莱尔沿维修通道前往冷藏样本库寻找幸存者。",
+        "action": "我趁离开前把终端上显示的实验日志异常时间与撤离命令签署时间逐项核对，将实际找到的记录存进随身册，注明每条线索的来源，再和克莱尔沿维修通道前往冷藏样本库寻找幸存者。",
+        "action_source": "PLAYER_RAW",
+        "desire": "",
+        "strategy": "",
+        "route": "action",
+        "confidence": 1.0,
+        "impact": "HIGH",
+        "quoted_constraints": [
+          "我趁离开前把终端上显示的实验日志异常时间与撤离命令签署时间逐项核对，将实际找到的记录存进随身册，注明每条线索的来源，再和克莱尔沿维修通道前往冷藏样本库寻找幸存者。"
+        ],
+        "observation": {
+          "action": "我趁离开前把终端上显示的实验日志异常时间与撤离命令签署时间逐项核对，将实际找到的记录存进随身册，注明每条线索的来源，再和克莱尔沿维修通道前往冷藏样本库寻找幸存者。",
+          "desire": "",
+          "strategy": "",
+          "desire_source": "UNKNOWN",
+          "route": "action",
+          "confidence": 1,
+          "impact": "HIGH",
+          "clarification_required": false,
+          "clarification": ""
+        },
+        "policy": "Original and player-confirmed intent are authoritative preferences, not world facts. Preserve targets, sequence, strategy and negative constraints. Explain any world-grounded obstruction. Never grant an item or evidence simply because the player claims it exists."
+      },
+      "original_preserved": true
+    },
+    {
+      "turn_id": "br_00044_26d95c",
+      "session_id": "sess_00006_6051ee",
+      "record_kind": "player_turn",
+      "raw_input": "我和克莱尔检查冷藏样本库里是否有幸存者，优先用急救物资救助受伤的人，核对样本与抑制剂的说明和风险。带着已经复制的证据，我们寻找能把幸存者安全带向紧急逃生通道的路线；不把不明样本带出隔离区。",
+      "old_context_chars": 8197,
+      "new_context_chars": 7325,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "semantic_packet": {
+        "version": "2.0.0",
+        "raw_input": "我和克莱尔检查冷藏样本库里是否有幸存者，优先用急救物资救助受伤的人，核对样本与抑制剂的说明和风险。带着已经复制的证据，我们寻找能把幸存者安全带向紧急逃生通道的路线；不把不明样本带出隔离区。",
+        "action": "我和克莱尔检查冷藏样本库里是否有幸存者，优先用急救物资救助受伤的人，核对样本与抑制剂的说明和风险。带着已经复制的证据，我们寻找能把幸存者安全带向紧急逃生通道的路线；不把不明样本带出隔离区。",
+        "action_source": "PLAYER_RAW",
+        "desire": "",
+        "strategy": "",
+        "route": "action",
+        "confidence": 1.0,
+        "impact": "HIGH",
+        "quoted_constraints": [
+          "我和克莱尔检查冷藏样本库里是否有幸存者，优先用急救物资救助受伤的人，核对样本与抑制剂的说明和风险。",
+          "不把不明样本带出隔离区。"
+        ],
+        "observation": {
+          "action": "我和克莱尔检查冷藏样本库里是否有幸存者，优先用急救物资救助受伤的人，核对样本与抑制剂的说明和风险。带着已经复制的证据，我们寻找能把幸存者安全带向紧急逃生通道的路线；不把不明样本带出隔离区。",
+          "desire": "",
+          "strategy": "",
+          "desire_source": "UNKNOWN",
+          "route": "action",
+          "confidence": 1,
+          "impact": "HIGH",
+          "clarification_required": false,
+          "clarification": ""
+        },
+        "policy": "Original and player-confirmed intent are authoritative preferences, not world facts. Preserve targets, sequence, strategy and negative constraints. Explain any world-grounded obstruction. Never grant an item or evidence simply because the player claims it exists."
+      },
+      "original_preserved": true
+    },
+    {
+      "turn_id": "br_00010_cdc5e0",
+      "session_id": "sess_00006_6051ee",
+      "record_kind": "player_turn",
+      "raw_input": "我在冷藏样本库搜寻幸存者，使用现有急救物资救助伤员，请克莱尔帮忙带他们去紧急逃生通道。",
+      "old_context_chars": 8197,
+      "new_context_chars": 7325,
+      "lost_required_context": [],
+      "outcome": "improved",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [
+        {
+          "op": "addItem",
+          "value": "medical_supplies"
+        },
+        {
+          "op": "increment",
+          "path": "relationships.char_204d12",
+          "value": 10
+        },
+        {
+          "op": "set",
+          "path": "clues.clue_power_restored",
+          "value": "DISCOVERED"
+        }
+      ],
+      "new_proposal": [
+        {
+          "op": "increment",
+          "path": "relationships.char_204d12",
+          "value": 10
+        },
+        {
+          "op": "set",
+          "path": "clues.clue_power_restored",
+          "value": "DISCOVERED"
+        }
+      ],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 7,
+          "location": "loc_control",
+          "inventory": [
+            "ammunition",
+            "keycard_access",
+            "medical_supplies"
+          ],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 70
+          },
+          "knowledge": [
+            "配电室需要恢复供电才能打开相关门禁",
+            "维修通道是绕过主通道的替代路线",
+            "样本库后方可能藏有未被主通道发现的线索",
+            "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1"
+          ],
+          "clues": {
+            "clue_repair_path": "DISCOVERED",
+            "clue_power_restored": "DISCOVERED",
+            "clue_experiment_log_anomaly": "VERIFIED"
+          },
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": false,
+        "reason": "inventory:medical_supplies:inventory_use_cannot_acquire"
+      },
+      "decisions": [
+        {
+          "skill": "inventory",
+          "target": "medical_supplies",
+          "trigger": {
+            "skill": "inventory",
+            "stage": "USED",
+            "value": 3,
+            "action": "add",
+            "target": "medical_supplies"
+          },
+          "status": "rejected",
+          "reason": "inventory_use_cannot_acquire"
+        },
+        {
+          "skill": "relationship",
+          "target": "char_204d12",
+          "trigger": {
+            "skill": "relationship",
+            "value": 10,
+            "target": "char_204d12"
+          },
+          "status": "proposed",
+          "reason": "explicit_director_proposal_validated"
+        },
+        {
+          "skill": "clue-system",
+          "target": "clue_power_restored",
+          "trigger": {
+            "skill": "clue-system",
+            "stage": "DISCOVERED",
+            "target": "clue_power_restored"
+          },
+          "status": "proposed",
+          "reason": "explicit_director_proposal_validated"
+        }
+      ],
+      "reason": "blocks observed acquisition while using an item",
+      "semantic_packet": {
+        "version": "2.0.0",
+        "raw_input": "我在冷藏样本库搜寻幸存者，使用现有急救物资救助伤员，请克莱尔帮忙带他们去紧急逃生通道。",
+        "action": "我在冷藏样本库搜寻幸存者，使用现有急救物资救助伤员，请克莱尔帮忙带他们去紧急逃生通道。",
+        "action_source": "PLAYER_RAW",
+        "desire": "",
+        "strategy": "",
+        "route": "action",
+        "confidence": 0.99,
+        "impact": "HIGH",
+        "quoted_constraints": [],
+        "observation": {
+          "action": "我在冷藏样本库搜寻幸存者，使用现有急救物资救助伤员，请克莱尔帮忙带他们去紧急逃生通道。",
+          "desire": "",
+          "strategy": "",
+          "desire_source": "UNKNOWN",
+          "route": "action",
+          "confidence": 0.99,
+          "impact": "HIGH",
+          "clarification_required": false,
+          "clarification": ""
+        },
+        "policy": "Original and player-confirmed intent are authoritative preferences, not world facts. Preserve targets, sequence, strategy and negative constraints. Explain any world-grounded obstruction. Never grant an item or evidence simply because the player claims it exists."
+      },
+      "original_preserved": true
+    },
+    {
+      "turn_id": "br_00049_f32ffd",
+      "session_id": "sess_00006_6051ee",
+      "record_kind": "player_turn",
+      "raw_input": "我与克莱尔把已经救出的伤员护送到紧急逃生通道，带走已复制的证据，不冒险搬运危险样本。确认所有能救的人通过后，我关闭隔离门，阻止实验体和污染向外扩散，和大家一起撤离设施。",
+      "old_context_chars": 8452,
+      "new_context_chars": 7600,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [],
+      "new_proposal": [],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 8,
+          "location": "loc_control",
+          "inventory": [
+            "ammunition",
+            "keycard_access",
+            "medical_supplies"
+          ],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 70
+          },
+          "knowledge": [
+            "配电室需要恢复供电才能打开相关门禁",
+            "维修通道是绕过主通道的替代路线",
+            "样本库后方可能藏有未被主通道发现的线索",
+            "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1"
+          ],
+          "clues": {
+            "clue_repair_path": "DISCOVERED",
+            "clue_power_restored": "DISCOVERED",
+            "clue_experiment_log_anomaly": "VERIFIED"
+          },
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 8,
+          "location": "loc_control",
+          "inventory": [
+            "ammunition",
+            "keycard_access",
+            "medical_supplies"
+          ],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 70
+          },
+          "knowledge": [
+            "配电室需要恢复供电才能打开相关门禁",
+            "维修通道是绕过主通道的替代路线",
+            "样本库后方可能藏有未被主通道发现的线索",
+            "物资搜寻成功，获得急救物资 x3、弹药 x1盒、门禁钥匙卡 x1"
+          ],
+          "clues": {
+            "clue_repair_path": "DISCOVERED",
+            "clue_power_restored": "DISCOVERED",
+            "clue_experiment_log_anomaly": "VERIFIED"
+          },
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": [],
+      "semantic_packet": {
+        "version": "2.0.0",
+        "raw_input": "我与克莱尔把已经救出的伤员护送到紧急逃生通道，带走已复制的证据，不冒险搬运危险样本。确认所有能救的人通过后，我关闭隔离门，阻止实验体和污染向外扩散，和大家一起撤离设施。",
+        "action": "我与克莱尔把已经救出的伤员护送到紧急逃生通道，带走已复制的证据，不冒险搬运危险样本。确认所有能救的人通过后，我关闭隔离门，阻止实验体和污染向外扩散，和大家一起撤离设施。",
+        "action_source": "PLAYER_RAW",
+        "desire": "",
+        "strategy": "",
+        "route": "action",
+        "confidence": 1.0,
+        "impact": "HIGH",
+        "quoted_constraints": [
+          "我与克莱尔把已经救出的伤员护送到紧急逃生通道，带走已复制的证据，不冒险搬运危险样本。"
+        ],
+        "observation": {
+          "action": "我与克莱尔把已经救出的伤员护送到紧急逃生通道，带走已复制的证据，不冒险搬运危险样本。确认所有能救的人通过后，我关闭隔离门，阻止实验体和污染向外扩散，和大家一起撤离设施。",
+          "desire": "",
+          "strategy": "",
+          "desire_source": "UNKNOWN",
+          "route": "action",
+          "confidence": 1,
+          "impact": "HIGH",
+          "clarification_required": false,
+          "clarification": ""
+        },
+        "policy": "Original and player-confirmed intent are authoritative preferences, not world facts. Preserve targets, sequence, strategy and negative constraints. Explain any world-grounded obstruction. Never grant an item or evidence simply because the player claims it exists."
+      },
+      "original_preserved": true
+    },
+    {
+      "turn_id": "br_00078_6edd5b",
+      "session_id": "sess_00006_6051ee",
+      "record_kind": "player_turn",
+      "raw_input": "我确认克莱尔和幸存者已安全离开后，使用设施允许的隔离处置程序销毁危险样本，接受未能备份的实验资料一起损失，不再返回。带着幸存者和仅存证据前往地面救援点，把我们掌握的真相交给救援人员。",
+      "old_context_chars": 8269,
+      "new_context_chars": 7294,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "loc_parking"
+        },
+        {
+          "op": "set",
+          "path": "health",
+          "value": "normal"
+        },
+        {
+          "op": "removeItem",
+          "value": "危险样本"
+        },
+        {
+          "op": "increment",
+          "path": "relationships.char_204d12",
+          "value": 5
+        },
+        {
+          "op": "set",
+          "path": "clues.clue_repair_path",
+          "value": "USED"
+        }
+      ],
+      "new_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "loc_parking"
+        },
+        {
+          "op": "set",
+          "path": "health",
+          "value": "normal"
+        },
+        {
+          "op": "increment",
+          "path": "relationships.char_204d12",
+          "value": 5
+        },
+        {
+          "op": "set",
+          "path": "clues.clue_repair_path",
+          "value": "USED"
+        }
+      ],
+      "old_validation": {
+        "valid": false,
+        "reason": "item not owned: 危险样本"
+      },
+      "new_validation": {
+        "valid": false,
+        "reason": "inventory:危险样本:cannot_remove_unowned_item"
+      },
+      "decisions": [
+        {
+          "skill": "inventory",
+          "target": "危险样本",
+          "trigger": {
+            "skill": "inventory",
+            "stage": "USED",
+            "value": 1,
+            "action": "remove",
+            "target": "危险样本"
+          },
+          "status": "rejected",
+          "reason": "cannot_remove_unowned_item"
+        },
+        {
+          "skill": "relationship",
+          "target": "char_204d12",
+          "trigger": {
+            "skill": "relationship",
+            "value": 5,
+            "target": "char_204d12"
+          },
+          "status": "proposed",
+          "reason": "explicit_director_proposal_validated"
+        },
+        {
+          "skill": "clue-system",
+          "target": "clue_repair_path",
+          "trigger": {
+            "skill": "clue-system",
+            "stage": "USED",
+            "target": "clue_repair_path"
+          },
+          "status": "proposed",
+          "reason": "explicit_director_proposal_validated"
+        }
+      ],
+      "semantic_packet": {
+        "version": "2.0.0",
+        "raw_input": "我确认克莱尔和幸存者已安全离开后，使用设施允许的隔离处置程序销毁危险样本，接受未能备份的实验资料一起损失，不再返回。带着幸存者和仅存证据前往地面救援点，把我们掌握的真相交给救援人员。",
+        "action": "我确认克莱尔和幸存者已安全离开后，使用设施允许的隔离处置程序销毁危险样本，接受未能备份的实验资料一起损失，不再返回。带着幸存者和仅存证据前往地面救援点，把我们掌握的真相交给救援人员。",
+        "action_source": "PLAYER_RAW",
+        "desire": "",
+        "strategy": "",
+        "route": "action",
+        "confidence": 1.0,
+        "impact": "HIGH",
+        "quoted_constraints": [
+          "我确认克莱尔和幸存者已安全离开后，使用设施允许的隔离处置程序销毁危险样本，接受未能备份的实验资料一起损失，不再返回。"
+        ],
+        "observation": {
+          "action": "我确认克莱尔和幸存者已安全离开后，使用设施允许的隔离处置程序销毁危险样本，接受未能备份的实验资料一起损失，不再返回。带着幸存者和仅存证据前往地面救援点，把我们掌握的真相交给救援人员。",
+          "desire": "",
+          "strategy": "",
+          "desire_source": "UNKNOWN",
+          "route": "action",
+          "confidence": 1,
+          "impact": "HIGH",
+          "clarification_required": false,
+          "clarification": ""
+        },
+        "policy": "Original and player-confirmed intent are authoritative preferences, not world facts. Preserve targets, sequence, strategy and negative constraints. Explain any world-grounded obstruction. Never grant an item or evidence simply because the player claims it exists."
+      },
+      "original_preserved": true
+    },
+    {
+      "turn_id": "opening_00011_c00828",
+      "session_id": "sess_00006_80d9a4",
+      "record_kind": "opening",
+      "raw_input": "opening",
+      "old_context_chars": 5915,
+      "new_context_chars": 5757,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00051_df5199",
+      "session_id": "sess_00006_80d9a4",
+      "record_kind": "speculative_branch",
+      "raw_input": "优先救援幸存者",
+      "old_context_chars": 6491,
+      "new_context_chars": 6333,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00053_c32b4e",
+      "session_id": "sess_00006_80d9a4",
+      "record_kind": "speculative_branch",
+      "raw_input": "检查配电系统",
+      "old_context_chars": 6491,
+      "new_context_chars": 6333,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00055_d0fb26",
+      "session_id": "sess_00006_80d9a4",
+      "record_kind": "speculative_branch",
+      "raw_input": "撤离与隐藏样本",
+      "old_context_chars": 6491,
+      "new_context_chars": 6333,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "opening_00011_3d2895",
+      "session_id": "sess_00006_97bc74",
+      "record_kind": "opening",
+      "raw_input": "opening",
+      "old_context_chars": 5918,
+      "new_context_chars": 5760,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00048_7acf37",
+      "session_id": "sess_00006_97bc74",
+      "record_kind": "speculative_branch",
+      "raw_input": "优先撤离关键幸存者",
+      "old_context_chars": 6503,
+      "new_context_chars": 6345,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00050_30002e",
+      "session_id": "sess_00006_97bc74",
+      "record_kind": "speculative_branch",
+      "raw_input": "收集并转移关键证据",
+      "old_context_chars": 6503,
+      "new_context_chars": 6345,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00052_e1e4c2",
+      "session_id": "sess_00006_97bc74",
+      "record_kind": "speculative_branch",
+      "raw_input": "检查配电系统",
+      "old_context_chars": 6503,
+      "new_context_chars": 6345,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "opening_00011_84b6a5",
+      "session_id": "sess_00006_f91c09",
+      "record_kind": "opening",
+      "raw_input": "opening",
+      "old_context_chars": 5918,
+      "new_context_chars": 5760,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00062_e1aed2",
+      "session_id": "sess_00006_f91c09",
+      "record_kind": "player_turn",
+      "raw_input": "查阅实验档案寻找证据",
+      "old_context_chars": 7068,
+      "new_context_chars": 6910,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [],
+      "new_proposal": [],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": []
+    },
+    {
+      "turn_id": "br_00064_8a31c8",
+      "session_id": "sess_00006_f91c09",
+      "record_kind": "speculative_branch",
+      "raw_input": "进入配电室恢复供电",
+      "old_context_chars": 7068,
+      "new_context_chars": 6910,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [],
+      "new_proposal": [],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": []
+    },
+    {
+      "turn_id": "br_00066_f8f118",
+      "session_id": "sess_00006_f91c09",
+      "record_kind": "speculative_branch",
+      "raw_input": "护送幸存者前往安全出口",
+      "old_context_chars": 7068,
+      "new_context_chars": 6910,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "loc_exit"
+        },
+        {
+          "op": "set",
+          "path": "clues.survivor_presence",
+          "value": "DISCOVERED"
+        }
+      ],
+      "new_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "loc_exit"
+        },
+        {
+          "op": "set",
+          "path": "clues.survivor_presence",
+          "value": "DISCOVERED"
+        }
+      ],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_exit",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {
+            "survivor_presence": "DISCOVERED"
+          },
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_exit",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {
+            "survivor_presence": "DISCOVERED"
+          },
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": [
+        {
+          "skill": "clue-system",
+          "target": "survivor_presence",
+          "trigger": {
+            "skill": "clue-system",
+            "stage": "DISCOVERED",
+            "value": 1,
+            "action": "add",
+            "target": "survivor_presence"
+          },
+          "status": "proposed",
+          "reason": "explicit_director_proposal_validated"
+        }
+      ]
+    },
+    {
+      "turn_id": "br_00035_710887",
+      "session_id": "sess_00006_f91c09",
+      "record_kind": "speculative_branch",
+      "raw_input": "掩护逃离",
+      "old_context_chars": 7429,
+      "new_context_chars": 6922,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "loc_holding"
+        },
+        {
+          "op": "addItem",
+          "value": "铁锹"
+        }
+      ],
+      "new_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "loc_holding"
+        },
+        {
+          "op": "addItem",
+          "value": "铁锹"
+        }
+      ],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_holding",
+          "inventory": [
+            "铁锹"
+          ],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_holding",
+          "inventory": [
+            "铁锹"
+          ],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": [
+        {
+          "skill": "inventory",
+          "target": "铁锹",
+          "trigger": {
+            "skill": "inventory",
+            "stage": "DISCOVERED",
+            "action": "add",
+            "target": "铁锹"
+          },
+          "status": "proposed",
+          "reason": "explicit_director_proposal_validated"
+        }
+      ]
+    },
+    {
+      "turn_id": "br_00037_bd922a",
+      "session_id": "sess_00006_f91c09",
+      "record_kind": "speculative_branch",
+      "raw_input": "修复配电",
+      "old_context_chars": 7429,
+      "new_context_chars": 6922,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [
+        {
+          "op": "inspect",
+          "path": "location",
+          "value": "loc_control"
+        }
+      ],
+      "new_proposal": [
+        {
+          "op": "inspect",
+          "path": "location",
+          "value": "loc_control"
+        }
+      ],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [
+            "loc_control"
+          ],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [
+            "loc_control"
+          ],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": []
+    },
+    {
+      "turn_id": "br_00039_b1f32b",
+      "session_id": "sess_00006_f91c09",
+      "record_kind": "speculative_branch",
+      "raw_input": "撤离幸存者",
+      "old_context_chars": 7429,
+      "new_context_chars": 6922,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [],
+      "new_proposal": [],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": []
+    },
+    {
+      "turn_id": "br_00159_3e296a",
+      "session_id": "sess_00007_b1da61",
+      "record_kind": "speculative_branch",
+      "raw_input": "询问 Alice 的近况",
+      "old_context_chars": 2221,
+      "new_context_chars": 2056,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "opening_00014_cb39a9",
+      "session_id": "sess_00009_0791da",
+      "record_kind": "opening",
+      "raw_input": "opening",
+      "old_context_chars": 1607,
+      "new_context_chars": 1535,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00034_ab6d14",
+      "session_id": "sess_00009_0791da",
+      "record_kind": "speculative_branch",
+      "raw_input": "检查码头设施",
+      "old_context_chars": 1829,
+      "new_context_chars": 1757,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00036_a2b0ea",
+      "session_id": "sess_00009_0791da",
+      "record_kind": "speculative_branch",
+      "raw_input": "询问维修员细节",
+      "old_context_chars": 1829,
+      "new_context_chars": 1757,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00038_aec824",
+      "session_id": "sess_00009_0791da",
+      "record_kind": "speculative_branch",
+      "raw_input": "查看灯塔门厅",
+      "old_context_chars": 1829,
+      "new_context_chars": 1757,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00136_383b8e",
+      "session_id": "sess_00009_0791da",
+      "record_kind": "player_turn",
+      "raw_input": "我敲响后门，大声表明保险调查员的身份，请林岚开门，带我进入灯塔门厅一起搜查。",
+      "old_context_chars": 1829,
+      "new_context_chars": 1757,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "semantic_packet": {
+        "version": "2.0.0",
+        "raw_input": "我敲响后门，大声表明保险调查员的身份，请林岚开门，带我进入灯塔门厅一起搜查。",
+        "action": "我敲响后门，大声表明保险调查员的身份，请林岚开门，带我进入灯塔门厅一起搜查。",
+        "action_source": "PLAYER_RAW",
+        "desire": "",
+        "strategy": "",
+        "route": "unknown",
+        "confidence": 0.97,
+        "impact": "MEDIUM",
+        "quoted_constraints": [],
+        "observation": {
+          "raw_text": "我敲响后门，大声表明保险调查员的身份，请林岚开门，带我进入灯塔门厅一起搜查。",
+          "action": "我敲响后门，大声表明保险调查员的身份，请林岚开门，带我进入灯塔门厅一起搜查。",
+          "desire": "",
+          "strategy": "",
+          "desire_source": "UNKNOWN",
+          "confidence": 0.97,
+          "calibrated": false,
+          "impact": "MEDIUM",
+          "clarification_required": false
+        },
+        "policy": "Original and player-confirmed intent are authoritative preferences, not world facts. Preserve targets, sequence, strategy and negative constraints. Explain any world-grounded obstruction. Never grant an item or evidence simply because the player claims it exists."
+      },
+      "original_preserved": true
+    },
+    {
+      "turn_id": "br_00175_87d094",
+      "session_id": "sess_00009_0791da",
+      "record_kind": "speculative_branch",
+      "raw_input": "查看码头边缘的痕迹",
+      "old_context_chars": 2121,
+      "new_context_chars": 1951,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00177_21b079",
+      "session_id": "sess_00009_0791da",
+      "record_kind": "speculative_branch",
+      "raw_input": "询问林岚关于灯塔后门的细节",
+      "old_context_chars": 2121,
+      "new_context_chars": 1951,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00179_8f9e32",
+      "session_id": "sess_00009_0791da",
+      "record_kind": "speculative_branch",
+      "raw_input": "检查灯塔大门的锁状态",
+      "old_context_chars": 2121,
+      "new_context_chars": 1951,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00181_467d1f",
+      "session_id": "sess_00009_0791da",
+      "record_kind": "player_turn",
+      "raw_input": "保持沉默，不作回应",
+      "old_context_chars": 2121,
+      "new_context_chars": 1951,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00333_7f9a00",
+      "session_id": "sess_00009_0791da",
+      "record_kind": "speculative_branch",
+      "raw_input": "查看码头边缘的痕迹",
+      "old_context_chars": 2227,
+      "new_context_chars": 1942,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00335_2a3d99",
+      "session_id": "sess_00009_0791da",
+      "record_kind": "speculative_branch",
+      "raw_input": "返回码头小屋暂避风雨",
+      "old_context_chars": 2227,
+      "new_context_chars": 1942,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00337_18670d",
+      "session_id": "sess_00009_0791da",
+      "record_kind": "speculative_branch",
+      "raw_input": "询问林兰关于后门的细节",
+      "old_context_chars": 2227,
+      "new_context_chars": 1942,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00008_c24bb7",
+      "session_id": "sess_00009_0791da",
+      "record_kind": "player_turn",
+      "raw_input": "我决定结束这次调查，离开港口，不再参与这场矛盾。",
+      "old_context_chars": 2227,
+      "new_context_chars": 1942,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [],
+      "new_proposal": [],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "dock",
+          "inventory": [],
+          "relationships": {},
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_1": "",
+            "fact_2": "",
+            "fact_3": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "dock",
+          "inventory": [],
+          "relationships": {},
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_1": "",
+            "fact_2": "",
+            "fact_3": ""
+          }
+        }
+      },
+      "decisions": [],
+      "semantic_packet": {
+        "version": "2.0.0",
+        "raw_input": "我决定结束这次调查，离开港口，不再参与这场矛盾。",
+        "action": "我决定结束这次调查，离开港口，不再参与这场矛盾。",
+        "action_source": "PLAYER_RAW",
+        "desire": "",
+        "strategy": "",
+        "route": "action",
+        "confidence": 0.87,
+        "impact": "HIGH",
+        "quoted_constraints": [
+          "我决定结束这次调查，离开港口，不再参与这场矛盾。"
+        ],
+        "observation": {
+          "action": "我决定结束这次调查，离开港口，不再参与这场矛盾。",
+          "desire": "",
+          "strategy": "",
+          "desire_source": "UNKNOWN",
+          "route": "action",
+          "confidence": 0.87,
+          "impact": "HIGH",
+          "clarification_required": false,
+          "clarification": ""
+        },
+        "policy": "Original and player-confirmed intent are authoritative preferences, not world facts. Preserve targets, sequence, strategy and negative constraints. Explain any world-grounded obstruction. Never grant an item or evidence simply because the player claims it exists."
+      },
+      "original_preserved": true
+    },
+    {
+      "turn_id": "br_00078_c42ec2",
+      "session_id": "sess_00009_0791da",
+      "record_kind": "player_turn",
+      "raw_input": "我向林岚坦白先前作为保险调查员隐瞒身份的原因，承认这伤害了她的信任，并真诚道歉；我决定与她共同寻找姐姐，请她告诉我当前已知的线索。",
+      "old_context_chars": 2485,
+      "new_context_chars": 2158,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [],
+      "new_proposal": [],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "dock",
+          "inventory": [],
+          "relationships": {},
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_1": "",
+            "fact_2": "",
+            "fact_3": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "dock",
+          "inventory": [],
+          "relationships": {},
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_1": "",
+            "fact_2": "",
+            "fact_3": ""
+          }
+        }
+      },
+      "decisions": [],
+      "semantic_packet": {
+        "version": "2.0.0",
+        "raw_input": "我向林岚坦白先前作为保险调查员隐瞒身份的原因，承认这伤害了她的信任，并真诚道歉；我决定与她共同寻找姐姐，请她告诉我当前已知的线索。",
+        "action": "我向林岚坦白先前作为保险调查员隐瞒身份的原因，承认这伤害了她的信任，并真诚道歉；我决定与她共同寻找姐姐，请她告诉我当前已知的线索。",
+        "action_source": "PLAYER_RAW",
+        "desire": "",
+        "strategy": "",
+        "route": "dialogue",
+        "confidence": 0.37,
+        "impact": "HIGH",
+        "quoted_constraints": [
+          "我向林岚坦白先前作为保险调查员隐瞒身份的原因，承认这伤害了她的信任，并真诚道歉；"
+        ],
+        "observation": {
+          "action": "我向林岚坦白先前作为保险调查员隐瞒身份的原因，承认这伤害了她的信任，并真诚道歉；我决定与她共同寻找姐姐，请她告诉我当前已知的线索。",
+          "desire": "",
+          "strategy": "",
+          "desire_source": "UNKNOWN",
+          "route": "dialogue",
+          "confidence": 0.37,
+          "impact": "HIGH",
+          "clarification_required": false,
+          "clarification": ""
+        },
+        "policy": "Original and player-confirmed intent are authoritative preferences, not world facts. Preserve targets, sequence, strategy and negative constraints. Explain any world-grounded obstruction. Never grant an item or evidence simply because the player claims it exists."
+      },
+      "original_preserved": true
+    },
+    {
+      "turn_id": "br_00010_040fd6",
+      "session_id": "sess_00009_0791da",
+      "record_kind": "player_turn",
+      "raw_input": "我把关于姐姐被走私团伙追踪的推测告诉林岚，并承认自己缺少证据；我愿意按她的办法调查，请她与我结伴并相互信任，先一起核实灯塔后门暗锁线索。",
+      "old_context_chars": 2805,
+      "new_context_chars": 2464,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [
+        {
+          "op": "set",
+          "path": "relationships.lin_lan",
+          "value": 55
+        }
+      ],
+      "new_proposal": [
+        {
+          "op": "set",
+          "path": "relationships.lin_lan",
+          "value": 55
+        }
+      ],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "dock",
+          "inventory": [],
+          "relationships": {
+            "lin_lan": 55
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_1": "",
+            "fact_2": "",
+            "fact_3": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "dock",
+          "inventory": [],
+          "relationships": {
+            "lin_lan": 55
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_1": "",
+            "fact_2": "",
+            "fact_3": ""
+          }
+        }
+      },
+      "decisions": [
+        {
+          "skill": "relationship",
+          "target": "lin_lan",
+          "trigger": {
+            "skill": "relationship",
+            "target": "lin_lan",
+            "action": "add",
+            "stage": "DISCOVERED",
+            "value": 5
+          },
+          "status": "proposed",
+          "reason": "explicit_director_proposal_validated"
+        }
+      ],
+      "semantic_packet": {
+        "version": "2.0.0",
+        "raw_input": "我把关于姐姐被走私团伙追踪的推测告诉林岚，并承认自己缺少证据；我愿意按她的办法调查，请她与我结伴并相互信任，先一起核实灯塔后门暗锁线索。",
+        "action": "我把关于姐姐被走私团伙追踪的推测告诉林岚，并承认自己缺少证据；我愿意按她的办法调查，请她与我结伴并相互信任，先一起核实灯塔后门暗锁线索。",
+        "action_source": "PLAYER_RAW",
+        "desire": "",
+        "strategy": "",
+        "route": "dialogue",
+        "confidence": 0.45,
+        "impact": "MEDIUM",
+        "quoted_constraints": [
+          "我愿意按她的办法调查，请她与我结伴并相互信任，先一起核实灯塔后门暗锁线索。"
+        ],
+        "observation": {
+          "action": "我把关于姐姐被走私团伙追踪的推测告诉林岚，并承认自己缺少证据；我愿意按她的办法调查，请她与我结伴并相互信任，先一起核实灯塔后门暗锁线索。",
+          "desire": "",
+          "strategy": "",
+          "desire_source": "UNKNOWN",
+          "route": "dialogue",
+          "confidence": 0.45,
+          "impact": "MEDIUM",
+          "clarification_required": false,
+          "clarification": ""
+        },
+        "policy": "Original and player-confirmed intent are authoritative preferences, not world facts. Preserve targets, sequence, strategy and negative constraints. Explain any world-grounded obstruction. Never grant an item or evidence simply because the player claims it exists."
+      },
+      "original_preserved": true
+    },
+    {
+      "turn_id": "opening_00017_077de9",
+      "session_id": "sess_00012_654bef",
+      "record_kind": "opening",
+      "raw_input": "opening",
+      "old_context_chars": 5915,
+      "new_context_chars": 5757,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "opening_00030_290f74",
+      "session_id": "sess_00025_e74624",
+      "record_kind": "opening",
+      "raw_input": "opening",
+      "old_context_chars": 5915,
+      "new_context_chars": 5757,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "opening_00033_23675f",
+      "session_id": "sess_00028_dc6cb4",
+      "record_kind": "opening",
+      "raw_input": "opening",
+      "old_context_chars": 3307,
+      "new_context_chars": 3149,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "opening_00046_8e220e",
+      "session_id": "sess_00041_0b4332",
+      "record_kind": "opening",
+      "raw_input": "opening",
+      "old_context_chars": 1634,
+      "new_context_chars": 1569,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "opening_00056_bbda4e",
+      "session_id": "sess_00051_e8762c",
+      "record_kind": "opening",
+      "raw_input": "opening",
+      "old_context_chars": 5915,
+      "new_context_chars": 5757,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "opening_00078_51f227",
+      "session_id": "sess_00073_f412f8",
+      "record_kind": "opening",
+      "raw_input": "opening",
+      "old_context_chars": 5915,
+      "new_context_chars": 5757,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "opening_00106_20d86e",
+      "session_id": "sess_00101_7db4d3",
+      "record_kind": "opening",
+      "raw_input": "opening",
+      "old_context_chars": 5918,
+      "new_context_chars": 5760,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00152_18c8ec",
+      "session_id": "sess_00101_7db4d3",
+      "record_kind": "speculative_branch",
+      "raw_input": "寻找控制室恢复供电",
+      "old_context_chars": 6429,
+      "new_context_chars": 6271,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "loc_control"
+        }
+      ],
+      "new_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "loc_control"
+        }
+      ],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_control",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_control",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": []
+    },
+    {
+      "turn_id": "br_00154_2d275d",
+      "session_id": "sess_00101_7db4d3",
+      "record_kind": "speculative_branch",
+      "raw_input": "优先救援被困的幸存者",
+      "old_context_chars": 6429,
+      "new_context_chars": 6271,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [],
+      "new_proposal": [],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": []
+    },
+    {
+      "turn_id": "br_00156_bbf9cb",
+      "session_id": "sess_00101_7db4d3",
+      "record_kind": "player_turn",
+      "raw_input": "锁存并转移关键的Umbrella证据",
+      "old_context_chars": 6429,
+      "new_context_chars": 6271,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [],
+      "new_proposal": [],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": []
+    },
+    {
+      "turn_id": "br_00254_2a6b2e",
+      "session_id": "sess_00101_7db4d3",
+      "record_kind": "speculative_branch",
+      "raw_input": "撤离至安全控制中心撤离",
+      "old_context_chars": 6761,
+      "new_context_chars": 6361,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "location_5"
+        }
+      ],
+      "new_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "location_5"
+        }
+      ],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "location_5",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "location_5",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": []
+    },
+    {
+      "turn_id": "br_00256_6f0a53",
+      "session_id": "sess_00101_7db4d3",
+      "record_kind": "speculative_branch",
+      "raw_input": "前往配电室恢复供电",
+      "old_context_chars": 6761,
+      "new_context_chars": 6361,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "loc_control"
+        },
+        {
+          "op": "addItem",
+          "value": "钥匙"
+        }
+      ],
+      "new_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "loc_control"
+        },
+        {
+          "op": "addItem",
+          "value": "钥匙"
+        }
+      ],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_control",
+          "inventory": [
+            "钥匙"
+          ],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_control",
+          "inventory": [
+            "钥匙"
+          ],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": [
+        {
+          "skill": "inventory",
+          "target": "钥匙",
+          "trigger": {
+            "skill": "inventory",
+            "stage": "DISCOVERED",
+            "action": "add",
+            "target": "钥匙"
+          },
+          "status": "proposed",
+          "reason": "explicit_director_proposal_validated"
+        }
+      ]
+    },
+    {
+      "turn_id": "br_00258_c7819b",
+      "session_id": "sess_00101_7db4d3",
+      "record_kind": "speculative_branch",
+      "raw_input": "前往实验档案室锁存Umbrella证据",
+      "old_context_chars": 6761,
+      "new_context_chars": 6361,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "loc_holding"
+        },
+        {
+          "op": "addItem",
+          "value": "Umbrella 证据"
+        }
+      ],
+      "new_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "loc_holding"
+        },
+        {
+          "op": "addItem",
+          "value": "Umbrella 证据"
+        }
+      ],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_holding",
+          "inventory": [
+            "Umbrella 证据"
+          ],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_holding",
+          "inventory": [
+            "Umbrella 证据"
+          ],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": [
+        {
+          "skill": "inventory",
+          "target": "Umbrella 证据",
+          "trigger": {
+            "skill": "inventory",
+            "action": "add",
+            "target": "Umbrella 证据"
+          },
+          "status": "proposed",
+          "reason": "explicit_director_proposal_validated"
+        }
+      ]
+    },
+    {
+      "turn_id": "br_00335_aa08da",
+      "session_id": "sess_00101_7db4d3",
+      "record_kind": "player_turn",
+      "raw_input": "这时候T-103突然出现在档案室，李昂掏出一发大火箭把他秒杀",
+      "old_context_chars": 6779,
+      "new_context_chars": 6379,
+      "lost_required_context": [],
+      "outcome": "improved",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "loc_exit"
+        },
+        {
+          "op": "addItem",
+          "value": "大火箭"
+        },
+        {
+          "op": "increment",
+          "path": "relationships.char_149758",
+          "value": -10
+        }
+      ],
+      "new_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "loc_exit"
+        },
+        {
+          "op": "increment",
+          "path": "relationships.char_149758",
+          "value": -10
+        }
+      ],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_exit",
+          "inventory": [
+            "大火箭"
+          ],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 40,
+            "char_204d12": 50
+          },
+          "knowledge": [
+            "Umbrella 关键证据已锁存"
+          ],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": false,
+        "reason": "inventory:大火箭:inventory_use_cannot_acquire"
+      },
+      "decisions": [
+        {
+          "skill": "inventory",
+          "target": "大火箭",
+          "trigger": {
+            "skill": "inventory",
+            "stage": "USED",
+            "value": 1,
+            "action": "add",
+            "target": "大火箭"
+          },
+          "status": "rejected",
+          "reason": "inventory_use_cannot_acquire"
+        },
+        {
+          "skill": "relationship",
+          "target": "char_149758",
+          "trigger": {
+            "skill": "relationship",
+            "value": -10,
+            "target": "char_149758"
+          },
+          "status": "proposed",
+          "reason": "explicit_director_proposal_validated"
+        }
+      ],
+      "reason": "blocks observed acquisition while using an item",
+      "semantic_packet": {
+        "version": "2.0.0",
+        "raw_input": "这时候T-103突然出现在档案室，李昂掏出一发大火箭把他秒杀",
+        "action": "这时候T-103突然出现在档案室，李昂掏出一发大火箭把他秒杀",
+        "action_source": "PLAYER_RAW",
+        "desire": "",
+        "strategy": "",
+        "route": "unknown",
+        "confidence": 1.0,
+        "impact": "HIGH",
+        "quoted_constraints": [],
+        "observation": {
+          "action": "这时候T-103突然出现在档案室，李昂掏出一发大火箭把他秒杀",
+          "desire": "",
+          "impact": "HIGH",
+          "raw_text": "这时候T-103突然出现在档案室，李昂掏出一发大火箭把他秒杀",
+          "strategy": "",
+          "calibrated": false,
+          "confidence": 1.0,
+          "desire_source": "UNKNOWN",
+          "clarification_required": false
+        },
+        "policy": "Original and player-confirmed intent are authoritative preferences, not world facts. Preserve targets, sequence, strategy and negative constraints. Explain any world-grounded obstruction. Never grant an item or evidence simply because the player claims it exists."
+      },
+      "original_preserved": true
+    },
+    {
+      "turn_id": "br_00402_6dd90b",
+      "session_id": "sess_00101_7db4d3",
+      "record_kind": "player_turn",
+      "raw_input": "冲出冷藏库",
+      "old_context_chars": 7119,
+      "new_context_chars": 6532,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "location_5"
+        }
+      ],
+      "new_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "location_5"
+        }
+      ],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 3,
+          "location": "location_5",
+          "inventory": [
+            "大火箭"
+          ],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 40,
+            "char_204d12": 50
+          },
+          "knowledge": [
+            "Umbrella 关键证据已锁存"
+          ],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 3,
+          "location": "location_5",
+          "inventory": [
+            "大火箭"
+          ],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 40,
+            "char_204d12": 50
+          },
+          "knowledge": [
+            "Umbrella 关键证据已锁存"
+          ],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": []
+    },
+    {
+      "turn_id": "br_00404_de6f98",
+      "session_id": "sess_00101_7db4d3",
+      "record_kind": "speculative_branch",
+      "raw_input": "掩护幸存者撤离",
+      "old_context_chars": 7119,
+      "new_context_chars": 6532,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "loc_control"
+        },
+        {
+          "op": "set",
+          "path": "objects.火箭弹",
+          "value": 0
+        },
+        {
+          "op": "removeItem",
+          "value": "火箭弹"
+        }
+      ],
+      "new_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "loc_control"
+        },
+        {
+          "op": "set",
+          "path": "objects.火箭弹",
+          "value": 0
+        }
+      ],
+      "old_validation": {
+        "valid": false,
+        "reason": "item not owned: 火箭弹"
+      },
+      "new_validation": {
+        "valid": false,
+        "reason": "inventory:火箭弹:cannot_remove_unowned_item"
+      },
+      "decisions": [
+        {
+          "skill": "inventory",
+          "target": "火箭弹",
+          "trigger": {
+            "skill": "inventory",
+            "stage": "USED",
+            "action": "remove",
+            "target": "火箭弹"
+          },
+          "status": "rejected",
+          "reason": "cannot_remove_unowned_item"
+        }
+      ]
+    },
+    {
+      "turn_id": "br_00406_b6fddf",
+      "session_id": "sess_00101_7db4d3",
+      "record_kind": "speculative_branch",
+      "raw_input": "设法恢复供电",
+      "old_context_chars": 7119,
+      "new_context_chars": 6532,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "loc_control"
+        }
+      ],
+      "new_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "loc_control"
+        }
+      ],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 3,
+          "location": "loc_control",
+          "inventory": [
+            "大火箭"
+          ],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 40,
+            "char_204d12": 50
+          },
+          "knowledge": [
+            "Umbrella 关键证据已锁存"
+          ],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 3,
+          "location": "loc_control",
+          "inventory": [
+            "大火箭"
+          ],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 40,
+            "char_204d12": 50
+          },
+          "knowledge": [
+            "Umbrella 关键证据已锁存"
+          ],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": []
+    },
+    {
+      "turn_id": "br_00408_261d5c",
+      "session_id": "sess_00101_7db4d3",
+      "record_kind": "speculative_branch",
+      "raw_input": "保持沉默，不作回应",
+      "old_context_chars": 7119,
+      "new_context_chars": 6532,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00523_4da67d",
+      "session_id": "sess_00101_7db4d3",
+      "record_kind": "speculative_branch",
+      "raw_input": "冲出安全控制中心",
+      "old_context_chars": 7474,
+      "new_context_chars": 6724,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "location_6"
+        }
+      ],
+      "new_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "location_6"
+        }
+      ],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 4,
+          "location": "location_6",
+          "inventory": [
+            "大火箭"
+          ],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 40,
+            "char_204d12": 50
+          },
+          "knowledge": [
+            "Umbrella 关键证据已锁存"
+          ],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 4,
+          "location": "location_6",
+          "inventory": [
+            "大火箭"
+          ],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 40,
+            "char_204d12": 50
+          },
+          "knowledge": [
+            "Umbrella 关键证据已锁存"
+          ],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": []
+    },
+    {
+      "turn_id": "br_00525_ca8177",
+      "session_id": "sess_00101_7db4d3",
+      "record_kind": "speculative_branch",
+      "raw_input": "伪装样本并撤离",
+      "old_context_chars": 7474,
+      "new_context_chars": 6724,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "location_6"
+        },
+        {
+          "op": "addItem",
+          "value": "大火箭"
+        }
+      ],
+      "new_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "location_6"
+        },
+        {
+          "op": "addItem",
+          "value": "大火箭"
+        }
+      ],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 4,
+          "location": "location_6",
+          "inventory": [
+            "大火箭"
+          ],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 40,
+            "char_204d12": 50
+          },
+          "knowledge": [
+            "Umbrella 关键证据已锁存"
+          ],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 4,
+          "location": "location_6",
+          "inventory": [
+            "大火箭"
+          ],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 40,
+            "char_204d12": 50
+          },
+          "knowledge": [
+            "Umbrella 关键证据已锁存"
+          ],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": [
+        {
+          "skill": "inventory",
+          "target": "大火箭",
+          "trigger": {
+            "skill": "inventory",
+            "stage": "DISCOVERED",
+            "action": "add",
+            "target": "大火箭"
+          },
+          "status": "proposed",
+          "reason": "explicit_director_proposal_validated"
+        }
+      ]
+    },
+    {
+      "turn_id": "br_00527_01d15d",
+      "session_id": "sess_00101_7db4d3",
+      "record_kind": "speculative_branch",
+      "raw_input": "与克莱尔协商分配任务",
+      "old_context_chars": 7474,
+      "new_context_chars": 6724,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [],
+      "new_proposal": [],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 4,
+          "location": "location_5",
+          "inventory": [
+            "大火箭"
+          ],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 40,
+            "char_204d12": 50
+          },
+          "knowledge": [
+            "Umbrella 关键证据已锁存"
+          ],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 4,
+          "location": "location_5",
+          "inventory": [
+            "大火箭"
+          ],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 40,
+            "char_204d12": 50
+          },
+          "knowledge": [
+            "Umbrella 关键证据已锁存"
+          ],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": []
+    },
+    {
+      "turn_id": "opening_00114_d85bd0",
+      "session_id": "sess_00109_ff6a3b",
+      "record_kind": "opening",
+      "raw_input": "opening",
+      "old_context_chars": 5915,
+      "new_context_chars": 5757,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "opening_00126_fc5e7c",
+      "session_id": "sess_00121_429d09",
+      "record_kind": "opening",
+      "raw_input": "opening",
+      "old_context_chars": 5915,
+      "new_context_chars": 5757,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "opening_00139_2e2c57",
+      "session_id": "sess_00134_b8fc5a",
+      "record_kind": "opening",
+      "raw_input": "opening",
+      "old_context_chars": 5915,
+      "new_context_chars": 5757,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "opening_00615_d5e171",
+      "session_id": "sess_00610_fa931e",
+      "record_kind": "opening",
+      "raw_input": "opening",
+      "old_context_chars": 1922,
+      "new_context_chars": 1857,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "opening_00665_c3087d",
+      "session_id": "sess_00660_754715",
+      "record_kind": "opening",
+      "raw_input": "opening",
+      "old_context_chars": 5918,
+      "new_context_chars": 5760,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "opening_00727_0bc363",
+      "session_id": "sess_00722_5ab523",
+      "record_kind": "opening",
+      "raw_input": "opening",
+      "old_context_chars": 5918,
+      "new_context_chars": 5760,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00773_fa8e5f",
+      "session_id": "sess_00722_5ab523",
+      "record_kind": "speculative_branch",
+      "raw_input": "离开这里，去紧急逃生通道",
+      "old_context_chars": 6536,
+      "new_context_chars": 6378,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "location_6"
+        }
+      ],
+      "new_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "location_6"
+        }
+      ],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "location_6",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "location_6",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": []
+    },
+    {
+      "turn_id": "br_00775_10c4eb",
+      "session_id": "sess_00722_5ab523",
+      "record_kind": "speculative_branch",
+      "raw_input": "仔细观察地下检疫入口的细节",
+      "old_context_chars": 6536,
+      "new_context_chars": 6378,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [
+        {
+          "op": "set",
+          "path": "clues.clue_entry_manual_release",
+          "value": "DISCOVERED"
+        }
+      ],
+      "new_proposal": [
+        {
+          "op": "set",
+          "path": "clues.clue_entry_manual_release",
+          "value": "DISCOVERED"
+        }
+      ],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {
+            "clue_entry_manual_release": "DISCOVERED"
+          },
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {
+            "clue_entry_manual_release": "DISCOVERED"
+          },
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": [
+        {
+          "skill": "clue-system",
+          "target": "clue_entry_manual_release",
+          "trigger": {
+            "label": "闸门手动液压杆与电力故障",
+            "skill": "clue-system",
+            "stage": "DISCOVERED",
+            "value": null,
+            "action": "add",
+            "target": "clue_entry_manual_release"
+          },
+          "status": "proposed",
+          "reason": "explicit_director_proposal_validated"
+        }
+      ]
+    },
+    {
+      "turn_id": "br_00777_befc8e",
+      "session_id": "sess_00722_5ab523",
+      "record_kind": "speculative_branch",
+      "raw_input": "和T-103 型追踪实验体 · 高威胁敌对实体谈谈，听 TA 怎么说",
+      "old_context_chars": 6536,
+      "new_context_chars": 6378,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [],
+      "new_proposal": [],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": []
+    },
+    {
+      "turn_id": "opening_00816_d917f5",
+      "session_id": "sess_00811_59bde4",
+      "record_kind": "opening",
+      "raw_input": "opening",
+      "old_context_chars": 1922,
+      "new_context_chars": 1857,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "opening_00881_8465f6",
+      "session_id": "sess_00876_839552",
+      "record_kind": "opening",
+      "raw_input": "opening",
+      "old_context_chars": 5918,
+      "new_context_chars": 5760,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0
+    },
+    {
+      "turn_id": "br_00943_087b54",
+      "session_id": "sess_00876_839552",
+      "record_kind": "speculative_branch",
+      "raw_input": "搜查入口闸机与值班记录",
+      "old_context_chars": 6455,
+      "new_context_chars": 6297,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [
+        {
+          "op": "set",
+          "path": "clues.clue_sample_anomaly",
+          "value": "DISCOVERED"
+        },
+        {
+          "op": "set",
+          "path": "clues.clue_missing_staff",
+          "value": "DISCOVERED"
+        },
+        {
+          "op": "set",
+          "path": "clues.clue_delayed_evac",
+          "value": "DISCOVERED"
+        }
+      ],
+      "new_proposal": [
+        {
+          "op": "set",
+          "path": "clues.clue_sample_anomaly",
+          "value": "DISCOVERED"
+        },
+        {
+          "op": "set",
+          "path": "clues.clue_missing_staff",
+          "value": "DISCOVERED"
+        },
+        {
+          "op": "set",
+          "path": "clues.clue_delayed_evac",
+          "value": "DISCOVERED"
+        }
+      ],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {
+            "clue_sample_anomaly": "DISCOVERED",
+            "clue_missing_staff": "DISCOVERED",
+            "clue_delayed_evac": "DISCOVERED"
+          },
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {
+            "clue_sample_anomaly": "DISCOVERED",
+            "clue_missing_staff": "DISCOVERED",
+            "clue_delayed_evac": "DISCOVERED"
+          },
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": [
+        {
+          "skill": "clue-system",
+          "target": "clue_sample_anomaly",
+          "trigger": {
+            "label": "事故前样本温度异常报告",
+            "skill": "clue-system",
+            "stage": "DISCOVERED",
+            "target": "clue_sample_anomaly"
+          },
+          "status": "proposed",
+          "reason": "explicit_director_proposal_validated"
+        },
+        {
+          "skill": "clue-system",
+          "target": "clue_missing_staff",
+          "trigger": {
+            "label": "闸机失踪人员记录",
+            "skill": "clue-system",
+            "stage": "DISCOVERED",
+            "target": "clue_missing_staff"
+          },
+          "status": "proposed",
+          "reason": "explicit_director_proposal_validated"
+        },
+        {
+          "skill": "clue-system",
+          "target": "clue_delayed_evac",
+          "trigger": {
+            "label": "延迟的撤离警报日志",
+            "skill": "clue-system",
+            "stage": "DISCOVERED",
+            "target": "clue_delayed_evac"
+          },
+          "status": "proposed",
+          "reason": "explicit_director_proposal_validated"
+        }
+      ]
+    },
+    {
+      "turn_id": "br_00945_7e93e9",
+      "session_id": "sess_00876_839552",
+      "record_kind": "player_turn",
+      "raw_input": "暂时隐蔽观察追踪者",
+      "old_context_chars": 6455,
+      "new_context_chars": 6297,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [],
+      "new_proposal": [],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": []
+    },
+    {
+      "turn_id": "br_00947_9c31dc",
+      "session_id": "sess_00876_839552",
+      "record_kind": "speculative_branch",
+      "raw_input": "询问克莱尔的判断",
+      "old_context_chars": 6455,
+      "new_context_chars": 6297,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [
+        {
+          "op": "increment",
+          "path": "relationships.char_204d12",
+          "value": 2
+        }
+      ],
+      "new_proposal": [
+        {
+          "op": "increment",
+          "path": "relationships.char_204d12",
+          "value": 2
+        }
+      ],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 52
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 52
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": [
+        {
+          "skill": "relationship",
+          "target": "char_204d12",
+          "trigger": {
+            "skill": "relationship",
+            "value": 2,
+            "target": "char_204d12"
+          },
+          "status": "proposed",
+          "reason": "explicit_director_proposal_validated"
+        }
+      ]
+    },
+    {
+      "turn_id": "br_01058_ba5810",
+      "session_id": "sess_00876_839552",
+      "record_kind": "speculative_branch",
+      "raw_input": "离开这里，去紧急逃生通道",
+      "old_context_chars": 6810,
+      "new_context_chars": 6366,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "location_6"
+        }
+      ],
+      "new_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "location_6"
+        }
+      ],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "location_6",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "location_6",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": []
+    },
+    {
+      "turn_id": "br_01060_cf994f",
+      "session_id": "sess_00876_839552",
+      "record_kind": "speculative_branch",
+      "raw_input": "仔细观察地下检疫入口的细节",
+      "old_context_chars": 6810,
+      "new_context_chars": 6366,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [],
+      "new_proposal": [],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": []
+    },
+    {
+      "turn_id": "br_01062_820126",
+      "session_id": "sess_00876_839552",
+      "record_kind": "player_turn",
+      "raw_input": "和T-103 型追踪实验体 · 高威胁敌对实体谈谈，听 TA 怎么说",
+      "old_context_chars": 6810,
+      "new_context_chars": 6366,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [],
+      "new_proposal": [],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": []
+    },
+    {
+      "turn_id": "br_01160_8a1ec4",
+      "session_id": "sess_00876_839552",
+      "record_kind": "speculative_branch",
+      "raw_input": "离开这里，去紧急逃生通道",
+      "old_context_chars": 7221,
+      "new_context_chars": 6612,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "location_6"
+        }
+      ],
+      "new_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "location_6"
+        }
+      ],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "location_6",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "location_6",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": []
+    },
+    {
+      "turn_id": "br_01162_86bea9",
+      "session_id": "sess_00876_839552",
+      "record_kind": "speculative_branch",
+      "raw_input": "仔细观察地下检疫入口的细节",
+      "old_context_chars": 7221,
+      "new_context_chars": 6612,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [
+        {
+          "op": "set",
+          "path": "clues.clue_vent_grille",
+          "value": "DISCOVERED"
+        }
+      ],
+      "new_proposal": [
+        {
+          "op": "set",
+          "path": "clues.clue_vent_grille",
+          "value": "DISCOVERED"
+        }
+      ],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {
+            "clue_vent_grille": "DISCOVERED"
+          },
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {
+            "clue_vent_grille": "DISCOVERED"
+          },
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": [
+        {
+          "skill": "clue-system",
+          "target": "clue_vent_grille",
+          "trigger": {
+            "label": "通风盖板与维修缝隙",
+            "skill": "clue-system",
+            "stage": "DISCOVERED",
+            "target": "clue_vent_grille"
+          },
+          "status": "proposed",
+          "reason": "explicit_director_proposal_validated"
+        }
+      ]
+    },
+    {
+      "turn_id": "br_01164_d2ff70",
+      "session_id": "sess_00876_839552",
+      "record_kind": "player_turn",
+      "raw_input": "和T-103 型追踪实验体 · 高威胁敌对实体谈谈，听 TA 怎么说",
+      "old_context_chars": 7221,
+      "new_context_chars": 6612,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [],
+      "new_proposal": [],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": []
+    },
+    {
+      "turn_id": "br_01271_823973",
+      "session_id": "sess_00876_839552",
+      "record_kind": "speculative_branch",
+      "raw_input": "搜查车辆与配电终端",
+      "old_context_chars": 7565,
+      "new_context_chars": 6760,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [
+        {
+          "op": "addItem",
+          "value": "item_first_aid_spray"
+        },
+        {
+          "op": "addItem",
+          "value": "item_ammo_9mm"
+        },
+        {
+          "op": "set",
+          "path": "clues.clue_shift_log",
+          "value": "DISCOVERED"
+        }
+      ],
+      "new_proposal": [
+        {
+          "op": "addItem",
+          "value": "item_first_aid_spray"
+        },
+        {
+          "op": "addItem",
+          "value": "item_ammo_9mm"
+        },
+        {
+          "op": "set",
+          "path": "clues.clue_shift_log",
+          "value": "DISCOVERED"
+        }
+      ],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [
+            "item_first_aid_spray",
+            "item_ammo_9mm"
+          ],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {
+            "clue_shift_log": "DISCOVERED"
+          },
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [
+            "item_first_aid_spray",
+            "item_ammo_9mm"
+          ],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {
+            "clue_shift_log": "DISCOVERED"
+          },
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": [
+        {
+          "skill": "inventory",
+          "target": "item_first_aid_spray",
+          "trigger": {
+            "label": "急救喷雾",
+            "skill": "inventory",
+            "stage": "DISCOVERED",
+            "value": null,
+            "action": "add",
+            "target": "item_first_aid_spray"
+          },
+          "status": "proposed",
+          "reason": "explicit_director_proposal_validated"
+        },
+        {
+          "skill": "inventory",
+          "target": "item_ammo_9mm",
+          "trigger": {
+            "label": "9mm手枪弹药",
+            "skill": "inventory",
+            "stage": "DISCOVERED",
+            "value": null,
+            "action": "add",
+            "target": "item_ammo_9mm"
+          },
+          "status": "proposed",
+          "reason": "explicit_director_proposal_validated"
+        },
+        {
+          "skill": "clue-system",
+          "target": "clue_shift_log",
+          "trigger": {
+            "label": "手动切换备用电源的值班记录",
+            "skill": "clue-system",
+            "stage": "DISCOVERED",
+            "value": null,
+            "action": "add",
+            "target": "clue_shift_log"
+          },
+          "status": "proposed",
+          "reason": "explicit_director_proposal_validated"
+        }
+      ]
+    },
+    {
+      "turn_id": "br_01273_4e3e70",
+      "session_id": "sess_00876_839552",
+      "record_kind": "speculative_branch",
+      "raw_input": "放弃接触并退向配电室",
+      "old_context_chars": 7565,
+      "new_context_chars": 6760,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "loc_control"
+        },
+        {
+          "op": "increment",
+          "path": "fiction_minutes",
+          "value": 2
+        }
+      ],
+      "new_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "loc_control"
+        },
+        {
+          "op": "increment",
+          "path": "fiction_minutes",
+          "value": 2
+        }
+      ],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_control",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 2,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_control",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 2,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": []
+    },
+    {
+      "turn_id": "br_01275_785ce0",
+      "session_id": "sess_00876_839552",
+      "record_kind": "player_turn",
+      "raw_input": "观察T-103的感知方式",
+      "old_context_chars": 7565,
+      "new_context_chars": 6760,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [],
+      "new_proposal": [],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": []
+    },
+    {
+      "turn_id": "br_01388_65a612",
+      "session_id": "sess_00876_839552",
+      "record_kind": "speculative_branch",
+      "raw_input": "离开这里，去紧急逃生通道",
+      "old_context_chars": 7348,
+      "new_context_chars": 6663,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "location_6"
+        }
+      ],
+      "new_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "location_6"
+        }
+      ],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "location_6",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "location_6",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": []
+    },
+    {
+      "turn_id": "br_01390_012eb5",
+      "session_id": "sess_00876_839552",
+      "record_kind": "speculative_branch",
+      "raw_input": "仔细观察地下检疫入口的细节",
+      "old_context_chars": 7348,
+      "new_context_chars": 6663,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [],
+      "new_proposal": [],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": []
+    },
+    {
+      "turn_id": "br_01392_bc8473",
+      "session_id": "sess_00876_839552",
+      "record_kind": "player_turn",
+      "raw_input": "和T-103 型追踪实验体 · 高威胁敌对实体谈谈，听 TA 怎么说",
+      "old_context_chars": 7348,
+      "new_context_chars": 6663,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [],
+      "new_proposal": [],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": []
+    },
+    {
+      "turn_id": "br_01490_b1b850",
+      "session_id": "sess_00876_839552",
+      "record_kind": "speculative_branch",
+      "raw_input": "离开这里，去紧急逃生通道",
+      "old_context_chars": 7344,
+      "new_context_chars": 6670,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "location_6"
+        }
+      ],
+      "new_proposal": [
+        {
+          "op": "set",
+          "path": "location",
+          "value": "location_6"
+        }
+      ],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "location_6",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "location_6",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": []
+    },
+    {
+      "turn_id": "br_01492_23857b",
+      "session_id": "sess_00876_839552",
+      "record_kind": "speculative_branch",
+      "raw_input": "仔细观察地下检疫入口的细节",
+      "old_context_chars": 7344,
+      "new_context_chars": 6670,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [],
+      "new_proposal": [],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 50
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 0,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": []
+    },
+    {
+      "turn_id": "br_01494_7e74db",
+      "session_id": "sess_00876_839552",
+      "record_kind": "speculative_branch",
+      "raw_input": "和T-103 型追踪实验体 · 高威胁敌对实体谈谈，听 TA 怎么说",
+      "old_context_chars": 7344,
+      "new_context_chars": 6670,
+      "lost_required_context": [],
+      "outcome": "neutral",
+      "policy_replay_only": true,
+      "media_requests": 0,
+      "old_proposal": [
+        {
+          "op": "increment",
+          "path": "fiction_minutes",
+          "value": 1
+        },
+        {
+          "op": "increment",
+          "path": "relationships.char_204d12",
+          "value": -5
+        }
+      ],
+      "new_proposal": [
+        {
+          "op": "increment",
+          "path": "fiction_minutes",
+          "value": 1
+        },
+        {
+          "op": "increment",
+          "path": "relationships.char_204d12",
+          "value": -5
+        }
+      ],
+      "old_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 45
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 1,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "new_validation": {
+        "valid": true,
+        "world": {
+          "version": 2,
+          "location": "loc_parking",
+          "inventory": [],
+          "relationships": {
+            "stalker": 50,
+            "char_149758": 50,
+            "char_204d12": 45
+          },
+          "knowledge": [],
+          "clues": {},
+          "objects": {},
+          "fiction_minutes": 1,
+          "health": 100,
+          "inspected": [],
+          "truth": {
+            "fact_01": "",
+            "fact_02": "",
+            "fact_03": "",
+            "fact_04": "",
+            "fact_05": ""
+          }
+        }
+      },
+      "decisions": [
+        {
+          "skill": "relationship",
+          "target": "char_204d12",
+          "trigger": {
+            "skill": "relationship",
+            "value": -5,
+            "target": "char_204d12"
+          },
+          "status": "proposed",
+          "reason": "explicit_director_proposal_validated"
+        }
+      ]
+    }
+  ]
+}

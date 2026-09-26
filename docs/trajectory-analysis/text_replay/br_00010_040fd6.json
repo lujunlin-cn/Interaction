@@ -1,0 +1,176 @@
+{
+  "turn_id": "br_00010_040fd6",
+  "raw_input": "我把关于姐姐被走私团伙追踪的推测告诉林岚，并承认自己缺少证据；我愿意按她的办法调查，请她与我结伴并相互信任，先一起核实灯塔后门暗锁线索。",
+  "visible_before": {
+    "title": "灯塔失踪案",
+    "premise": "废弃灯塔守塔人失踪，调查员林远与维修员林岚封港前夜追查，发现守塔人自愿藏于地下维修间保护被走私团伙追踪的姐姐，面临亲情与公义的抉择。",
+    "genre": "悬疑剧情",
+    "tone": "压抑紧迫，充满人性挣扎",
+    "core_question": "在码头准备履行离开的承诺时，你察觉被保护目标仍被旧日恩怨纠缠，是否该改变离去的计划？",
+    "central_conflict": "旧结局中你选择保护并离开，如今码头之上，离去的退路与保护对象的真实处境发生激烈冲突。",
+    "ending_families": {
+      "ending_safe_alarm": "安全报警，在走私者察觉前救出姐姐并移交证据。",
+      "ending_protect_leave": "保护姐姐，放弃公开证据并带她趁封港前离开港口。"
+    },
+    "truth_model": "fact_1：守塔人自愿藏在地下维修间保护被走私团伙追踪的姐姐，并非超自然失踪。\nfact_2：走私团伙仍在港口活动，姐姐的行踪是当前最大风险。\nfact_3：天亮封港前必须决定是否报警，时间压力不可逆。",
+    "authored_anchors": "码头调查起点；灯塔门厅线索；后门通往地下维修间。",
+    "forbidden_outcomes": "守塔人被动死亡或复活；走私团伙无故消失；超自然力量真实存在；改写守塔人自愿失踪的事实。",
+    "world_rules": "灯塔结构复杂，地下维修间可藏人；封港令生效后无法离港。",
+    "world_constraints": "不得复活守塔人或改写其自愿失踪事实；必须在天亮封港前作出最终决定。",
+    "player": {
+      "id": "player",
+      "identity": "保险调查员",
+      "personality": "冷静理性，注重证据",
+      "desire": "查明失踪真相",
+      "fear": "因错误判断导致无辜者受害",
+      "secrets": "对港口走私案早有耳闻",
+      "knowledge": "保险理赔流程，现场勘查",
+      "relationship": "与林岚是旧识，信任其技术判断",
+      "visual_state": "风衣，手持调查记录板",
+      "global_character_version": null
+    },
+    "locations": {
+      "dock": "码头",
+      "lighthouse_hall": "灯塔门厅",
+      "back_door": "后门",
+      "basement_repair": "地下维修间"
+    },
+    "location": "dock",
+    "inventory": [],
+    "clues": [],
+    "knowledge": [],
+    "canonical_facts": {},
+    "objects": {},
+    "recent_canonical_beats": [
+      {
+        "title": "保险调查员身份确认",
+        "result": "你大声喊道‘保险调查员！’，声音在潮湿的码头回荡。林岚停下脚步，转过头看着你，眼中闪过一丝错愕，随即是压抑的警惕。她缓缓走向后门，手搭在暗锁上，语气低沉：「调查员？现在这会儿……你是来查什么的？」她并未立刻开门，而是等待你的进一步解释。",
+        "evidence": []
+      },
+      {
+        "title": "没有回应",
+        "result": "未能及时反应，被对方趁机逃离。",
+        "evidence": []
+      },
+      {
+        "title": "调查终结",
+        "result": "你做出了决定，转身离开码头，不再参与这场关于亲情与公共利益的较量。雨水依旧拍打着码头的石板，但你再也听不见背后那沉重的脚步声。",
+        "evidence": []
+      },
+      {
+        "title": "坦白与新的开始",
+        "result": "你走到林岚面前，摘下那枚藏匿身份的徽章，诚恳地说出了当年的隐瞒原因——那是为了保护她，也是为了完成任务。林岚的眼眶微红，她握住你的手，说：‘我知道你是为了我，但这份隐瞒让我感到被背叛。不过既然你现在坦白了，我愿意听你说下去。’她深吸一口气，点了点头：‘好，我现在就告诉你我掌握的每一条线索，我们一起找姐姐。’随即，她开始回忆并列出已知线索：走私团伙在港口的活动规律、姐姐最后被看到的位置以及灯塔后门的暗码……",
+        "presented_narrative": "你站在林岚面前，指尖触到那枚藏了多年身份的徽章，最终将它摘下，将当年隐瞒的真相和盘托出——所有的隐忍与隐瞒，既是为了护她平安，也是为了完成卧底任务。林岚眼眶泛红，指尖攥紧了你的手腕，声音带着未散的委屈：“我知道你是为了我，但这份瞒了这么久的隐瞒，让我觉得被最信任的人背叛了。不过既然你现在肯坦白了，我愿意听你把话说完。”她深吸几口气压下情绪，郑重点头：“好，我现在就把我掌握的所有线索都告诉你，我们一起找姐姐。”随即将走私团伙在港口的活动规律、姐姐最后被目击的位置、灯塔后门的专属暗码等关键信息一一摊开在你面前。",
+        "evidence": []
+      }
+    ],
+    "wishes": [],
+    "relationships": {},
+    "phase": "ESCALATION",
+    "npcs": [
+      {
+        "id": "lin_lan",
+        "identity": "维修员",
+        "personality": "务实善良，熟悉灯塔结构",
+        "desire": "在天亮前找到姐姐",
+        "fear": "灯塔地下结构坍塌或被人发现",
+        "secrets": "知道灯塔后门暗锁的打开方式",
+        "knowledge": "灯塔维修通道，地下维修间位置",
+        "relationship": "与守塔人关系要好，协助调查",
+        "visual_state": "黄色雨衣，保持原来的面貌",
+        "global_character_version": 2
+      }
+    ]
+  },
+  "old": {
+    "outcome": {
+      "title": "林岚的回应",
+      "text": "林岚的眉头微蹙，她抿了抿嘴，目光在你脸与手上扫过。她沉默了片刻，随后轻声说道：“你的坦白让我放心——至少我知道你不是在掩藏什么。我也不想让姐姐独自面对那群人。但我有自己的顾虑，如果我们连手，就得共享风险。即便如此，我还是答应了。我们先去灯塔后门看看，那里有个暗锁，我记得里面藏过什么痕迹。你若是愿意，我们可以相互信任，但得先查清楚后门到底通向什么。”",
+      "ops": [],
+      "evidence": [],
+      "skill_triggers": [
+        {
+          "skill": "relationship",
+          "target": "lin_lan",
+          "action": "add",
+          "stage": "DISCOVERED",
+          "value": 5
+        }
+      ]
+    },
+    "narrative": "林岚的眉头微蹙，她抿了抿嘴，目光在你脸与手上扫过。她沉默了片刻，随后轻声开口说道。"
+  },
+  "provider_mode": "real_text_only",
+  "canonical_db_written": false,
+  "paid_media_requests": 0,
+  "new": {
+    "outcome": {
+      "title": "信任提议",
+      "text": "林岚看着你，眼中闪过错愕，随即松开暗锁，点了点头。她说：「既然你愿意按我的办法调查，我就信你。我们一起去核实灯塔后门的暗锁。」她伸出手，期待与你握手。",
+      "ops": [
+        {
+          "op": "set",
+          "path": "relationships.lin_lan",
+          "value": 51
+        }
+      ],
+      "evidence": [],
+      "ending": null,
+      "kind": "investigation",
+      "mode": "FULL_BEAT"
+    },
+    "narrative": "你表明愿意按林岚的办法开展调查后，林岚眼中闪过错愕，随即松开暗锁点了点头，同意与你合作，伸手要与你握手，准备一同去核实灯塔后门的暗锁。",
+    "visual_focus": "林岚松开暗锁，伸手与你相握",
+    "skill_decisions": [
+      {
+        "skill": "relationship",
+        "target": "lin_lan",
+        "trigger": {
+          "skill": "relationship",
+          "target": "lin_lan",
+          "label": "相互信任",
+          "action": "add",
+          "stage": "DISCOVERED",
+          "value": 1
+        },
+        "status": "proposed",
+        "reason": "explicit_director_proposal_validated"
+      }
+    ]
+  },
+  "calls": [
+    {
+      "role": "director",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4",
+      "request_id": "chatcmpl-ae2371d498141824",
+      "usage": {
+        "prompt_tokens": 3964,
+        "total_tokens": 4322,
+        "completion_tokens": 358,
+        "prompt_tokens_details": null
+      },
+      "latency_ms": 7940,
+      "input_chars": 8568
+    },
+    {
+      "role": "narrative",
+      "model": "step-3.7-flash",
+      "request_id": "44436ef38306a4a2fa1ee1f993478841.b357cf12aac083c3004b9085cfd886d4",
+      "usage": {
+        "cached_tokens": 256,
+        "prompt_tokens": 490,
+        "completion_tokens": 928,
+        "total_tokens": 1418,
+        "prompt_tokens_details": {
+          "cached_tokens": 256
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "latency_ms": 7446,
+      "input_chars": 1294
+    }
+  ],
+  "canonical_state_unchanged": true
+}

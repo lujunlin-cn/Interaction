@@ -599,6 +599,8 @@ class ScenePacket(BaseModel):
     allowed_revelations: list[str] = Field(default_factory=list)
     forbidden_revelations: list[str] = Field(default_factory=list)  # 仅用于输出校验
     relationship_context: dict[str, int] = Field(default_factory=dict)
+    known_state: dict[str, Any] = Field(default_factory=dict)
+    authorized_changes: list[dict[str, Any]] = Field(default_factory=list)
     style: dict[str, str] = Field(default_factory=dict)
 
 

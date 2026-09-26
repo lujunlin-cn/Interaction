@@ -1,0 +1,921 @@
+{
+  "dataset": {
+    "db": {
+      "sessions": 41,
+      "spans": 0,
+      "jobs": 6
+    },
+    "deduplicated_sessions": 42,
+    "session_provenance": {
+      "mock_or_fixture": 2,
+      "mixed": 14,
+      "real_provider_observed": 25,
+      "unknown": 1
+    },
+    "branches": 214,
+    "record_kinds": {
+      "player_turn": 40,
+      "speculative_branch": 146,
+      "opening": 28
+    },
+    "recovered_spans": 467,
+    "span_names": {
+      "skill.clue-system": 6,
+      "director.plan": 47,
+      "provider.text": 77,
+      "narrative.beat": 47,
+      "presentation.text": 9,
+      "commit.canonical": 21,
+      "scenario.publish": 2,
+      "session.create": 5,
+      "production.shots": 38,
+      "video.submit": 57,
+      "video.generate": 26,
+      "assembly.concat": 26,
+      "director.candidates": 11,
+      "decision.rank": 11,
+      "scheduler.lock_topk": 11,
+      "skill.inventory": 10,
+      "decision.intent": 12,
+      "director.action": 11,
+      "skill.relationship": 6,
+      "scheduler.publish": 6,
+      "director.schema": 5,
+      "authoring.draft_schema": 3,
+      "character.understanding": 4,
+      "authoring.draft": 3,
+      "authoring.projection_schema": 3,
+      "authoring.projection": 6,
+      "authoring.confirm": 2,
+      "character.overlay_promote": 1,
+      "timed.fallback": 1
+    },
+    "sources": 474,
+    "ledger_records": 69
+  },
+  "offline_policy": {
+    "records_with_proposals": 56,
+    "improved": 3,
+    "neutral": 53,
+    "regressed": 0,
+    "needs_review": 0,
+    "context_only_no_policy_score": 63
+  },
+  "context": {
+    "records": 119,
+    "old_chars": 678125,
+    "new_chars": 635864,
+    "reduction_percent": 6.232036866359447,
+    "lost_required_fields": 0,
+    "unit": "Unicode characters in Director context block, NOT tokens or full request size"
+  },
+  "recovery": {
+    "recorded_canonical_checkpoints": 31,
+    "improved": 31,
+    "regressed": 0,
+    "new_paid_media_requests": 0,
+    "scope": "Counterfactual duplicate commit injected into historical in-memory states, not a frequency estimate of real double-clicks.",
+    "no_db_write": true,
+    "sources_unchanged": true
+  },
+  "pairwise": {
+    "free": {
+      "reviewed": 8,
+      "outcomes": {
+        "improved": 6,
+        "regressed": 2
+      },
+      "old_fidelity": {
+        "ACCEPTABLE": 4,
+        "OVERRIDDEN": 1,
+        "DISTORTED": 3
+      },
+      "new_fidelity": {
+        "ACCEPTABLE": 4,
+        "OVERRIDDEN": 1,
+        "DISTORTED": 2,
+        "EXACT": 1
+      }
+    },
+    "choice": {
+      "reviewed": 3,
+      "outcomes": {
+        "regressed": 1,
+        "improved": 2
+      },
+      "old_fidelity": {
+        "UNKNOWN": 3
+      },
+      "new_fidelity": {
+        "UNKNOWN": 3
+      }
+    }
+  },
+  "critic_requests": [
+    {
+      "file": "docs/trajectory-analysis/pairwise/batch_3.json",
+      "successful": true,
+      "model": "step-5-preview",
+      "request_id": "e5512160d8c5d739ede14f56e1f19eaf.8aa20176de4feae709d2320d849d6452",
+      "latency_ms": 190922,
+      "usage": {
+        "cached_tokens": 5120,
+        "prompt_tokens": 5430,
+        "completion_tokens": 13279,
+        "total_tokens": 18709,
+        "prompt_tokens_details": {
+          "cached_tokens": 5120
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "error": null
+    },
+    {
+      "file": "docs/trajectory-analysis/pairwise/batch_2.json",
+      "successful": true,
+      "model": "step-5-preview",
+      "request_id": "4f602191cca1092fa7c8e9882fecfddc.f31a77806ee6f9c0fc808e747b7fb11d",
+      "latency_ms": 228032,
+      "usage": {
+        "prompt_tokens": 4798,
+        "completion_tokens": 15584,
+        "total_tokens": 20382,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "error": null
+    },
+    {
+      "file": "docs/trajectory-analysis/pairwise/batch_4.json",
+      "successful": true,
+      "model": "step-5-preview",
+      "request_id": "c7a879b0dd05f3aed59cd45a0b92399b.43bbedf393dc66c9b915b6762df37f75",
+      "latency_ms": 147164,
+      "usage": {
+        "prompt_tokens": 3478,
+        "completion_tokens": 11185,
+        "total_tokens": 14663,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "error": null
+    },
+    {
+      "file": "docs/trajectory-analysis/pairwise/batch_1.json",
+      "successful": true,
+      "model": "step-5-preview",
+      "request_id": "41805dee8a8d2120d76535889ab97cbe.2f98d9109e95a513210908739db06395",
+      "latency_ms": 176522,
+      "usage": {
+        "prompt_tokens": 4885,
+        "completion_tokens": 11528,
+        "total_tokens": 16413,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "error": null
+    },
+    {
+      "file": "docs/trajectory-analysis/pairwise/transport_failures/batch_2_prior_1790410575.json",
+      "successful": false,
+      "model": "step-5-preview",
+      "request_id": null,
+      "latency_ms": null,
+      "usage": null,
+      "error": "JSONDecodeError: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "file": "docs/trajectory-analysis/pairwise/transport_failures/batch_1_original.json",
+      "successful": false,
+      "model": "step-5-preview",
+      "request_id": null,
+      "latency_ms": null,
+      "usage": null,
+      "error": "JSONDecodeError: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "file": "docs/trajectory-analysis/pairwise_choices/batch_1.json",
+      "successful": true,
+      "model": "step-5-preview",
+      "request_id": "5898ed4e11f4ef8469d5c3dd4ec1fddf.01fa1f9ffc03bb2e7fbbeecb86b79dd0",
+      "latency_ms": 175969,
+      "usage": {
+        "prompt_tokens": 5054,
+        "completion_tokens": 12492,
+        "total_tokens": 17546,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "error": null
+    }
+  ],
+  "text_calls": [
+    {
+      "role": "director",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4",
+      "request_id": "chatcmpl-865b997a01ad62a6",
+      "usage": {
+        "prompt_tokens": 6256,
+        "total_tokens": 6559,
+        "completion_tokens": 303,
+        "prompt_tokens_details": null
+      },
+      "latency_ms": 5044,
+      "input_chars": 12238,
+      "source": "docs/trajectory-analysis/text_replay/br_00335_aa08da.json"
+    },
+    {
+      "role": "narrative",
+      "model": "step-3.7-flash",
+      "request_id": "e4ec88a3859234fe3f0a9559bfb37c08.846cfed186306b20f6a9151429e539e8",
+      "usage": {
+        "cached_tokens": 384,
+        "prompt_tokens": 888,
+        "completion_tokens": 768,
+        "total_tokens": 1656,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "latency_ms": 6091,
+      "input_chars": 2094,
+      "source": "docs/trajectory-analysis/text_replay/br_00335_aa08da.json"
+    },
+    {
+      "role": "director",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4",
+      "request_id": "chatcmpl-938b7282c731ae0e",
+      "usage": {
+        "prompt_tokens": 3673,
+        "total_tokens": 4223,
+        "completion_tokens": 550,
+        "prompt_tokens_details": null
+      },
+      "latency_ms": 8100,
+      "input_chars": 8250,
+      "source": "docs/trajectory-analysis/text_replay/br_00078_c42ec2.json"
+    },
+    {
+      "role": "narrative",
+      "model": "step-3.7-flash",
+      "request_id": "272e9de4bcf6eec94d2d7581bf65b635.e1e3ee0f3a7121b5a524df821ba1344b",
+      "usage": {
+        "prompt_tokens": 555,
+        "completion_tokens": 1163,
+        "total_tokens": 1718,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "latency_ms": 7979,
+      "input_chars": 1405,
+      "source": "docs/trajectory-analysis/text_replay/br_00078_c42ec2.json"
+    },
+    {
+      "role": "director",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4",
+      "request_id": "chatcmpl-9e8172f0d5b2799a",
+      "usage": {
+        "prompt_tokens": 6782,
+        "total_tokens": 6989,
+        "completion_tokens": 207,
+        "prompt_tokens_details": null
+      },
+      "latency_ms": 3932,
+      "input_chars": 12844,
+      "source": "docs/trajectory-analysis/text_replay/br_00012_e5b104.json"
+    },
+    {
+      "role": "narrative",
+      "model": "step-3.7-flash",
+      "request_id": "c1fa98e29b6ab2550bd8f0b7e318fa13.5310594a8a0cc33ae7d5d68e0e93e64d",
+      "usage": {
+        "cached_tokens": 384,
+        "prompt_tokens": 840,
+        "completion_tokens": 1171,
+        "total_tokens": 2011,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "latency_ms": 7915,
+      "input_chars": 2024,
+      "source": "docs/trajectory-analysis/text_replay/br_00012_e5b104.json"
+    },
+    {
+      "role": "director",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4",
+      "request_id": "chatcmpl-ae2371d498141824",
+      "usage": {
+        "prompt_tokens": 3964,
+        "total_tokens": 4322,
+        "completion_tokens": 358,
+        "prompt_tokens_details": null
+      },
+      "latency_ms": 7940,
+      "input_chars": 8568,
+      "source": "docs/trajectory-analysis/text_replay/br_00010_040fd6.json"
+    },
+    {
+      "role": "narrative",
+      "model": "step-3.7-flash",
+      "request_id": "44436ef38306a4a2fa1ee1f993478841.b357cf12aac083c3004b9085cfd886d4",
+      "usage": {
+        "cached_tokens": 256,
+        "prompt_tokens": 490,
+        "completion_tokens": 928,
+        "total_tokens": 1418,
+        "prompt_tokens_details": {
+          "cached_tokens": 256
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "latency_ms": 7446,
+      "input_chars": 1294,
+      "source": "docs/trajectory-analysis/text_replay/br_00010_040fd6.json"
+    },
+    {
+      "role": "director",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4",
+      "request_id": "chatcmpl-a6fc8473d9ba1425",
+      "usage": {
+        "prompt_tokens": 6849,
+        "total_tokens": 7181,
+        "completion_tokens": 332,
+        "prompt_tokens_details": null
+      },
+      "latency_ms": 5555,
+      "input_chars": 12956,
+      "source": "docs/trajectory-analysis/text_replay/br_00010_262ca1.json"
+    },
+    {
+      "role": "narrative",
+      "model": "step-3.7-flash",
+      "request_id": "992eb221d131caa2656351786ebd8aab.d83b1b6ea5e655f9602441a9f8a2474f",
+      "usage": {
+        "cached_tokens": 384,
+        "prompt_tokens": 851,
+        "completion_tokens": 924,
+        "total_tokens": 1775,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "latency_ms": 6994,
+      "input_chars": 2045,
+      "source": "docs/trajectory-analysis/text_replay/br_00010_262ca1.json"
+    },
+    {
+      "role": "director",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4",
+      "request_id": "chatcmpl-a451e46d1c96d4ea",
+      "usage": {
+        "prompt_tokens": 6954,
+        "total_tokens": 7584,
+        "completion_tokens": 630,
+        "prompt_tokens_details": null
+      },
+      "latency_ms": 9421,
+      "input_chars": 13108,
+      "source": "docs/trajectory-analysis/text_replay/br_00010_a0a79c.json"
+    },
+    {
+      "role": "narrative",
+      "model": "step-3.7-flash",
+      "request_id": "d0945e43f18277ac90633b9eb4f61ffd.5cd6f2b71b2c76fbdedca605ac02b5c3",
+      "usage": {
+        "cached_tokens": 384,
+        "prompt_tokens": 990,
+        "completion_tokens": 2088,
+        "total_tokens": 3078,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "latency_ms": 12992,
+      "input_chars": 2270,
+      "source": "docs/trajectory-analysis/text_replay/br_00010_a0a79c.json"
+    },
+    {
+      "role": "director",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4",
+      "request_id": "chatcmpl-b3f73bd9f57dab0c",
+      "usage": {
+        "prompt_tokens": 7333,
+        "total_tokens": 7687,
+        "completion_tokens": 354,
+        "prompt_tokens_details": null
+      },
+      "latency_ms": 5899,
+      "input_chars": 13518,
+      "source": "docs/trajectory-analysis/text_replay/br_00078_6edd5b.json"
+    },
+    {
+      "role": "narrative",
+      "model": "step-3.7-flash",
+      "request_id": "7eb20580e825ea3eb304e03335da2c4b.48b6e607b8356a26494f8b254419d657",
+      "usage": {
+        "cached_tokens": 384,
+        "prompt_tokens": 878,
+        "completion_tokens": 1106,
+        "total_tokens": 1984,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "latency_ms": 8547,
+      "input_chars": 2083,
+      "source": "docs/trajectory-analysis/text_replay/br_00078_6edd5b.json"
+    },
+    {
+      "role": "director",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4",
+      "request_id": "chatcmpl-a975bf14a122e259",
+      "usage": {
+        "prompt_tokens": 7213,
+        "total_tokens": 8092,
+        "completion_tokens": 879,
+        "prompt_tokens_details": null
+      },
+      "latency_ms": 12685,
+      "input_chars": 13419,
+      "source": "docs/trajectory-analysis/text_replay/br_00078_d75c60.json"
+    },
+    {
+      "role": "narrative",
+      "model": "step-3.7-flash",
+      "request_id": "5390dc29e16142aad5c1b572890d24c7.751b841023f0f38310e3d83fc6753e4d",
+      "usage": {
+        "cached_tokens": 384,
+        "prompt_tokens": 1095,
+        "completion_tokens": 1966,
+        "total_tokens": 3061,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "latency_ms": 13429,
+      "input_chars": 2460,
+      "source": "docs/trajectory-analysis/text_replay/br_00078_d75c60.json"
+    },
+    {
+      "role": "narrative",
+      "model": "step-3.7-flash",
+      "request_id": "7a2a2090a148cbb228dd1729a6205826.424431bf1ecb7a9f0f25aa8759fc6c36",
+      "usage": {
+        "cached_tokens": 1088,
+        "prompt_tokens": 1127,
+        "completion_tokens": 1602,
+        "total_tokens": 2729,
+        "prompt_tokens_details": {
+          "cached_tokens": 1088
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "latency_ms": 11772,
+      "input_chars": 2507,
+      "source": "docs/trajectory-analysis/text_replay/br_00078_d75c60.json"
+    },
+    {
+      "role": "director",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4",
+      "request_id": "chatcmpl-b7e068bb56a1d881",
+      "usage": {
+        "prompt_tokens": 1968,
+        "total_tokens": 2213,
+        "completion_tokens": 245,
+        "prompt_tokens_details": null
+      },
+      "latency_ms": 3536,
+      "input_chars": 3106,
+      "source": "docs/trajectory-analysis/choice_replay/span_00011_5e886d.json"
+    },
+    {
+      "role": "decision",
+      "model": "jev-1.13.0",
+      "latency_ms": 2074,
+      "scores": {
+        "深入医疗观察区寻找失踪幸存者": 0.0,
+        "前往配电室恢复局部供电": 0.66,
+        "利用维修通道绕行至样本库后方": 0.33,
+        "OTHER": 0.01
+      },
+      "input_chars": 2163,
+      "source": "docs/trajectory-analysis/choice_replay/span_00011_5e886d.json"
+    },
+    {
+      "role": "director",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4",
+      "request_id": "chatcmpl-b8ff635966380947",
+      "usage": {
+        "prompt_tokens": 1533,
+        "total_tokens": 1748,
+        "completion_tokens": 215,
+        "prompt_tokens_details": null
+      },
+      "latency_ms": 3072,
+      "input_chars": 2482,
+      "source": "docs/trajectory-analysis/choice_replay/span_00045_f3ef20.json"
+    },
+    {
+      "role": "decision",
+      "model": "jev-1.13.0",
+      "latency_ms": 1769,
+      "scores": {
+        "检查配电系统恢复供电": 0.02,
+        "验证Victor身份并询问样本当前状态": 0.94,
+        "优先撤离眼前幸存者": 0.02,
+        "OTHER": 0.02
+      },
+      "input_chars": 1652,
+      "source": "docs/trajectory-analysis/choice_replay/span_00045_f3ef20.json"
+    },
+    {
+      "role": "director",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4",
+      "request_id": "chatcmpl-8fd61d9ee4820820",
+      "usage": {
+        "prompt_tokens": 2099,
+        "total_tokens": 2356,
+        "completion_tokens": 257,
+        "prompt_tokens_details": null
+      },
+      "latency_ms": 3684,
+      "input_chars": 3047,
+      "source": "docs/trajectory-analysis/choice_replay/span_00059_7aac49.json"
+    },
+    {
+      "role": "decision",
+      "model": "jev-1.13.0",
+      "latency_ms": 1798,
+      "scores": {
+        "深入医疗观察区查探幸存者": 0.88,
+        "前往配电室恢复供电": 0.07,
+        "检查冷藏样本库保存状况": 0.02,
+        "OTHER": 0.03
+      },
+      "input_chars": 2217,
+      "source": "docs/trajectory-analysis/choice_replay/span_00059_7aac49.json"
+    },
+    {
+      "role": "narrative",
+      "model": "step-3.7-flash",
+      "request_id": "3319b19bbc1e9ba598aa2d7655ec177f.670ed2e930627d623b9349bd3d04f88c",
+      "usage": {
+        "cached_tokens": 448,
+        "prompt_tokens": 968,
+        "completion_tokens": 1486,
+        "total_tokens": 2454,
+        "prompt_tokens_details": {
+          "cached_tokens": 448
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "latency_ms": 12497,
+      "input_chars": 2347,
+      "source": "docs/trajectory-analysis/narrative_context_replay/br_00012_e5b104.json"
+    },
+    {
+      "role": "narrative",
+      "model": "step-3.7-flash",
+      "request_id": "b7e5484d5c3ae1598484f728790cbb0f.dbb049e5a95002e4662fdaf636f38715",
+      "usage": {
+        "cached_tokens": 128,
+        "prompt_tokens": 1058,
+        "completion_tokens": 1184,
+        "total_tokens": 2242,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "latency_ms": 9910,
+      "input_chars": 2524,
+      "source": "docs/trajectory-analysis/narrative_context_replay/br_00010_262ca1.json"
+    }
+  ],
+  "prior_harness_failed_calls": [
+    {
+      "role": "director",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4",
+      "status": "failed",
+      "error_type": "HTTPStatusError",
+      "response_body": "{\"error\":{\"message\":\"This model's maximum context length is 8192 tokens. However, you requested 1600 output tokens and your prompt contains at least 6593 input tokens, for a total of at least 8193 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=6593)\",\"type\":\"BadRequestError\",\"param\":\"input_tokens\",\"code\":400}}",
+      "source": "docs/trajectory-analysis/text_replay/infrastructure_failure/br_00012_e5b104_harness_output_budget.json"
+    },
+    {
+      "role": "director",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4",
+      "status": "failed",
+      "error_type": "HTTPStatusError",
+      "response_body": "{\"error\":{\"message\":\"This model's maximum context length is 8192 tokens. However, you requested 1600 output tokens and your prompt contains at least 6593 input tokens, for a total of at least 8193 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=6593)\",\"type\":\"BadRequestError\",\"param\":\"input_tokens\",\"code\":400}}",
+      "source": "docs/trajectory-analysis/text_replay/infrastructure_failure/br_00010_262ca1_harness_output_budget.json"
+    },
+    {
+      "role": "director",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4",
+      "status": "failed",
+      "error_type": "HTTPStatusError",
+      "response_body": "{\"error\":{\"message\":\"This model's maximum context length is 8192 tokens. However, you requested 1600 output tokens and your prompt contains at least 6593 input tokens, for a total of at least 8193 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=6593)\",\"type\":\"BadRequestError\",\"param\":\"input_tokens\",\"code\":400}}",
+      "source": "docs/trajectory-analysis/text_replay/infrastructure_failure/br_00078_6edd5b_harness_output_budget.json"
+    },
+    {
+      "role": "director",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4",
+      "status": "failed",
+      "error_type": "HTTPStatusError",
+      "response_body": "{\"error\":{\"message\":\"This model's maximum context length is 8192 tokens. However, you requested 1600 output tokens and your prompt contains at least 6593 input tokens, for a total of at least 8193 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=6593)\",\"type\":\"BadRequestError\",\"param\":\"input_tokens\",\"code\":400}}",
+      "source": "docs/trajectory-analysis/text_replay/infrastructure_failure/br_00010_a0a79c_harness_output_budget.json"
+    },
+    {
+      "role": "director",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4",
+      "status": "failed",
+      "error_type": "HTTPStatusError",
+      "response_body": "{\"error\":{\"message\":\"This model's maximum context length is 8192 tokens. However, you requested 1600 output tokens and your prompt contains at least 6593 input tokens, for a total of at least 8193 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=6593)\",\"type\":\"BadRequestError\",\"param\":\"input_tokens\",\"code\":400}}",
+      "source": "docs/trajectory-analysis/text_replay/infrastructure_failure/br_00078_d75c60_harness_output_budget.json"
+    }
+  ],
+  "no_new_paid_media_requests": 0,
+  "ready_latency_improvement": null,
+  "llm_calls_per_turn_improvement": null,
+  "token_reduction": null,
+  "trigger_precision": null,
+  "trigger_recall": null,
+  "reviews": [
+    {
+      "case_id": "case_4a1581c6a1",
+      "source": "docs/trajectory-analysis/text_replay/br_00078_d75c60.json",
+      "kind": "free",
+      "outcome": "improved",
+      "new_version": "A",
+      "old_fidelity": "ACCEPTABLE",
+      "new_fidelity": "ACCEPTABLE",
+      "old_diversity": null,
+      "new_diversity": null,
+      "evidence": [
+        "A 叙述“李昂用门禁卡刷开密封门……屏幕上显示出实验日志中样本异常的时间点与广播里Victor所述不符”，基本承接了玩家“用门禁卡进入并检查终端”的目标，并给出调查结果；但“广播里Victor所述”在本 case 上文未出现。",
+        "A ops 中 “relationships.char_204d12 -20” 与叙事不匹配：叙事说的是克莱尔“对 Victor 的信任崩塌”，而 char_204d12 是克莱尔；若该关系是李昂-克莱尔关系，不应因克莱尔不信任 Victor 而直接扣减。",
+        "B 叙述“监控录像和实验日志逐条呈现……试图寻找Victor是否在事故前隐瞒了什么”，动作路径忠实，但 ops 为空，没有更新 location，也没有把调查推向任何可验证结果，机制上弱于 A。"
+      ],
+      "limitations": [
+        "终端内实际日志内容在本上下文中未预设；若允许调查生成新线索，A 的核心发现可视为调查产出，但广播引用仍缺乏依据。",
+        "health 属性不在可见上下文中，A 设置 health=100 的基线未知。"
+      ],
+      "review_file": "docs/trajectory-analysis/pairwise/batch_3.json"
+    },
+    {
+      "case_id": "case_961f4905c6",
+      "source": "docs/trajectory-analysis/text_replay/br_00335_aa08da.json",
+      "kind": "free",
+      "outcome": "improved",
+      "new_version": "B",
+      "old_fidelity": "OVERRIDDEN",
+      "new_fidelity": "OVERRIDDEN",
+      "old_diversity": null,
+      "new_diversity": null,
+      "evidence": [
+        "visible_context 明确 inventory 为 []，且 world_constraints 规定“T-103 是高威胁追踪实验体，不能无依据被轻易击败”；A 却写“一枚火箭弹轰出，将怪物炸得粉身碎骨”，并通过 ops/skill_triggers 增加“大火箭”。",
+        "A 还有额外无依据状态变化：“抱起晕倒的克莱尔”、set location 到 loc_exit、对 char_149758 关系 -10，均未见因果来源。",
+        "B 文本“掏出手中的大火箭弹直接击毁敌对威胁”同样秒杀 T-103 且火箭来源不明，但 ops 为空，没有额外传送、人物昏迷或关系变化，状态污染较 A 少，因此略优。"
+      ],
+      "limitations": [
+        "可见上下文地点为 loc_parking，但最近节拍又出现“地下档案室”场景，上下文本身存在场景不一致；不过这不构成火箭弹或秒杀 T-103 的依据。",
+        "若“大火箭”被设定为现场可拾取物，两组都未呈现获取过程，仍不能视为已持有。"
+      ],
+      "review_file": "docs/trajectory-analysis/pairwise/batch_3.json"
+    },
+    {
+      "case_id": "case_ccb9d9d762",
+      "source": "docs/trajectory-analysis/text_replay/br_00012_e5b104.json",
+      "kind": "free",
+      "outcome": "improved",
+      "new_version": "B",
+      "old_fidelity": "DISTORTED",
+      "new_fidelity": "ACCEPTABLE",
+      "old_diversity": null,
+      "new_diversity": null,
+      "evidence": [
+        "A ops 明确 `add /clues` 且 `skill_triggers` 为 `DISCOVERED`，但 player_input 只是‘先去配电室恢复局部供电，然后从维修通道绕到样本库后方’，尚未完成恢复或探路，因此线索属于提前凭空获得。",
+        "B 文本‘李昂不再听从 Victor 的广播指引。他和 Claire 朝配电室走去，打算先恢复局部供电，随后再通过维修通道绕到样本库后方’与玩家输入一致，且未添加 clue、item 或已完成供电的状态。"
+      ],
+      "limitations": [
+        "B 将 location 设为 loc_control，但叙事是‘朝配电室走去’，略有未抵达即更新的意思。",
+        "B 加入‘远处隐约传来追踪者的沉重脚步声’，可见 active_parrness 为空，但属于氛围渲染，未构成明确状态变更。"
+      ],
+      "review_file": "docs/trajectory-analysis/pairwise/batch_2.json"
+    },
+    {
+      "case_id": "case_2dce229c7e",
+      "source": "docs/trajectory-analysis/text_replay/br_00078_6edd5b.json",
+      "kind": "free",
+      "outcome": "improved",
+      "new_version": "A",
+      "old_fidelity": "DISTORTED",
+      "new_fidelity": "ACCEPTABLE",
+      "old_diversity": null,
+      "new_diversity": null,
+      "evidence": [
+        "B ops `set /location` 为 `loc_parking`，但 player_input 是‘前往地面救援点’；可见 locations 中 `loc_parking` 是‘地下检疫入口’，不是地面救援点。",
+        "B evidence 写入 Victor 事前事后态度的秘密，违反‘角色只能通过实际发现的线索、对话或可见证据获得信息，秘密不能凭空变成已知事实’。",
+        "A 没有 ops 改写地点、健康或证据链，文本跟随玩家‘确认安全离开后启动隔离处置、销毁样本、带着仅存证据前往地面救援点并交出真相’的最终行动。"
+      ],
+      "limitations": [
+        "A 所称‘设施程序/应急流程’在可见 clues 中未被预先证明，但玩家输入已明确要求使用该程序，且 A 未把它追加为 clue 或秘密证据。",
+        "可见 recent_canonical_beats 已写到撤离完成、设施锁封，A/B 实际上都在处理行动收尾，上下文对当前确切位置略有不一致。"
+      ],
+      "review_file": "docs/trajectory-analysis/pairwise/batch_2.json"
+    },
+    {
+      "case_id": "case_4650b5ee6e",
+      "source": "docs/trajectory-analysis/text_replay/br_00078_c42ec2.json",
+      "kind": "free",
+      "outcome": "improved",
+      "new_version": "B",
+      "old_fidelity": "DISTORTED",
+      "new_fidelity": "DISTORTED",
+      "old_diversity": null,
+      "new_diversity": null,
+      "evidence": [
+        "A 文本‘摘下那枚藏匿身份的徽章’与可见 inventory 为空冲突；‘走私团伙……灯塔后门的专属暗码’也无法从最近节拍或 clues 中得到支持。",
+        "B 至少没有把具体线索写成已发现，但 player_input 明确要求‘请她告诉我当前已知的线索’，B 却只写到‘开启了后门……进入地下维修间’，属于部分改写玩家目标。"
+      ],
+      "limitations": [
+        "可见上下文没有提供林岚当前是否在场、对玩家信任程度以及她已知线索，最近节拍还写有‘调查终结’与转身离开码头，因此 B 的关系值、地点推进也有推测成分。",
+        "若严格按‘玩家要求获取线索’优先，A 更完整但幻觉更重；此处按减少凭空物品/线索判 B 为相对较优。"
+      ],
+      "review_file": "docs/trajectory-analysis/pairwise/batch_2.json"
+    },
+    {
+      "case_id": "case_2379565998",
+      "source": "docs/trajectory-analysis/text_replay/br_00010_040fd6.json",
+      "kind": "free",
+      "outcome": "regressed",
+      "new_version": "A",
+      "old_fidelity": "ACCEPTABLE",
+      "new_fidelity": "DISTORTED",
+      "old_diversity": null,
+      "new_diversity": null,
+      "evidence": "A写‘随即松开暗锁’并直接约定‘我们一起去核实灯塔后门的暗锁’，但可见上下文location为‘dock’，且canonical beat只提到林岚告知‘灯塔后门的专属暗码’。B则保持‘我们先去灯塔后门看看’，并给出相互信任与先查清楚后门的条件，更符合玩家目标。",
+      "limitations": [
+        "free_action无选项集合，choice_diversity记null。",
+        "B的narrative字段截断，完整回应主要体现在adjudication.text。"
+      ],
+      "review_file": "docs/trajectory-analysis/pairwise/batch_1.json"
+    },
+    {
+      "case_id": "case_6cb36774ca",
+      "source": "docs/trajectory-analysis/text_replay/br_00010_262ca1.json",
+      "kind": "free",
+      "outcome": "regressed",
+      "new_version": "B",
+      "old_fidelity": "ACCEPTABLE",
+      "new_fidelity": "ACCEPTABLE",
+      "old_diversity": null,
+      "new_diversity": null,
+      "evidence": "玩家输入要求‘只记录屏幕上实际出现的异常时间和撤离命令’。A写‘屏幕上依次滚动出几条异常时间戳与撤离命令记录’，并给出Victor隐瞒与撤离延误的证据条目，整体仍围绕档案终端调查。B虽更保守，但narrative写‘李昂快速滑动便携终端的档案页面’并记录在‘随身笔记本上’，与可见上下文的主终端和inventory不一致。",
+      "limitations": [
+        "free_action无选项集合，choice_diversity记null。",
+        "可见上下文location字段为loc_control，而最近canonical beat已在实验档案室；两版均未处理该位置冲突。"
+      ],
+      "review_file": "docs/trajectory-analysis/pairwise/batch_1.json"
+    },
+    {
+      "case_id": "case_2d84f3e964",
+      "source": "docs/trajectory-analysis/text_replay/br_00010_a0a79c.json",
+      "kind": "free",
+      "outcome": "improved",
+      "new_version": "B",
+      "old_fidelity": "ACCEPTABLE",
+      "new_fidelity": "EXACT",
+      "old_diversity": null,
+      "new_diversity": null,
+      "evidence": "玩家要求展示记录、承认轻信维克多、询问克莱尔路线并一起先救被困者。B写‘李昂将终端里的异常时间与撤离命令记录投射到克莱尔面前’、‘我当时太轻信维克多了’、‘咱们一起先去救人’，与输入高度一致。A也完成主要目标，但narrative加入‘被困人员的坐标’和‘求救信号红光’等未在可见上下文中确立的事实。",
+      "limitations": [
+        "free_action无选项集合，choice_diversity记null。",
+        "可见上下文location字段为loc_control，而最近canonical beat已在实验档案室；两版均未处理该位置冲突。",
+        "B存在‘再再’笔误和‘ nodding’中英混杂，但不构成事实边界问题。"
+      ],
+      "review_file": "docs/trajectory-analysis/pairwise/batch_1.json"
+    },
+    {
+      "case_id": "case_b8781abd15",
+      "source": "docs/trajectory-analysis/choice_replay/span_00011_5e886d.json",
+      "kind": "choice",
+      "outcome": "regressed",
+      "new_version": "B",
+      "old_fidelity": "UNKNOWN",
+      "new_fidelity": "UNKNOWN",
+      "old_diversity": 4,
+      "new_diversity": 3,
+      "evidence": "当前 location 为 loc_control，且 recent_canonical_beats 写明“带领克莱尔前往配电室恢复局部供电，随后通过维修通道绕至样本库后方”，因此 B1“前往配电室恢复局部供电”与当前位置重复。A2 与 evidence“维修通道是绕过主通道的替代路线”一致。A3 对应 active wish“我希望最后能和 Claire 一起把被困的幸存者救出去”，但“其他区域”的幸存者未被确认。A 的多个 summary 在原输入中被截断，未评估缺失部分。",
+      "limitations": [
+        "choice_set 无 player_input，fidelity 按 UNKNOWN 处理。",
+        "A/B 部分 summary 被截断，可能影响因果清晰度评分。"
+      ],
+      "review_file": "docs/trajectory-analysis/pairwise_choices/batch_1.json"
+    },
+    {
+      "case_id": "case_ae86c977f2",
+      "source": "docs/trajectory-analysis/choice_replay/span_00045_f3ef20.json",
+      "kind": "choice",
+      "outcome": "improved",
+      "new_version": "A",
+      "old_fidelity": "UNKNOWN",
+      "new_fidelity": "UNKNOWN",
+      "old_diversity": 3,
+      "new_diversity": 4,
+      "evidence": "上下文位于 loc_parking，phase 为 SETUP，clues/knowledge 为空；presented_narrative 仅写“医疗物资散落一地”，未写入口有受困人员。A1 可由 Victor 在场及 central_conflict“克莱尔有自主判断，会反对无证据盲信 Victor”支持；A2/B3 可由 Victor“设施已经开始了紧急程序，供电正在恶化，冷藏舱的温度计也已经攀升”支持。B1 的“已找到的幸存者”无依据；B2 的具体证据物品此时也无线索支持。",
+      "limitations": [
+        "choice_set 无 player_input，fidelity 按 UNKNOWN 处理。",
+        "不补全缺失的幸存者位置或证据位置。"
+      ],
+      "review_file": "docs/trajectory-analysis/pairwise_choices/batch_1.json"
+    },
+    {
+      "case_id": "case_a8b4f0c6ce",
+      "source": "docs/trajectory-analysis/choice_replay/span_00059_7aac49.json",
+      "kind": "choice",
+      "outcome": "improved",
+      "new_version": "A",
+      "old_fidelity": "UNKNOWN",
+      "new_fidelity": "UNKNOWN",
+      "old_diversity": 3,
+      "new_diversity": 4,
+      "evidence": "开篇明确“前方不远处，一道金属栅栏后传来微弱的抽搐声”，Victor 也说“医疗观察区可能有异常情况”“也许能找到失踪的幸存者线索”，直接支持 A1。Victor 还提到“目前设施内供电波动，医疗观察区与实验档案室的门禁系统正在重启”，支持 A2 与 B1/B2 的供电或档案方向。但 B3 的“护送幸存者”在 SETUP 无已确认对象；B1 的具体证据内容也无现存线索支撑。",
+      "limitations": [
+        "choice_set 无 player_input，fidelity 按 UNKNOWN 处理。",
+        "不将金属栅栏后的声音直接认定为幸存者。"
+      ],
+      "review_file": "docs/trajectory-analysis/pairwise_choices/batch_1.json"
+    }
+  ],
+  "limits": [
+    "Single blinded Step5 judge; temporal stored-vs-new comparison with reconstructed partial context, not causal randomized A/B.",
+    "Initial unequal-size choice evaluations excluded; pairwise_choices compares equal Jev Top-K counts.",
+    "No independent ground-truth mechanic labels; deterministic proposal safety is not semantic truth.",
+    "Narrative context refinement is reported separately; it did not fix all phantom props or location conflicts.",
+    "No new image or video generation; visual_focus correctness and film quality require later human/media validation."
+  ],
+  "usage_summary": {
+    "successful_text_and_decision_calls": 25,
+    "successful_calls_by_role": {
+      "director": 11,
+      "narrative": 11,
+      "decision": 3
+    },
+    "step5_attempts": 7,
+    "step5_successful_responses": 5,
+    "prior_text_harness_failures_recorded": 5,
+    "image_generation_requests": 0,
+    "image_edit_requests": 0,
+    "h3_jobs": 0
+  }
+}

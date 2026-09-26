@@ -1,0 +1,7 @@
+{
+  "initial_attempts": 2,
+  "first": "response failed JSON parsing; earlier harness did not retain raw content or provider usage",
+  "second": "Original process completed with a second JSON parse failure; retained under transport_failures, then retried once with full raw response retention.",
+  "change": "retain raw response before parsing; allow 32768 output tokens with high reasoning; identical blinded cases",
+  "counts_are_attempts_not_successes": true
+}

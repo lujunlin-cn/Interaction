@@ -1,0 +1,397 @@
+{
+  "provider": "step_5",
+  "configured_model": "step-5-preview",
+  "request_sha256": "af9ca658d91c27e9488bfb0472c63b34d7c399d2c55b419d474190bbd40c7d1c",
+  "anonymized_cases": [
+    {
+      "case_id": "case_b8781abd15",
+      "task": "choice_set",
+      "player_input": null,
+      "visible_context": {
+        "title": "生化危机：黑雨隔离区",
+        "core_question": "在T-103追踪、供电恶化与冷藏失效的压力下，李昂与克莱尔如何在救出幸存者、阻止病毒样本扩散、保留Umbrella犯罪证据之间做出无法两全的取舍，并承担相应后果？",
+        "central_conflict": "救出眼前生命、阻止样本扩散、保留 Umbrella 犯罪证据与有限时间无法同时保证。克莱尔有自主判断，会反对无证据盲信 Victor；李昂的行动、分享信息和救援取舍影响双方信任，而不是预设玩家一定轻信他。Victor 希望借两人之力带着成果活着离开，与他们的救援和调查目标发生冲突。",
+        "location": "loc_control",
+        "locations": {
+          "loc_parking": "地下检疫入口",
+          "loc_lab_a": "医疗观察区",
+          "loc_control": "配电室",
+          "loc_holding": "实验档案室",
+          "loc_exit": "冷藏样本库",
+          "location_5": "安全控制中心",
+          "location_6": "紧急逃生通道"
+        },
+        "inventory": [],
+        "clues": [
+          "clue_repair_path",
+          "clue_power_restored"
+        ],
+        "knowledge": [],
+        "relationships": {
+          "stalker": 50,
+          "char_149758": 50,
+          "char_204d12": 50
+        },
+        "phase": "ESCALATION",
+        "wishes": [
+          {
+            "text": "我希望最后能和 Claire 一起把被困的幸存者救出去。",
+            "status": "ACTIVE"
+          }
+        ],
+        "location_name": "配电室",
+        "recent_canonical_beats": [
+          {
+            "title": "幕前铺陈",
+            "result": "地下检疫入口，灯光昏暗，空气中弥漫潮湿与铁锈的味道。李昂刚踏入这个被Umbrella掩盖的地下设施，视线立刻被伸向远方的走廊吸引。不远处，克莱尔正倚靠在一堆被遗弃的医疗设备上，手里握着一支早已烧短的烟，见状她猛吸一口，烟雾在昏黄的灯光中若有若无地环绕。她推了推眼镜，目光在李昂身上停驻，语气里带着一丝不易察觉的审视与疲惫。「你总算来了。Victor 的广播已经重复了三遍，他让我们去医疗观察区核实一下什么叫『样本异常』，说是有失踪的幸存者需要协助。」她转过身，往更深的走廊方向点了点头，「但我有种不好的预感——Victor 一直都在瞒着什么。尤其是他声称的病毒抑制剂，听着就很像什么好东西。」\n\n就在这时，远处的广播系统再次咔哒作响，Victor 的声音在空荡的走廊里回荡：「检疫入口的二位，请注意。设施内的冷藏供电正在恶化，冷藏样本库的温度正逐步失控。如果不尽快处理，不仅样本会失效，其中被困的幸存者也将面临更高的风险。我现在的位置在配电室，我可以指引你们如何恢复供电，但需要你们亲自前来确认。」\n\n核心冲突已经浮现：在Victor给出指引、冷藏供电即将失效、T-103型追踪实验体潜伏在暗处，以及关于失踪幸存者与危险病毒样本的真实情况之间，李昂与克莱尔需要做出取舍。前方的医疗观察区可能藏有关键证据，也可能是陷阱；配电室能恢复供电，但也可能暴露更深层的秘密；而即将失控的冷藏样本库，则关乎着幸存者的生死与样本的稳定性。'\n",
+            "evidence": []
+          },
+          {
+            "title": "行动确认",
+            "result": "李昂放弃暂时听从 Victor 的指引，带领克莱尔前往配电室恢复局部供电，随后通过维修通道绕至样本库后方。这一决定切断了与 Victor 实时广播的直接联系，转而依赖现场的线索与通道。",
+            "presented_narrative": "李昂放弃继续听从Victor的远程指引，带领克莱尔前往配电室恢复局部供电，随后准备通过维修通道绕至样本库后方。这一决定切断了二人与Victor实时广播的直接联系，后续只能依靠现场线索与通道推进调查。",
+            "evidence": [
+              "配电室需要恢复供电才能打开相关门禁",
+              "维修通道是绕过主通道的替代路线",
+              "样本库后方可能藏有未被主通道发现的线索"
+            ]
+          }
+        ],
+        "npcs": [
+          {
+            "id": "stalker",
+            "identity": "T-103 型追踪实验体 · 高威胁敌对实体"
+          },
+          {
+            "id": "char_204d12",
+            "identity": "克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者"
+          },
+          {
+            "id": "char_149758",
+            "identity": "Dr. Victor Hale · Umbrella 地下设施研究主管"
+          }
+        ],
+        "preferences": {},
+        "active_pressures": [],
+        "world_rules": "感染者不能靠普通谈判停止攻击。\n普通草药只能处理外伤，不能治愈病毒感染。\n安全门必须通过有效门禁、电力恢复或合理物理手段处理。\n已确认死亡或毁灭的实体不能无原因复活。\n李昂、克莱尔、Victor 等角色必须沿可达通道移动，不能瞬间传送。\nVictor 只能操控他仍保有权限、且仍有供电的设施系统。\n角色只能通过实际发现的线索、对话或可见证据获得信息，秘密不能凭空变成已知事实。",
+        "world_constraints": "弹药、急救物资、门禁用品和保险丝有限，搜寻与使用必须符合现场因果。T-103 是高威胁追踪实验体，不能无依据被轻易击败；可利用门、电力、地形与协作争取逃生时间。冷藏供电恶化威胁样本稳定性，被困幸存者的救援窗口持续缩短。Victor 的权限会随供电和安全系统状态变化，不得全知全能。关键秘密必须经过线索核实，克莱尔有自己的判断与行动立场。倒计时失败会造成受伤、消耗、路线封锁或救援延误等后果，但不得直接强制游戏结束。"
+      },
+      "A": [
+        {
+          "label": "恢复配电与分流电力",
+          "summary": "李昂与克莱尔冒险进入配电室，冒着 T-103 可能出现的风险，恢复局部供电。勉强恢复的电力可以为冷藏库的锁扣提供临时供电，并减缓设施整体的电力衰退，为后续行动争",
+          "kind": "investigation"
+        },
+        {
+          "label": "从维修通道潜入样本库",
+          "summary": "利用恢复的供电作为掩护，李昂与克莱尔从维修通道潜入冷藏样本库后方。这种路线相对明亮的主通道，能在一定程度上规避 T-103 的直接视线，但狭窄的通道仍可能成为突",
+          "kind": "investigation"
+        },
+        {
+          "label": "优先保护幸存者并撤离",
+          "summary": "在 T-103 的持续追踪与电力即将彻底失效的双重压力下，李昂与克莱尔决定暂时放弃深入样本库，转而优先营救仍被困在其他区域的幸存者，并寻找最近的安全出口撤离，放",
+          "kind": "investigation"
+        }
+      ],
+      "B": [
+        {
+          "label": "前往配电室恢复局部供电",
+          "summary": "优先恢复配电室供电，以打开关键门禁并延缓冷藏样本库温度失控。",
+          "confidence": 0.6,
+          "kind": "risk"
+        },
+        {
+          "label": "利用维修通道绕行至样本库后方",
+          "summary": "避开主通道直接风险，通过维修通道潜入样本库后方检查是否有被隐藏的线索或异常。",
+          "confidence": 0.6,
+          "kind": "investigation"
+        },
+        {
+          "label": "深入医疗观察区寻找失踪幸存者",
+          "summary": "冒着T-103威胁，深入医疗观察区核实Victor关于样本异常的说法，寻找被困幸存者。",
+          "confidence": 0.6,
+          "kind": "risk"
+        }
+      ]
+    },
+    {
+      "case_id": "case_ae86c977f2",
+      "task": "choice_set",
+      "player_input": null,
+      "visible_context": {
+        "title": "生化危机：黑雨隔离区",
+        "core_question": "在T-103追踪、供电恶化与冷藏失效的压力下，李昂与克莱尔如何在救出幸存者、阻止病毒样本扩散、保留Umbrella犯罪证据之间做出无法两全的取舍，并承担相应后果？",
+        "central_conflict": "救出眼前生命、阻止样本扩散、保留 Umbrella 犯罪证据与有限时间无法同时保证。克莱尔有自主判断，会反对无证据盲信 Victor；李昂的行动、分享信息和救援取舍影响双方信任，而不是预设玩家一定轻信他。Victor 希望借两人之力带着成果活着离开，与他们的救援和调查目标发生冲突。",
+        "location": "loc_parking",
+        "locations": {
+          "loc_parking": "地下检疫入口",
+          "loc_lab_a": "医疗观察区",
+          "loc_control": "配电室",
+          "loc_holding": "实验档案室",
+          "loc_exit": "冷藏样本库",
+          "location_5": "安全控制中心",
+          "location_6": "紧急逃生通道"
+        },
+        "inventory": [],
+        "clues": [],
+        "knowledge": [],
+        "relationships": {
+          "stalker": 50,
+          "char_149758": 50,
+          "char_204d12": 50
+        },
+        "phase": "SETUP",
+        "wishes": [],
+        "location_name": "地下检疫入口",
+        "recent_canonical_beats": [
+          {
+            "title": "生化危机：黑雨隔离区 - 第一章：停车场入口",
+            "result": "雨水如细丝般穿透封闭的钢铁大门，在昏黄的应急灯光下打出斑驼状的影子。李昂踩下刹车，车轮在积水中喷溅出细碎的水花。车门打开，冷气如潮水般涌入车厢，带来一股霉土与金属的味道。\n\n前方是地下检疫入口。四周是陈旧的混凝土墙壁，几盏破损的灯管闪烁不定，投下扭曲的影子。入口处站立着一位身穿实验服的男人，面容冷峻，手中紧握着一份尚未完全干涸的文件夹。他就是Victor Hale，地下设施的研究主管。\n\"你们来得正是时候,\" Victor的声音在空旷的走廊里回荡，带着一丝疲惫与急迫。他环视了一眼李昂与克莱尔，目光落在两人手中的武器上，随即收回。\"设施已经开始了紧急程序，供电正在恶化，冷藏舱的温度计也已经攀升。\"\n\n克莱尔紧紧握着手中的手电筒，眉头微蹙：",
+            "presented_narrative": "雨水顺着锈蚀的通风栅栏渗进地下层，在地面积成浑浊的水洼，频闪的应急灯把混凝土墙上的霉斑拉成长长的晃动的影子。入口处的金属密封门半敞着，门边堆着几个被撬开的物资箱，医疗物资散落一地，混着几缕暗褐色的污渍。Victor Hale靠在控制台旁，指尖捻着半张被水洇湿的登记表，听见脚步声抬眼望过来，实验服的袖口沾了点干涸的深色痕迹。",
+            "evidence": []
+          }
+        ],
+        "npcs": [
+          {
+            "id": "stalker",
+            "identity": "T-103 型追踪实验体 · 高威胁敌对实体"
+          },
+          {
+            "id": "char_204d12",
+            "identity": "克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者"
+          },
+          {
+            "id": "char_149758",
+            "identity": "Dr. Victor Hale · Umbrella 地下设施研究主管"
+          }
+        ],
+        "preferences": {},
+        "active_pressures": [],
+        "world_rules": "感染者不能靠普通谈判停止攻击。\n普通草药只能处理外伤，不能治愈病毒感染。\n安全门必须通过有效门禁、电力恢复或合理物理手段处理。\n已确认死亡或毁灭的实体不能无原因复活。\n李昂、克莱尔、Victor 等角色必须沿可达通道移动，不能瞬间传送。\nVictor 只能操控他仍保有权限、且仍有供电的设施系统。\n角色只能通过实际发现的线索、对话或可见证据获得信息，秘密不能凭空变成已知事实。",
+        "world_constraints": "弹药、急救物资、门禁用品和保险丝有限，搜寻与使用必须符合现场因果。T-103 是高威胁追踪实验体，不能无依据被轻易击败；可利用门、电力、地形与协作争取逃生时间。冷藏供电恶化威胁样本稳定性，被困幸存者的救援窗口持续缩短。Victor 的权限会随供电和安全系统状态变化，不得全知全能。关键秘密必须经过线索核实，克莱尔有自己的判断与行动立场。倒计时失败会造成受伤、消耗、路线封锁或救援延误等后果，但不得直接强制游戏结束。"
+      },
+      "A": [
+        {
+          "label": "验证Victor身份并询问样本当前状态",
+          "summary": "询问Victor关于样本位置和完整性的细节，评估其是否可信以决定是否配合带离",
+          "confidence": 0.6,
+          "kind": "investigation"
+        },
+        {
+          "label": "检查配电系统恢复供电",
+          "summary": "前往配电室检查并尝试恢复因供电恶化而下降的电力，延缓冷藏舱温度上升",
+          "confidence": 0.6,
+          "kind": "risk"
+        },
+        {
+          "label": "优先撤离眼前幸存者",
+          "summary": "无视样本风险，先带出入口处的受困人员并封锁门后",
+          "confidence": 0.6,
+          "kind": "withdrawal"
+        }
+      ],
+      "B": [
+        {
+          "label": "优先撤离关键幸存者",
+          "summary": "带领已找到的幸存者前往安全控制中心，在病毒样本泄漏前将其作为首要目标，牺牲实验室内的其他证据。",
+          "kind": "investigation"
+        },
+        {
+          "label": "收集并转移关键证据",
+          "summary": "在时间紧迫下，刻意寻找并带走 Umbrella 的犯罪证据（实验记录、样本清单），为后续追责做准备，即使这会耗费关键时间。",
+          "kind": "investigation"
+        },
+        {
+          "label": "检查配电系统",
+          "summary": "前往配电室恢复供电，以解锁冷藏系统和安全门，但此路径可能暴露玩家位置给 T-103。",
+          "kind": "investigation"
+        }
+      ]
+    },
+    {
+      "case_id": "case_a8b4f0c6ce",
+      "task": "choice_set",
+      "player_input": null,
+      "visible_context": {
+        "title": "生化危机：黑雨隔离区",
+        "core_question": "在T-103追踪、供电恶化与冷藏失效的压力下，李昂与克莱尔如何在救出幸存者、阻止病毒样本扩散、保留Umbrella犯罪证据之间做出无法两全的取舍，并承担相应后果？",
+        "central_conflict": "救出眼前生命、阻止样本扩散、保留 Umbrella 犯罪证据与有限时间无法同时保证。克莱尔有自主判断，会反对无证据盲信 Victor；李昂的行动、分享信息和救援取舍影响双方信任，而不是预设玩家一定轻信他。Victor 希望借两人之力带着成果活着离开，与他们的救援和调查目标发生冲突。",
+        "location": "loc_parking",
+        "locations": {
+          "loc_parking": "地下检疫入口",
+          "loc_lab_a": "医疗观察区",
+          "loc_control": "配电室",
+          "loc_holding": "实验档案室",
+          "loc_exit": "冷藏样本库",
+          "location_5": "安全控制中心",
+          "location_6": "紧急逃生通道"
+        },
+        "inventory": [],
+        "clues": [],
+        "knowledge": [],
+        "relationships": {
+          "stalker": 50,
+          "char_149758": 50,
+          "char_204d12": 50
+        },
+        "phase": "SETUP",
+        "wishes": [],
+        "location_name": "地下检疫入口",
+        "recent_canonical_beats": [
+          {
+            "title": "生化危机：黑雨隔离区 第一章 - 入口会合",
+            "result": "1998年浣熊市失控的当夜，李昂·S·肯尼迪深入警察局地下更深层，在迷宫般的下水道与废弃管道中穿行，最终抵达地下检疫入口。这里已经是一片混乱，被撤离的市民留下的痕迹与倒塌的墙壁见证了灾难的规模。李昂刚卸下背上的装备，还没来得及调整呼吸，广播系统里便传来了研究主管维克多·黑尔的声音——\n\n\"欢迎，肯尼迪先生。我是这座设施的研究主管维克多·黑尔。请保持冷静，我通过监控系统为您指引前路。地下检疫入口是安全区域，请勿随意深入未经许可的区域。\"\n\n与此同时，克莱尔·雷德菲尔德已经先一步到这里，她正蹲在入口处的废墟旁检查一具倒下的安保人员，手里紧紧握着一把生锈的铁锹，神情警惕地环视四周。\n\n\"李昂，你终于来了\", 克莱尔转过头，看到李昂出现松了一口气，随即警惕地问道： \"你是怎么进来的？维克托广播里提到的安全通道是否真的畅通？我闻到了臭氧味，好像有什么东西在冷藏区出了问题。\", \n\n空气中弥漫着潮湿血腥与消毒剂混合的味道，红色的应急灯在昏暗中闪烁。维克托的广播继续播报：\n\n\"目前设施内供电波动，医疗观察区与实验档案室的门禁系统正在重启。如果你们需要前进，请通过中央控制台的手动覆盖。但请注意，低电量警告正在闪烁，关键系统可能随时断电。\",\n\n前方不远处，一道金属栅栏后传来微弱的抽搐声，似乎有什么东西在挣扎。维克托的声音随即带上一丝紧迫：\n\n\"请小心前方，医疗观察区可能有异常情况。我建议优先检查那里，也许能找到失踪的幸存者线索。但请记住，每一步都需要权衡。\"\n\n李昂与克莱尔站在入口处，周围是昏暗的走道、摇曳的警示灯以及不明液体留下的痕迹。维克托的广播在背景中持续播报，而前方的医疗观察区门口，似乎藏着什么未知的危机。",
+            "presented_narrative": "1998年浣熊市全面失控的深夜，李昂·S·肯尼迪穿过迷宫般的下水道与废弃管道，抵达Umbrella与当地机构秘密合作建造的地下检疫设施入口。潮湿的血腥气混着消毒剂味道弥漫在空气里，红色应急灯在昏暗走道中摇曳，地面散落着撤离市民遗留的杂物、倒塌的碎石与暗色不明液体痕迹。克莱尔·雷德菲尔德已经先一步抵达此处，正蹲在入口废墟旁检查一具倒下的安保人员，手里紧紧攥着一把生锈的铁锹，神情警惕地环视四周。研究主管维克多·黑尔的声音通过广播系统响起，一边为两人指引方向，一边透露出设施供电不稳、门禁系统重启、低电量告警闪烁的现状，特意提醒医疗观察区存在异常，建议优先前往该处寻找失踪幸存者线索。前方的金属栅栏后传来微弱的抽搐声，未知的危机正蛰伏在黑暗之中。",
+            "evidence": []
+          }
+        ],
+        "npcs": [
+          {
+            "id": "stalker",
+            "identity": "T-103 型追踪实验体 · 高威胁敌对实体"
+          },
+          {
+            "id": "char_204d12",
+            "identity": "克莱尔·雷德菲尔德（Claire Redfield）· 主要搭档，寻找失踪幸存者"
+          },
+          {
+            "id": "char_149758",
+            "identity": "Dr. Victor Hale · Umbrella 地下设施研究主管"
+          }
+        ],
+        "preferences": {},
+        "active_pressures": [],
+        "world_rules": "感染者不能靠普通谈判停止攻击。\n普通草药只能处理外伤，不能治愈病毒感染。\n安全门必须通过有效门禁、电力恢复或合理物理手段处理。\n已确认死亡或毁灭的实体不能无原因复活。\n李昂、克莱尔、Victor 等角色必须沿可达通道移动，不能瞬间传送。\nVictor 只能操控他仍保有权限、且仍有供电的设施系统。\n角色只能通过实际发现的线索、对话或可见证据获得信息，秘密不能凭空变成已知事实。",
+        "world_constraints": "弹药、急救物资、门禁用品和保险丝有限，搜寻与使用必须符合现场因果。T-103 是高威胁追踪实验体，不能无依据被轻易击败；可利用门、电力、地形与协作争取逃生时间。冷藏供电恶化威胁样本稳定性，被困幸存者的救援窗口持续缩短。Victor 的权限会随供电和安全系统状态变化，不得全知全能。关键秘密必须经过线索核实，克莱尔有自己的判断与行动立场。倒计时失败会造成受伤、消耗、路线封锁或救援延误等后果，但不得直接强制游戏结束。"
+      },
+      "A": [
+        {
+          "label": "深入医疗观察区查探幸存者",
+          "summary": "冒着被困风险，前往传来抽搐声的金属栅栏前，查明医疗观察区内的异常情况与失踪幸存者踪迹。",
+          "confidence": 0.6,
+          "kind": "investigation"
+        },
+        {
+          "label": "前往配电室恢复供电",
+          "summary": "优先修复断电关键系统，尝试恢复冷藏与门禁，以延缓病毒样本失效与追踪实验体的威胁。",
+          "confidence": 0.6,
+          "kind": "risk"
+        },
+        {
+          "label": "检查冷藏样本库保存状况",
+          "summary": "确认Umbrella病毒样本的保存完整性，权衡样本作为证据留存与防止样本扩散的风险。",
+          "confidence": 0.6,
+          "kind": "investigation"
+        }
+      ],
+      "B": [
+        {
+          "label": "查阅实验档案寻找证据",
+          "summary": "进入 loc_holding 搜索 Umbrella 的非法实验记录与病毒样本目录，作为反公司的关键证据，但档案室可能锁死或被 T-103 破坏。",
+          "kind": "investigation"
+        },
+        {
+          "label": "进入配电室恢复供电",
+          "summary": "前往 loc_control 恢复发电机运转，这对重新开启冷藏系统和关闭大门防御至关重要，但走廊暴露在 T-103 的追踪视野中。",
+          "kind": "investigation"
+        },
+        {
+          "label": "护送幸存者前往安全出口",
+          "summary": "优先将被困的科研人员或测试对象疏散至安全区域，减少人员伤亡，但在供电不足和 T-103 逼近的情况下，撤离路线极其危险。",
+          "kind": "investigation"
+        }
+      ]
+    }
+  ],
+  "judge_policy": "你是独立的互动故事轨迹评审。A/B 匿名顺序已打乱，不知道哪版新。只比较已提供的上下文，不补全缺失事实，不偏爱长文。可读性与多样性不应掩盖玩家目标被改写或物品凭空出现。world/rules及已持有物是约束，玩家声称持有不等于已持有；有依据的受阻属于ACCEPTABLE。对每个case返回JSON {cases:[{case_id,winner:\"A|B|tie|insufficient\",fidelity_A:\"EXACT|ACCEPTABLE|DISTORTED|OVERRIDDEN|UNKNOWN\",fidelity_B:同枚举,world_consistency_A:1到5或null,world_consistency_B:同,causal_clarity_A:1到5或null,causal_clarity_B:同,mechanic_appropriateness_A:1到5或null,mechanic_appropriateness_B:同,choice_diversity_A:1到5或null,choice_diversity_B:同,knowledge_boundary_issues:[],evidence:引用确切原文并解释判定,limitations:[]}]}。任务choice_set时fidelity为UNKNOWN，评价选项策略差异、现实可执行性和目的是否基于已知信息。遇到上下文缺失写insufficient而不是杜撰。你是研究Critic，不修改运行时状态。",
+  "paid_media_requests": 0,
+  "model": "step-5-preview",
+  "request_id": "5898ed4e11f4ef8469d5c3dd4ec1fddf.01fa1f9ffc03bb2e7fbbeecb86b79dd0",
+  "latency_ms": 175969,
+  "usage": {
+    "prompt_tokens": 5054,
+    "completion_tokens": 12492,
+    "total_tokens": 17546,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "raw_response": "{\"cases\":[{\"case_id\":\"case_b8781abd15\",\"winner\":\"A\",\"fidelity_A\":\"UNKNOWN\",\"fidelity_B\":\"UNKNOWN\",\"world_consistency_A\":3,\"world_consistency_B\":3,\"causal_clarity_A\":3,\"causal_clarity_B\":3,\"mechanic_appropriateness_A\":3,\"mechanic_appropriateness_B\":3,\"choice_diversity_A\":4,\"choice_diversity_B\":3,\"knowledge_boundary_issues\":[\"A3 的“仍被困在其他区域的幸存者”缺少已发现证据；上下文只有救援愿望和 Victor 对冷藏样本库幸存者风险的泛称。\",\"A1/A2 引入“冷藏库的锁扣”“狭窄的通道”等上下文未给出的设施细节。\"],\"evidence\":\"当前 location 为 loc_control，且 recent_canonical_beats 写明“带领克莱尔前往配电室恢复局部供电，随后通过维修通道绕至样本库后方”，因此 B1“前往配电室恢复局部供电”与当前位置重复。A2 与 evidence“维修通道是绕过主通道的替代路线”一致。A3 对应 active wish“我希望最后能和 Claire 一起把被困的幸存者救出去”，但“其他区域”的幸存者未被确认。A 的多个 summary 在原输入中被截断，未评估缺失部分。\",\"limitations\":[\"choice_set 无 player_input，fidelity 按 UNKNOWN 处理。\",\"A/B 部分 summary 被截断，可能影响因果清晰度评分。\"]},{\"case_id\":\"case_ae86c977f2\",\"winner\":\"A\",\"fidelity_A\":\"UNKNOWN\",\"fidelity_B\":\"UNKNOWN\",\"world_consistency_A\":3,\"world_consistency_B\":2,\"causal_clarity_A\":4,\"causal_clarity_B\":3,\"mechanic_appropriateness_A\":4,\"mechanic_appropriateness_B\":3,\"choice_diversity_A\":4,\"choice_diversity_B\":3,\"knowledge_boundary_issues\":[\"A3 的“入口处的受困人员”在 visible_context 中不存在；开场只描述物资散落和 Victor，无待救个体。\",\"B1 的“已找到的幸存者”与 SETUP 阶段矛盾：尚未发现或确认任何幸存者。\",\"B2 指定“实验记录、样本清单”为可带走证据，但此时 clues/knowledge 为空，未见这些物品存在或位置。\"],\"evidence\":\"上下文位于 loc_parking，phase 为 SETUP，clues/knowledge 为空；presented_narrative 仅写“医疗物资散落一地”，未写入口有受困人员。A1 可由 Victor 在场及 central_conflict“克莱尔有自主判断，会反对无证据盲信 Victor”支持；A2/B3 可由 Victor“设施已经开始了紧急程序，供电正在恶化，冷藏舱的温度计也已经攀升”支持。B1 的“已找到的幸存者”无依据；B2 的具体证据物品此时也无线索支持。\",\"limitations\":[\"choice_set 无 player_input，fidelity 按 UNKNOWN 处理。\",\"不补全缺失的幸存者位置或证据位置。\"]},{\"case_id\":\"case_a8b4f0c6ce\",\"winner\":\"A\",\"fidelity_A\":\"UNKNOWN\",\"fidelity_B\":\"UNKNOWN\",\"world_consistency_A\":4,\"world_consistency_B\":3,\"causal_clarity_A\":4,\"causal_clarity_B\":3,\"mechanic_appropriateness_A\":4,\"mechanic_appropriateness_B\":3,\"choice_diversity_A\":4,\"choice_diversity_B\":3,\"knowledge_boundary_issues\":[\"B3 的“被困的科研人员或测试对象”尚未被发现；金属栅栏后的抽搐声未被确认属于幸存者。\",\"B1 指定“非法实验记录与病毒样本目录”，但此时 clues/knowledge 为空，无法确认档案室含有这些具体证据。\"],\"evidence\":\"开篇明确“前方不远处，一道金属栅栏后传来微弱的抽搐声”，Victor 也说“医疗观察区可能有异常情况”“也许能找到失踪的幸存者线索”，直接支持 A1。Victor 还提到“目前设施内供电波动，医疗观察区与实验档案室的门禁系统正在重启”，支持 A2 与 B1/B2 的供电或档案方向。但 B3 的“护送幸存者”在 SETUP 无已确认对象；B1 的具体证据内容也无现存线索支撑。\",\"limitations\":[\"choice_set 无 player_input，fidelity 按 UNKNOWN 处理。\",\"不将金属栅栏后的声音直接认定为幸存者。\"]}]}",
+  "result": {
+    "cases": [
+      {
+        "case_id": "case_b8781abd15",
+        "winner": "A",
+        "fidelity_A": "UNKNOWN",
+        "fidelity_B": "UNKNOWN",
+        "world_consistency_A": 3,
+        "world_consistency_B": 3,
+        "causal_clarity_A": 3,
+        "causal_clarity_B": 3,
+        "mechanic_appropriateness_A": 3,
+        "mechanic_appropriateness_B": 3,
+        "choice_diversity_A": 4,
+        "choice_diversity_B": 3,
+        "knowledge_boundary_issues": [
+          "A3 的“仍被困在其他区域的幸存者”缺少已发现证据；上下文只有救援愿望和 Victor 对冷藏样本库幸存者风险的泛称。",
+          "A1/A2 引入“冷藏库的锁扣”“狭窄的通道”等上下文未给出的设施细节。"
+        ],
+        "evidence": "当前 location 为 loc_control，且 recent_canonical_beats 写明“带领克莱尔前往配电室恢复局部供电，随后通过维修通道绕至样本库后方”，因此 B1“前往配电室恢复局部供电”与当前位置重复。A2 与 evidence“维修通道是绕过主通道的替代路线”一致。A3 对应 active wish“我希望最后能和 Claire 一起把被困的幸存者救出去”，但“其他区域”的幸存者未被确认。A 的多个 summary 在原输入中被截断，未评估缺失部分。",
+        "limitations": [
+          "choice_set 无 player_input，fidelity 按 UNKNOWN 处理。",
+          "A/B 部分 summary 被截断，可能影响因果清晰度评分。"
+        ]
+      },
+      {
+        "case_id": "case_ae86c977f2",
+        "winner": "A",
+        "fidelity_A": "UNKNOWN",
+        "fidelity_B": "UNKNOWN",
+        "world_consistency_A": 3,
+        "world_consistency_B": 2,
+        "causal_clarity_A": 4,
+        "causal_clarity_B": 3,
+        "mechanic_appropriateness_A": 4,
+        "mechanic_appropriateness_B": 3,
+        "choice_diversity_A": 4,
+        "choice_diversity_B": 3,
+        "knowledge_boundary_issues": [
+          "A3 的“入口处的受困人员”在 visible_context 中不存在；开场只描述物资散落和 Victor，无待救个体。",
+          "B1 的“已找到的幸存者”与 SETUP 阶段矛盾：尚未发现或确认任何幸存者。",
+          "B2 指定“实验记录、样本清单”为可带走证据，但此时 clues/knowledge 为空，未见这些物品存在或位置。"
+        ],
+        "evidence": "上下文位于 loc_parking，phase 为 SETUP，clues/knowledge 为空；presented_narrative 仅写“医疗物资散落一地”，未写入口有受困人员。A1 可由 Victor 在场及 central_conflict“克莱尔有自主判断，会反对无证据盲信 Victor”支持；A2/B3 可由 Victor“设施已经开始了紧急程序，供电正在恶化，冷藏舱的温度计也已经攀升”支持。B1 的“已找到的幸存者”无依据；B2 的具体证据物品此时也无线索支持。",
+        "limitations": [
+          "choice_set 无 player_input，fidelity 按 UNKNOWN 处理。",
+          "不补全缺失的幸存者位置或证据位置。"
+        ]
+      },
+      {
+        "case_id": "case_a8b4f0c6ce",
+        "winner": "A",
+        "fidelity_A": "UNKNOWN",
+        "fidelity_B": "UNKNOWN",
+        "world_consistency_A": 4,
+        "world_consistency_B": 3,
+        "causal_clarity_A": 4,
+        "causal_clarity_B": 3,
+        "mechanic_appropriateness_A": 4,
+        "mechanic_appropriateness_B": 3,
+        "choice_diversity_A": 4,
+        "choice_diversity_B": 3,
+        "knowledge_boundary_issues": [
+          "B3 的“被困的科研人员或测试对象”尚未被发现；金属栅栏后的抽搐声未被确认属于幸存者。",
+          "B1 指定“非法实验记录与病毒样本目录”，但此时 clues/knowledge 为空，无法确认档案室含有这些具体证据。"
+        ],
+        "evidence": "开篇明确“前方不远处，一道金属栅栏后传来微弱的抽搐声”，Victor 也说“医疗观察区可能有异常情况”“也许能找到失踪的幸存者线索”，直接支持 A1。Victor 还提到“目前设施内供电波动，医疗观察区与实验档案室的门禁系统正在重启”，支持 A2 与 B1/B2 的供电或档案方向。但 B3 的“护送幸存者”在 SETUP 无已确认对象；B1 的具体证据内容也无现存线索支撑。",
+        "limitations": [
+          "choice_set 无 player_input，fidelity 按 UNKNOWN 处理。",
+          "不将金属栅栏后的声音直接认定为幸存者。"
+        ]
+      }
+    ]
+  }
+}

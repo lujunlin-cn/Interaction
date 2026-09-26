@@ -1,0 +1,15 @@
+{
+  "before": {
+    "dataset.json": "fdddbe3854697b96b17583a6edb60d206ba52c346373e04aebf8e6baa01c27ef",
+    "replay_sessions.json": "c9bd771e3a4956f8fcadeeace7f9ea3a7745f97163e4bf8ad4e045449959dffd"
+  },
+  "after": {
+    "dataset.json": "fdddbe3854697b96b17583a6edb60d206ba52c346373e04aebf8e6baa01c27ef",
+    "replay_sessions.json": "c9bd771e3a4956f8fcadeeace7f9ea3a7745f97163e4bf8ad4e045449959dffd"
+  },
+  "frozen_sources_unchanged": true,
+  "media_adapter_instantiated": false,
+  "player_api_called": false,
+  "canonical_database_written": false,
+  "scope": "Frozen sources and in-memory state; no live DB mutation attempted."
+}

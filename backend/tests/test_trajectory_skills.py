@@ -160,3 +160,32 @@ async def test_trace_survives_new_tracer_instance(tmp_path,monkeypatch):
         found=await second.spans_for_skill(connection,'inventory')
         assert [s.id for s in found]==[span.id]
     await engine.dispose()
+
+@pytest.mark.asyncio
+async def test_old_canonical_choice_cannot_be_reselected_after_progress():
+    from app.runtime.engine import EngineError
+    engine=RuntimeEngine(None);state=engine._bootstrap('v','s',{});engine.sessions[state.id]=state
+    old=Branch(id='old',session_id=state.id,arc_id=state.current_arc().id,source=BranchSource.RECOMMENDATION,
+        status=BranchStatus.CANONICAL,commit_event='commit:old',base_versions=engine._branch_base_versions(state))
+    state.branches.append(old);state.player.branch_id='current'
+    before=state.model_dump(mode='json')
+    with pytest.raises(EngineError,match='已失效'):
+        await engine.select_branch(state.id,'old')
+    assert state.model_dump(mode='json')==before
+
+def test_scene_packet_projects_known_state_without_private_truth():
+    from app.domain.schemas import OutcomeSpec,StatePatchProposal,PatchOperation
+    engine=RuntimeEngine(None);state=engine._bootstrap('v','s',{})
+    state.world.location='hall';state.world.inventory=['door_card'];state.world.truth={'hidden_cause':False}
+    state.world.knowledge=['The terminal is fixed to the wall.']
+    b=Branch(id='b',session_id=state.id,arc_id=state.current_arc().id,source=BranchSource.FREE,
+        base_versions=engine._branch_base_versions(state),outcome=OutcomeSpec(title='Inspect',text='Read the terminal.'),
+        state_patch_proposal=StatePatchProposal(proposal_id='p',base_version=state.world.version,
+            operations=[PatchOperation(op='set',path='clues.timeline',value='DISCOVERED')]))
+    packet=engine._build_scene_packet(state,b)
+    assert packet.known_state['inventory']==['door_card']
+    assert packet.known_state['location']=='hall'
+    assert packet.authorized_changes[0]['path']=='clues.timeline'
+    visible=packet.model_dump(exclude={'forbidden_revelations'})
+    assert 'hidden_cause' not in json.dumps(visible)
+    assert state.world.inventory==['door_card']
