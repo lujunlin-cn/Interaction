@@ -483,7 +483,9 @@ class ProviderRouter:
                 rec.model = resp.model
                 self._mark_success(rec.selected)
                 from ..runtime.tracer import tracer
-                await tracer.emit("provider.text", "success", input_={"role": role},
+                await tracer.emit("provider.text", "success", input_={"role": role,
+                    "purpose": (output_contract or {}).get("purpose"),
+                    "context_chars": sum(len(m.get("content", "")) for m in messages), "attempt": _ + 1},
                     output={"request_id": resp.request_id, "usage": resp.usage},
                     provider=rec.selected or "", model=resp.model, profile=self.profile.value,
                     duration_ms=resp.latency_ms, branch_id=branch_id)
@@ -513,6 +515,10 @@ class ProviderRouter:
             resp = await asyncio.wait_for(
                 provider.evaluate(state, questions), timeout=settings.provider_timeout_seconds)
             self._mark_success(rec.selected)
+            from ..runtime.tracer import tracer
+            await tracer.emit("provider.decision", "success", input_={"state": state, "questions": questions},
+                output={"scores": resp.scores, "observation": resp.details}, provider=rec.selected or "",
+                model=resp.model, duration_ms=resp.latency_ms, branch_id=branch_id)
             return provider, rec, resp
         except Exception as exc:  # noqa: BLE001
             kind = self._classify(exc)

@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 from typing import Any, Optional
+import asyncio
+import logging
 
 from sqlalchemy import select
 
@@ -16,6 +18,56 @@ class Tracer:
     def __init__(self) -> None:
         self.recent: list[TraceSpan] = []
         self._ws_subscribers: list[Any] = []
+        self._pending: list[TraceSpan] = []
+        self._writer = None
+        self._flush_lock = None
+        self.persistence_failures = 0
+        self.dropped = 0
+
+    def start(self):
+        self._flush_lock = asyncio.Lock()
+        self._writer = asyncio.create_task(self._write_loop())
+
+    async def _write_loop(self):
+        while True:
+            await asyncio.sleep(0.25)
+            await self.flush()
+
+    async def flush(self):
+        from ..db import SessionLocal
+        if self._flush_lock is None:
+            self._flush_lock = asyncio.Lock()
+        async with self._flush_lock:
+            batch = self._pending[:250]
+            if not batch:
+                return
+            try:
+                async with SessionLocal() as db:
+                    async with db.begin():
+                        # Handles an uncertain previous transaction result safely.
+                        existing = set((await db.execute(select(TraceSpanRow.id).where(
+                            TraceSpanRow.id.in_([s.id for s in batch])))).scalars())
+                        for span in batch:
+                            if span.id not in existing:
+                                await self.persist(span, db)
+                del self._pending[:len(batch)]
+            except Exception as error:
+                self.persistence_failures += 1
+                logging.getLogger(__name__).warning('Trace persistence failed (%s); pending=%s',
+                                                    type(error).__name__, len(self._pending))
+
+    async def close(self):
+        if self._writer:
+            self._writer.cancel()
+            try:
+                await self._writer
+            except asyncio.CancelledError:
+                pass
+        while self._pending:
+            before = len(self._pending)
+            await self.flush()
+            if len(self._pending) >= before:
+                break
 
     def subscribe(self, ws) -> None:
         self._ws_subscribers.append(ws)
@@ -40,6 +92,10 @@ class Tracer:
         )
         self.recent.append(span)
         self.recent = self.recent[-2000:]
+        self._pending.append(span)
+        if len(self._pending) > 10000:
+            self._pending.pop(0)
+            self.dropped += 1
         # WS 广播（尽力而为）
         dead = []
         for ws in self._ws_subscribers:
@@ -73,10 +129,10 @@ class Tracer:
         """G24：某 Skill 最近调用记录（含被禁用时的阻塞记录）。"""
         rows = (await db.execute(
             select(TraceSpanRow)
-            .where(TraceSpanRow.name.like(f"{skill_id}%"))
-            .order_by(TraceSpanRow.at.desc()).limit(limit * 4))).scalars().all()
+            .order_by(TraceSpanRow.at.desc()).limit(5000))).scalars().all()
         spans = [TraceSpan(**r.data) for r in rows]
-        hits = [s for s in spans if s.skill_id == skill_id or s.name.startswith(skill_id)]
+        hits = [s for s in spans if s.skill_id == skill_id or s.name.startswith(skill_id)
+                or s.name == f"skill.{skill_id}"]
         return hits[:limit]
 
 

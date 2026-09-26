@@ -17,10 +17,10 @@ PLATFORM_SKILLS: list[dict[str, Any]] = [
         "used_by": ["Creator"],
     },
     {
-        "id": "intent-reconciliation", "version": "1.0.0", "kind": "platform",
-        "title": "Intent Reconciliation",
-        "description": "调和玩家输入、愿望与戏剧目标，产出 ResolvedIntent 与澄清请求。",
-        "produces": ["ResolvedIntent"],
+        "id": "intent-reconciliation", "version": "2.0.0", "kind": "platform",
+        "title": "理解自由行动 · Understand Free Action",
+        "description": "组合 Jev 观察与玩家确认，保留原文、目标、方式和否定约束；需要澄清时由 AI 预填理解。",
+        "produces": ["ActionSemanticPacket", "IntentPreview"],
         "writes_state": False,
         "used_by": ["Director"],
     },
@@ -76,6 +76,36 @@ MECHANIC_SKILLS: list[dict[str, Any]] = [
         "produces": ["TimedInteractionRequest"],
     },
 ]
+
+
+PLATFORM_SKILLS.extend([
+    {"id": "choice-evaluation", "version": "1.0.0", "kind": "platform",
+     "title": "评估行动选择 · Evaluate Choices", "description": "基于玩家已知情境生成具体行动与目的，经 Jev 排序，保留 OTHER 不确定性并移除精确重复。",
+     "produces": ["RankedChoices", "RankingEvidence"], "writes_state": False, "used_by": ["Director", "Jev"]},
+    {"id": "mechanic-arbitration", "version": "1.0.0", "kind": "platform",
+     "title": "协调玩法提案 · Reconcile Mechanics", "description": "结合持有物、角色和线索阶段检查提案；矛盾退回 Director 修正一次，不伪造结果。",
+     "produces": ["ArbitrationResult", "StatePatchProposal"], "writes_state": False, "used_by": ["Director", "StateManager"]},
+])
+
+CAPABILITY_CONTRACTS = {
+    "intent-reconciliation": {"when_to_use": "Player FREE action or ambiguous input confirmation", "input": "RawInput + Jev observation + player-confirmed edits + visible context",
+        "output": "ActionSemanticPacket v2 / editable IntentPreview", "failure_modes": ["ambiguous referent", "preview provider unavailable"],
+        "fallback": "Preserve original; optional confirmation fields; never invent execution", "dependencies": ["Jev", "Director only for preview"],
+        "evaluation": "raw/confirmed fidelity; blind trajectory pairwise; no factual side effects"},
+    "choice-evaluation": {"when_to_use": "New canonical decision epoch", "input": "Known state, current beat, recent canonical actions, preferences, candidate actions",
+        "output": "Concrete actions with plain-language purposes + Jev ranking + OTHER", "failure_modes": ["candidate provider unavailable", "Jev unavailable", "high OTHER"],
+        "fallback": "Existing generic grounded candidates; no recursive regeneration", "dependencies": ["Director", "Jev"],
+        "evaluation": "choice relevance/diversity, duplicate rate, knowledge boundary, Ready latency"},
+    "mechanic-arbitration": {"when_to_use": "Director outcome before Narrative/Production", "input": "Director proposals + projected canonical state + enabled mechanics",
+        "output": "Deduplicated proposals, per-trigger decisions and conflicts", "failure_modes": ["unowned removal", "use-as-acquisition", "unknown NPC", "clue regression", "conflicting target"],
+        "fallback": "One Director correction; otherwise recoverable planning failure before media", "dependencies": ["inventory", "clue-system", "relationship", "StateManager"],
+        "evaluation": "unsafe proposal acceptance, labeled trigger precision/recall, zero canonical mutation while planning"},
+}
+for definition in PLATFORM_SKILLS + MECHANIC_SKILLS:
+    definition["implementation_kind"] = "deterministic_tool" if definition["id"] == "video-assembly" else "agent_capability" if definition["id"] in CAPABILITY_CONTRACTS else "existing_capability"
+    if definition["id"] in CAPABILITY_CONTRACTS:
+        definition["contract"] = {**CAPABILITY_CONTRACTS[definition["id"]], "side_effects": "Trace and proposals only; no canonical commit",
+            "allowed_state_access": "Read-only projected state; StateManager retains commit authority", "metrics": ["invocations", "outcome", "latency_ms", "fallback", "proposal_disposition"]}
 
 
 def registry() -> dict[str, Any]:

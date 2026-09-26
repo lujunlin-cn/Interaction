@@ -38,6 +38,10 @@ class MockTextProvider:
 
     def _dispatch(self, purpose: str, messages, contract) -> str:
         user = next((m["content"] for m in reversed(messages) if m.get("role") == "user"), "")
+        if purpose == "intent_preview":
+            payload = json.loads(user)
+            return json.dumps({"action": payload["raw_player_input"], "desire": "确认眼前情况后再决定下一步",
+                               "strategy": "先按你描述的行动尝试，遇到阻碍再决定"}, ensure_ascii=False)
         if purpose == "candidate_actions":
             return self._candidates(user)
         if purpose == "director_plan":
@@ -89,14 +93,14 @@ class MockTextProvider:
              "kind": "investigation", "confidence": 0.68},
         ]
         if npc_name:
-            cands.append({"label": f"和{npc_name}谈谈", "summary": "让关系自然流动",
+            cands.append({"label": f"和{npc_name}谈谈", "summary": "了解对方发现了什么，再一起决定下一步",
                           "kind": "social", "confidence": 0.64})
         if ctx.get("clues"):
             cands.append({"label": "梳理目前掌握的线索", "summary": "已有线索也许指向同一个方向",
                           "kind": "investigation", "confidence": 0.6})
         if others:
             cands.append({"label": f"离开这里，去{others[-1]}",
-                          "summary": "主动改变自己所处的位置",
+                          "summary": "寻找离开眼前困境的路线",
                           "kind": "withdrawal", "confidence": 0.55})
         else:
             cands.append({"label": "主动退出眼前的故事", "summary": "不再参与眼前的矛盾",
@@ -169,7 +173,8 @@ class MockTextProvider:
             text += f"（原来{leak_seg}。）"
         return json.dumps({
             "title": packet_hint, "text": text, "caption": caption,
-            "dialogue": [{"speaker": speaker, "line": caption}],
+            "dialogue": [{"speaker": speaker, "line": caption}] if npcs else [],
+            "visual_focus": packet_hint,
         }, ensure_ascii=False)
 
     def _shots(self, user: str, policy: dict | None = None) -> str:

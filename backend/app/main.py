@@ -86,8 +86,13 @@ async def lifespan(app: FastAPI):
     async with db_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     await seed_if_empty()
+    from .runtime.tracer import tracer
+    tracer.start()
     logger.info("provider_mode=%s profile=%s", settings.provider_mode, settings.runtime_profile)
-    yield
+    try:
+        yield
+    finally:
+        await tracer.close()
 
 
 app = FastAPI(title="Interactive Drama Runtime", lifespan=lifespan)

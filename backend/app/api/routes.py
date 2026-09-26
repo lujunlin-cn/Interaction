@@ -1109,17 +1109,27 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
     async def list_skills():
         return skills_registry()
 
+    @api.get("/skills/observatory")
+    async def skill_observatory():
+        from ..runtime.skill_observatory import summarize
+        async with SessionLocal() as db:
+            spans = await tracer.list_spans(db, limit=5000)
+        result = summarize([s.model_dump(mode="json") for s in spans + tracer.recent])
+        result["persistence"] = {"pending": len(tracer._pending), "failures": tracer.persistence_failures, "dropped": tracer.dropped}
+        return result
+
     @api.get("/skills/{skill_id}/calls")
     async def skill_calls(skill_id: str, limit: int = 5):
         """G24：Skill 调用审计——最近 N 次调用 span（含禁用阻塞记录）。
 
-        DB 持久化的 span 优先；无记录时回落到进程内 recent（重启后丢失属预期）。
+        DB 持久化 + 尚未写入的进程记录按 ID 合并；重启后仍能查看。
         """
         async with SessionLocal() as db:
             spans = await tracer.spans_for_skill(db, skill_id, limit)
-        if not spans:
-            spans = [s for s in reversed(tracer.recent)
-                     if s.skill_id == skill_id or s.name.startswith(skill_id)][:limit]
+        recent = [s for s in tracer.recent if s.skill_id == skill_id or s.name.startswith(skill_id)
+                  or s.name == f"skill.{skill_id}"]
+        unique = {s.id: s for s in spans + recent}
+        spans = sorted(unique.values(), key=lambda s: s.at, reverse=True)[:max(1,min(limit,100))]
         return {"items": [s.model_dump(mode="json") for s in spans]}
 
     @api.post("/skills/{skill_id}/toggle")

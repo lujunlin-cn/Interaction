@@ -467,6 +467,7 @@ function SkillsTab({ skills, onChanged }: { skills: SkillsRegistry; onChanged: (
   };
   return (
     <>
+      <SkillObservatory />
       <div className="card">
         <h3>平台 Skills</h3>
         <p className="muted">
@@ -510,6 +511,40 @@ function SkillsTab({ skills, onChanged }: { skills: SkillsRegistry; onChanged: (
       </div>
     </>
   );
+}
+
+function SkillObservatory() {
+  const [data, setData] = useState<any>(null);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    const refresh = () => fetch("/api/skills/observatory").then(r => { if (!r.ok) throw new Error(); return r.json(); })
+      .then(x => { if (alive) { setData(x); setFailed(false); } }).catch(() => { if (alive) setFailed(true); });
+    void refresh(); const timer = setInterval(refresh, 5000);
+    return () => { alive = false; clearInterval(timer); };
+  }, []);
+  return <section className="card" data-testid="skill-observatory">
+    <h3>Skill Observatory · 能力调用与提案链</h3>
+    <p className="muted">最近观测窗口；调用成功不等于状态已提交。精确率、召回率没有标注时不显示虚构分数。</p>
+    {failed && <p role="status">暂时无法载入能力轨迹，请稍后重试。</p>}
+    {data && <>
+      <p>持久化待写入 {data.persistence.pending} · 写入失败 {data.persistence.failures} · 丢失 {data.persistence.dropped}</p>
+      <table className="dev"><thead><tr><th>能力</th><th>调用 / 成功 / 失败</th><th>有记录平均耗时</th><th>提案 / 已提交分支</th></tr></thead>
+        <tbody>{data.metrics.map((m: any) => <tr key={m.skill_id}>
+          <td>{m.skill_id}</td><td>{m.invocations} / {m.success} / {m.failure}</td>
+          <td>{m.average_latency_ms == null ? "未记录" : Math.round(m.average_latency_ms) + " ms (" + m.latency_samples + " 样本)"}</td>
+          <td>{m.proposal_count} / {m.proposals_in_committed_branches}</td>
+        </tr>)}</tbody></table>
+      {!data.chains.length && <p>尚无本次部署后的能力链；研究 Replay 记录见仓库报告，不冒充线上调用。</p>}
+      {data.chains.slice().reverse().map((chain: any) => <details key={chain.branch_id}>
+        <summary>Skill Chain · {chain.branch_id} · {chain.calls.length} 步</summary>
+        {chain.calls.map((c: any) => <details key={c.id}>
+          <summary>{c.skill_id || c.name} v{c.skill_version || "未记录"} · {c.status} · {c.duration_ms ? c.duration_ms + " ms" : "耗时未记录"}</summary>
+          <pre>{JSON.stringify({why: c.input?.why, input: c.input, output: c.output}, null, 2)}</pre>
+        </details>)}
+      </details>)}
+    </>}
+  </section>;
 }
 
 /** G24：某 Skill 最近调用记录（含禁用阻塞记录） */

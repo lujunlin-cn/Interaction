@@ -45,9 +45,14 @@ class TestVerticalSlice:
         assert view["player"]["status"] in ("PLAYING", "READY")
         assert view["player"]["video_url"].startswith("/media/scenes/")
 
-        # 重复选择已消费的分支应失败（已 INVALIDATED/CANONICAL）
+        # Transport retry of the current committed choice is idempotent:
+        # return its receipt, never replay the scene or apply its patch twice.
+        before_retry = client.get(f"/api/dev/sessions/{sid}/state").json()
         r = client.post(f"/api/sessions/{sid}/select", json={"branch_id": bid})
-        assert r.status_code == 409
+        assert r.status_code == 200 and r.json()["status"] == "CANONICAL"
+        after_retry = client.get(f"/api/dev/sessions/{sid}/state").json()
+        assert before_retry["world"] == after_retry["world"]
+        assert before_retry["turns"] == after_retry["turns"]
 
         # 播放完成 + receipt
         client.post(f"/api/sessions/{sid}/player", json={"command": "skip"})

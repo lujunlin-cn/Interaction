@@ -656,6 +656,9 @@ class Branch(BaseModel):
     ready_at: Optional[int] = None
     expires_at: int = 0
     director_result: dict[str, Any] = Field(default_factory=dict)  # accepted FREE skeleton, never silently re-planned
+    action_semantics: dict[str, Any] = Field(default_factory=dict)
+    skill_decisions: list[dict[str, Any]] = Field(default_factory=list)
+    causal_presentation: dict[str, Any] = Field(default_factory=dict)
     narrative: str = ""                          # NARRATIVE 阶段产出的 beat 文本
     caption: str = ""
     caption_speaker: str = ""
