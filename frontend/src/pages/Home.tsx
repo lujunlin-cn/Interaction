@@ -1,4 +1,4 @@
-/** 故事库：选择世界 / 创建 / 导入。 */
+/** 故事库：玩家态=发现+继续；创作者/开发者态=完整管理。 */
 import React, { useEffect, useRef, useState } from "react";
 import { api } from "../api";
 import { setState, toast, useUi } from "../store";
@@ -10,6 +10,7 @@ const MECHANIC_LABELS: Record<string, string> = {
 
 export default function Home() {
   const ui = useUi();
+  const isPlayer = ui.mode === "player";
   const [items, setItems] = useState<ScenarioDraft[]>([]);
   const [versions, setVersions] = useState<Record<string, string>>({});
   const [importing, setImporting] = useState(false);
@@ -59,20 +60,28 @@ export default function Home() {
   return (
     <>
       <div className="home-intro">
-        <h1>选择一个世界，或亲手创建</h1>
-        <p className="muted">预设故事只是起点，你仍然可以在游玩中做出计划外的行动。</p>
+        <h1>{isPlayer ? "选择一个世界，开始你的故事" : "选择一个世界，或亲手创建"}</h1>
+        <p className="muted">{isPlayer
+          ? "每个故事都会回应你的选择；没有标准答案。"
+          : "预设故事只是起点，你仍然可以在游玩中做出计划外的行动。"}</p>
         <div className="toolbar">
-          <button className="primary" onClick={async () => {
-            const draft = await api.createScenario();
-            setState({ editId: draft.id, page: "creator", creatorTab: "overview" });
-          }}>创建故事</button>
+          {!isPlayer && (
+            <button className="primary" onClick={async () => {
+              const draft = await api.createScenario();
+              setState({ editId: draft.id, page: "creator", creatorTab: "overview" });
+            }}>创建故事</button>
+          )}
           {ui.mode === "developer" && <button onClick={() => setImporting(true)}>导入故事</button>}
+          {isPlayer && (
+            <button className="primary" onClick={() => setState({ mode: "creator", page: "creator", creatorTab: "overview" })}>
+              亲手创作 →</button>
+          )}
           {ui.sessionId && (
             <button onClick={() => setState({ page: "player" })}>继续当前游玩</button>
           )}
         </div>
       </div>
-      <h2>故事库</h2>
+      <h2>{isPlayer ? "发现故事" : "故事库"}</h2>
       <div className="grid">
         {items.map((sc) => (
           <article key={sc.id} className="card story-library-card">
@@ -90,34 +99,38 @@ export default function Home() {
             <p className="muted">
               玩法：{Object.entries(sc.mechanics).filter(([, v]) => v.enabled)
                 .map(([k]) => MECHANIC_LABELS[k] ?? k).join(" · ") || "剧情互动"}
-              <br />版本：v{sc.version}
+              {!isPlayer && <><br />版本：v{sc.version}</>}
             </p>
             <div className="toolbar">
               <button className="primary" disabled={startingId !== null || (!versions[sc.id] && sc.status !== "PUBLISHED")}
-                onClick={() => startPlay(sc)}>开始游玩</button>
-              <button onClick={() => setState({ editId: sc.id, page: "creator", creatorTab: "overview" })}>
-                编辑
-              </button>
-              <button onClick={async () => {
-                try {
-                  await api.duplicateScenario(sc.id);
-                  toast("已创建副本。");
-                  reload();
-                } catch (e: any) {
-                  toast(`复制失败：${e.message}`);
-                }
-              }}>复制</button>
-              {sc.owner !== "official" && (
-                <button className="danger" onClick={async () => {
-                  if (!window.confirm(`确定删除「${sc.title}」？此操作不可撤销。`)) return;
-                  try {
-                    await api.deleteScenario(sc.id);
-                    toast("已删除。");
-                    reload();
-                  } catch (e: any) {
-                    toast(`删除失败：${e.message}`);
-                  }
-                }}>删除</button>
+                onClick={() => startPlay(sc)}>{startingId === sc.id ? "正在进入…" : "开始游玩"}</button>
+              {!isPlayer && (
+                <>
+                  <button onClick={() => setState({ editId: sc.id, page: "creator", creatorTab: "overview" })}>
+                    编辑
+                  </button>
+                  <button onClick={async () => {
+                    try {
+                      await api.duplicateScenario(sc.id);
+                      toast("已创建副本。");
+                      reload();
+                    } catch (e: any) {
+                      toast(`复制失败：${e.message}`);
+                    }
+                  }}>复制</button>
+                  {sc.owner !== "official" && (
+                    <button className="danger" onClick={async () => {
+                      if (!window.confirm(`确定删除「${sc.title}」？此操作不可撤销。`)) return;
+                      try {
+                        await api.deleteScenario(sc.id);
+                        toast("已删除。");
+                        reload();
+                      } catch (e: any) {
+                        toast(`删除失败：${e.message}`);
+                      }
+                    }}>删除</button>
+                  )}
+                </>
               )}
             </div>
           </article>

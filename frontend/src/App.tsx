@@ -61,7 +61,7 @@ export default function App() {
             <div className="topbar">
               <h1>{ui.page === "creator" ? creatorTitle(ui.creatorTab) :
                 ui.page === "developer" ? devTitle(ui.devTab) : TITLES[ui.page] ?? "互动短剧"}</h1>
-              <span className="muted">{ui.mode === "developer" ? "开发者模式" : "标准模式"}</span>
+              <span className="muted">{ui.mode === "developer" ? "开发者模式" : ui.mode === "creator" ? "创作模式" : "玩家模式"}</span>
             </div>
             <div className={`workspace-inner ${ui.page === "developer" ? "wide" : ui.page === "home" ? "library" : ""}`}>
               {content}

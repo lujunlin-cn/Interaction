@@ -139,8 +139,8 @@ export default function Creator() {
           {(["rules", "lore", "locations", "constraints"] as const).map((k) => (
             <label key={k}><span>{({ rules: "World Rules / 世界规则", lore: "Lore / 背景设定",
               locations: ui.mode === "developer" ? "Locations / 地点（每行：id｜名称）" : "故事发生的地点", constraints: "Constraints / 约束" } as const)[k]}</span>
-              <textarea value={ui.mode === "standard" && k === "locations" ? readable(draft.world[k]) : draft.world[k]}
-                onChange={(e) => patch({ world: { ...draft.world, [k]: ui.mode === "standard" && k === "locations" ? e.target.value.split("\n").map((v, i) => `${draft.world.locations.split("\n")[i]?.split("｜")[0] || `location_${i}`}｜${v}`).join("\n") : e.target.value } })} /></label>
+              <textarea value={ui.mode !== "developer" && k === "locations" ? readable(draft.world[k]) : draft.world[k]}
+                onChange={(e) => patch({ world: { ...draft.world, [k]: ui.mode !== "developer" && k === "locations" ? e.target.value.split("\n").map((v, i) => `${draft.world.locations.split("\n")[i]?.split("｜")[0] || `location_${i}`}｜${v}`).join("\n") : e.target.value } })} /></label>
           ))}
         </div>
       )}

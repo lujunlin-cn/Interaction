@@ -58,11 +58,13 @@ export default function Settings() {
       <div className="card">
         <h3>模式</h3>
         <p className="muted">
-          标准模式只显示自然语言状态；开发者模式会显示分支状态机、指纹、路由与 Trace 等技术细节。
+          玩家模式只保留故事与继续入口；创作模式开放故事编排；开发者模式额外显示分支状态机、指纹、路由与 Trace 等技术细节。
         </p>
         <div className="toolbar">
-          <button className={ui.mode === "standard" ? "active" : ""}
-            onClick={() => setState({ mode: "standard" })}>标准模式</button>
+          <button className={ui.mode === "player" ? "active" : ""}
+            onClick={() => setState({ mode: "player" })}>玩家模式</button>
+          <button className={ui.mode === "creator" ? "active" : ""}
+            onClick={() => setState({ mode: "creator" })}>创作模式</button>
           <button className={ui.mode === "developer" ? "active" : ""}
             onClick={() => setState({ mode: "developer" })}>开发者模式</button>
         </div>
@@ -87,7 +89,7 @@ export default function Settings() {
           <b>Sol-H3</b><span className="mono">{providers?.health?.sol_h3_local?.status ?? "未检查"}</span>
           <b>切换状态</b><span>{profile?.state ?? "ACTIVE"}{profile?.error ? `：${profile.error}` : ""}</span>
         </div>}
-        {ui.mode === "standard" && <p className="muted">{switching ? "正在准备，请稍候…" : profile?.error ? "切换暂时未完成，请重试。" : "运行环境已就绪"}</p>}
+        {ui.mode !== "developer" && <p className="muted">{switching ? "正在准备，请稍候…" : profile?.error ? "切换暂时未完成，请重试。" : "运行环境已就绪"}</p>}
       </div>
 
       <div className="card">
@@ -180,7 +182,7 @@ export default function Settings() {
         </div>
         <p className="muted">语言设置保存在此部署，供之后新制作的场景使用。视频语言也用于新叙事与推荐文案；字幕可独立选择。已生成或正在制作的场景保留原语言。字幕是场景摘要，并非逐字听写；本设置不会翻译旧视频或改变界面语言。</p>
         {languageError && <p role="alert">{languageError}{!language && <button onClick={loadLanguage}>重新载入语言设置</button>}</p>}
-        {ui.mode === "standard" && <p className="muted">当前云端媒体生成暂时不可用时，可以继续播放已有素材、上传素材或选择文字模式。</p>}
+        {ui.mode !== "developer" && <p className="muted">当前云端媒体生成暂时不可用时，可以继续播放已有素材、上传素材或选择文字模式。</p>}
         {ui.mode === "developer" && <>
           <h4>开发测试覆盖</h4>
           <p className="muted">仅用于测试/验收，不会修改已发布故事的正式配置。</p>

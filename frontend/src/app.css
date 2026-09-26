@@ -451,6 +451,69 @@ body[data-appearance="dark"] .notice { background: var(--player-surface); }
 .media-status.failed { background: linear-gradient(135deg, #342933, #17222d); }
 .media-status-symbol { font-size: 48px; margin-bottom: 12px; }
 .text-scene { height: 100%; overflow: auto; padding: 10%; color: #eee; background: #182431; }
+
+/* ============ 首幕前情提要（星战式 crawl） ============
+ * OPENING_PREPARING 阶段铺满 player-stage 的叙事覆盖层。
+ * 全部内容来自 scenario snapshot（零生成），慢速上滚 + 上下渐隐；
+ * 视频 READY 后由外层 showOpeningCrawl 条件卸载（淡出靠 transform 轨迹终点
+ * 自带的可视消隐——组件卸载即消失，无需在 DOM 里维持离场动画）。 */
+.opening-crawl {
+  position: absolute; inset: 0; z-index: 6;
+  overflow: hidden; display: flex; flex-direction: column;
+  justify-content: flex-end;
+  background: radial-gradient(ellipse at 50% 120%, #1a2434 0%, #060a12 68%, #020409 100%);
+  color: var(--opening-accent, #e2d5a7);
+  /* 视锥：让文字从下缘出现向中上"远去" */
+  perspective: 480px;
+}
+.opening-crawl-fade-top, .opening-crawl-fade-bottom {
+  position: absolute; left: 0; right: 0; height: 22%; z-index: 2; pointer-events: none;
+}
+.opening-crawl-fade-top    { top: 0;    background: linear-gradient(to bottom, #020409 0%, transparent 100%); }
+.opening-crawl-fade-bottom { bottom: 0; background: linear-gradient(to top,    #020409 0%, transparent 100%); }
+.opening-crawl-track {
+  margin: 0 auto; width: min(74%, 720px); text-align: center;
+  transform-origin: 50% 100%;
+  /* 60s 一轮：5 行内文 + 1 行状态，玩家等待上限内滚完一遍即可接管或继续 */
+  animation: openingCrawlScroll 60s linear forwards;
+  will-change: transform, opacity;
+}
+@keyframes openingCrawlScroll {
+  0%   { transform: translateY(78%) rotateX(38deg) scale(1);    opacity: 0; }
+  4%   { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { transform: translateY(-120%) rotateX(38deg) scale(0.86); opacity: 0; }
+}
+.opening-line {
+  margin: 0 0 1.6em; line-height: 1.55; letter-spacing: 0.04em;
+  text-shadow: 0 0 24px rgba(0, 0, 0, 0.7);
+}
+.opening-line.opening-location {
+  font-size: var(--font-lg); letter-spacing: 0.32em; font-weight: 600;
+  margin-bottom: 2.4em;
+}
+.opening-line.opening-premise { font-size: var(--font-md); }
+.opening-line.opening-identity { font-size: var(--font-md); font-weight: 600; }
+.opening-line.opening-hook {
+  font-size: var(--font-md); font-style: italic; opacity: 0.92;
+  margin-top: 2.2em;
+}
+.opening-line.opening-status {
+  font-size: var(--font-xs); opacity: 0.55; letter-spacing: 0.18em;
+  margin-top: 3em;
+}
+.opening-skip {
+  position: absolute; right: 18px; bottom: 14px; z-index: 7;
+  background: rgba(10, 16, 24, 0.72); color: var(--opening-accent, #e2d5a7);
+  border: 1px solid rgba(226, 213, 167, 0.28);
+  font-size: var(--font-xs); letter-spacing: 0.08em; padding: 6px 14px;
+}
+.opening-skip:hover { border-color: var(--opening-accent, #e2d5a7); }
+/* 玩家手动调小动态（vestibular 无障碍）：直接静态显示全部行 */
+@media (prefers-reduced-motion: reduce) {
+  .opening-crawl-track { animation: none; transform: none; padding: 12% 0; }
+  .opening-crawl { justify-content: center; overflow-y: auto; }
+}
 .player-hud { position: absolute; left: 14px; top: 14px; z-index: 4; max-width: min(360px, 90%); }
 .hud-toggle { background: rgba(20,30,40,.86); color: #fff; border-color: #617082; }
 .hud-drawer { width: min(320px, 75vw); max-height: 46dvh; overflow-y: auto; margin-top: 6px; padding: 18px; border-radius: 8px; color: var(--ink); background: var(--panel); border: 1px solid var(--line); box-shadow: 0 8px 28px #0007; }

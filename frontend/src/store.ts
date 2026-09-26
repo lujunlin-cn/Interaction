@@ -23,11 +23,15 @@ export interface DisplayPrefs {
   subtitlePos: "bottomInside" | "bottomOutside" | "bottom" | "top";
 }
 
+export type Mode = "player" | "creator" | "developer";
+
 export interface UiState {
   page: Page;
   creatorTab: CreatorTab;
   devTab: DevTab;
-  mode: "standard" | "developer";
+  /** 三态：player=普通玩家（默认）；creator=创作模式；developer=开发者。
+   * 兼容迁移：旧值 "standard" 读入时按上下文归并为 player。 */
+  mode: Mode;
   editId: string | null;            // 正在编辑的 Scenario
   sessionId: string | null;         // 当前游玩 Session
   scenarioVersionId: string | null;
@@ -73,12 +77,19 @@ function pageFromHash(): { page: Page; creatorTab: CreatorTab; devTab: DevTab } 
   };
 }
 
+function loadMode(): Mode {
+  const raw = localStorage.getItem("drama.mode");
+  if (raw === "developer" || raw === "creator") return raw;
+  // 旧值 "standard" / 空 / 其他 → 默认玩家态；创作者由显式切换进入。
+  return "player";
+}
+
 const _init = pageFromHash();
 const initial: UiState = {
   page: _init.page,
   creatorTab: _init.creatorTab,
   devTab: _init.devTab,
-  mode: (localStorage.getItem("drama.mode") as "developer") || "standard",
+  mode: loadMode(),
   editId: localStorage.getItem("drama.editId"),
   sessionId: localStorage.getItem("drama.sessionId"),
   scenarioVersionId: null,
@@ -119,7 +130,7 @@ export function setDisplay(patch: Partial<DisplayPrefs>) {
 }
 
 export function toast(msg: string) {
-  if (state.mode === "standard" && /pydantic|traceback|validationerror|exception|provider|request[_ ]?id|branch[_ ]?id|schema|https?:|\bJSON\b|\b502\b|\b500\b/i.test(msg)) msg = "这个操作暂时没有完成，请保留输入后重试。";
+  if (state.mode !== "developer" && /pydantic|traceback|validationerror|exception|provider|request[_ ]?id|branch[_ ]?id|schema|https?:|\bJSON\b|\b502\b|\b500\b/i.test(msg)) msg = "这个操作暂时没有完成，请保留输入后重试。";
   setState({ toast: msg });
   window.setTimeout(() => {
     if (getState().toast === msg) setState({ toast: null });
