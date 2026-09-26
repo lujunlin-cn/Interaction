@@ -18,6 +18,7 @@ import httpx
 
 from ..config import settings
 from .base import DecisionAnswer, TextResponse, VideoJobHandle, VideoJobResult
+from .reference_images import ReferenceImageError
 
 
 class FalGenerationError(RuntimeError):
@@ -395,6 +396,23 @@ class FalH3MaxProvider:
                 out["reference_video_urls"].append(url)
         return {k: list(dict.fromkeys(v)) for k, v in out.items() if v}
 
+    async def _verify_public_reference(self, url: str) -> None:
+        """Fail before a paid submit when our public asset URL is stale."""
+        try:
+            async with httpx.AsyncClient(timeout=12, follow_redirects=True, trust_env=False) as client:
+                response = await client.head(url)
+                if response.status_code in (405, 501):
+                    response = await client.get(url, headers={"Range": "bytes=0-0"})
+                response.raise_for_status()
+                content_type = response.headers.get("content-type", "")
+                if content_type and not content_type.lower().startswith("image/"):
+                    raise ReferenceImageError("public reference is not served as an image")
+        except (httpx.HTTPError, ReferenceImageError) as exc:
+            raise FalGenerationError(
+                "REFERENCE_UNAVAILABLE",
+                "configured PUBLIC_BASE_URL cannot serve a reference image",
+            ) from exc
+
     async def submit(self, request: dict) -> VideoJobHandle:
         _ensure_fal_paid_allowed("video_generation", request, self.name, self._explicit_key)
         prompt = request.get("prompt", "")
@@ -436,7 +454,7 @@ class FalH3MaxProvider:
             raise FalGenerationError("INVALID_REQUEST", "reference count exceeds declared H3 capability")
         # Relay URLs can expire or reject Fal's downloader. Archive exact bytes
         # before any paid submit, and retain their order for the identity map.
-        from .reference_images import ReferenceImageError, archive_image
+        from .reference_images import archive_image
         reference_transport = []
         for field in ("reference_image_urls", "image_url"):
             values = payload.get(field)
@@ -446,6 +464,7 @@ class FalH3MaxProvider:
             transported = []
             for index, url in enumerate(urls):
                 if url.startswith(settings.public_base_url.rstrip("/") + "/files/") or url.startswith(settings.public_base_url.rstrip("/") + "/media/"):
+                    await self._verify_public_reference(url)
                     transported.append(url)
                     continue
                 try:

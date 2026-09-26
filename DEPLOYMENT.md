@@ -1,12 +1,12 @@
 # 部署与运维手册 · 互动短剧
 
 部署目标：DGX Spark `/home/hajimi2025/interaction`，公网经 FRP 中转暴露
-`http://139.199.69.46:9000`（前端 + API 同端口，API 前缀 `/api`）。
+`http://47.108.220.174:9000`（前端 + API 同端口，API 前缀 `/api`）。
 
 ## 拓扑
 
 ```
-浏览器 ──► FRP(139.199.69.46:9000) ──► DGX uvicorn :9000 ──► PG :5433 (docker)
+浏览器 ──► FRP(47.108.220.174:9000) ──► DGX uvicorn :9000 ──► PG :5433 (docker)
                                             │
                                             ├─► StepFun api.stepfun.com   (step_37/step_5)
                                             ├─► Jev api.typesafe.ai        (decision)
@@ -29,14 +29,14 @@ exec .venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port 9000 > ~/int
 远程重启（SSH 后台化的唯一可靠姿势——远程 `&` 会被 SSH 会话回收）：
 
 ```bash
-ssh -f -p 22222 hajimi2025@139.199.69.46 \
+ssh -f -p 22222 hajimi2025@47.108.220.174 \
   'setsid /tmp/start_backend.sh < /dev/null > /dev/null 2>&1'
 ```
 
 验证：
 
 ```bash
-curl -s http://139.199.69.46:9000/api/health
+curl -s http://47.108.220.174:9000/api/health
 # {"ok":true,"provider_mode":"hybrid","profile":"AGENT_LOCAL_PROFILE"}
 ```
 
@@ -62,6 +62,7 @@ npm run build
 | 变量 | 用途 |
 | --- | --- |
 | `DATABASE_URL` | `postgresql+asyncpg://…@127.0.0.1:5433/…` |
+| `PUBLIC_BASE_URL` | Fal 可从公网访问的应用基址；IP、域名或 FRP 入口变化时必须同步更新 |
 | `PROVIDER_TIMEOUT_SECONDS` | 实际部署为120秒；真实Step作者请求可能超过旧30秒默认，仍保留有界超时/重试 |
 | `PROVIDER_MODE` | `mock` / `live` / `hybrid`（hybrid：真实 H3 Max，失败显式降级 Mock） |
 | `PROFILE_LIFECYCLE_ENABLED` | 真实 Profile 切换时执行 stop/release/start/health；单 GPU 生产环境开启 |
@@ -138,7 +139,7 @@ DATABASE_URL="sqlite+aiosqlite:///./itest.db" PROVIDER_MODE=mock \
 ```
 
 真实双向 Profile 证据见 `PROFILE_SWITCH_ACCEPTANCE.md`；真实 H3 Max 双 Shot 证据见
-`REAL_MULTISHOT_ACCEPTANCE.md`。线上当前服务：`http://139.199.69.46:9000`，不再作为
+`REAL_MULTISHOT_ACCEPTANCE.md`。线上当前服务：`http://47.108.220.174:9000`，不再作为
 本轮 Gap。
 
 Fal 双 Key 轮换与最近一次 0.5K / n=1 真实 smoke 见 `FAL_KEY_ROTATION_ACCEPTANCE.md`。

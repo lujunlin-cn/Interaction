@@ -41,6 +41,8 @@ def test_fal_submits_archived_reference_in_original_order(monkeypatch):
     def handler(req):
         import json
         calls.append(req)
+        if req.method == "HEAD":
+            return httpx.Response(200, headers={"content-type": "image/png"})
         assert req.method == "POST"
         data = json.loads(req.content)
         assert data["reference_image_urls"] == ["https://app.test" + archived["url"], "https://app.test/files/outfit.png"]
@@ -49,8 +51,29 @@ def test_fal_submits_archived_reference_in_original_order(monkeypatch):
     monkeypatch.setattr(real.httpx, "AsyncClient", lambda **kwargs: client_type(transport=httpx.MockTransport(handler), **kwargs))
     result = asyncio.run(real.FalH3MaxProvider(api_key="offline").submit({"duration": 5,
         "references": [{"path": source, "type": "image"}, {"path": "/files/outfit.png", "type": "image"}]}))
-    assert len(calls) == 1
+    assert len(calls) == 2
     assert result.metadata["reference_transport"][0]["sha256"] == archived["sha256"]
+
+
+def test_stale_public_base_url_blocks_before_paid_submit(monkeypatch):
+    monkeypatch.setattr(settings, "fal_paid_generation_enabled", True)
+    real.reset_fal_circuit()
+    calls = []
+    def handler(req):
+        calls.append((req.method, str(req.url)))
+        assert req.method == "HEAD"
+        return httpx.Response(502)
+    client_type = httpx.AsyncClient
+    monkeypatch.setattr(real.httpx, "AsyncClient",
+        lambda **kwargs: client_type(transport=httpx.MockTransport(handler), **kwargs))
+    with pytest.raises(real.FalGenerationError) as error:
+        asyncio.run(real.FalH3MaxProvider(api_key="offline").submit({
+            "duration": 5,
+            "references": [{"path": "/files/reference-images/local.png", "type": "image"}],
+        }))
+    assert error.value.kind == "REFERENCE_UNAVAILABLE"
+    assert calls == [("HEAD", "https://app.test/files/reference-images/local.png")]
+    assert real.fal_circuit_status()["http_attempts"] == 0
 
 
 def test_reference_failure_happens_before_paid_submit(monkeypatch):

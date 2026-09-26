@@ -2554,6 +2554,27 @@ class RuntimeEngine:
                     return {"position": player.position(), "status": player.status}
                 player.status = "OPENING_PREPARING" if not player.branch_id else "GENERATING_NEXT"
                 if failed:
+                    # A provider-declared failure is safe to retry with a new
+                    # paid job. Preserve the old handle in pipeline_events for
+                    # audit, but remove it from the active submission guard.
+                    # Unknown submit outcomes remain blocked.
+                    definite_media_failure = (
+                        failed.fail_stage == "GENERATING"
+                        and any(kind in (failed.last_error or "") for kind in (
+                            "REFERENCE_UNAVAILABLE", "PROVIDER_ERROR",
+                            "INVALID_RESPONSE", "AUTH_FAILED",
+                            "BILLING_LOCKED", "QUOTA_EXHAUSTED",
+                        ))
+                        and not any(event.get("event") == "video_submit_uncertain"
+                                    for event in failed.pipeline_events)
+                    )
+                    if definite_media_failure and failed.jobs:
+                        failed.pipeline_events.append({
+                            "event": "video_retry_supersedes_failed_job",
+                            "provider_job_ids": list(failed.jobs),
+                            "at": now_ms(),
+                        })
+                        failed.jobs = []
                     if failed.fail_stage == "PLANNING":
                         # Invalid model output must be replanned under the
                         # current contract, not replayed forever from cache.

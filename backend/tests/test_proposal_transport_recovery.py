@@ -25,6 +25,44 @@ def test_planning_retry_drops_invalid_cached_director_output(monkeypatch):
     asyncio.run(engine.player_command(state.id,'retry'))
     assert b.director_result is None and b.status==BranchStatus.RETRYING
 
+def test_definite_media_failure_retry_supersedes_failed_job(monkeypatch):
+    from app.runtime.engine import RuntimeEngine
+    from app.domain.schemas import Branch,BranchStatus,BranchSource
+    engine=RuntimeEngine(SimpleNamespace());state=engine._bootstrap('v','s',{})
+    b=Branch(id='failed-media',session_id=state.id,arc_id=state.current_arc().id,source=BranchSource.OPENING,
+        status=BranchStatus.FAILED,fail_stage='GENERATING',
+        last_error='REFERENCE_UNAVAILABLE: Fal result HTTP 422',jobs=['failed-paid-job'],
+        base_versions=engine._branch_base_versions(state))
+    state.branches.append(b);state.player.status='FAILED_RECOVERABLE';engine.sessions[state.id]=state
+    spawned=[]
+    async def noop(*a):pass
+    monkeypatch.setattr(engine,'_persist',noop);monkeypatch.setattr(engine,'_push',noop)
+    monkeypatch.setattr(engine,'_spawn_pipeline',lambda *a:spawned.append(a))
+    asyncio.run(engine.player_command(state.id,'retry'))
+    assert b.jobs == [] and b.status==BranchStatus.RETRYING
+    assert spawned == [(state.id,b.id)]
+    assert b.pipeline_events[-1]['event']=='video_retry_supersedes_failed_job'
+    assert b.pipeline_events[-1]['provider_job_ids']==['failed-paid-job']
+
+def test_uncertain_media_submit_retry_preserves_paid_job_guard(monkeypatch):
+    from app.runtime.engine import RuntimeEngine
+    from app.domain.schemas import Branch,BranchStatus,BranchSource
+    engine=RuntimeEngine(SimpleNamespace());state=engine._bootstrap('v','s',{})
+    b=Branch(id='uncertain-media',session_id=state.id,arc_id=state.current_arc().id,source=BranchSource.OPENING,
+        status=BranchStatus.FAILED,fail_stage='GENERATING',
+        last_error='TIMEOUT: provider outcome unknown',jobs=['possibly-paid-job'],
+        pipeline_events=[{'event':'video_submit_uncertain','provider_job_id':'possibly-paid-job'}],
+        base_versions=engine._branch_base_versions(state))
+    state.branches.append(b);state.player.status='FAILED_RECOVERABLE';engine.sessions[state.id]=state
+    spawned=[]
+    async def noop(*a):pass
+    monkeypatch.setattr(engine,'_persist',noop);monkeypatch.setattr(engine,'_push',noop)
+    monkeypatch.setattr(engine,'_spawn_pipeline',lambda *a:spawned.append(a))
+    asyncio.run(engine.player_command(state.id,'retry'))
+    assert b.jobs == ['possibly-paid-job'] and b.status==BranchStatus.RETRYING
+    assert spawned == [(state.id,b.id)]
+    assert all(event.get('event')!='video_retry_supersedes_failed_job' for event in b.pipeline_events)
+
 def test_rfc_object_assignment_and_redundant_clue_envelope_preserve_explicit_ops():
     world = WorldState(location='hall')
     proposal = StatePatchProposal(proposal_id='p', base_version=world.version, source='director',

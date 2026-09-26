@@ -16,7 +16,7 @@
 ## CORS（G28 收敛）
 
 - `CORSMiddleware` 收敛为 `settings.cors_origins`（逗号分隔），**不再 `*`**。
-- 默认白名单：同源 `139.199.69.46:9000` / `127.0.0.1:9000` + 本地 dev 端口
+- 默认白名单：同源 `47.108.220.174:9000` / `127.0.0.1:9000` + 本地 dev 端口
   （5173/4173）。生产同源部署下跨域头实际不触发，但收敛避免被任意站点跨域调 API。
 - 实测：evil origin 预检 → 无 `Access-Control-Allow-Origin`；allowed origin →
   200 + 正确 `ACAO`。

@@ -14,7 +14,10 @@ class Settings(BaseSettings):
     env: str = "dev"
     host: str = "0.0.0.0"
     port: int = 9000
-    public_base_url: str = "http://139.199.69.46:9000"   # 素材对外可访问基址（fal 拉取 references）
+    # Fal must be able to download /files and /media from this address.
+    # Production deployments must set PUBLIC_BASE_URL explicitly; localhost is
+    # a safe non-public default that fails preflight before a paid submit.
+    public_base_url: str = "http://127.0.0.1:9000"
 
     # --- 数据库 ---
     database_url: str = "postgresql+asyncpg://drama:drama@127.0.0.1:5433/interaction_drama"
@@ -104,7 +107,7 @@ class Settings(BaseSettings):
     # 生产同源部署下 CORS 头实际上用不到，但仍收敛避免被任意站点跨域调用 API。
     cors_origins: str = ("http://127.0.0.1:5173,http://localhost:5173,"
                         "http://127.0.0.1:4173,http://localhost:4173,"
-                        "http://139.199.69.46:9000,http://127.0.0.1:9000")
+                        "http://47.108.220.174:9000,http://127.0.0.1:9000")
 
     # --- 运行时节奏 ---
     branch_phase_delay_ms: int = 350      # 各管线阶段之间的最小间隔（让状态转换可观察）
