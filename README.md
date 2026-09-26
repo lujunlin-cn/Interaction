@@ -2,6 +2,12 @@
 
 完整本地报告与验收证据见 [报告总索引](REPORTS_INDEX.md)。
 
+面向项目提交的中文文档：
+
+- [项目说明文档](docs/PROJECT_DESCRIPTION.md)：产品目标、用户流程、Agent Skills 和创新点
+- [部署说明](docs/DEPLOYMENT_GUIDE.md)：从零部署、外部 API 接入和安全边界
+- [技术栈说明](docs/TECH_STACK.md)：前端、后端、NVIDIA/Nemotron、StepFun、Jev、图片中转和 fal.ai H3
+
 基于 PRD v0.6 Final Closure 的可运行实现：React+TypeScript 前端 + FastAPI + PostgreSQL 后端，
 部署目标为 DGX Spark（`/home/hajimi2025/interaction`）。
 
