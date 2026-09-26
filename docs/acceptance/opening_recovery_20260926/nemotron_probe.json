@@ -1,0 +1,9 @@
+{
+  "endpoint": "http://127.0.0.1:8001/v1",
+  "model": "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4",
+  "request_id": "chatcmpl-a947d0b32cbbd144",
+  "response": "服务正常",
+  "finish_reason": "stop",
+  "latency_ms": 107,
+  "usage": {"prompt_tokens": 25, "completion_tokens": 5, "total_tokens": 30}
+}

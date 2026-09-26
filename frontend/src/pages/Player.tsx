@@ -149,7 +149,9 @@ export default function Player() {
           onError={() => { setMedia("failed"); if (!replay) void command("pause"); }}
           onEnded={finished} />}
         {buffering && media === "playing" && <div className="buffering-badge" role="status">缓冲中…</div>}
-        {showOpeningCrawl && <OpeningCrawl info={view.opening!} onSkip={() => { /* 跳过即收起覆盖层，露出下面的 media-status */ setCrawlDismissed(true); }} />}
+        {showOpeningCrawl && <OpeningCrawl info={view.opening!}
+          onSkip={() => setCrawlDismissed(true)}
+          onBack={() => setState({page: "home", theaterMode: false})} />}
         {!showOpeningCrawl && (generating || failed || (source && !hasFrame.current && media !== "playing") || (!source && !p.scene_text)) && <div className={`media-status ${failed || media === "failed" ? "failed" : ""}`} role="status"
           data-media-state={failed || (source && media === "failed") ? "FAILED" : generating ? "GENERATING" : "LOADING"}>
           <div className="media-status-symbol">{failed || media === "failed" ? "↻" : "◌"}</div>
@@ -413,7 +415,7 @@ function WishDrawer({ sid, wishes, onClose }: {
  * OPENING_PREPARING 阶段无视频可播时铺满 Stage：慢速上滚的多行叙事文本，
  * 全部由 scenario snapshot 组装（零生成、零等待），视频 READY 后由外层
  * showOpeningCrawl 条件自动让位，CSS opacity transition 自然淡出接管。 */
-function OpeningCrawl({ info, onSkip }: { info: OpeningInfo; onSkip: () => void }) {
+function OpeningCrawl({ info, onSkip, onBack }: { info: OpeningInfo; onSkip: () => void; onBack: () => void }) {
   const lines: { key: string; text: string; kind: "location" | "premise" | "identity" | "hook" }[] = [];
   if (info.location_line) lines.push({ key: "loc", text: info.location_line, kind: "location" });
   info.premise_lines.forEach((t, i) => lines.push({ key: `p${i}`, text: t, kind: "premise" }));
@@ -431,7 +433,10 @@ function OpeningCrawl({ info, onSkip }: { info: OpeningInfo; onSkip: () => void 
         <p className="opening-line opening-status">正在准备第一幕画面…</p>
       </div>
       <div className="opening-crawl-fade-bottom" aria-hidden />
-      <button className="opening-skip" onClick={onSkip} aria-label="跳过前情提要">跳过前情 ›</button>
+      <div className="opening-actions">
+        <button onClick={onSkip} aria-label="跳过前情提要">跳过前情 ›</button>
+        <button onClick={onBack}>返回故事库</button>
+      </div>
     </div>
   );
 }

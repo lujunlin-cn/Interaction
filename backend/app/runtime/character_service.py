@@ -112,6 +112,25 @@ class CharacterAssetService:
                     status=asset.status.value, role=role,
                     data=asset.model_dump(mode="json"),
                     created_at=asset.created_at))
+        # Preserve generated candidates first, then archive exact image bytes.
+        # A temporary CDN must not be the only copy of an approved identity.
+        if (self.router.mode != "mock" and url.startswith(("https://", "http://"))
+                and asset.provenance.get("capability") in {"IMAGE_GENERATION", "IMAGE_EDIT"}):
+            from ..providers.reference_images import ReferenceImageError, archive_image
+            try:
+                archived = await archive_image(url)
+                asset.url = archived["url"]
+                asset.provenance["archive"] = archived
+            except (ReferenceImageError, OSError) as exc:
+                # Keep the paid result available for recovery without generating
+                # another candidate. Video preflight will reject missing refs.
+                asset.provenance["archive_error"] = type(exc).__name__
+                await tracer.emit("character.asset_archive", "failed",
+                    input_={"asset_id": asset.id}, output={"error_class": type(exc).__name__})
+            async with SessionLocal() as db:
+                async with db.begin():
+                    row = await db.get(CharacterAssetRow, asset.id)
+                    row.data = asset.model_dump(mode="json")
         return asset
 
     async def list_assets(self, character_id: str,

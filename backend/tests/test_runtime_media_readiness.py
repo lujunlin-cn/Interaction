@@ -199,6 +199,57 @@ def test_mock_provider_respects_count_contract_without_paid_network(monkeypatch)
     assert len(shots) == 1 and shots[0]["duration"] == 8
 
 
+def test_resume_submitted_media_reuses_handle_without_another_submit(monkeypatch):
+    from app.domain.schemas import ShotPlan, RuntimeProfile
+    from app.providers.base import VideoJobHandle, VideoJobResult
+    engine, state, branch, route = fixture_engine(monkeypatch)
+    handle = VideoJobHandle(provider="h3_max", provider_job_id="already-paid", status_url="https://queue.test/status")
+    branch.shots = [ShotPlan(id="shot-1", index=1, duration=5, prompt="Original shot")]
+    branch.jobs = [handle.provider_job_id]
+    branch.pipeline_events = [{"event": "video_submit", "shot_id": "shot-1", "provider": "h3_max",
+        "provider_job_id": handle.provider_job_id, "submitted_at": 100, "handle": handle.model_dump()}]
+    polled = []
+    class Provider:
+        name = "h3_max"
+        async def submit(self, request):
+            raise AssertionError("recovery must not purchase another video")
+        async def status(self, recovered):
+            polled.append(recovered)
+            return VideoJobResult(status="READY", raw={"clips": []})
+    async def noop(*args): pass
+    monkeypatch.setattr(engine, "_persist", noop)
+    engine.router = SimpleNamespace(profile=RuntimeProfile.AGENT_LOCAL,
+        video_provider=lambda *args, **kwargs: (Provider(), route))
+    asyncio.run(engine._generate_branch_media(state.id, branch.id, resume=True))
+    assert polled == [handle]
+    assert branch.jobs == ["already-paid"]
+
+
+def test_resume_pipeline_keeps_original_narrative_and_shot_plan(monkeypatch):
+    from app.domain.schemas import BranchStatus
+    from app.config import settings
+    engine, state, branch, route = fixture_engine(monkeypatch)
+    branch.status = BranchStatus.RETRYING
+    branch.jobs = ["already-paid"]
+    original = branch.narrative
+    calls = []
+    async def forbidden(*args):
+        raise AssertionError("do not replan or rewrite a shot already submitted")
+    async def media(session_id, branch_id, *, resume=False):
+        calls.append(resume)
+    async def noop(*args): pass
+    monkeypatch.setattr(settings, "branch_phase_delay_ms", 0)
+    for name in ("_plan_branch", "_narrate_branch", "_shoot_branch"):
+        monkeypatch.setattr(engine, name, forbidden)
+    for name in ("_persist", "_push", "_assemble_branch", "_maybe_publish"):
+        monkeypatch.setattr(engine, name, noop)
+    monkeypatch.setattr(engine, "_generate_branch_media", media)
+    asyncio.run(engine._pipeline_inner(state.id, branch.id, False))
+    assert calls == [True]
+    assert branch.narrative == original
+    assert branch.status == BranchStatus.READY
+
+
 def test_unbound_text_creature_keeps_cast_description_with_other_identity_refs(monkeypatch):
     from app.providers.base import TextResponse
     engine, state, branch, route = fixture_engine(monkeypatch)

@@ -153,7 +153,7 @@ def _usage_error_label(error: str) -> str:
     # a stable classification enters this journal.
     allowed = {"BILLING_LOCKED", "QUOTA_EXHAUSTED", "AUTH_FAILED", "RATE_LIMITED",
                "TRANSIENT_PROVIDER_ERROR", "INVALID_REQUEST", "INVALID_RESPONSE",
-               "TIMEOUT", "NETWORK_ERROR", "PROVIDER_ERROR", "CANCELLED"}
+               "TIMEOUT", "NETWORK_ERROR", "PROVIDER_ERROR", "CANCELLED", "REFERENCE_UNAVAILABLE"}
     return error if error in allowed else ("PROVIDER_ERROR" if error else "")
 
 
@@ -434,6 +434,29 @@ class FalH3MaxProvider:
         counts = {kind: len(payload.get(field, [])) for kind, field in reference_fields.items()}
         if any(counts[kind] > self.REFERENCE_LIMITS[kind] for kind in counts) or sum(counts.values()) > self.REFERENCE_LIMITS["mixed"]:
             raise FalGenerationError("INVALID_REQUEST", "reference count exceeds declared H3 capability")
+        # Relay URLs can expire or reject Fal's downloader. Archive exact bytes
+        # before any paid submit, and retain their order for the identity map.
+        from .reference_images import ReferenceImageError, archive_image
+        reference_transport = []
+        for field in ("reference_image_urls", "image_url"):
+            values = payload.get(field)
+            if not values:
+                continue
+            urls = [values] if isinstance(values, str) else values
+            transported = []
+            for index, url in enumerate(urls):
+                if url.startswith(settings.public_base_url.rstrip("/") + "/files/") or url.startswith(settings.public_base_url.rstrip("/") + "/media/"):
+                    transported.append(url)
+                    continue
+                try:
+                    archived = await archive_image(url)
+                except ReferenceImageError as exc:
+                    _record_usage(self.name, self.model, "video_generation", payload, "BLOCKED", "REFERENCE_UNAVAILABLE")
+                    raise FalGenerationError("REFERENCE_UNAVAILABLE", f"reference image {index} unavailable: {exc}") from None
+                public_url = settings.public_base_url.rstrip("/") + archived["url"]
+                transported.append(public_url)
+                reference_transport.append({**archived, "field": field, "index": index, "public_url": public_url})
+            payload[field] = transported[0] if isinstance(values, str) else transported
         keys = [self._explicit_key] if self._explicit_key else _configured_fal_keys()
         attempts = max(1, len(keys))
         last_error: Exception | None = None
@@ -463,7 +486,7 @@ class FalH3MaxProvider:
                     status_url=data.get("status_url"), response_url=data.get("response_url"),
                     cancel_url=data.get("cancel_url"),
                     metadata={"fal_key_index": key_index, "fal_key_fingerprint": _key_fingerprint(key),
-                              "usage_id": usage_id})
+                              "usage_id": usage_id, "reference_transport": reference_transport})
             except FalGenerationError as exc:
                 _update_usage(usage_id, "SUBMISSION_UNCERTAIN" if exc.submit_uncertain else "FAILED", error=exc.kind)
                 last_error = exc
@@ -494,7 +517,37 @@ class FalH3MaxProvider:
             "fal handle missing status_url (job submitted before handle-url "
             "support); resubmit the job to obtain queue URLs")
 
+    def recover_handle(self, job_id: str) -> VideoJobHandle:
+        """Read-only migration for jobs predating durable queue handles.
+
+        Fal queue URLs use owner/app, without the endpoint's subpath. This
+        reconstructs only the documented status/result URLs; never submits.
+        New jobs persist the actual URLs from Fal's submit response instead.
+        """
+        if not job_id or any(c not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_" for c in job_id):
+            raise ValueError("invalid Fal job identifier")
+        root = "https://queue.fal.run/" + "/".join(self.model.split("/")[:2]) + "/requests/" + job_id
+        usage = next((entry for entry in usage_ledger(5000)
+                      if entry.get("request_id") == job_id and entry.get("provider") == self.name), {})
+        return VideoJobHandle(provider=self.name, provider_job_id=job_id,
+            status_url=root + "/status", response_url=root,
+            metadata={"usage_id": usage.get("id"), "legacy_handle_recovered": True})
+
     async def status(self, handle: VideoJobHandle) -> VideoJobResult:
+        # Polling and downloading are idempotent reads. A temporary transport
+        # failure must not abandon a still-running paid job or buy a new one.
+        try:
+            return await self._read_status(handle)
+        except httpx.RequestError:
+            return VideoJobResult(status="GENERATING", raw={"poll_error": "NETWORK_ERROR",
+                "request_id": handle.provider_job_id})
+        except httpx.HTTPStatusError as exc:
+            if exc.response.status_code in (408, 429, 500, 502, 503, 504):
+                return VideoJobResult(status="GENERATING", raw={"poll_error": "TRANSIENT_PROVIDER_ERROR",
+                    "http_status": exc.response.status_code, "request_id": handle.provider_job_id})
+            raise
+
+    async def _read_status(self, handle: VideoJobHandle) -> VideoJobResult:
         usage_id = handle.metadata.get("usage_id")
         key_index = handle.metadata.get("fal_key_index")
         keys = _configured_fal_keys()
@@ -519,11 +572,22 @@ class FalH3MaxProvider:
                 raise RuntimeError("fal handle missing response_url")
             result = await client.get(result_url, headers=headers)
             if result.status_code == 422:
-                # fal queue versions differ: some expose the response at
-                # /response while newer ones return the request URL. Retry
-                # the documented response suffix before failing the job.
-                fallback_url = result_url.rstrip("/") + "/response"
-                result = await client.get(fallback_url, headers=headers)
+                # COMPLETED means the queue finished, not that generation
+                # succeeded. Keep the original failure; do not guess URLs.
+                try:
+                    body = result.json()
+                    details = body.get("detail", []) if isinstance(body, dict) else []
+                except ValueError:
+                    details = []
+                downloads = [item for item in details if isinstance(item, dict)
+                             and item.get("type") == "file_download_error"] if isinstance(details, list) else []
+                indices = [item["loc"][-1] for item in downloads if isinstance(item.get("loc"), list)
+                           and item["loc"] and isinstance(item["loc"][-1], int)]
+                kind = "REFERENCE_UNAVAILABLE" if downloads else "INVALID_REQUEST"
+                _update_usage(usage_id, "FAILED", request_id=handle.provider_job_id, error=kind, http_status=422)
+                return VideoJobResult(status="FAILED", error=f"{kind}: Fal rejected the completed job (422)",
+                    raw={"http_status": 422, "request_id": handle.provider_job_id,
+                         "reference_indices": indices, "error_kind": kind})
             result.raise_for_status()
             data = result.json()
         video_url = (data.get("video") or {}).get("url") or data.get("video_url")

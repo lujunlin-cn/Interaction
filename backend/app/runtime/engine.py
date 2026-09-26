@@ -966,75 +966,83 @@ class RuntimeEngine:
                 return
             if branch.status not in (BranchStatus.PREDICTED, BranchStatus.RETRYING):
                 return
-            await self._set_phase(state, branch, BranchStatus.PLANNING)
+            resume_media = branch.status == BranchStatus.RETRYING and bool(branch.jobs)
+            if resume_media:
+                await self._set_phase(state, branch, BranchStatus.GENERATING)
+            else:
+                await self._set_phase(state, branch, BranchStatus.PLANNING)
 
-        await self._phase_sleep()
-        async with self._lock(session_id):
-            state = await self.load_session(session_id)
-            branch = state.branch(branch_id)
-            if branch.status != BranchStatus.PLANNING:
-                return
-            await self._plan_branch(state, branch)
-            await self._set_phase(state, branch, BranchStatus.NARRATIVE)
+        if not resume_media:
+            await self._phase_sleep()
+            async with self._lock(session_id):
+                state = await self.load_session(session_id)
+                branch = state.branch(branch_id)
+                if branch.status != BranchStatus.PLANNING:
+                    return
+                await self._plan_branch(state, branch)
+                await self._set_phase(state, branch, BranchStatus.NARRATIVE)
 
-        await self._phase_sleep()
-        async with self._lock(session_id):
-            state = await self.load_session(session_id)
-            branch = state.branch(branch_id)
-            if branch.status != BranchStatus.NARRATIVE:
-                return
-            await self._narrate_branch(state, branch)
-            if state.text_mode and branch.source in (BranchSource.OPENING, BranchSource.FREE):
-                await self._text_artifact(state, branch)
-                await self._commit_selected(state, branch)
-                return
-            await self._set_phase(state, branch, BranchStatus.PRODUCTION)
+            await self._phase_sleep()
+            async with self._lock(session_id):
+                state = await self.load_session(session_id)
+                branch = state.branch(branch_id)
+                if branch.status != BranchStatus.NARRATIVE:
+                    return
+                await self._narrate_branch(state, branch)
+                if state.text_mode and branch.source in (BranchSource.OPENING, BranchSource.FREE):
+                    await self._text_artifact(state, branch)
+                    await self._commit_selected(state, branch)
+                    return
+                await self._set_phase(state, branch, BranchStatus.PRODUCTION)
 
-        await self._phase_sleep()
-        async with self._lock(session_id):
-            state = await self.load_session(session_id)
-            branch = state.branch(branch_id)
-            if branch.status != BranchStatus.PRODUCTION:
-                return
-            await self._shoot_branch(state, branch)
-            if (not settings.pre_generate_recommendation_media
-                    and branch.source in (BranchSource.RECOMMENDATION, BranchSource.TIMED)):
-                duration = sum(s.duration for s in branch.shots) or settings.effective_shot_duration
-                branch.artifact = SceneArtifact(
-                    id=uid("deferred_scene"), branch_id=branch.id,
-                    quality_status="DEFERRED", duration=duration,
-                    provenance={"deferred_media": True,
-                                "reason": "recommendation_media_on_demand",
-                                "provider": settings.fal_h3_model})
-                branch.pipeline_events.append({"at": now_ms(), "status": "READY",
-                                               "media": "DEFERRED"})
-                branch.status = BranchStatus.READY
-                branch.ready_at = now_ms()
-                self._event(state, "recommendation_ready_without_media",
-                            f"推荐已就绪，等待选择后生成视频：{branch.label}",
-                            branch_id=branch.id)
-                await self._persist(state)
-                await self._maybe_publish(state)
-                await self._push(state)
-                return
-            await self._set_phase(state, branch, BranchStatus.GENERATING)
+            await self._phase_sleep()
+            async with self._lock(session_id):
+                state = await self.load_session(session_id)
+                branch = state.branch(branch_id)
+                if branch.status != BranchStatus.PRODUCTION:
+                    return
+                await self._shoot_branch(state, branch)
+                if (not settings.pre_generate_recommendation_media
+                        and branch.source in (BranchSource.RECOMMENDATION, BranchSource.TIMED)):
+                    duration = sum(s.duration for s in branch.shots) or settings.effective_shot_duration
+                    branch.artifact = SceneArtifact(
+                        id=uid("deferred_scene"), branch_id=branch.id,
+                        quality_status="DEFERRED", duration=duration,
+                        provenance={"deferred_media": True,
+                                    "reason": "recommendation_media_on_demand",
+                                    "provider": settings.fal_h3_model})
+                    branch.pipeline_events.append({"at": now_ms(), "status": "READY",
+                                                   "media": "DEFERRED"})
+                    branch.status = BranchStatus.READY
+                    branch.ready_at = now_ms()
+                    self._event(state, "recommendation_ready_without_media",
+                                f"推荐已就绪，等待选择后生成视频：{branch.label}",
+                                branch_id=branch.id)
+                    await self._persist(state)
+                    await self._maybe_publish(state)
+                    await self._push(state)
+                    return
+                await self._set_phase(state, branch, BranchStatus.GENERATING)
 
         # 问题6：FREE/OPENING 分支进入媒体生成期后，并行跑间奏叙事，
         # 把执行描写补进 outcome.effects，供前端在等待期逐句淡入。
         interstitial: Optional[asyncio.Task] = None
-        if branch.source in (BranchSource.FREE, BranchSource.OPENING):
+        if not resume_media and branch.source in (BranchSource.FREE, BranchSource.OPENING):
             interstitial = asyncio.get_running_loop().create_task(
                 self._interstitial_effects(session_id, branch_id))
 
         gen_error: Optional[str] = None
         retryable = True
         try:
-            await self._generate_branch_media(session_id, branch_id)
+            if resume_media:
+                await self._generate_branch_media(session_id, branch_id, resume=True)
+            else:
+                await self._generate_branch_media(session_id, branch_id)
         except Exception as e:  # noqa: BLE001
             gen_error = f"{type(e).__name__}: {e}"
             retryable = not branch.jobs and not getattr(e, "submit_uncertain", False) and getattr(e, "kind", "") not in {
                 "BILLING_LOCKED", "QUOTA_EXHAUSTED", "AUTH_FAILED",
-                "PAID_GENERATION_DISABLED", "INVALID_REQUEST", "CIRCUIT_OPEN",
+                "PAID_GENERATION_DISABLED", "INVALID_REQUEST", "CIRCUIT_OPEN", "REFERENCE_UNAVAILABLE",
             }
         finally:
             # Optional text must never delay a completed video or survive a
@@ -1813,7 +1821,7 @@ class RuntimeEngine:
             "text_only_cast": [shot.params["text_only_cast"] for shot in shots]},
             provider=rec.selected or "", session_id=state.id, branch_id=branch.id, skill_id="h3-production")
 
-    async def _generate_branch_media(self, session_id: str, branch_id: str) -> None:
+    async def _generate_branch_media(self, session_id: str, branch_id: str, *, resume: bool = False) -> None:
         if not skill_enabled("h3-production"):
             await tracer.emit("h3-production.blocked", "blocked",
                               output={"reason": "skill disabled"},
@@ -1834,7 +1842,7 @@ class RuntimeEngine:
             if len(shots) != policy["count"] or any(not math.isfinite(s["duration"]) or
                     not policy["minimum"] <= s["duration"] <= policy["maximum"] for s in shots):
                 raise ProviderError("INVALID_REQUEST", "Shot plan exceeds the approved generation limits")
-            if branch.jobs:
+            if branch.jobs and not resume:
                 raise ProviderError("INVALID_REQUEST", "This branch already has submitted media jobs; inspect existing jobs before retrying")
             if any(event.get("event") == "video_submit_uncertain" for event in branch.pipeline_events):
                 raise ProviderError("INVALID_REQUEST", "A previous submit may have created a paid job; reconcile its usage record before retrying")
@@ -1880,17 +1888,40 @@ class RuntimeEngine:
                     session_id=session_id, branch_id=branch_id)
                 raise
             await tracer.emit("video.submit", "success", input_={"shot_id": shot["id"], "prompt": prompt, "references": shot_refs, "media_language": shot.get("params", {}).get("media_language")},
-                output={"provider_job_id": handle.provider_job_id, "submitted_at": submitted_at}, provider=rec.selected or "",
+                output={"provider_job_id": handle.provider_job_id, "submitted_at": submitted_at,
+                        "reference_transport": handle.metadata.get("reference_transport", [])}, provider=rec.selected or "",
                 session_id=session_id, branch_id=branch_id)
             async with self._lock(session_id):
                 current = await self.load_session(session_id)
                 current_branch = current.branch(branch_id)
                 current_branch.jobs.append(handle.provider_job_id)
                 current_branch.pipeline_events.append({"event": "video_submit", "shot_id": shot["id"],
-                    "provider": rec.selected, "provider_job_id": handle.provider_job_id, "submitted_at": submitted_at})
+                    "provider": rec.selected, "provider_job_id": handle.provider_job_id, "submitted_at": submitted_at,
+                    "handle": handle.model_dump(mode="json"),
+                    "reference_transport": handle.metadata.get("reference_transport", [])})
                 await self._persist(current)
             return shot, handle, submitted_at, prompt
-        submitted = await asyncio.gather(*(submit_one(shot) for shot in shots))
+        if resume:
+            from ..providers.base import VideoJobHandle
+            submitted = []
+            for shot in shots:
+                event = next((event for event in reversed(branch.pipeline_events)
+                              if event.get("event") == "video_submit" and event.get("shot_id") == shot["id"]
+                              and event.get("provider_job_id") in branch.jobs), None)
+                if not event or event.get("provider") != provider.name:
+                    raise ProviderError("INVALID_REQUEST", "Existing media job cannot be safely recovered; no new job submitted")
+                if event.get("handle"):
+                    handle = VideoJobHandle(**event["handle"])
+                elif getattr(provider, "recover_handle", None):
+                    handle = provider.recover_handle(event["provider_job_id"])
+                    handle.metadata["reference_transport"] = event.get("reference_transport", [])
+                else:
+                    raise ProviderError("INVALID_REQUEST", "Existing provider job has no recovery handle; no new job submitted")
+                submitted.append((shot, handle, event["submitted_at"], shot.get("prompt") or shot.get("title", "")))
+            await tracer.emit("video.resume", "success", output={"jobs": [item[1].provider_job_id for item in submitted],
+                "new_submits": 0}, provider=provider.name, session_id=session_id, branch_id=branch_id)
+        else:
+            submitted = await asyncio.gather(*(submit_one(shot) for shot in shots))
         clips: list[str] = []
         shot_provenance: list[dict] = []
         handles = []
@@ -1910,6 +1941,7 @@ class RuntimeEngine:
                                             "prompt": prompt,
                                             "media_language": shot.get("params", {}).get("media_language"),
                                             "references": shot.get("references", []),
+                                            "reference_transport": handle.metadata.get("reference_transport", []),
                                             "cast": shot.get("params", {}).get("cast", []),
                                             "text_only_cast": shot.get("params", {}).get("text_only_cast", []),
                                             "resolution": generation_resolution,

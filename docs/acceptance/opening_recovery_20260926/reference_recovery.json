@@ -1,0 +1,183 @@
+{
+  "session_id": "sess_00049_9cfbcf",
+  "scenario_version_id": "ver_00001_1fa925",
+  "new_generation_requests": 0,
+  "assets": [
+    {
+      "asset_id": "ca_00011_d574bc",
+      "role": "side",
+      "method": "download original existing asset; no generation",
+      "historical_sha256": null,
+      "source_url_sha256": "74038af34a0466316cf3fbf3c417719863959158f16423020db277d085914913",
+      "url": "/files/reference-images/74038af34a0466316cf3fbf3c417719863959158f16423020db277d085914913.png",
+      "sha256": "f9b4e4c5c7def919799cadcaccec9084889c5c246474e127c337f7a61d6ca089",
+      "bytes": 19781608,
+      "status": "PASS"
+    },
+    {
+      "asset_id": "ca_00016_628682",
+      "role": "front",
+      "method": "restore original PNG verified against historical SHA-256",
+      "historical_sha256": "8e565ee593d4585d42162b970875065542f68886c520fa54e51ec1ee1ace2930",
+      "source_url_sha256": "c4fb92a63f9eea69d7345f80ffc68493ee9affd4fcc1c004ebdaa40982bcf791",
+      "url": "/files/reference-images/c4fb92a63f9eea69d7345f80ffc68493ee9affd4fcc1c004ebdaa40982bcf791.png",
+      "sha256": "8e565ee593d4585d42162b970875065542f68886c520fa54e51ec1ee1ace2930",
+      "bytes": 19122000,
+      "status": "PASS"
+    },
+    {
+      "asset_id": "ca_00006_9ac0e8",
+      "role": "wardrobe",
+      "method": "restore original PNG verified against historical SHA-256",
+      "historical_sha256": "82dfc1f03c827a6bc8710c887f32881afd7633cffc068079f29f0aedae300ddc",
+      "source_url_sha256": "a79070ba461567acf285caf3720d868cdc5b4202d2c3626d91770447eb56be9c",
+      "url": "/files/reference-images/a79070ba461567acf285caf3720d868cdc5b4202d2c3626d91770447eb56be9c.png",
+      "sha256": "82dfc1f03c827a6bc8710c887f32881afd7633cffc068079f29f0aedae300ddc",
+      "bytes": 20444689,
+      "status": "PASS"
+    },
+    {
+      "asset_id": "ca_00014_3af539",
+      "role": "full_side",
+      "method": "download original existing asset; no generation",
+      "historical_sha256": null,
+      "source_url_sha256": "50d15878b060f405667114c0a4785895c7160a95f9e317b34c6a6d4645677023",
+      "url": "/files/reference-images/50d15878b060f405667114c0a4785895c7160a95f9e317b34c6a6d4645677023.png",
+      "sha256": "e18a026322266c02fff2c4c35a2263583f45a1de4b8d571a8e53763e9b367bf5",
+      "bytes": 11249347,
+      "status": "PASS"
+    },
+    {
+      "asset_id": "ca_00013_c32afd",
+      "role": "full_front",
+      "method": "download original existing asset; no generation",
+      "historical_sha256": null,
+      "source_url_sha256": "964476313f85fa71158e2152cc512ed29640a5dd6b3f97f60f200ca4fa10869b",
+      "url": "/files/reference-images/964476313f85fa71158e2152cc512ed29640a5dd6b3f97f60f200ca4fa10869b.png",
+      "sha256": "6550d8fe534422c0525fb60246922f2f025345ad2b7e2e15cb238010fb097cf1",
+      "bytes": 13482437,
+      "status": "PASS"
+    },
+    {
+      "asset_id": "ca_00010_d93507",
+      "role": "three_quarter",
+      "method": "download original existing asset; no generation",
+      "historical_sha256": null,
+      "source_url_sha256": "9dca3850aa838b6f9c3e6416289fc62c11964a13d51c21d13d60422e3d3103b1",
+      "url": "/files/reference-images/9dca3850aa838b6f9c3e6416289fc62c11964a13d51c21d13d60422e3d3103b1.png",
+      "sha256": "4c40931e857582395f0ae82347380926be495236225c24ae6b047d1e8d6d78b4",
+      "bytes": 19358571,
+      "status": "PASS"
+    },
+    {
+      "asset_id": "ca_00019_c4f113",
+      "role": "side",
+      "method": "download original existing asset; no generation",
+      "historical_sha256": null,
+      "source_url_sha256": "a92d55a2537cf07c0f5a3b66d0d09fa0c323e24ef187bef98024a830e0bc67e9",
+      "url": "/files/reference-images/a92d55a2537cf07c0f5a3b66d0d09fa0c323e24ef187bef98024a830e0bc67e9.png",
+      "sha256": "0ccd83ffe6dd374cb15ed02cca1ee1f2824b0e9aaf8902376dea139ed84cb5ee",
+      "bytes": 22966883,
+      "status": "PASS"
+    },
+    {
+      "asset_id": "ca_00002_921521",
+      "role": "front",
+      "method": "download original existing asset; no generation",
+      "historical_sha256": "f6703c894c3f18faa580b79e682363307bf4c5914c348235ea9bba35cf125e7c",
+      "source_url_sha256": "3764179ebfe2743322b0e821336ebe6c8d63afb2383cf61928ec23bac3b535e2",
+      "url": "/files/reference-images/3764179ebfe2743322b0e821336ebe6c8d63afb2383cf61928ec23bac3b535e2.png",
+      "sha256": "f6703c894c3f18faa580b79e682363307bf4c5914c348235ea9bba35cf125e7c",
+      "bytes": 23030464,
+      "status": "PASS"
+    },
+    {
+      "asset_id": "ca_00025_c72f99",
+      "role": "full_side",
+      "method": "download original existing asset; no generation",
+      "historical_sha256": null,
+      "source_url_sha256": "f69111141eb03a9c22fb5d7b878dfed4e34b40d0d3f32e3041a0e4d818832b22",
+      "url": "/files/reference-images/f69111141eb03a9c22fb5d7b878dfed4e34b40d0d3f32e3041a0e4d818832b22.png",
+      "sha256": "77e8eccfacbb9d96380c68b623b32ca375fbd64ec58fe86a661ea07d88b26e02",
+      "bytes": 20367171,
+      "status": "PASS"
+    },
+    {
+      "asset_id": "ca_00022_ffdc24",
+      "role": "full_front",
+      "method": "download original existing asset; no generation",
+      "historical_sha256": null,
+      "source_url_sha256": "5264f0915c3069640afc8abb80ff577ef2384ef9b3ae3d9fbdf58d62380307b5",
+      "url": "/files/reference-images/5264f0915c3069640afc8abb80ff577ef2384ef9b3ae3d9fbdf58d62380307b5.png",
+      "sha256": "51159ba29bfe6eecabff12169b65ed3ae3e6ba63ae323a42dcb85b7b8e99934b",
+      "bytes": 13753675,
+      "status": "PASS"
+    },
+    {
+      "asset_id": "ca_00018_8aa48f",
+      "role": "three_quarter",
+      "method": "download original existing asset; no generation",
+      "historical_sha256": null,
+      "source_url_sha256": "bbaad838225b772914fad23e362b2d9fe25e8b7ae29da45cfec8f71e0715cb6a",
+      "url": "/files/reference-images/bbaad838225b772914fad23e362b2d9fe25e8b7ae29da45cfec8f71e0715cb6a.png",
+      "sha256": "2b7741ae820638413ea5534988b05d92fb21f67ab9eb25774329f9ba6d6c3cac",
+      "bytes": 21039729,
+      "status": "PASS"
+    },
+    {
+      "asset_id": "ca_00030_2ab004",
+      "role": "side",
+      "method": "download original existing asset; no generation",
+      "historical_sha256": null,
+      "source_url_sha256": "e27b76493511b9cdf01f42a5fa0c652fa282fdbdbd53a24446f1d3dbcb7c51c2",
+      "url": "/files/reference-images/e27b76493511b9cdf01f42a5fa0c652fa282fdbdbd53a24446f1d3dbcb7c51c2.png",
+      "sha256": "1e21a425707802ed7fc9fae5bb9cb18f02d8a8fef9147d2c0d95259e6dfa1ecd",
+      "bytes": 12746167,
+      "status": "PASS"
+    },
+    {
+      "asset_id": "ca_00007_fc3839",
+      "role": "front",
+      "method": "download original existing asset; no generation",
+      "historical_sha256": "467a3c60564dd88b5168811473d23da71a7db80a4f578f584e493b6020fedf1c",
+      "source_url_sha256": "325174b69302bcc635846365f656d5f66e5682bec9f58c77bb0796282ec58934",
+      "url": "/files/reference-images/325174b69302bcc635846365f656d5f66e5682bec9f58c77bb0796282ec58934.png",
+      "sha256": "467a3c60564dd88b5168811473d23da71a7db80a4f578f584e493b6020fedf1c",
+      "bytes": 13376913,
+      "status": "PASS"
+    },
+    {
+      "asset_id": "ca_00032_6d97c5",
+      "role": "full_side",
+      "method": "download original existing asset; no generation",
+      "historical_sha256": null,
+      "source_url_sha256": "b8d1a42b243c2a566a2e11aa925172fa68b5e6b0e9f2ad5dbefb4ea43b554f8f",
+      "url": "/files/reference-images/b8d1a42b243c2a566a2e11aa925172fa68b5e6b0e9f2ad5dbefb4ea43b554f8f.png",
+      "sha256": "b0278cbb596a001c20b2742e90035f43838aeb4ee6c55960bba05f7b8930e7ff",
+      "bytes": 8779825,
+      "status": "PASS"
+    },
+    {
+      "asset_id": "ca_00031_63c741",
+      "role": "full_front",
+      "method": "download original existing asset; no generation",
+      "historical_sha256": null,
+      "source_url_sha256": "c8fcd1e9f95e9ce502896f63cd487895af8989a165b20f32a21e3b47be5c059e",
+      "url": "/files/reference-images/c8fcd1e9f95e9ce502896f63cd487895af8989a165b20f32a21e3b47be5c059e.png",
+      "sha256": "119215774f044e3a43c1a80afe49024dac6406c052030c0aba59498884260fba",
+      "bytes": 9980318,
+      "status": "PASS"
+    },
+    {
+      "asset_id": "ca_00029_18208e",
+      "role": "three_quarter",
+      "method": "download original existing asset; no generation",
+      "historical_sha256": null,
+      "source_url_sha256": "b378cd5e055adac296468d8231f569f442908208288efe843862c26b3294291d",
+      "url": "/files/reference-images/b378cd5e055adac296468d8231f569f442908208288efe843862c26b3294291d.png",
+      "sha256": "e11ec3ed6ea438b0f0b87ec7f11d40c6dff6104149886415b38364b9980688b2",
+      "bytes": 12464686,
+      "status": "PASS"
+    }
+  ]
+}

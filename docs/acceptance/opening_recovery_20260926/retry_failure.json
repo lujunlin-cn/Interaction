@@ -1,0 +1,11 @@
+{
+  "session_id": "sess_00049_9cfbcf",
+  "status": "FAILED_RECOVERABLE",
+  "errors": [
+    {
+      "id": "opening_00054_e2d82c",
+      "status": "FAILED",
+      "error": "ProviderError: This branch already has submitted media jobs; inspect existing jobs before retrying"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "session_id": "sess_00027_85e25d",
+  "status": "FAILED_RECOVERABLE",
+  "errors": [
+    {
+      "id": "opening_00032_7b2a1e",
+      "status": "FAILED",
+      "error": "ConnectError: "
+    }
+  ]
+}

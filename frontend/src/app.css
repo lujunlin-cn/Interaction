@@ -464,7 +464,7 @@ body[data-appearance="dark"] .notice { background: var(--player-surface); }
   background: radial-gradient(ellipse at 50% 120%, #1a2434 0%, #060a12 68%, #020409 100%);
   color: var(--opening-accent, #e2d5a7);
   /* 视锥：让文字从下缘出现向中上"远去" */
-  perspective: 480px;
+  perspective: 1200px;
 }
 .opening-crawl-fade-top, .opening-crawl-fade-bottom {
   position: absolute; left: 0; right: 0; height: 22%; z-index: 2; pointer-events: none;
@@ -472,47 +472,57 @@ body[data-appearance="dark"] .notice { background: var(--player-surface); }
 .opening-crawl-fade-top    { top: 0;    background: linear-gradient(to bottom, #020409 0%, transparent 100%); }
 .opening-crawl-fade-bottom { bottom: 0; background: linear-gradient(to top,    #020409 0%, transparent 100%); }
 .opening-crawl-track {
-  margin: 0 auto; width: min(74%, 720px); text-align: center;
+  margin: 0 auto; width: min(86%, 1040px); text-align: center; flex-shrink: 0;
+  font-size: clamp(24px, 2.5vw, 44px);
   transform-origin: 50% 100%;
   /* 60s 一轮：5 行内文 + 1 行状态，玩家等待上限内滚完一遍即可接管或继续 */
   animation: openingCrawlScroll 60s linear forwards;
   will-change: transform, opacity;
 }
 @keyframes openingCrawlScroll {
-  0%   { transform: translateY(78%) rotateX(38deg) scale(1);    opacity: 0; }
+  0%   { transform: translateY(78%) rotateX(26deg) scale(1);    opacity: 0; }
   4%   { opacity: 1; }
   90%  { opacity: 1; }
-  100% { transform: translateY(-120%) rotateX(38deg) scale(0.86); opacity: 0; }
+  100% { transform: translateY(-120%) rotateX(26deg) scale(0.94); opacity: 0; }
 }
 .opening-line {
-  margin: 0 0 1.6em; line-height: 1.55; letter-spacing: 0.04em;
+  margin: 0 0 1.3em; line-height: 1.65; letter-spacing: 0.04em;
+  overflow-wrap: anywhere;
   text-shadow: 0 0 24px rgba(0, 0, 0, 0.7);
 }
 .opening-line.opening-location {
-  font-size: var(--font-lg); letter-spacing: 0.32em; font-weight: 600;
-  margin-bottom: 2.4em;
+  font-size: clamp(30px, 3.2vw, 56px); letter-spacing: 0.18em; font-weight: 600;
+  margin-bottom: 1.8em;
 }
-.opening-line.opening-premise { font-size: var(--font-md); }
-.opening-line.opening-identity { font-size: var(--font-md); font-weight: 600; }
+.opening-line.opening-identity { font-weight: 600; }
 .opening-line.opening-hook {
-  font-size: var(--font-md); font-style: italic; opacity: 0.92;
-  margin-top: 2.2em;
+  font-style: italic; opacity: 0.92;
+  margin-top: 1.8em;
 }
 .opening-line.opening-status {
-  font-size: var(--font-xs); opacity: 0.55; letter-spacing: 0.18em;
+  font-size: clamp(16px, 1.35vw, 22px); opacity: 0.75; letter-spacing: 0.12em;
   margin-top: 3em;
 }
-.opening-skip {
-  position: absolute; right: 18px; bottom: 14px; z-index: 7;
-  background: rgba(10, 16, 24, 0.72); color: var(--opening-accent, #e2d5a7);
-  border: 1px solid rgba(226, 213, 167, 0.28);
-  font-size: var(--font-xs); letter-spacing: 0.08em; padding: 6px 14px;
+.opening-actions {
+  position: absolute; right: max(18px, env(safe-area-inset-right));
+  bottom: max(14px, env(safe-area-inset-bottom)); z-index: 7;
+  display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px;
+  max-width: calc(100% - 36px);
 }
-.opening-skip:hover { border-color: var(--opening-accent, #e2d5a7); }
+.opening-actions button {
+  background: rgba(10, 16, 24, 0.9); color: var(--opening-accent, #e2d5a7);
+  border: 1px solid rgba(226, 213, 167, 0.28);
+  font-size: max(16px, var(--font-md)); min-height: 44px; padding: 8px 16px;
+}
+.opening-actions button:hover { border-color: var(--opening-accent, #e2d5a7); }
 /* 玩家手动调小动态（vestibular 无障碍）：直接静态显示全部行 */
 @media (prefers-reduced-motion: reduce) {
-  .opening-crawl-track { animation: none; transform: none; padding: 12% 0; }
-  .opening-crawl { justify-content: center; overflow-y: auto; }
+  .opening-crawl-track {
+    animation: none; transform: none; padding: 32px 7% 100px;
+    width: 100%; height: 100%; overflow-y: auto;
+  }
+  .opening-crawl { justify-content: flex-start; }
+  .opening-crawl-fade-top, .opening-crawl-fade-bottom { height: 8%; }
 }
 .player-hud { position: absolute; left: 14px; top: 14px; z-index: 4; max-width: min(360px, 90%); }
 .hud-toggle { background: rgba(20,30,40,.86); color: #fff; border-color: #617082; }
