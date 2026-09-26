@@ -1,6 +1,6 @@
 {
   "schema": "trajectory-replay-benchmark/1.0",
-  "repository_sha": "e4ecb92474953614def564c09743431494c1fbb2",
+  "repository_sha": "2418471b0c9cf009c94c9c7b3784ea0db462f4c7",
   "capture": {
     "captured_at": "2026-09-26T07:27:57.382538+00:00",
     "dataset_start_sha": "c22d14bceea3930e2dd2c25eaaf449bc85fbbd0a",
@@ -140,7 +140,7 @@
     "image_requests": 0,
     "video_requests": 0,
     "canonical_db_writes": 0,
-    "uses_saved_replay_receipts_only": true,
+    "uses_saved_frozen_inputs": true,
     "frozen_source_hashes": {
       "dataset_sha256": "fdddbe3854697b96b17583a6edb60d206ba52c346373e04aebf8e6baa01c27ef",
       "replay_sessions_sha256": "c9bd771e3a4956f8fcadeeace7f9ea3a7745f97163e4bf8ad4e045449959dffd",

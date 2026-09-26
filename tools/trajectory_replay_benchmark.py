@@ -253,7 +253,7 @@ def summarize(
             "image_requests": 0,
             "video_requests": 0,
             "canonical_db_writes": 0,
-            "uses_saved_replay_receipts_only": True,
+            "uses_saved_frozen_inputs": True,
             "frozen_source_hashes": asdict(source_paths),
         },
     }
