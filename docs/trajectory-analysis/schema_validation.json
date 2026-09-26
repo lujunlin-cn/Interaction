@@ -1,6 +1,0 @@
-{
-  "validated_records": 214,
-  "failures": 0,
-  "schema": "1.0.0",
-  "scope": "Typed envelope; raw historical nested payloads remain verbatim; runtime schemas remain authoritative."
-}

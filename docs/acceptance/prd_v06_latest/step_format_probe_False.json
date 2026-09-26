@@ -1,8 +1,0 @@
-{
-  "status": 200,
-  "elapsed_s": 11.480481386184692,
-  "json_mode": false,
-  "model": "step-5-preview",
-  "content": "{\"summary\":\"灯塔调查案：以调查和询问为核心，角色会记住玩家是否撒谎并影响信任；追逐场景需要快速做出决定。\",\"items\":[{\"path\":\"mechanics.clue-system\",\"summary\":\"调查与询问\",\"value\":{\"enabled\":true,\"config\":{\"focus\":\"lighthouse_investigation\",\"interrogation\":true},\"tutorial\":\"在灯塔现场搜集线索，并通过询问证人拼凑真相。\"},\"question\":\"\",\"suggestions\":[]},{\"path\":\"mechanics.relationship\",\"summary\":\"信任与记忆\",\"value\":{\"enabled\":true,\"config\":{\"remembers_lies\":true,\"trust_tracking\":true},\"tutorial\":\"角色会记住你的每一次陈述，撒谎可能暂时引导方向，但会永久影响信任。\"},\"question\":\"\",\"suggestions\":[]},{\"path\":\"mechanics.inventory\",\"summary\":\"线索物品\",\"value\":{\"enabled\":true,\"config\":{\"evidence_slots\":12,\"combine_items\":true},\"tutorial\":\"收集证物与文件，可在调查面板中组合并比对线索。\"},\"question\":\"\",\"suggestions\":[]},{\"path\":\"mechanics.qte\",\"summary\":\"快速决定\",\"value\":{\"enabled\":true,\"config\":{\"chase_sequences\":true,\"reaction_window\":1.5},\"tutorial\":\"追逐与危机时刻需迅速按键或选择，迟疑将导致不同后果。\"},\"question\":\"\",\"suggestions\":[]},{\"path\":\"drama.timed_interactions\",\"summary\":\"限时交互\",\"value\":\"id｜qte｜8｜没有及时决定，错过机会。\",\"question\":\"\",\"suggestions\":[]}]}",
-  "finish_reason": "stop"
-}

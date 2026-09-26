@@ -1,9 +1,0 @@
-{
-  "recorded_canonical_checkpoints": 31,
-  "improved": 31,
-  "regressed": 0,
-  "new_paid_media_requests": 0,
-  "scope": "Counterfactual duplicate commit injected into historical in-memory states, not a frequency estimate of real double-clicks.",
-  "no_db_write": true,
-  "sources_unchanged": true
-}

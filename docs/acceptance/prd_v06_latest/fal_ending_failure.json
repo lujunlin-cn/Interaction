@@ -1,5 +1,0 @@
-{
-  "url": "https://queue.fal.run/minimax/h3-max/requests/01a0d481-3949-7f32-8d42-0ffed6de7010",
-  "status": 403,
-  "body": "{\"detail\":\"User is locked. Reason: TOP_UP.\"}"
-}

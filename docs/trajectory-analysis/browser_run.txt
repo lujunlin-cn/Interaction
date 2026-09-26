@@ -1,1 +1,0 @@
-PASS: isolated UI contracts; no live writes or media.

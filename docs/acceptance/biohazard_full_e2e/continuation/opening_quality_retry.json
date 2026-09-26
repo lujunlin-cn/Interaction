@@ -1,9 +1,0 @@
-{
-  "reason": "Step 5 confirmed missing required Leon/Claire and wrong in-person Victor staging. Authored anchors were omitted from Director input; fixed generically.",
-  "retry_number": 1,
-  "max_quality_retries": 1,
-  "old_session": "sess_00006_97bc74",
-  "trusted_checkpoint": "Published Scenario 0.3.0",
-  "previous_h3_jobs": 4,
-  "previous_requested_seconds": 25
-}

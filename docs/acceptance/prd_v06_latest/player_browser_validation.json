@@ -1,7 +1,0 @@
-{
-  "session_id": "sess_00009_0791da",
-  "started_at": "2026-09-24T17:14:04.327Z",
-  "checks": [],
-  "errors": [],
-  "failure": "TimeoutError: page.waitForFunction: Timeout 30000ms exceeded."
-}

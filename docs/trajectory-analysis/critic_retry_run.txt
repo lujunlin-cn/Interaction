@@ -1,3 +1,0 @@
-critic batch_1.json PASS
-critic batch_3.json PASS
-critic batch_4.json PASS

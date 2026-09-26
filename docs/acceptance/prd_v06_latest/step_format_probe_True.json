@@ -1,8 +1,0 @@
-{
-  "status": 200,
-  "elapsed_s": 22.220803022384644,
-  "json_mode": true,
-  "model": "step-5-preview",
-  "content": "{\":以调查与询问为核心，角色会记住玩家是否撒谎；追逐场景启用快速决定（QTE）玩法，并包含关系、物品与限时交互系统。},\":{\"items\":[{\"path\":\"mechanics.clue-system\",\"summary\":\"调查与询问\",\"value\":{\"enabled\":true,\"config\":{\"interrogate\":true,\"rememberLies\":true},\"tutorial\":\"在灯塔调查中收集线索并询问嫌疑人，注意角色会记住你的谎言。\"},\"question\":\"\",\"suggestions\":[]},{\"path\":\"mechanics.relationship\",\"summary\":\"关系与谎言记忆\",\"value\":{\"enabled\":true,\"config\":{\"trackLies\":true,\"trustImpact\":true},\"tutorial\":\"角色会记住你是否撒谎，影响信任与后续对话。\"},\"question\":\"\",\"suggestions\":[]},{\"path\":\"mechanics.inventory\",\"summary\":\"物品与证据\",\"value\":{\"enabled\":true,\"config\":{\"evidenceSlots\":12},\"tutorial\":\"收集并管理调查中获得的物品与证据。\"},\"question\":\"\",\"suggestions\":[]},{\"path\":\"mechanics.qte\",\"summary\":\"快速决定\",\"value\":{\"enabled\":true,\"config\":{\"chaseMode\":true,\"timeLimit\":8},\"tutorial\":\"追逐场景中需要快速做出决定。\"},\"question\":\"\",\"suggestions\":[]},{\"path\":\"drama.timed_interactions\",\"summary\":\"限时交互\",\"value\":\"id｜qte｜8｜没有及时决定，错过机会\",\"question\":\"\",\"suggestions\":[]}]}}",
-  "finish_reason": "stop"
-}
