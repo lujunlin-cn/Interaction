@@ -609,3 +609,62 @@ body[data-subtitle-pos="bottomOutside"] .immersive-player:fullscreen .player-sta
   body[data-uisize="large"] { --font-xs: 15px; --font-sm: 18px; --font-md: 21px; --font-lg: 25px; --font-xl: 32px; --sidebar-w: 300px; --control-h: 48px; --space-md: 20px; --card-pad: 26px; }
   body[data-uisize="xlarge"] { --font-xs: 17px; --font-sm: 20px; --font-md: 24px; --font-lg: 28px; --font-xl: 36px; --sidebar-w: 340px; --control-h: 56px; --space-md: 24px; --card-pad: 30px; }
 }
+
+/* ============ 生成等待期的文字承接（问题6） ============
+ * 行动被接受后 interaction-dock 内渲染：Director PLANNING 产出的 effects
+ * 分句逐条淡入，Nemotron 间奏在 GENERATING 阶段继续追加；底部进度带
+ * 锚定真实 pipeline 阶段（pending_phase），视频 READY 后随外层条件卸载。 */
+.action-sequence {
+  background: var(--player-panel); border: 1px solid var(--player-line);
+  border-radius: 10px; padding: 14px 16px; margin-top: 8px;
+}
+.action-echo { margin: 0 0 10px; font-size: var(--font-sm); font-style: italic; }
+.action-effects { margin: 0; }
+.action-effect {
+  margin: 0 0 6px; font-size: var(--font-md); line-height: 1.6;
+  color: var(--player-ink); opacity: 0;
+  animation: actionEffectIn 0.7s ease-out forwards;
+}
+@keyframes actionEffectIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.action-effect-pending {
+  color: var(--player-muted); font-size: var(--font-sm);
+  animation: actionPendingPulse 1.8s ease-in-out infinite;
+  margin-top: 4px;
+}
+@keyframes actionPendingPulse {
+  0%, 100% { opacity: 0.45; }
+  50%      { opacity: 0.95; }
+}
+.phase-track {
+  display: flex; flex-wrap: wrap; gap: 4px 6px;
+  margin-top: 12px; padding-top: 10px;
+  border-top: 1px dashed var(--player-line);
+}
+.phase-step {
+  font-size: var(--font-xs); color: var(--player-muted);
+  padding: 2px 8px; border-radius: 10px; white-space: nowrap;
+  opacity: 0.55;
+}
+.phase-step + .phase-step::before { content: "› "; opacity: 0.5; }
+.phase-step.done { opacity: 0.8; text-decoration: line-through; }
+.phase-step.active {
+  opacity: 1; color: var(--accent); font-weight: 600;
+  background: var(--player-surface); text-decoration: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .action-effect { animation: none; opacity: 1; }
+  .action-effect-pending { animation: none; }
+}
+
+/* ============ 播放缓冲徽标（问题3） ============
+ * 已显示过帧的视频进入缓冲时，不再全屏回 loading 遮罩，
+ * 只在舞台角落挂小徽标提示；首次加载仍走 .media-status。 */
+.buffering-badge {
+  position: absolute; right: 14px; top: 14px; z-index: 5;
+  background: rgba(20, 30, 40, 0.86); color: #edf3f9;
+  font-size: var(--font-xs); letter-spacing: 0.06em;
+  padding: 5px 12px; border-radius: 12px; pointer-events: none;
+}

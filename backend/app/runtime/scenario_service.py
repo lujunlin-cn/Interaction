@@ -213,9 +213,12 @@ class ScenarioService:
         draft = await self.get(scenario_id)
         if draft is None:
             raise KeyError(scenario_id)
+        draft_summary = json.dumps(
+            draft.model_dump(exclude={"changes", "creator_projection"}),
+            ensure_ascii=False)
         messages = [{"role": "system", "content": '输出 JSON {"patches":[{"path":"drama.core_question","after":"新内容","reason":"原因"}]}。只修改指令明确要求且未被 locks 锁定的字段。drama.pressures 每行为名称｜来源｜行动触发或故事时间推进；第三列只能是这两个明确驱动，不能填后果。'}, {"role": "user", "content":
                        f"instruction: {instruction}\n"
-                       f"draft_summary: {json.dumps(draft.model_dump(exclude={"changes", "creator_projection"}), ensure_ascii=False)}"}]
+                       f"draft_summary: {draft_summary}"}]
         for attempt in range(2):
             _, rec, resp = await self.router.call_text("authoring", messages=messages,
                 output_contract={"purpose": "authoring_patch"}, budget={

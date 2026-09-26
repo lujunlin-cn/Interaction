@@ -200,6 +200,18 @@ export default function Player() {
       {view.ended && view.ending && <EndingPanel sid={sid} view={view} onReplay={setReplay} />}
     {!view.ended && <div className="interaction-dock">
       {view.timed?.active && <div className="qte-composer"><b>{remaining == null ? "准备快速决定" : `${Math.ceil(remaining / 1000)} 秒`}</b><p>{view.timed.fallback_hint}</p></div>}
+      {/* 问题6：生成等待期的文字承接 —— effects 逐条淡入 + 阶段进度带。
+          pending 期间 view.selected 会回退匹配到上一幕 CANONICAL 分支，
+          所以不能简单用 !view.selected 屏蔽；仅当「待选分支真的还在生成中」
+          （非 CANONICAL）才隐藏承接。 */}
+      {(view.pending_effects?.length || view.pending_phase) &&
+        !(view.selected && view.selected.status !== "CANONICAL") && (
+        <ActionSequence
+          label={view.pending_label || ""}
+          effects={view.pending_effects || []}
+          phase={view.pending_phase || ""}
+        />
+      )}
       {view.selected && view.selected.status !== "CANONICAL" ? <div className="decision-layer" data-layer="decision">✓ {view.selected.label} · 正在继续故事……</div>
         : !accepted && view.recommendations.length > 0 && (!view.timed?.active || view.timed.selection_open) && <section className="decision-layer" data-layer="decision"><div className="rec-row">{view.recommendations.map(r => <button className="rec-card" key={r.branch_id} disabled={busy} onClick={() => choose(r.branch_id)}><b>{r.label}</b>{r.media_ready === false && <small className="muted">视频准备中，选中后继续</small>}<p>{r.summary}</p></button>)}</div></section>}
       <section className="agency-layer" data-layer="agency"><p className="muted">推荐只是快捷行动，你仍然可以做自己的选择。</p><div className="free-input-row"><input aria-label="描述你想做的事" placeholder="描述你想做的事……" value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && !accepted) void submitAction(); }} /><button className="primary" disabled={accepted || !input.trim()} onClick={submitAction}>{accepted ? "正在继续故事…" : "行动"}</button></div></section>
@@ -430,5 +442,48 @@ function OpeningCrawl({ info, onSkip }: { info: OpeningInfo; onSkip: () => void 
       <div className="opening-crawl-fade-bottom" aria-hidden />
       <button className="opening-skip" onClick={onSkip} aria-label="跳过前情提要">跳过前情 ›</button>
     </div>
+  );
+}
+
+/** 生成等待期的文字承接（问题6）：
+ * 行动被接受后，Director 在 PLANNING 阶段已产出 effects（执行过程的分句），
+ * Nemotron 间奏还会在 GENERATING 阶段继续追加；前端按到达顺序逐条淡入，
+ * 底部用锚定真实 pipeline 阶段的进度带呈现"现在进行到哪一步"。
+ * 视频 READY 后外层条件让位，本组件随视频淡入自然消失。 */
+function ActionSequence({ label, effects, phase }: {
+  label: string; effects: string[]; phase: string;
+}) {
+  const PHASES = [
+    { key: "PLANNING", label: "理解行动" },
+    { key: "NARRATIVE", label: "编排叙事" },
+    { key: "PRODUCTION", label: "准备镜头" },
+    { key: "GENERATING", label: "生成画面" },
+    { key: "ASSEMBLING", label: "装配场景" },
+    { key: "READY", label: "即将播放" },
+  ];
+  const idx = Math.max(0, PHASES.findIndex(p => p.key === phase));
+  // 每条 effect 用 CSS animation-delay 形成逐句淡入；间奏追加的新句会
+  // 以新的 key 挂载，不打断已在画面上的句子。
+  return (
+    <section className="action-sequence" data-testid="action-sequence" aria-live="polite">
+      {label && <p className="action-echo muted">你{label}</p>}
+      <div className="action-effects">
+        {effects.map((line, i) => (
+          <p key={`${i}-${line.slice(0, 12)}`} className="action-effect"
+            style={{ animationDelay: `${i * 0.9}s` }}>{line}</p>
+        ))}
+        <p className="action-effect action-effect-pending"
+          style={{ animationDelay: `${effects.length * 0.9}s` }}>◌ 正在生成画面…</p>
+      </div>
+      <div className="phase-track" role="progressbar"
+        aria-valuemin={0} aria-valuemax={PHASES.length - 1} aria-valuenow={idx}>
+        {PHASES.map((p, i) => (
+          <span key={p.key}
+            className={`phase-step ${i < idx ? "done" : i === idx ? "active" : ""}`}>
+            {p.label}
+          </span>
+        ))}
+      </div>
+    </section>
   );
 }

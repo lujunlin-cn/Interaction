@@ -32,6 +32,7 @@ from ..domain.schemas import (
     RuntimeProfile, BaseVersions, Branch, BranchSource, BranchStatus, DramaticDirective, DramaPatchProposal,
     DramaState, Event, ForeshadowEntry, InteractionMode, OutcomeSpec, PatchOperation,
     PhaseHint, PresentationReceipt, PressureInstance, RecommendationEpoch, ResolvedIntent,
+    ResponseMode,
     SceneArtifact, ScenePacket, ShotPlan, StatePatchProposal, Wish, WishStatus, WorldState,
     now_ms,
 )
@@ -1019,6 +1020,13 @@ class RuntimeEngine:
                 return
             await self._set_phase(state, branch, BranchStatus.GENERATING)
 
+        # 问题6：FREE/OPENING 分支进入媒体生成期后，并行跑间奏叙事，
+        # 把执行描写补进 outcome.effects，供前端在等待期逐句淡入。
+        interstitial: Optional[asyncio.Task] = None
+        if branch.source in (BranchSource.FREE, BranchSource.OPENING):
+            interstitial = asyncio.get_running_loop().create_task(
+                self._interstitial_effects(session_id, branch_id))
+
         gen_error: Optional[str] = None
         retryable = True
         try:
@@ -1033,8 +1041,12 @@ class RuntimeEngine:
             state = await self.load_session(session_id)
             branch = state.branch(branch_id)
             if branch.status != BranchStatus.GENERATING:
+                if interstitial:
+                    interstitial.cancel()
                 return
             if gen_error:
+                if interstitial:
+                    interstitial.cancel()
                 if not retried and retryable:
                     # 快速重试 1 次：新 job，不沿用半成品
                     branch.status = BranchStatus.RETRYING
@@ -1059,6 +1071,12 @@ class RuntimeEngine:
                 await self._persist(state)
                 await self._push(state)
                 return
+            # 进入装配前给间奏一个短窗口收尾，避免与 READY 切换抢占渲染。
+            if interstitial:
+                try:
+                    await asyncio.wait_for(asyncio.shield(interstitial), timeout=8.0)
+                except Exception:  # noqa: BLE001
+                    pass
             await self._set_phase(state, branch, BranchStatus.ASSEMBLING)
 
         await self._phase_sleep()
@@ -1108,6 +1126,7 @@ class RuntimeEngine:
             ' Record changed facility conditions under objects, not inventory. Actual movement must include a location set using the declared location ID.'
             ' Never invent possession, evidence or a relationship delta just to populate a field. Explain the observable causal basis in text/evidence.'
             " outcome 必须显式给出 ops、evidence、skill_triggers 三个数组；没有变化时返回空数组。"
+            ' FULL_BEAT 时 outcome 另需返回 "effects": 2-4 句逐步展开的执行描写（第 1 句复述玩家动作本身，后续写环境/他人的即时反应），只描写执行过程，不预言本幕最终结局；每句不超过 40 字，只用玩家角色此刻能知道的信息（不得出现未揭示的秘密名词）。QUICK_ACK 时 effects 返回空数组。'
             "如果你决定人物信任改变、发现线索或获得物品，必须在 skill_triggers 给出相应的类型化提案，"
             "不能仅在 text 或 directive.secondary_functions 中描述变化。"
             '关系提案格式：{"skill":"relationship","target":"场景角色ID","value":变化量}；'
@@ -1238,8 +1257,18 @@ class RuntimeEngine:
             ops=_to_patch_ops(outcome.get("ops", [])),
             evidence=outcome.get("evidence", []),
             ending=outcome.get("ending"),
-            kind=outcome.get("kind", "investigation"))
+            kind=outcome.get("kind", "investigation"),
+            effects=[str(s)[:80] for s in (outcome.get("effects") or [])
+                     if isinstance(s, str) and s.strip()][:4])
         branch.summary = branch.summary or branch.outcome.title
+        # 问题6：FULL_BEAT 必须有执行描写兜底，保证生成等待期有文字可播。
+        if not branch.outcome.effects:
+            branch.outcome.effects = [f"你开始{branch.label}。"]
+        # 泄密防线：effects 与其他面向玩家的文本同标准过滤。
+        branch.outcome.effects = [
+            s for s in branch.outcome.effects
+            if not self._forbidden_hits(state, branch, s)][:4] or \
+            [f"你开始{branch.label}。"]
         branch.outcome.ops = _to_patch_ops(adjudication.operations)
         branch.skill_decisions = adjudication.decisions
         for result in adjudication.invocations:
@@ -1485,6 +1514,74 @@ class RuntimeEngine:
                                   "visual_focus": branch.causal_presentation.get("visual_focus"),
                                   "chars": len(branch.narrative), "media_language": language.model_dump(), "dialogue_count": len(branch.dialogue)},
                           provider=rec.selected or "", session_id=state.id, branch_id=branch.id)
+
+    async def _interstitial_effects(self, session_id: str, branch_id: str) -> None:
+        """间奏叙事（问题6）：媒体 GENERATING 期间并行补写执行描写。
+
+        Director 在 PLANNING 已给出 2-4 句 effects 兜底；这里用 narrative 低预算
+        再补 2-3 句"环境/他人的即时反应"继续覆盖等待时间。全程 best-effort：
+        任何失败静默降级（锁内状态可能已推进），绝不阻塞主 pipeline。
+        """
+        try:
+            async with self._lock(session_id):
+                state = await self.load_session(session_id)
+                branch = state.branch(branch_id) if state else None
+                if not state or not branch or branch.status != BranchStatus.GENERATING:
+                    return
+                if not branch.outcome:
+                    return
+                existing = list(branch.outcome.effects)
+                packet = branch.packet.model_dump(exclude={"forbidden_revelations"}) if branch.packet else {}
+                brief = self._scenario_brief(state)
+            language = self._branch_language(branch)
+            _, rec, resp = await self.router.call_text(
+                "narrative",
+                messages=[
+                    {"role": "system", "content":
+                     "只返回 JSON {lines:[字符串,...]}。为玩家正在执行的动作补 2-3 句"
+                     "环境/他人的即时反应（每句不超过 40 字），延续已有描写的氛围，"
+                     "只写执行过程中可观察到的细节，不预言本幕结局，不引入新的事实或"
+                     "未揭示的秘密名词。"
+                     + language.text_instruction()
+                     + "场景包：" + json.dumps(packet, ensure_ascii=False)},
+                    {"role": "user", "content":
+                     f"action: {branch.label}\n"
+                     f"already_written: {json.dumps(existing, ensure_ascii=False)}\n"
+                     f"scene: {brief}"}],
+                output_contract={"purpose": "interstitial_effects",
+                                 "media_language": language.model_dump()},
+                branch_id=branch_id)
+            from .structured_output import decode_object
+            content = decode_object(resp.content)
+            fresh = [str(s)[:80] for s in (content.get("lines") or [])
+                     if isinstance(s, str) and s.strip()]
+            if not fresh:
+                return
+            async with self._lock(session_id):
+                state = await self.load_session(session_id)
+                branch = state.branch(branch_id) if state else None
+                if not state or not branch or not branch.outcome \
+                        or branch.status not in (BranchStatus.GENERATING, BranchStatus.ASSEMBLING):
+                    return
+                merged = list(branch.outcome.effects)
+                for s in fresh:
+                    if s not in merged and not self._forbidden_hits(state, branch, s):
+                        merged.append(s)
+                branch.outcome.effects = merged[:6]
+                await self._persist(state)
+                await self._push(state)
+            await tracer.emit("narrative.interstitial", "success",
+                              output={"added": len(fresh),
+                                      "total": len(branch.outcome.effects)},
+                              provider=rec.selected or "", session_id=session_id,
+                              branch_id=branch_id)
+        except asyncio.CancelledError:
+            raise
+        except Exception as error:  # noqa: BLE001  间奏是增强项，失败不阻碍主流程
+            await tracer.emit("narrative.interstitial", "failed",
+                              output={"error": str(error)},
+                              provider="runtime", session_id=session_id,
+                              branch_id=branch_id)
 
     def _bound_references(self, state: SessionState, cast: list[str] | None = None) -> list[dict]:
         """Select balanced, cast-scoped references within real provider limits."""
@@ -3011,6 +3108,8 @@ class RuntimeEngine:
                 "fallback_hint": "倒计时结束后，会按这个故事已经设定好的结果继续。",
             }
         arc = state.current_arc()
+        pending_branch = (state.branch(state.pending_freeform_id)
+                          if state.pending_freeform_id else None)
         view = {
             "session_id": state.id,
             "scenario": {"title": snapshot.get("title", ""),
@@ -3036,6 +3135,15 @@ class RuntimeEngine:
                 "recovery_actions": ["retry", "modify", "text_continue", "exit"] if state.player.status in ("FAILED", "FAILED_RECOVERABLE") else [],
                 "state": "GENERATING_MEDIA" if state.player.status in ("GENERATING_NEXT", "OPENING_PREPARING") else state.player.status},
             "action_pending": state.player.status == "GENERATING_NEXT" or bool(state.pending_freeform_id and (pending := state.branch(state.pending_freeform_id)) and pending.status not in (BranchStatus.CANONICAL, BranchStatus.FAILED, BranchStatus.CANCELLED, BranchStatus.INVALIDATED, BranchStatus.EXPIRED)),
+            # 问题6：pending 分支的执行描写与真实 pipeline 阶段，
+            # 前端 ActionSequence 在等待期逐句淡入 + 进度带。
+            "pending_effects": [
+                _public_story_text(state, s)
+                for s in (pending_branch.outcome.effects
+                          if pending_branch and pending_branch.outcome else [])
+            ] if (state.player.status == "GENERATING_NEXT" or pending_branch) else [],
+            "pending_phase": pending_branch.status.value if pending_branch else "",
+            "pending_label": _public_story_text(state, pending_branch.label) if pending_branch else "",
             "causal_presentation": {k: _public_story_text(state, v) for k, v in current.causal_presentation.items()
                                     if k in ("action", "result", "visual_focus", "transition") and isinstance(v, str)}
                                     if current and current.status == BranchStatus.CANONICAL and current.source != BranchSource.OPENING else None,

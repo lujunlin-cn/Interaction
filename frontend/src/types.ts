@@ -314,6 +314,10 @@ export interface PlayerView {
   hint_chips: string[];
   ended: boolean;
   ending?: EndingView;
+  /** 生成等待期承接（问题6）：pending 分支的执行描写分句与真实 pipeline 阶段。 */
+  pending_effects?: string[];
+  pending_phase?: string;
+  pending_label?: string;
   pending_continuation: boolean;
   wishes: Wish[];
 }
