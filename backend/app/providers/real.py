@@ -993,6 +993,18 @@ class OpenAIImageProvider:
                                                  json=request_payload, headers=self._headers())
                 response.raise_for_status()
                 data = response.json()
+                # Some OpenAI-compatible relays return ``b64_json`` even
+                # when ``response_format=url`` is requested. Archive those
+                # bytes into the normal public asset root so downstream
+                # CharacterService code receives a durable /files URL.
+                for item in data.get("data", []) if isinstance(data, dict) else []:
+                    if isinstance(item, dict) and item.get("b64_json") and not item.get("url"):
+                        import base64
+                        from .reference_images import store_image
+                        raw = base64.b64decode(item["b64_json"])
+                        archived = store_image(
+                            f"relay-b64:{hashlib.sha256(raw).hexdigest()}", raw)
+                        item["url"] = archived["url"]
                 if not isinstance(data, dict) or not any(img.get("url") for img in self._images(data)):
                     raise ValueError("invalid image response")
                 # Some relays only expose the external ID in a header.
