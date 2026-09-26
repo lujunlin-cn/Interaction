@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { api, sessionSocket } from "../api";
 import { setState, toast, useUi } from "../store";
-import type { PendingIntent, PlayerView, Wish } from "../types";
+import type { OpeningInfo, PendingIntent, PlayerView, Wish } from "../types";
 
 const WISH_STATUS_LABEL: Record<string, string> = {
   ACTIVE: "生效中", DEFERRED: "已延期", CONFLICTED: "与规则冲突", FULFILLED: "已实现",
@@ -22,12 +22,16 @@ export default function Player() {
   const [hudPinned, setHudPinned] = useState(false);
   const [replay, setReplay] = useState<string | null>(null);
   const [media, setMedia] = useState<"loading" | "playing" | "failed">("loading");
+  // 是否出过首帧：一旦出过，缓冲/seek 不得把舞台打回全屏 Loading（问题3）
+  const hasFrame = useRef(false);
+  const [buffering, setBuffering] = useState(false);
   const [loadAttempt, setLoadAttempt] = useState(0);
   const [titleVisible, setTitleVisible] = useState(true);
   const [controlActivity, setControlActivity] = useState(0);
   const [showControls, setShowControls] = useState(true);
   const [fullscreen, setFullscreen] = useState(false);
   const [connectionFailed, setConnectionFailed] = useState(false);
+  const [crawlDismissed, setCrawlDismissed] = useState(false);
   const [devState, setDevState] = useState<any>(null);
   const [now, setNow] = useState(Date.now());
   const [timedBase, setTimedBase] = useState<{remaining: number; at: number} | null>(null);
@@ -53,14 +57,15 @@ export default function Player() {
   }, [view?.timed?.remaining_ms, view?.timed?.active]);
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 200); return () => clearInterval(t); }, []);
   useEffect(() => {
-    setMedia("loading"); setTitleVisible(true);
+    setMedia("loading"); setTitleVisible(true); hasFrame.current = false; setBuffering(false);
   }, [view?.player.video_url, replay, loadAttempt]);
   useEffect(() => {
     if (media !== "playing") return;
     const t = setTimeout(() => setTitleVisible(false), 3500); return () => clearTimeout(t);
   }, [media, view?.player.video_url]);
   useEffect(() => {
-    if (media !== "loading" || !view?.player.video_url) return;
+    // 只惩罚"从未出过首帧"的加载；出过帧之后的 waiting 只是缓冲，不判失败。
+    if (media !== "loading" || !view?.player.video_url || hasFrame.current) return;
     const t = setTimeout(() => setMedia("failed"), 20000); return () => clearTimeout(t);
   }, [media, view?.player.video_url, loadAttempt]);
   useEffect(() => {
@@ -103,6 +108,10 @@ export default function Player() {
   const p = view.player;
   const failed = p.status === "FAILED_RECOVERABLE" || p.status === "FAILED";
   const generating = p.status === "OPENING_PREPARING" || p.status === "GENERATING_NEXT";
+  // 首幕 crawl：OPENING_PREPARING 且尚无视频帧时，用前情提要替代空白转圈。
+  // 视频 READY / 失败 / 已有 scene_text 时自动让位给既有三态。
+  const showOpeningCrawl = p.status === "OPENING_PREPARING" && !p.video_url
+    && !p.scene_text && Boolean(view.opening) && !crawlDismissed;
   const accepted = busy || Boolean((view as any).action_pending) || Boolean(view.pending_intent);
   const decisionOpen = Boolean(
     view.ended || view.pending_intent || view.last_failed_action ||
@@ -130,14 +139,18 @@ export default function Player() {
     <div className="immersion-layer" data-layer="immersion">
       <div className="player-stage">
         {source && <video key={`${source}:${loadAttempt}`} ref={videoRef} src={source} autoPlay playsInline
-          onLoadStart={() => { setMedia("loading"); if (!replay) void command("pause"); }}
-          onCanPlay={() => { setMedia("playing"); videoRef.current?.play().catch(() => setAck("点击播放，开始观看这一幕。")); }}
-          onPlaying={() => { setMedia("playing"); setAck(a => a === "点击播放，开始观看这一幕。" ? null : a); if (!replay) void command("play"); }}
-          onWaiting={() => { setMedia("loading"); if (!replay) void command("pause"); }}
+          onLoadStart={() => { setMedia("loading"); setBuffering(false); if (!replay) void command("pause"); }}
+          onLoadedData={() => { hasFrame.current = true; }}
+          onCanPlay={() => { hasFrame.current = true; setMedia("playing"); setBuffering(false); videoRef.current?.play().catch(() => setAck("点击播放，开始观看这一幕。")); }}
+          onPlaying={() => { hasFrame.current = true; setMedia("playing"); setBuffering(false); setAck(a => a === "点击播放，开始观看这一幕。" ? null : a); if (!replay) void command("play"); }}
+          onWaiting={() => { if (!hasFrame.current) setMedia("loading"); else setBuffering(true); }}
+          onStalled={() => { if (!hasFrame.current) setMedia("loading"); else setBuffering(true); }}
           onPause={() => !replay && void command("pause")}
           onError={() => { setMedia("failed"); if (!replay) void command("pause"); }}
           onEnded={finished} />}
-        {(generating || failed || (source && media !== "playing") || (!source && !p.scene_text)) && <div className={`media-status ${failed || media === "failed" ? "failed" : ""}`} role="status"
+        {buffering && media === "playing" && <div className="buffering-badge" role="status">缓冲中…</div>}
+        {showOpeningCrawl && <OpeningCrawl info={view.opening!} onSkip={() => { /* 跳过即收起覆盖层，露出下面的 media-status */ setCrawlDismissed(true); }} />}
+        {!showOpeningCrawl && (generating || failed || (source && !hasFrame.current && media !== "playing") || (!source && !p.scene_text)) && <div className={`media-status ${failed || media === "failed" ? "failed" : ""}`} role="status"
           data-media-state={failed || (source && media === "failed") ? "FAILED" : generating ? "GENERATING" : "LOADING"}>
           <div className="media-status-symbol">{failed || media === "failed" ? "↻" : "◌"}</div>
           <h3>{failed ? "这个行动暂时没有生成成功。" : source && media === "failed" ? "这一幕暂时无法播放。" : generating ? "正在生成这一幕……" : "正在载入场景……"}</h3>
@@ -176,6 +189,13 @@ export default function Player() {
     {ack && <div className="ack-toast">{ack}</div>}
     {view.last_failed_action && !failed && <div className="notice"><p>这个行动暂时没有生成成功。</p>{recover}</div>}
     {view.messages.length > 0 && <div className="msg-list">{view.messages.slice(-2).map((m,i) => <p key={i}>{m.text}</p>)}</div>}
+    {view.causal_presentation && !replay && <details className="card action-result" data-testid="action-result">
+      <summary>刚才的行动与结果</summary>
+      <p><b>你的行动：</b>{view.causal_presentation.action}</p>
+      {view.causal_presentation.transition && <p>{view.causal_presentation.transition}</p>}
+      <p><b>结果：</b>{view.causal_presentation.result}</p>
+      {view.causal_presentation.visual_focus && <p><b>画面呈现：</b>{view.causal_presentation.visual_focus}</p>}
+    </details>}
     {view.pending_intent && <IntentCard key={view.pending_intent.raw_text} sid={sid} intent={view.pending_intent} />}
       {view.ended && view.ending && <EndingPanel sid={sid} view={view} onReplay={setReplay} />}
     {!view.ended && <div className="interaction-dock">
@@ -194,7 +214,7 @@ function IntentCard({ sid, intent }: { sid: string; intent: PendingIntent }) {
   const [action, setAction] = useState(intent.action);
   const [desire, setDesire] = useState(intent.desire);
   const [strategy, setStrategy] = useState(intent.strategy);
-  const [editing, setEditing] = useState(intent.kind === "clarification");
+  const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const send = async (approved: boolean) => {
@@ -218,23 +238,23 @@ function IntentCard({ sid, intent }: { sid: string; intent: PendingIntent }) {
         <div className="intent-form">
           <label><span>你打算怎么做</span>
             <input value={action} onChange={(e) => setAction(e.target.value)} /></label>
-          <label><span>你想达到的目的</span>
+          <label><span>可能的目的（可选修改）</span>
             <input value={desire} onChange={(e) => setDesire(e.target.value)} /></label>
-          <label><span>你希望的方式</span>
+          <label><span>可能的方式（可选修改）</span>
             <input value={strategy} onChange={(e) => setStrategy(e.target.value)} /></label>
         </div>
       ) : (
         <div className="intent-summary">
           {action && <div>行动：{action}</div>}
-          {desire && <div>目的：{desire}</div>}
-          {strategy && <div>方式：{strategy}</div>}
+          {desire && <div>可能目的：{desire}</div>}
+          {strategy && <div>可能方式：{strategy}</div>}
         </div>
       )}
       <div className="toolbar">
         <button className="primary" disabled={busy} onClick={() => send(true)}>
           {editing ? "确认并继续" : "按这个意思继续"}
         </button>
-        {!editing && intent.kind === "echo" && (
+        {!editing && (
           <button disabled={busy} onClick={() => setEditing(true)}>修改理解</button>
         )}
         <button disabled={busy} onClick={() => send(false)}>算了，不这么做</button>
@@ -382,6 +402,33 @@ function WishDrawer({ sid, wishes, onClose }: {
           );
         })}
       </div>
+    </div>
+  );
+}
+
+/** 首幕前情提要（星战式 crawl）。
+ * OPENING_PREPARING 阶段无视频可播时铺满 Stage：慢速上滚的多行叙事文本，
+ * 全部由 scenario snapshot 组装（零生成、零等待），视频 READY 后由外层
+ * showOpeningCrawl 条件自动让位，CSS opacity transition 自然淡出接管。 */
+function OpeningCrawl({ info, onSkip }: { info: OpeningInfo; onSkip: () => void }) {
+  const lines: { key: string; text: string; kind: "location" | "premise" | "identity" | "hook" }[] = [];
+  if (info.location_line) lines.push({ key: "loc", text: info.location_line, kind: "location" });
+  info.premise_lines.forEach((t, i) => lines.push({ key: `p${i}`, text: t, kind: "premise" }));
+  if (info.identity_line) lines.push({ key: "id", text: info.identity_line, kind: "identity" });
+  if (info.hook_line) lines.push({ key: "hook", text: info.hook_line, kind: "hook" });
+  if (!lines.length) lines.push({ key: "empty", text: "故事即将开始。", kind: "premise" });
+  return (
+    <div className="opening-crawl" data-testid="opening-crawl"
+      style={{ ["--opening-accent" as any]: info.accent || "#e2d5a7" }}>
+      <div className="opening-crawl-fade-top" aria-hidden />
+      <div className="opening-crawl-track">
+        {lines.map((l) => (
+          <p key={l.key} className={`opening-line opening-${l.kind}`}>{l.text}</p>
+        ))}
+        <p className="opening-line opening-status">正在准备第一幕画面…</p>
+      </div>
+      <div className="opening-crawl-fade-bottom" aria-hidden />
+      <button className="opening-skip" onClick={onSkip} aria-label="跳过前情提要">跳过前情 ›</button>
     </div>
   );
 }

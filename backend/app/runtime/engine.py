@@ -39,6 +39,9 @@ from ..domain.state_manager import ProposalRejected, StateManager
 from ..providers.router import ProviderBlocked, ProviderError, ProviderRouter
 from ..skills.registry import is_enabled as skill_enabled
 from ..skills import mechanic as mechanic_skill
+from ..skills.gameplay_policy import INTENT_PREVIEW_POLICY, CHOICE_POLICY, CAUSAL_NARRATIVE_POLICY, MECHANIC_REPAIR_POLICY
+from ..skills.gameplay import (understand_action, director_context, choice_context,
+                              mechanic_context, arbitrate, distinct_candidates)
 from .session_state import Arc, BudgetLedger, SessionState, TimedState
 from .tracer import tracer
 from .language_settings import read_language_settings
@@ -132,6 +135,67 @@ def _public_story_text(state: "SessionState", text: str) -> str:
     return value
 
 
+def _opening_info(state: "SessionState") -> dict:
+    """前情提要（星战式 crawl）：OPENING_PREPARING 阶段立即可得。
+
+    全部由 scenario_snapshot 组装，零生成；前端在视频 READY 前滚动显示，
+    READY 后淡出接管。location_line 优先「名称 · 时间感」，premise_lines
+    从 premise/description 抽 2–3 句，identity_line 给玩家身份锚点，
+    hook_line 用 core_question 留下悬念钩子。
+    """
+    snapshot = state.scenario_snapshot
+    drama = snapshot.get("drama", {})
+    world = snapshot.get("world", {})
+    chars = {c.get("id"): c for c in snapshot.get("characters", [])}
+    player_char = chars.get(snapshot.get("player_character", "player"), {})
+
+    # 地点行：优先「名称 · 年份/氛围」（生化危机那类 "Raccoon City · Sept 1998"），
+    # 退化成第一条 locations 的显示名 + world.era/time 字段兜底。
+    loc_names = _scenario_location_names(state)
+    first_loc_label = next(iter(loc_names.values()), "") or world.get("name", "")
+    era = world.get("era") or world.get("time") or world.get("setting_time") or ""
+    location_line = " · ".join(x for x in [first_loc_label, era] if x)
+
+    # 前情段：premise → description → title 逐级退化；按中文句号/换行切 2–3 句
+    import re as _re
+    raw_premise = (snapshot.get("premise") or snapshot.get("description")
+                   or snapshot.get("title") or "")
+    premise_lines = [
+        ln.strip() for ln in _re.split(r"(?<=[。！？!?])|\n", raw_premise)
+        if ln.strip()
+    ][:3]
+
+    # 身份锚点：玩家角色 display identity（快照里的 identity 字段）
+    identity = (player_char.get("identity") or "你").strip()
+    identity_line = f"你是 {identity}。" if identity and not identity.startswith("你") else ""
+
+    # 悬念钩子：core_question 保留问句形态，让玩家知道故事要回答什么
+    hook_line = (drama.get("core_question") or "").strip()
+
+    # 主题色：按 genre 给 hue，前端合成 HSL，避免把视觉细节堆到后端
+    genre = (snapshot.get("genre") or "").lower()
+    accent_map = {
+        "horror": "#c8a86b", "生化": "#c8a86b", "悬疑": "#c8a86b",
+        "scifi": "#7db3e8", "科幻": "#7db3e8",
+        "fantasy": "#b98ae8", "奇幻": "#b98ae8",
+        "romance": "#e88aa8", "爱情": "#e88aa8",
+        "thriller": "#d4c06a", "惊悚": "#d4c06a",
+    }
+    accent = "#e2d5a7"  # 默认星战金
+    for key, color in accent_map.items():
+        if key in genre:
+            accent = color
+            break
+
+    return {
+        "location_line": location_line,
+        "premise_lines": premise_lines,
+        "identity_line": identity_line,
+        "hook_line": hook_line,
+        "accent": accent,
+    }
+
+
 def _npc_ids(state: "SessionState") -> list[str]:
     """在场非玩家角色 id（按 Scenario characters 声明顺序）。"""
     player_id = state.scenario_snapshot.get("player_character", "player")
@@ -165,7 +229,7 @@ class RuntimeEngine:
         snapshot = state.scenario_snapshot
         drama = snapshot.get("drama", {})
         chars = {c.get("id"): c for c in snapshot.get("characters", [])}
-        return {
+        return director_context({
             "title": snapshot.get("title", ""),
             "premise": snapshot.get("premise") or snapshot.get("description", ""),
             "genre": snapshot.get("genre", ""),
@@ -196,7 +260,7 @@ class RuntimeEngine:
             "phase": state.drama.phase.value,
             "npcs": [{**chars.get(cid, {}), "id": cid}
                      for cid in _npc_ids(state)],
-        }
+        })
 
     async def _persist(self, state: SessionState) -> None:
         state.touch()
@@ -234,7 +298,7 @@ class RuntimeEngine:
             id=uid("evt"), session_id=state.id, arc_id=arc.id if arc else "",
             type=type_, summary=summary, branch_id=branch_id,
             world_version=state.world.version, drama_revision=state.drama.revision,
-            extra=extra)
+            operations=extra.pop("operations", []), extra=extra)
         state.add_event(evt)
         return evt
 
@@ -528,13 +592,13 @@ class RuntimeEngine:
             name = chars.get(cid, {}).get("identity", cid).split(" /")[0]
             candidates.append(
                 dict(label=f"Talk to {name}" if english else f"和{name}谈谈，听 TA 怎么说", confidence=0.6,
-                     summary="Listen to their perspective" if english else "不推进调查，让关系自然流动", kind="social"))
+                     summary="Hear what they have noticed and decide together" if english else "听听对方发现了什么，再一起决定下一步", kind="social"))
         other_locs = [l for l in loc_ids if l != world.location]
         if other_locs:
             dest = loc_names.get(other_locs[-1], other_locs[-1])
             candidates.append(
                 dict(label=f"Leave for {dest}" if english else f"离开这里，去{dest}", confidence=0.55,
-                     summary="Move to another location" if english else "主动改变自己所处的位置", kind="withdrawal"))
+                     summary="Look for a route out of the current predicament" if english else "寻找离开眼前困境的路线", kind="withdrawal"))
         else:
             candidates.append(
                 dict(label="Withdraw from the situation" if english else "主动退出眼前的故事", confidence=0.55,
@@ -560,7 +624,7 @@ class RuntimeEngine:
             "inventory": world.inventory,
             "clues": list(world.clues.keys()),
             "relationships": world.relationships,
-            "npcs": [{**chars.get(cid, {}), "id": cid}
+            "npcs": [{"id": cid, "identity": chars.get(cid, {}).get("identity", "")}
                      for cid in npcs],
             "phase": state.drama.phase.value,
             "wishes": [w.raw for w in state.wishes if w.status == WishStatus.ACTIVE],
@@ -569,7 +633,13 @@ class RuntimeEngine:
                            "返回 JSON: {\"candidates\": [{\"label\",\"summary\",\"kind\"}]}，"
                            "kind ∈ investigation/social/risk/withdrawal",
         }
+        decision_context = choice_context(self._scenario_brief(state), state.preferences.model_dump(),
+                                          [p.model_dump() for p in state.pressures])
+        context.update(decision_context)
+        context["instruction"] += CHOICE_POLICY
         candidates: list[dict] = []
+        if not skill_enabled("choice-evaluation"):
+            return self._generic_candidates(state)
         try:
             _, rec, resp = await self.router.call_text(
                 "director",
@@ -587,7 +657,7 @@ class RuntimeEngine:
                         confidence=float(c.get("confidence", 0.6)),
                         kind=str(c.get("kind", "investigation"))))
             await tracer.emit("director.candidates", "success",
-                              output={"count": len(candidates)},
+                              input_={"context": context}, output={"count": len(candidates), "candidates": candidates},
                               provider=rec.selected or "", session_id=state.id)
         except (ProviderBlocked, ProviderError, ValueError, KeyError) as e:
             await tracer.emit("director.candidates", "degraded",
@@ -595,19 +665,27 @@ class RuntimeEngine:
         if not candidates:
             candidates = self._generic_candidates(state)
 
+        candidates, duplicate_decisions = distinct_candidates(candidates)
+        latest = next((b for b in reversed(state.branches) if b.status == BranchStatus.CANONICAL
+                       and b.source != BranchSource.OPENING), None)
+        if latest and len(candidates) > 1:
+            remaining = [c for c in candidates if c["label"].strip() != latest.label.strip()]
+            if remaining:
+                candidates = remaining
         # Jev/Decision 排序（Mock 决策或真实 API）；不可用则保持现有顺序
         try:
             _, rec, answer = await self.router.call_decision(
-                state={"location": world.location, "inventory": world.inventory,
-                       "clues": world.clues, "raw_player_input": ""},
+                state=decision_context,
                 questions=[{"id": "rank", "candidates": [c["label"] for c in candidates]}])
             ranked = answer.scores or {}
             if ranked:
                 candidates.sort(key=lambda c: -ranked.get(c["label"], 0.0))
             await tracer.emit("decision.rank", "success",
-                              input_={"candidates": [c["label"] for c in candidates]},
-                              output={"ranked": ranked}, provider=rec.selected or "",
-                              session_id=state.id)
+                              input_={"candidates": [c["label"] for c in candidates], "context": decision_context},
+                              output={"ranked": ranked, "other_probability": ranked.get("OTHER"),
+                                      "deduplicated": duplicate_decisions}, provider=rec.selected or "",
+                              model=answer.model, duration_ms=answer.latency_ms,
+                              skill_id="choice-evaluation", skill_version="1.0.0", session_id=state.id)
         except (ProviderBlocked, ProviderError) as e:
             await tracer.emit("decision.rank", "degraded", output={"reason": str(e)},
                               session_id=state.id)
@@ -842,6 +920,9 @@ class RuntimeEngine:
     # Branch 生成流水线
     # ==================================================================
     def _spawn_pipeline(self, session_id: str, branch_id: str) -> None:
+        task = self._pipeline_tasks.get(branch_id)
+        if task and not task.done():
+            return  # one running pipeline per branch, including recovery retries
         self._pipeline_tasks[branch_id] = asyncio.get_running_loop().create_task(
             self._run_pipeline(session_id, branch_id))
 
@@ -1096,7 +1177,8 @@ class RuntimeEngine:
             branch.packet = self._build_scene_packet(state, branch)
             branch.routes.append(rec)
             await tracer.emit("director.plan", "success", input_={"label": branch.label, "opening": True},
-                              output={"primary_function": branch.directive.primary_function},
+                              output={"directive": branch.directive.model_dump(), "outcome": branch.outcome.model_dump(),
+                                  "skill_decisions": branch.skill_decisions},
                               provider=rec.selected or "", model=rec.model or "",
                               session_id=state.id, branch_id=branch.id)
             return
@@ -1138,6 +1220,8 @@ class RuntimeEngine:
                   f"scenario_context: {json.dumps(self._scenario_brief(state), ensure_ascii=False)}\n{schema_hint}"}],
                 mechanics, state.id, branch.id)
         outcome = content.get("outcome") or {}
+        adjudication = await self._arbitrate_mechanics(state, branch, content)
+        outcome = content.get("outcome") or {}
         branch.director_result = content
         directive_data = content.get("directive") or {}
         branch.directive = DramaticDirective(
@@ -1156,25 +1240,14 @@ class RuntimeEngine:
             ending=outcome.get("ending"),
             kind=outcome.get("kind", "investigation"))
         branch.summary = branch.summary or branch.outcome.title
-        # Mechanic Skill 闭环（G26）：director 产出的 skill_triggers 显式走
-        # skill 函数 → 带 skill_version/input 的 Proposal → 合并进 state patch ops。
-        # 禁用/不处理的 trigger 静默跳过；产出与普通 ops 走同一 validate→commit。
-        for trig in outcome.get("skill_triggers") or []:
-            sid = trig.get("skill", "")
-            result = mechanic_skill.invoke(
-                sid, trig, self._scenario_brief(state), mechanics,
-                branch.id, state.world.version, state.drama.revision)
-            if result is None:
-                continue
-            for op in result["proposal"]["operations"]:
-                branch.outcome.ops.append(PatchOperation(**op))
-            await tracer.emit(f"skill.{sid}", "success",
-                              input_=result["input"],
-                              output={"ops": len(result["proposal"]["operations"]),
-                                      "proposal": result["proposal"]},
-                              provider="runtime",
-                              session_id=state.id, branch_id=branch.id,
-                              skill_id=sid, skill_version=result["skill_version"])
+        branch.outcome.ops = _to_patch_ops(adjudication.operations)
+        branch.skill_decisions = adjudication.decisions
+        for result in adjudication.invocations:
+            sid = result["skill_id"]
+            await tracer.emit(f"skill.{sid}", "success", input_=result["input"],
+                output={"proposal": result["proposal"], "disposition": "proposed_not_committed"},
+                session_id=state.id, branch_id=branch.id, trace_id=branch.trace_id,
+                skill_id=sid, skill_version=result["skill_version"])
         # 预构建双域 Proposal（提交时刷新 base_version 再校验）
         if branch.outcome.ops:
             branch.state_patch_proposal = StatePatchProposal(
@@ -1196,10 +1269,44 @@ class RuntimeEngine:
         branch.packet = self._build_scene_packet(state, branch)
         if not branch.routes or branch.routes[-1] != rec:
             branch.routes.append(rec)
+        await tracer.emit("turn.context", "success", input_={"world_before": state.world.model_dump(),
+            "drama_before": state.drama.model_dump(), "action_semantics": branch.action_semantics,
+            "context": self._scenario_brief(state)}, output={"proposal": branch.state_patch_proposal.model_dump() if branch.state_patch_proposal else None},
+            session_id=state.id, branch_id=branch.id, trace_id=branch.trace_id)
         await tracer.emit("director.plan", "success", input_={"label": branch.label},
                           output={"primary_function": branch.directive.primary_function},
                           provider=rec.selected or "", model=rec.model or "",
                           session_id=state.id, branch_id=branch.id)
+
+    async def _arbitrate_mechanics(self, state: SessionState, branch: Branch, content: dict):
+        """One bounded semantic correction, before Narrative or paid Production."""
+        import time
+        started = time.perf_counter()
+        if not skill_enabled("mechanic-arbitration"):
+            raise EngineError("Mechanic arbitration is disabled")
+        mechanics = state.scenario_snapshot.get("mechanics", {})
+        context = mechanic_context(self._scenario_brief(state), state.world.model_dump())
+        for attempt in range(2):
+            result = arbitrate(content.get("outcome") or {}, context, mechanics, branch.id,
+                               state.world.version, state.drama.revision)
+            await tracer.emit("skill.mechanic-arbitration", "rejected" if result.errors else "success",
+                input_={"why": "reconcile Director mechanic proposals before narrative", "context": context,
+                        "triggers": (content.get("outcome") or {}).get("skill_triggers", []), "attempt": attempt},
+                output=result.model_dump(), session_id=state.id, branch_id=branch.id, trace_id=branch.trace_id,
+                skill_id="mechanic-arbitration", skill_version="1.0.0",
+                duration_ms=int((time.perf_counter()-started)*1000))
+            if not result.errors:
+                return result
+            if attempt:
+                raise EngineError("Mechanic proposals conflict with recorded state: " + "; ".join(result.errors))
+            corrected, route = await self._director_output(
+                [{"role": "user", "content":
+                    f"raw_player_input: {branch.intent.action or branch.label}\n"
+                    f"scenario_context: {json.dumps(self._scenario_brief(state), ensure_ascii=False)}\n"
+                    f"action_semantics: {json.dumps(branch.action_semantics, ensure_ascii=False)}\n"
+                    + MECHANIC_REPAIR_POLICY + json.dumps(result.errors, ensure_ascii=False)}], mechanics, state.id, branch.id)
+            content.clear(); content.update(corrected)
+            branch.routes.append(route)
 
     def _build_scene_packet(self, state: SessionState, branch: Branch) -> ScenePacket:
         """ScenePacket（FR-068）：Narrative 的最小授权上下文。
@@ -1291,12 +1398,22 @@ class RuntimeEngine:
                          "caption 必须是本幕内容的字幕，不可复制行动建议。dialogue 只包含本幕确实说出的简短台词，"
                          "不得为凑台词添加新的剧情事实；无台词返回空数组。speaker 必须使用场景中的角色ID。"
                          "旁白无 speaker，不泄露授权范围以外的信息，不替玩家做下一步决定。"
-                         + language.text_instruction() + "允许的角色：" + json.dumps(
+                         + CAUSAL_NARRATIVE_POLICY + language.text_instruction() + "允许的角色：" + json.dumps(
                              [{"id": c.get("id"), "identity": c.get("identity", "")} for c in characters], ensure_ascii=False)
                          + "场景包：" + json.dumps(branch.packet.model_dump(exclude={"forbidden_revelations"}) if branch.packet else {}, ensure_ascii=False)}, {"role": "user", "content":
                           f"scene_title: {outcome.title if outcome else branch.label}\n"
                           f"scene_text: {outcome.text if outcome else branch.summary}\n"
                           f"action_summary (not a subtitle): {branch.summary}"}]
+        narrative_brief = {
+            "player": {"id": state.scenario_snapshot.get("player_character")},
+            "npcs": [{"id": c.get("id"), "identity": c.get("identity")} for c in characters
+                     if c.get("id") != state.scenario_snapshot.get("player_character")],
+        }
+        # Adversarial offline fixture only; secrets never enter live Narrative.
+        if settings.provider_mode == "mock":
+            from ..providers.fixtures import get as fixture_settings
+            if fixture_settings().get("leak_secret"):
+                narrative_brief["truth_model"] = state.scenario_snapshot.get("drama", {}).get("truth_model", "")
         leaked: list[str] = []
         resp = None
         rec = None
@@ -1309,9 +1426,8 @@ class RuntimeEngine:
             _, rec, resp = await self.router.call_text(
                 "narrative", messages=messages,
                 output_contract={"purpose": "narrative_beat", "media_language": language.model_dump(), "context": branch.context,
-                                 "packet": branch.packet.model_dump(mode="json")
-                                 if branch.packet else {},
-                                 "scenario_brief": self._scenario_brief(state)},
+                                 "packet": branch.packet.model_dump(mode="json", exclude={"forbidden_revelations"})
+                                 if branch.packet else {}, "scenario_brief": narrative_brief},
                 branch_id=branch.id)
             from .structured_output import decode_object
             try:
@@ -1344,6 +1460,8 @@ class RuntimeEngine:
                 continue
             leaked = self._forbidden_hits(state, branch, "\n".join([text, caption, *[line["line"] for line in dialogue]]))
             if not leaked:
+                focus = content.get("visual_focus", "")
+                branch.causal_presentation = {"visual_focus": focus[:300] if isinstance(focus, str) else ""}
                 branch.narrative = text
                 branch.caption = caption
                 branch.dialogue = [{"speaker": line["speaker"], "line": line["line"]} for line in dialogue]
@@ -1361,7 +1479,11 @@ class RuntimeEngine:
             raise EngineError(f"narrative leak rejected: {leaked[0]}")
         branch.routes.append(rec)
         await tracer.emit("narrative.beat", "success",
-                          output={"chars": len(branch.narrative), "media_language": language.model_dump(), "dialogue_count": len(branch.dialogue)},
+                          input_={"packet": branch.packet.model_dump(exclude={"forbidden_revelations"}) if branch.packet else {},
+                                  "action_semantics": branch.action_semantics},
+                          output={"text": branch.narrative, "caption": branch.caption,
+                                  "visual_focus": branch.causal_presentation.get("visual_focus"),
+                                  "chars": len(branch.narrative), "media_language": language.model_dump(), "dialogue_count": len(branch.dialogue)},
                           provider=rec.selected or "", session_id=state.id, branch_id=branch.id)
 
     def _bound_references(self, state: SessionState, cast: list[str] | None = None) -> list[dict]:
@@ -1461,11 +1583,14 @@ class RuntimeEngine:
                 f"cast 中每一项只能逐字使用这些 ID，禁止用姓名或自创缩写替代：{json.dumps(cast_ids)}。"
                 "dialogue_indices 选择该镜头要使用的授权台词序号(从0开始)；不说话返回空数组，"
                 "跨镜头不得重复同一句台词，不得虚构或翻译台词。prompt只描述画面与音效，不包含新台词或文字字幕。"
+                "每个短镜头只呈现visual_focus中的一个核心可见动作。复杂行动的完整结果由正文承接；"
+                "不得用无关走动代替玩家行动，不得增加地点跳转或新决定。"
                 + language.text_instruction() + "prompt 使用完整具体影视描述，人物与场景保持连续。角色：" + json.dumps(
                     [{k: c.get(k, "") for k in ("id", "identity", "appearance", "visual_state")} for c in characters], ensure_ascii=False)},
                 {"role": "user", "content": f"raw_player_input: {branch.label}\n"
                  f"scene_title: {branch.outcome.title if branch.outcome else branch.label}\n"
                  f"scene_text: {branch.narrative}\n"
+                 f"visual_focus: {branch.causal_presentation.get('visual_focus') or (branch.outcome.title if branch.outcome else branch.label)}\n"
                  f"approved_caption: {branch.caption}\n"
                  f"authorized_dialogue: {json.dumps(branch.dialogue, ensure_ascii=False)}"}],
             output_contract={"purpose": "production_shots", "media_language": language.model_dump(), "shot_policy": policy, "json_schema": schema}, branch_id=branch.id)
@@ -1966,6 +2091,11 @@ class RuntimeEngine:
             state = await self.load_session(session_id)
             if not state:
                 raise EngineError("session not found")
+            prior = state.branch(branch_id)
+            if prior and prior.status == BranchStatus.CANONICAL and prior.commit_event:
+                return {"status": "CANONICAL", "branch_id": branch_id, "idempotent": True}
+            if state.selection_lock and state.pending_selected_branch_id == branch_id:
+                return {"status": "SELECTING", "branch_id": branch_id, "idempotent": True}
             if state.player.status == "GENERATING_NEXT" and not state.pending_freeform_id:
                 raise EngineError("这一幕正在重新生成，请稍候")
             if state.selection_lock:
@@ -1999,6 +2129,7 @@ class RuntimeEngine:
                     self._await_selected_branch(session_id, branch_id))
                 return {"status": "SELECTING", "branch_id": branch_id}
             state.selection_lock = True
+            state.pending_selected_branch_id = branch_id
             branch.status = BranchStatus.SELECTED
             state.counters.spend_attempts += 1
             if state.timed.active:
@@ -2023,6 +2154,8 @@ class RuntimeEngine:
         调用方必须持有 session 锁。PROVISIONAL 显式持久化+推送（可观察）；
         任何一步失败 → FAILED + 回滚事件，不污染正式状态。
         """
+        if branch.status == BranchStatus.CANONICAL and branch.commit_event:
+            return
         try:
             branch.status = BranchStatus.SELECTED
             # Phase 1：PROVISIONAL —— 媒体可播放性确认前的可见中间态
@@ -2039,6 +2172,14 @@ class RuntimeEngine:
             # Phase 2：媒体确认 → 双域原子提交 → CANONICAL
             await self._commit_branch(state, branch)
             branch.status = BranchStatus.CANONICAL
+            locations = _scenario_location_names(state)
+            origin = (branch.read_set.get("world") or {}).get("location")
+            destination = state.world.location
+            transition = (f"从{locations.get(origin, '先前的位置')}来到{locations.get(destination, '当前区域')}。"
+                          if origin and origin != destination else "")
+            branch.causal_presentation.update({"action": branch.intent.action or branch.label,
+                "result": branch.outcome.text if branch.outcome else branch.narrative,
+                "transition": transition, "scene_id": branch.artifact.id})
             branch.last_error = None
             branch.fail_stage = None
             branch.rollback_reason = None
@@ -2046,9 +2187,12 @@ class RuntimeEngine:
             state.counters.spend_success += 1
             self._invalidate_others(state, branch)
             self._event(state, "branch_canonical", f"已确认：{branch.label}",
-                        branch_id=branch.id)
+                        branch_id=branch.id, operations=[op.model_dump() for op in branch.outcome.ops] if branch.outcome else [])
             await tracer.emit("commit.canonical", "success",
-                              output={"branch": branch.id},
+                              output={"branch": branch.id, "scene_id": branch.artifact.id,
+                                      "world_after": state.world.model_dump(), "drama_after": state.drama.model_dump(),
+                                      "operations": [op.model_dump() for op in branch.outcome.ops] if branch.outcome else [],
+                                      "skill_decisions": branch.skill_decisions},
                               session_id=state.id, branch_id=branch.id)
         except (EngineError, ProposalRejected) as e:
             branch.status = BranchStatus.FAILED
@@ -2235,6 +2379,9 @@ class RuntimeEngine:
             if command == "regenerate":
                 old = state.branch(player.branch_id) if player.branch_id else None
                 if old and old.status == BranchStatus.CANONICAL:
+                    running = self._pipeline_tasks.get(old.id)
+                    if running and not running.done():
+                        return {"position": player.position(), "status": player.status}
                     player.status = "GENERATING_NEXT"
                     self._pipeline_tasks[old.id] = asyncio.create_task(self._regenerate_presentation(session_id, old.id))
                     await self._persist(state)
@@ -2317,6 +2464,34 @@ class RuntimeEngine:
     # ==================================================================
     # 自由输入
     # ==================================================================
+    async def _preview_intent(self, state: SessionState, text: str, observation: dict) -> dict:
+        """AI pre-fills a review card only; interpretation never executes an action."""
+        if not skill_enabled("intent-reconciliation"):
+            return {"action": text, "desire": "", "strategy": ""}
+        context = choice_context(self._scenario_brief(state), {}, [])
+        try:
+            _, route, response = await self.router.call_text("director", messages=[
+                {"role": "system", "content":
+                    INTENT_PREVIEW_POLICY + read_language_settings().text_instruction()},
+                {"role": "user", "content": json.dumps({"raw_player_input": text,
+                    "observation": observation, "visible_context": context}, ensure_ascii=False)}],
+                output_contract={"purpose": "intent_preview"})
+            from .structured_output import decode_object
+            result = decode_object(response.content)
+            if any(not isinstance(result.get(k), str) for k in ("action", "desire", "strategy")) or not result["action"].strip():
+                raise ValueError("invalid intent preview")
+            result = {k: result[k][:300] for k in ("action", "desire", "strategy")}
+            await tracer.emit("skill.intent-reconciliation", "success",
+                input_={"raw_input": text, "why": "AI pre-filled confirmation; not an execution"}, output=result,
+                session_id=state.id, provider=route.selected or "", model=response.model,
+                duration_ms=response.latency_ms, skill_id="intent-reconciliation", skill_version="2.0.0")
+            return result
+        except (ProviderBlocked, ProviderError, ValueError, TypeError):
+            await tracer.emit("skill.intent-reconciliation", "fallback", input_={"raw_input": text},
+                output={"reason": "preview_unavailable_original_preserved"}, session_id=state.id,
+                skill_id="intent-reconciliation", skill_version="2.0.0")
+            return {"action": text, "desire": "", "strategy": ""}
+
     async def free_action(self, session_id: str, text: str) -> dict:
         async with self._lock(session_id):
             state = await self.load_session(session_id)
@@ -2348,11 +2523,15 @@ class RuntimeEngine:
             except (ProviderBlocked, ProviderError):
                 intent_obs = {"confidence": 0.9, "impact": "LOW",
                               "clarification_required": False}
+            needs_preview = intent_obs.get("clarification_required") or (
+                float(intent_obs.get("confidence", 0.8)) < 0.75 and intent_obs.get("impact") != "LOW")
+            if needs_preview:
+                intent_obs.update(await self._preview_intent(state, text, intent_obs))
             if intent_obs.get("clarification_required"):
                 # 高影响低置信：可编辑澄清卡（保留玩家原文，不覆盖）
                 state.pending_intent = {
                     "raw_text": text,
-                    "action": text,
+                    "action": intent_obs.get("action") or text,
                     "desire": intent_obs.get("desire") or "",
                     "strategy": intent_obs.get("strategy") or "",
                     "confidence": float(intent_obs.get("confidence", 0.0)),
@@ -2426,9 +2605,16 @@ class RuntimeEngine:
                                 intent_obs: dict, label_override: str = "") -> dict:
         """自由输入的规划路径：Director 判定三档响应 → QUICK_ACK 立即提交 / 完整分支生成。"""
         mechanics = state.scenario_snapshot.get("mechanics", {})
+        packet = understand_action(text, intent_obs, label_override)
+        await tracer.emit("skill.intent-reconciliation", "success",
+            input_={"raw_input": text, "why": "preserve original and confirmed player intent"},
+            output=packet.model_dump(), session_id=state.id,
+            skill_id="intent-reconciliation", skill_version="2.0.0")
         try:
             content, rec = await self._director_output(
-                [{"role": "user", "content": f"raw_player_input: {text}\nscenario_context: {json.dumps(self._scenario_brief(state), ensure_ascii=False)}"}],
+                [{"role": "user", "content": f"raw_player_input: {packet.action}\n"
+                  f"action_semantics: {packet.model_dump_json()}\n"
+                  f"scenario_context: {json.dumps(self._scenario_brief(state), ensure_ascii=False)}"}],
                 mechanics, state.id)
         except Exception as error:
             branch = Branch(id=uid("br"), trace_id=uid("trace"), session_id=state.id,
@@ -2450,6 +2636,8 @@ class RuntimeEngine:
         mode = "FULL_BEAT" if outcome.get("ending") else outcome.get("mode", "FULL_BEAT")
         await tracer.emit("director.action", "success", input_={"raw_player_input": text},
                           output={"response_mode": mode, "outcome": outcome, "directive": content.get("directive")}, provider=rec.selected or "", model=rec.model or "", session_id=state.id)
+        if mode == "QUICK_ACK" and outcome.get("skill_triggers"):
+            mode = "FULL_BEAT"
         if mode == "QUICK_ACK":
             # 轻量回应：确定性 patch 直接提交，不产生媒体分支
             ops = _to_patch_ops(outcome.get("ops", []))
@@ -2489,7 +2677,7 @@ class RuntimeEngine:
         state.merge_buffer = []   # 完整 beat 打断小动作序列
         # 完整分支
         branch = Branch(
-            director_result=content, routes=[rec],
+            director_result=content, routes=[rec], action_semantics=packet.model_dump(),
             id=uid("br"), trace_id=uid("trace"), session_id=state.id,
             arc_id=state.current_arc().id if state.current_arc() else "",
             source=BranchSource.FREE, label=text,
@@ -2771,7 +2959,8 @@ class RuntimeEngine:
                 b = state.branch(bid)
                 if (b and b.source in (BranchSource.RECOMMENDATION, BranchSource.TIMED)
                         and b.status not in (BranchStatus.FAILED, BranchStatus.INVALIDATED,
-                                             BranchStatus.EXPIRED, BranchStatus.CANCELLED)):
+                                             BranchStatus.EXPIRED, BranchStatus.CANCELLED,
+                                             BranchStatus.SELECTED, BranchStatus.PROVISIONAL, BranchStatus.CANONICAL)):
                     recommendations.append({
                         "branch_id": b.id, "label": _public_story_text(state, b.label),
                         "summary": _public_story_text(state, b.summary), "confidence": b.probability,
@@ -2827,6 +3016,9 @@ class RuntimeEngine:
             "scenario": {"title": snapshot.get("title", ""),
                          "player_identity": player_char.get("identity", "玩家")},
             "arc": {"seq": arc.seq if arc else len(state.arcs), "total": len(state.arcs)},
+            # 前情提要：OPENING_PREPARING 阶段立即给出，视频 READY 后由前端接管淡出。
+            # 零生成（全来自 snapshot），不会阻塞首次视图返回。
+            "opening": _opening_info(state),
             "player": {
                 "status": state.player.status,
                 "scene_title": _public_story_text(state, state.player.scene_title),
@@ -2844,6 +3036,9 @@ class RuntimeEngine:
                 "recovery_actions": ["retry", "modify", "text_continue", "exit"] if state.player.status in ("FAILED", "FAILED_RECOVERABLE") else [],
                 "state": "GENERATING_MEDIA" if state.player.status in ("GENERATING_NEXT", "OPENING_PREPARING") else state.player.status},
             "action_pending": state.player.status == "GENERATING_NEXT" or bool(state.pending_freeform_id and (pending := state.branch(state.pending_freeform_id)) and pending.status not in (BranchStatus.CANONICAL, BranchStatus.FAILED, BranchStatus.CANCELLED, BranchStatus.INVALIDATED, BranchStatus.EXPIRED)),
+            "causal_presentation": {k: _public_story_text(state, v) for k, v in current.causal_presentation.items()
+                                    if k in ("action", "result", "visual_focus", "transition") and isinstance(v, str)}
+                                    if current and current.status == BranchStatus.CANONICAL and current.source != BranchSource.OPENING else None,
             "recommendations": recommendations,
             "selected": selected,
             "generating": [{"branch_id": b.id, "label": b.label,

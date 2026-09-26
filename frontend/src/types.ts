@@ -275,6 +275,16 @@ export interface EndingView {
   budget: { total: number; used: number };
 }
 
+/** 前情提要：OPENING_PREPARING 阶段立即可得的叙事文本（星战式 crawl）。
+ * 全部由 scenario snapshot 组装，零生成；视频 READY 后接管淡出。 */
+export interface OpeningInfo {
+  location_line: string;    // "浣熊市 · 1998年9月"（world.locations 第一行 + 时间感）
+  premise_lines: string[];  // premise 前 2–3 句
+  identity_line: string;    // "你是 Leon S. Kennedy…"
+  hook_line: string;        // core_question → 悬念句
+  accent: string;           // 主题色（genre→色相映射）
+}
+
 export interface Wish {
   id: string;
   raw: string;
@@ -286,10 +296,12 @@ export interface Wish {
 }
 
 export interface PlayerView {
+  causal_presentation?: { action?: string; result?: string; visual_focus?: string; transition?: string } | null;
   session_id: string;
   scenario: { title: string; player_identity: string };
   arc: { seq: number; total: number };
   player: PlayerInfo;
+  opening?: OpeningInfo;
   recommendations: Recommendation[];
   selected: { branch_id: string; label: string; status: string } | null;
   generating: GeneratingItem[];
