@@ -2,6 +2,16 @@
 
 本文面向第一次部署项目的开发者。示例不会包含任何真实 API Key；请在自己的密钥管理系统、CI Secret 或服务器上的 `backend/.env` 注入凭据。
 
+## 部署模式选择
+
+| 模式 | 适合场景 | 外部请求 | 需要 GPU |
+| --- | --- | --- | --- |
+| `mock` | 本地开发、评审 UI、自动化回归 | 无 | 否 |
+| `hybrid` | 文本真实、媒体失败可回退的演示 | 按已配置 Provider | 推荐 |
+| `live` | 完整真实模型和媒体验收 | 会产生真实费用 | 运行 Nemotron 时需要 |
+
+第一次部署建议从 `mock` 开始，确认页面、数据库和状态机工作后，再单独打开文本、图片、决策和视频。不要为了验证页面而直接打开所有付费 Provider。
+
 ## 1. 环境要求
 
 - Linux（推荐 NVIDIA DGX Spark 或带 NVIDIA GPU 的主机）
@@ -132,7 +142,42 @@ curl http://127.0.0.1:9000/api/health
 
 返回 `ok: true` 后，再从开发者设置页检查 Provider、模型和付费熔断状态。
 
-## 6. 生产安全注意事项
+## 6. 首次部署验收清单
+
+```bash
+# 应用健康
+curl -fsS http://127.0.0.1:9000/api/health
+
+# 端口监听
+ss -ltnp | rg ':9000'
+
+# 前端构建
+test -f frontend/dist/index.html
+
+# 数据库容器
+docker compose -f deploy/docker-compose.yml ps
+```
+
+真实本地模型额外检查：
+
+```bash
+curl -fsS http://127.0.0.1:8001/v1/models
+```
+
+返回的模型 ID 必须与 `LOCAL_LLM_MODEL` 完全一致。`/api/health` 只证明应用进程可响应，不等于每个外部 Provider 都可用；Provider 的选择、跳过原因和熔断状态应在开发者设置页核对。
+
+## 7. 配置建议
+
+| 场景 | `PROVIDER_MODE` | `FAL_PAID_GENERATION_ENABLED` | `RUNTIME_PROFILE` |
+| --- | --- | --- | --- |
+| 页面开发 | `mock` | `false` | `AGENT_LOCAL_PROFILE` |
+| 文本模型演示 | `hybrid` | `false` | `AGENT_LOCAL_PROFILE` |
+| 人工视频测试 | `live` 或 `hybrid` | 按需 `true` | `AGENT_LOCAL_PROFILE` |
+| 本地视频实验 | `live` | `false` | `VIDEO_LOCAL_PROFILE` |
+
+Jev 推荐预生成视频保持关闭，可以先展示选项和文本结果；只有玩家实际选择或明确进行媒体测试时才提交 H3 任务。
+
+## 8. 生产安全注意事项
 
 - `/dev/*` 是开发者接口，公网部署必须通过反向代理、VPN 或访问控制保护。
 - `/media` 与 `/files` 使用静态文件服务，公网环境应增加签名 URL 或鉴权。
@@ -140,7 +185,24 @@ curl http://127.0.0.1:9000/api/health
 - 断开 SSH 后仍需保持服务运行时，请使用 systemd、Docker restart policy 或 `setsid`；不要依赖交互式终端后台进程。
 - 更新代码前先检查活动媒体任务，避免重复提交付费请求；更新后再次检查 `/api/health`、前端构建产物和本地模型 `/v1/models`。
 
-## 7. 离线回归
+## 9. 更新、回滚和 SSH 断连
+
+更新应用时：
+
+1. `git pull --ff-only`，确认当前 commit。
+2. 检查 `/api/dev/jobs` 是否有活动媒体任务，避免更新过程中重复提交。
+3. 只重启后端和前端；不要随意停止 Nemotron 或本地视频容器。
+4. 更新后重新执行健康、端口、前端资源和模型 `/v1/models` 检查。
+
+使用 systemd 或 Docker 的 `restart: unless-stopped` 保持 SSH 断开后的服务；临时手工启动可以使用 `setsid`：
+
+```bash
+setsid bash deploy/start.sh </dev/null >interaction-start.log 2>&1 &
+```
+
+若新版本启动失败，回滚到上一个已知 commit 后重新构建前端，再检查数据库迁移和活动任务。不要通过删除 PostgreSQL volume 解决应用启动问题。
+
+## 10. 离线回归
 
 ```bash
 cd backend
@@ -153,4 +215,3 @@ npm run build
 ```
 
 离线回归不会调用 StepFun、Jev、fal.ai 或图片中转，也不会产生付费媒体任务。
-

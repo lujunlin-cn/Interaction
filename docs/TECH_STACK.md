@@ -1,5 +1,28 @@
 # 技术栈说明
 
+## 架构分层
+
+```mermaid
+flowchart TB
+    UI[React / TypeScript / Vite]
+    API[FastAPI REST + WebSocket]
+    RT[Runtime Engine]
+    SK[Agent Skills]
+    SM[StateManager]
+    DB[(PostgreSQL)]
+    PR[Provider Router]
+    LOCAL[Nemotron / vLLM]
+    CLOUD[StepFun / Jev / Image Relay / fal.ai]
+    UI --> API --> RT
+    RT --> SK
+    SK --> SM --> DB
+    RT --> PR
+    PR --> LOCAL
+    PR --> CLOUD
+```
+
+前端负责交互和状态呈现，Runtime 负责编排，Skills 负责需要判断的能力，StateManager 负责确定性提交，Provider Router 负责外部服务适配。这样替换模型或供应商时，不需要修改玩家流程和 Canonical 状态规则。
+
 ## 总览
 
 | 层级 | 技术 | 在项目中的职责 |
@@ -55,7 +78,47 @@ StepFun 使用 OpenAI-compatible endpoint。Key 只在后端环境中读取，�
 
 所有 Skill 只能提出经过 schema 校验的 Proposal；StateManager 才能提交 World、Drama、Inventory、Relationship、Knowledge 和 Branch 状态。轨迹系统记录 Skill 版本、输入摘要、输出、拒绝原因、耗时和回退路径，便于 Replay 与比赛现场展示。
 
+## Skill 标准契约
+
+每个正式 Skill 至少定义以下字段：
+
+| 字段 | 含义 |
+| --- | --- |
+| `name` / `version` | 人类可读名称和可回放版本 |
+| `when_to_use` | 触发条件与不触发边界 |
+| `input` | 允许读取的最小上下文 |
+| `output` | 结构化结果或 State Proposal |
+| `side_effects` | 是否只读、是否产生媒体任务、是否允许 Proposal |
+| `failure` / `fallback` | 超时、格式错误和 Provider 不可用时的行为 |
+| `metrics` | 延迟、调用数、接受率、回退次数和质量指标 |
+
+这套契约让评审可以从 Developer Inspector 看到 Skill Chain，而不必阅读一个巨大 Prompt 才能理解系统。
+
+## Provider 路由矩阵
+
+| 能力 | 首选 | 回退 | 是否默认产生费用 |
+| --- | --- | --- | --- |
+| Director | Nemotron 本地 | Step 5 / mock | 否（本地）或按 StepFun 账户计费 |
+| Narrative | Step 3.7 | Nemotron / mock | 取决于配置 |
+| Authoring | Step 5 | mock | 取决于配置 |
+| Decision | Jev | mock decision | 取决于配置 |
+| Image | OpenAI-compatible Relay | 配置的 fallback model | 是，按中转服务计费 |
+| Cloud Video | fal H3 Max | mock video（hybrid） | 是，由付费开关保护 |
+| Local Video | Sol-H3 adapter | mock video | 由本地 GPU 和服务配置决定 |
+
+Router 会记录 selected、skipped 和 fallback 原因；业务代码不直接拼接 Provider 请求，也不在前端保存密钥。
+
+## 质量与工程验证
+
+测试分为四层：
+
+1. **契约测试**：验证 Provider 请求、Schema、Proposal 和状态转换。
+2. **Runtime 测试**：验证 READY、两阶段 Canonical、幂等重试和媒体失败恢复。
+3. **浏览器测试**：验证 Creator、Character Studio、Theater Player 和 Developer Inspector。
+4. **Replay / Smoke**：使用历史输入或固定夹具比较自由行动保真度、选项差异、机制触发和上下文效率；Production 只做 plan-only，不自动提交 H3。
+
+提交前至少执行后端 pytest、前端 `npm run build` 和 mock 健康检查；真实 Provider 验证应单独记录模型、请求数、费用开关和失败原因。
+
 ## 许可证与密钥边界
 
 本仓库代码和文档不包含 StepFun、Jev、fal.ai、图片中转或本地 adapter 的真实密钥。部署者应遵守各 Provider 的服务条款与模型许可证，并在自己的 Secret 管理系统中配置凭据。模型名称、端点和开关写入 `.env.example` 只是接入说明，不代表仓库提供这些服务或承担其费用。
-
