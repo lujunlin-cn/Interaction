@@ -548,6 +548,9 @@ class OutcomeSpec(BaseModel):
     ending: Optional[str] = None       # ending family id
     kind: str = "investigation"        # investigation / social / risk / withdrawal
     mode: ResponseMode = ResponseMode.FULL_BEAT
+    # 行动执行过程（生成等待期的文字承接）：PLANNING 后立即可播，
+    # 逐句淡入覆盖视频生成时间；只描写已确定的执行过程，不预言结果。
+    effects: list[str] = Field(default_factory=list)
 
 
 class ShotPlan(BaseModel):

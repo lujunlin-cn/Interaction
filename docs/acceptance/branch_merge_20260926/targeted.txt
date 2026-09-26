@@ -1,0 +1,9 @@
+......................                                                   [100%]
+=============================== warnings summary ===============================
+tests/test_pending_effects.py::test_effects_respect_packet_boundary_and_interstitial_excludes_hidden_context
+  /home/hajimi2025/interaction/backend/.venv/lib/python3.13/site-packages/pydantic/main.py:475: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='truth', input_value=False, input_type=bool])
+    return self.__pydantic_serializer__.to_python(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+22 passed, 1 warning in 0.57s

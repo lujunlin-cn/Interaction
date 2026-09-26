@@ -155,6 +155,9 @@ export default function Player() {
           <div className="media-status-symbol">{failed || media === "failed" ? "↻" : "◌"}</div>
           <h3>{failed ? "这个行动暂时没有生成成功。" : source && media === "failed" ? "这一幕暂时无法播放。" : generating ? "正在生成这一幕……" : "正在载入场景……"}</h3>
           <p>{failed || media === "failed" ? "你的行动已保留，可以重新尝试或继续阅读故事。" : "故事准备好后将在这里播放。"}</p>
+          {generating && !failed && Boolean(view.pending_effects?.length || view.pending_phase) &&
+            <ActionSequence label={view.pending_label || ""} effects={view.pending_effects || []}
+              phase={view.pending_phase || ""} />}
           {(failed || (source && media === "failed")) && recover}
         </div>}
         {!source && p.scene_text && !generating && !failed && <div className="text-scene"><p>{p.scene_text}</p></div>}
@@ -430,5 +433,48 @@ function OpeningCrawl({ info, onSkip }: { info: OpeningInfo; onSkip: () => void 
       <div className="opening-crawl-fade-bottom" aria-hidden />
       <button className="opening-skip" onClick={onSkip} aria-label="跳过前情提要">跳过前情 ›</button>
     </div>
+  );
+}
+
+/** 生成等待期的文字承接（问题6）：
+ * 行动被接受后，Director 在 PLANNING 阶段已产出 effects（执行过程的分句），
+ * Nemotron 间奏还会在 GENERATING 阶段继续追加；前端按到达顺序逐条淡入，
+ * 底部用锚定真实 pipeline 阶段的进度带呈现"现在进行到哪一步"。
+ * 视频 READY 后外层条件让位，本组件随视频淡入自然消失。 */
+function ActionSequence({ label, effects, phase }: {
+  label: string; effects: string[]; phase: string;
+}) {
+  const PHASES = [
+    { key: "PLANNING", label: "理解行动" },
+    { key: "NARRATIVE", label: "编排叙事" },
+    { key: "PRODUCTION", label: "准备镜头" },
+    { key: "GENERATING", label: "生成画面" },
+    { key: "ASSEMBLING", label: "装配场景" },
+    { key: "READY", label: "即将播放" },
+  ];
+  const idx = Math.max(0, PHASES.findIndex(p => p.key === phase));
+  // 每条 effect 用 CSS animation-delay 形成逐句淡入；间奏追加的新句会
+  // 以新的 key 挂载，不打断已在画面上的句子。
+  return (
+    <section className="action-sequence" data-testid="action-sequence" aria-live="polite">
+      {label && <p className="action-echo muted">你{label}</p>}
+      <div className="action-effects">
+        {effects.map((line, i) => (
+          <p key={`${i}-${line.slice(0, 12)}`} className="action-effect"
+            style={{ animationDelay: `${i * 0.9}s` }}>{line}</p>
+        ))}
+        <p className="action-effect action-effect-pending"
+          style={{ animationDelay: `${effects.length * 0.9}s` }}>◌ 正在生成画面…</p>
+      </div>
+      <div className="phase-track" role="progressbar"
+        aria-valuemin={0} aria-valuemax={PHASES.length - 1} aria-valuenow={idx}>
+        {PHASES.map((p, i) => (
+          <span key={p.key}
+            className={`phase-step ${i < idx ? "done" : i === idx ? "active" : ""}`}>
+            {p.label}
+          </span>
+        ))}
+      </div>
+    </section>
   );
 }
