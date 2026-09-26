@@ -13,6 +13,7 @@ from __future__ import annotations
 import asyncio
 import json
 import math
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -655,8 +656,10 @@ class RuntimeEngine:
             status="PLANNING", branch_ids=branch_ids, timed=bool(timed_node),
             # Decision content is safe to show as soon as Jev has locked it.
             # Media readiness is a separate gate and may lag behind.
-            options_exposed=not bool(timed_node),
-            options_exposed_at=now_ms() if not timed_node else None)
+            # Jev decision text is independent from media readiness. Timed
+            # choices follow the same contract and open at Decision Lead.
+            options_exposed=True,
+            options_exposed_at=now_ms())
         if timed_node:
             # 确定性超时 fallback 分支（Scenario 预先声明，不允许模型临场改判）
             timeout_s = settings.timed_timeout_override or timed_node["timeout_s"]
@@ -815,6 +818,22 @@ class RuntimeEngine:
         task = self._timed_tasks.get(state.id)
         if task and not task.done():
             task.cancel()
+
+    async def _maybe_open_timed_window(self, state: SessionState) -> None:
+        """Open a timed choice at Decision Lead, without waiting for H3."""
+        if (not state.timed.active or state.timed.selection_open
+                or not state.epoch or not state.epoch.timed
+                or not state.epoch.options_exposed):
+            return
+        lead_open = (state.player.position() >= state.player.decision_open_at
+                     or state.player.status in ("READY", "WAITING_DECISION", "ENDED"))
+        if not lead_open:
+            return
+        state.timed.selection_open = True
+        state.timed.deadline_ms = now_ms() + int(state.timed.timeout_seconds * 1000)
+        await self._persist(state)
+        await self._push(state)
+        self._schedule_timed_watchdog(state.id)
 
     # ==================================================================
     # Branch 生成流水线
@@ -1446,12 +1465,37 @@ class RuntimeEngine:
                         session_id=state.id, branch_id=branch.id)
                     raise EngineError("Production requires a valid explicit shot cast before paid submission")
                 cast = list(known)  # Offline fixtures predate cast; never inferred for a paid provider.
+            prompt = str(shot.get("prompt") or "")
+            # A production model can describe Leon in the prompt but return
+            # Victor's ID in `cast`. That would make the resolver send the
+            # wrong face/outfit to H3. When unambiguous identity aliases are
+            # present, derive the visible cast from the prompt and keep the
+            # order in which those identities appear.
+            aliases: list[tuple[int, str]] = []
+            lowered_prompt = prompt.casefold()
+            for character in characters:
+                cid = character.get("id")
+                if not cid or not character.get("global_character_id"):
+                    continue
+                identity = str(character.get("identity") or "")
+                candidates = [identity]
+                candidates.extend(part.strip() for part in re.findall(r"[A-Za-z][A-Za-z .'-]{2,}", identity))
+                candidates.extend(re.findall(r"[\u4e00-\u9fff]{2,}", identity))
+                hits = [a.casefold() for a in candidates if len(a.strip()) >= 2 and a.casefold() in lowered_prompt]
+                if hits:
+                    aliases.append((min(lowered_prompt.index(a) for a in hits), cid))
+            if aliases:
+                mentioned = [cid for _, cid in sorted(aliases)]
+                # Put explicit visual identities in prompt order. Preserve
+                # any non-visual entity such as T-103 after them.
+                cast = mentioned + [cid for cid in cast if cid not in mentioned
+                                    and not any(c.get("id") == cid and c.get("global_character_id")
+                                                for c in characters)]
             refs = self._bound_references(state, cast)
             covered = {ref["entity"] for ref in refs if ref["type"] == "image"}
             if settings.provider_mode == "live" and any(cid in visual_identity_cast and cid not in covered for cid in cast):
                 raise EngineError("A visible character has no image reference within the provider limit")
             text_only_cast = [cid for cid in cast if cid not in covered and cid not in visual_identity_cast]
-            prompt = str(shot.get("prompt") or "")
             if not prompt.strip():
                 raise EngineError("Production requires a non-empty shot prompt")
             visual_descriptions = [{"character_id": cid,
@@ -1707,6 +1751,11 @@ class RuntimeEngine:
         epoch = state.epoch
         if not epoch or epoch.published or epoch.status == "FAILED":
             return
+        # Timed decision labels may be shown at Decision Lead while their
+        # media is still being planned/generated. The countdown must not be
+        # held behind the H3 readiness barrier.
+        if epoch.timed:
+            await self._maybe_open_timed_window(state)
         branches = [state.branch(bid) for bid in epoch.branch_ids]
         branches = [b for b in branches if b]
         if branches and all(b.source == BranchSource.OPENING for b in branches):
@@ -1876,6 +1925,10 @@ class RuntimeEngine:
             if early_selectable:
                 state.selection_lock = True
                 state.pending_selected_branch_id = branch_id
+                if state.timed.active:
+                    # Selecting a timed option closes the current countdown
+                    # immediately, even while its deferred media is pending.
+                    self._cancel_timed(state)
                 state.player.status = "GENERATING_NEXT"
                 self._event(state, "branch_selected_early",
                             f"玩家先选了推荐，等待该方向的场景准备：{branch.label}",
@@ -2196,6 +2249,7 @@ class RuntimeEngine:
             pos = player.position()
             if pos >= player.duration and player.status == "PLAYING":
                 player.status = "WAITING_DECISION"   # 场景播完，等待玩家选择下一步
+            await self._maybe_open_timed_window(state)
             await self._persist(state)
             await self._push(state)
             return {"position": pos, "status": player.status}

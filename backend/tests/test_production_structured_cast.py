@@ -1,5 +1,6 @@
 import asyncio
 import json
+from types import SimpleNamespace
 
 import httpx
 
@@ -45,3 +46,29 @@ def test_production_constraints_reach_local_decoder(monkeypatch):
     assert len(captured) == 1
     assert {r['entity'] for r in branch.shots[0].references} == {'alpha', 'actor_random_42'}
     assert branch.jobs == []
+
+
+def test_production_repairs_identity_mismatch_before_reference_binding(monkeypatch):
+    """A model cast typo must not send Victor's reference for a Leon shot."""
+    from app.providers.base import TextResponse
+    engine, state, branch, route = fixture_engine(monkeypatch)
+    chars = state.scenario_snapshot["characters"]
+    chars[0].update(id="leon", identity="李昂·S·肯尼迪（Leon S. Kennedy）", global_character_id="g-leon")
+    chars[1].update(id="claire", identity="克莱尔·雷德菲尔德（Claire Redfield）", global_character_id="g-claire")
+    chars[2].update(id="victor", identity="Dr. Victor Hale", global_character_id="g-victor")
+    state.asset_manifest = [
+        {"id": "leon-front", "entity": "leon", "role": "front", "path": "https://example.invalid/leon.png", "type": "image"},
+        {"id": "claire-front", "entity": "claire", "role": "front", "path": "https://example.invalid/claire.png", "type": "image"},
+        {"id": "victor-front", "entity": "victor", "role": "front", "path": "https://example.invalid/victor.png", "type": "image"},
+    ]
+
+    async def text(*args, **kwargs):
+        return None, route, TextResponse(content=json.dumps({"shots": [{
+            "title": "突围", "prompt": "Leon S. Kennedy and Claire Redfield run through a corridor.",
+            "subtitle": "突围", "duration": 5, "cast": ["victor", "claire"]
+        }]}))
+
+    engine.router = SimpleNamespace(call_text=text)
+    asyncio.run(engine._shoot_branch(state, branch))
+    assert branch.shots[0].params["cast"] == ["leon", "claire"]
+    assert {ref["entity"] for ref in branch.shots[0].references} == {"leon", "claire"}

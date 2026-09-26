@@ -215,7 +215,7 @@ def test_timed_window_waits_for_server_decision_lead(client):
         runtime_engine.sessions[s.id]=s
         s.player.status='PLAYING';s.player.duration=10;s.player.decision_open_at=8;s.player.position_base=1;s.player.playing=False
         b=Branch(id='timed_lead',trace_id='t',session_id=s.id,arc_id=s.current_arc().id,source=BranchSource.TIMED,status=BranchStatus.READY,base_versions=runtime_engine._branch_base_versions(s),fingerprint=runtime_engine.compute_fingerprint(s),artifact=SceneArtifact(id='a',branch_id='timed_lead',quality_status='READY'))
-        s.branches.append(b);s.epoch=RecommendationEpoch(id='e',branch_ids=[b.id],timed=True);s.timed=TimedState(active=True,timeout_seconds=5)
+        s.branches.append(b);s.epoch=RecommendationEpoch(id='e',branch_ids=[b.id],timed=True,options_exposed=True);s.timed=TimedState(active=True,timeout_seconds=5)
         await runtime_engine._maybe_publish(s)
         assert s.timed.deadline_ms is None and not s.timed.selection_open
         assert runtime_engine.player_view(s)['recommendations']==[]

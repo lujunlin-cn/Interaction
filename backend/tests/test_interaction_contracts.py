@@ -129,7 +129,13 @@ class TestInteractionContracts:
         bid = view["recommendations"][0]["branch_id"]
         response = client.post(f"/api/sessions/{sid}/select", json={"branch_id": bid})
         assert response.status_code == 200, response.text
-        assert response.json()["status"] == "CANONICAL"
+        # With deferred recommendation media the choice is accepted before
+        # H3 finishes; canonicalization completes asynchronously.
+        assert response.json()["status"] in ("SELECTING", "CANONICAL")
+        if response.json()["status"] == "SELECTING":
+            view = wait_for(client, sid,
+                            lambda v: v.get("selected", {}).get("status") == "CANONICAL",
+                            timeout=90)
         view = client.get(f"/api/sessions/{sid}/view").json()
         assert not (view.get("timed") and view["timed"]["active"])
 
