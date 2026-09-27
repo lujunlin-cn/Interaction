@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     # Fal must be able to download /files and /media from this address.
     # Production deployments must set PUBLIC_BASE_URL explicitly; localhost is
     # a safe non-public default that fails preflight before a paid submit.
-    public_base_url: str = "http://127.0.0.1:9000"
+    public_base_url: str = "http://47.108.220.174:9000"
 
     # --- 数据库 ---
     database_url: str = "postgresql+asyncpg://drama:drama@127.0.0.1:5433/interaction_drama"
