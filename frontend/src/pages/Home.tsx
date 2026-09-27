@@ -13,6 +13,7 @@ const MECHANIC_LABELS: Record<string, string> = {
 /** 故事卡片封面映射：真实故事按 id 取封面，取不到用占位渐变。 */
 const COVER_BY_ID: Record<string, string> = {
   rainy_apartment: "/img/images/cover-rainy.png",
+  scn_00003_364d7e: "/img/images/cover-biohazard.png",
 };
 const SAMPLE_COVERS = [
   "/img/images/cover-sample1.png", "/img/images/cover-sample2.png",
@@ -185,7 +186,6 @@ export default function Home() {
             <article key={sc.id} className="story-card">
               <div className="story-cover" style={{ backgroundImage: `url(${coverOf(sc, i)})` }}>
                 {sc.status === "PUBLISHED" && <span className="story-badge"><Icon name="plus" size={11} /> 已发布</span>}
-                <button className="story-more" onClick={(e) => { e.stopPropagation(); }}><Icon name="more" size={16} /></button>
               </div>
               <div className="story-body">
                 <div className="story-titlerow">
@@ -237,9 +237,7 @@ export default function Home() {
           {/* 真实故事不足一排时用静态示例卡补齐 */}
           {FILLER_CARDS.slice(0, Math.max(0, (isPlayer ? RECENT_TOTAL : RECENT_TOTAL - 1) - items.length)).map((f) => (
             <article key={f.title} className="story-card">
-              <div className="story-cover" style={{ backgroundImage: `url(${f.cover})` }}>
-                <button className="story-more"><Icon name="more" size={16} /></button>
-              </div>
+              <div className="story-cover" style={{ backgroundImage: `url(${f.cover})` }}></div>
               <div className="story-body">
                 <div className="story-titlerow">
                   <h3 className="story-name">{f.title}</h3>

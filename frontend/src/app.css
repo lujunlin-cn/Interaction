@@ -81,8 +81,6 @@
   --glass-line: rgba(255,255,255,0.14);
   --badge-ok-bg: rgba(18,50,74,0.9);
   --badge-ok-line: rgba(62,207,142,0.4);
-  --more-bg: rgba(10,14,19,0.6);
-  --more-line: rgba(255,255,255,0.12);
   --plus-ring: rgba(255,255,255,0.6);
   --on-image-sub: rgba(230,238,246,0.8);
   /* 侧栏山脉遮罩透明度通道 */
@@ -998,12 +996,6 @@ body[data-subtitle-pos="bottomOutside"] .immersive-player:fullscreen .player-sta
   display: inline-flex; align-items: center; gap: 4px;
 }
 .story-badge .ico { display: block; }
-.story-more {
-  position: absolute; bottom: 10px; right: 10px; width: 30px; height: 30px;
-  border-radius: 8px; background: var(--more-bg); border: 1px solid var(--more-line);
-  color: var(--cine-ink-dim); font-size: 16px; line-height: 1; backdrop-filter: blur(4px);
-  display: inline-flex; align-items: center; justify-content: center;
-}
 .story-body { padding: 14px 16px 16px; display: flex; flex-direction: column; flex: 1; }
 .story-titlerow { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
 .story-name { font-size: 16px; font-weight: 700; color: var(--cine-ink); margin: 0 0 6px; }
