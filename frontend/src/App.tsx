@@ -1,7 +1,8 @@
 /** App 外壳：左侧 Sidebar + 主工作区 +（Player 页）Inspector 抽屉。 */
 import React, { useEffect } from "react";
-import { setState, useUi } from "./store";
+import { setState, toast, useUi } from "./store";
 import Sidebar from "./components/Sidebar";
+import Icon from "./components/Icon";
 import Home from "./pages/Home";
 import Creator from "./pages/Creator";
 import CharacterLibrary from "./pages/CharacterLibrary";
@@ -58,12 +59,23 @@ export default function App() {
       <main className={`workspace-main${isPlayer ? " player-mode" : ""}`}>
         {isPlayer ? content : (
           <>
-            <div className="topbar">
-              <h1>{ui.page === "creator" ? creatorTitle(ui.creatorTab) :
-                ui.page === "developer" ? devTitle(ui.devTab) : TITLES[ui.page] ?? "互动短剧"}</h1>
-              <span className="muted">{ui.mode === "developer" ? "开发者模式" : ui.mode === "creator" ? "创作模式" : "玩家模式"}</span>
+            {/* 图二：home 页工具栏浮在 hero 右上，不占独立标题条；其他页保留标题条 */}
+            <div className={`topbar${ui.page === "home" ? " topbar-float" : ""}`}>
+              {ui.page !== "home" && (
+                <h1>{ui.page === "creator" ? creatorTitle(ui.creatorTab) :
+                  ui.page === "developer" ? devTitle(ui.devTab) : TITLES[ui.page] ?? "互动短剧"}</h1>
+              )}
+              {ui.page !== "home" && (
+                <span className="muted">{ui.mode === "developer" ? "开发者模式" : ui.mode === "creator" ? "创作模式" : "玩家模式"}</span>
+              )}
+              <div className="topbar-tools">
+                <button className="topbar-search" title="搜索" onClick={() => toast("搜索即将上线")}><Icon name="search" /></button>
+                <button className="topbar-ico" title="夜间模式"><Icon name="moon" /></button>
+                <button className="topbar-ico" title="通知" onClick={() => toast("暂无新通知")}><Icon name="bell" /></button>
+                <span className="topbar-avatar" title="我的">M</span>
+              </div>
             </div>
-            <div className={`workspace-inner ${ui.page === "developer" ? "wide" : ui.page === "home" ? "library" : ""}`}>
+            <div className={`workspace-inner ${ui.page === "developer" ? "wide" : ui.page === "home" ? "library home-bleed" : ""}`}>
               {content}
             </div>
           </>

@@ -4,9 +4,17 @@ import { api } from "../api";
 import { setState, toast, useUi } from "../store";
 import CharacterProfile from "../components/CharacterProfile";
 import CharacterStudio, { CharacterStudioTabs, STUDIO_TABS } from "../components/CharacterStudio";
+import PageBanner from "../components/PageBanner";
 import type { CharacterAsset, GlobalCharacter } from "../types";
 
 const ROLE_LABELS: Record<string,string> = {front:"主身份图",three_quarter:"四分之三视图",side:"侧面视图",back:"额外背面参考",full_front:"全身正面",full_side:"全身侧面",outfit:"造型参考",pose:"姿势参考",motion:"动作参考",voice:"声音参考",derived:"编辑后的形象"};
+
+/** 本地生成的角色立绘，按名字/标签匹配；无匹配则回退到字母头像。 */
+function charAvatarImg(g: GlobalCharacter): string | null {
+  const hay = `${g.name} ${(g.tags || []).join(" ")}`.toLowerCase();
+  if (/alice|林岚|阿丽|丽丝/.test(hay)) return "/img/images/avatar-alice.png";
+  return null;
+}
 const UNDERSTANDING_LABELS: Record<string, string> = { personality: "基础人格", default_desire: "最想得到什么", default_fear: "最害怕什么", default_secrets: "默认秘密", default_knowledge: "默认认知", default_relationship: "默认关系", appearance: "稳定外观描述" };
 const CREATE_DRAFT_KEY = "drama.characterCreation";
 function readCreationDraft() {
@@ -34,12 +42,13 @@ export default function CharacterLibrary() {
   }
   return (
     <>
-      <div className="task-head">
-        <div className="grow">
-          <p className="muted">角色库保存角色长期稳定的身份；故事可以继承它，也可以只在当前故事里覆盖。</p>
-        </div>
-        <button className="primary" onClick={() => setCreateOpen(true)}>新建角色</button>
-      </div>
+      <PageBanner
+        image="/img/images/banner-charlib.png"
+        kicker="角色库"
+        title="稳定而鲜活的角色"
+        sub="角色库保存角色长期稳定的身份；故事可以继承它，也可以只在当前故事里覆盖。"
+        action={<button className="primary" onClick={() => setCreateOpen(true)}>＋ 新建角色</button>}
+      />
       <div className="character-searchbar">
         <input placeholder="按名字、描述、标签、职业或性格搜索" value={q}
           onChange={(e) => setQ(e.target.value)} />
@@ -49,7 +58,9 @@ export default function CharacterLibrary() {
         {items.map((g) => (
           <article key={g.id} className="global-character-card">
             <button className="global-character-open" onClick={() => setState({ globalCharacterId: g.id })}>
-              <span className="avatar">{g.name.slice(0, 1)}</span>
+              <span className={`avatar${charAvatarImg(g) ? " has-img" : ""}`}>
+                {charAvatarImg(g) ? <img className="avatar-img" src={charAvatarImg(g)!} alt={g.name} /> : g.name.slice(0, 1)}
+              </span>
               <div className="global-character-copy">
                 <div className="row"><h3 className="grow">{g.name}</h3>
                   <span className="version-pill">v{g.version}</span></div>
@@ -206,7 +217,9 @@ function CharacterDetail({ ch, onBack, onSaved, initialUnderstanding }: {
           <h2>{ch.name}</h2>
           <p className="muted">角色库定义 · v{ch.version}</p>
         </div>
-        <span className="avatar large">{ch.name.slice(0, 1)}</span>
+        <span className={`avatar large${charAvatarImg(ch) ? " has-img" : ""}`}>
+          {charAvatarImg(ch) ? <img className="avatar-img" src={charAvatarImg(ch)!} alt={ch.name} /> : ch.name.slice(0, 1)}
+        </span>
       </div>
       <CharacterStudioTabs tab={tab} onChange={setTab} />
       {tab === "overview" && <section className="card"><h3>AI 对这个角色的理解</h3><p>{ch.bio}</p>

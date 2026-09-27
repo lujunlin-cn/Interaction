@@ -122,7 +122,7 @@ function DramaTab({ state }: { state: DevState }) {
         {state.pressures.map((p: any) => (
           <div key={p.id} className="row" style={{ marginBottom: 6 }}>
             <b style={{ width: 160 }}>{p.title}</b>
-            <div className="player-progress" style={{ flex: 1, background: "#e6eaee" }}>
+            <div className="player-progress" style={{ flex: 1, background: "var(--progress-bg)" }}>
               <div style={{ width: `${p.progress}%` }} />
             </div>
             <span className="muted">{p.progress.toFixed(0)} · {p.driver}</span>

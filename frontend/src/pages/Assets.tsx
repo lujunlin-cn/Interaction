@@ -2,9 +2,18 @@
 import React, { useEffect, useRef, useState } from "react";
 import { api } from "../api";
 import { toast, useUi } from "../store";
+import PageBanner from "../components/PageBanner";
 import type { Asset } from "../types";
 
 const TYPE_LABELS: Record<string, string> = { image: "图片", voice: "声音", video: "视频" };
+
+/** 素材库示例素材（本地生成封面图，供界面展示参考）。 */
+const SAMPLE_ASSETS = [
+  { src: "/img/images/asset-street.png", name: "雨夜街道 · 场景" },
+  { src: "/img/images/asset-corridor.png", name: "公寓走廊 · 场景" },
+  { src: "/img/images/asset-watch.png", name: "黄铜怀表 · 道具" },
+  { src: "/img/images/asset-rooftop.png", name: "天台夜景 · 场景" },
+];
 const ROLE_OPTIONS: Array<[string, string]> = [
   ["identity", "身份参考"], ["wardrobe", "服装造型"], ["location", "地点场景"],
   ["style", "风格基调"], ["voice", "声音参考"], ["motion", "动作参考"], ["camera", "镜头参考"],
@@ -31,11 +40,35 @@ export default function Assets() {
     ...d.world.locations.split("\n").filter(Boolean).map(l => { const [id, label] = l.split("｜"); return { id, label: label || "故事地点" }; }),
   ])).catch(() => {}); }, [sid]);
 
-  if (!sid) return <div className="empty">请先在「创作 → 概览」选择一个故事。</div>;
+  if (!sid) return (
+    <>
+      <PageBanner
+        image="/img/images/banner-assets.png"
+        kicker="素材库"
+        title="为故事准备画面与声音"
+        sub="统一管理场景、道具、服装等视觉与声音素材。"
+      />
+      <div className="empty">请先在「创作 → 概览」选择一个故事。</div>
+    </>
+  );
 
   const shown = items.filter((a) => filter === "all" || a.type === filter);
   return (
     <>
+      <PageBanner
+        image="/img/images/banner-assets.png"
+        kicker="素材库"
+        title="为故事准备画面与声音"
+        sub="统一管理场景、道具、服装等视觉与声音素材，绑定到人物或地点。"
+      />
+      <div className="asset-gallery" aria-label="示例素材">
+        {SAMPLE_ASSETS.map((s) => (
+          <figure className="asset-gallery-card" key={s.src}>
+            <img className="asset-gallery-img" src={s.src} alt={s.name} />
+            <figcaption className="asset-gallery-name">{s.name}</figcaption>
+          </figure>
+        ))}
+      </div>
       <section className="card asset-ai-generation">
         <div className="row"><div className="grow"><h3>AI 生成图片</h3><p className="muted">用于场景、物件、背景或其他通用素材。当前云端生成受保险丝控制，已有素材和上传入口不受影响。</p></div>
           <button className="primary" onClick={() => generation?.fal_paid_generation_enabled
@@ -169,7 +202,7 @@ function AssetRow({ a, sid, onChanged, bindings }: { a: Asset; sid: string; onCh
       </tr>
       {editing && (
         <tr>
-          <td colSpan={9} style={{ background: "var(--bg-soft, rgba(128,128,128,.06))" }}>
+          <td colSpan={9} style={{ background: "var(--panel-2)" }}>
             <div className="row" style={{ flexWrap: "wrap", gap: 10 }}>
               <label><span>{developer ? "用途 role" : "参考用途"}</span>
                 <select value={form.role ?? a.role}

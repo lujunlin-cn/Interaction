@@ -2,6 +2,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { api, sessionSocket } from "../api";
 import { setState, toast, useUi } from "../store";
+import Icon from "../components/Icon";
 import type { OpeningInfo, PendingIntent, PlayerView, Wish } from "../types";
 
 const WISH_STATUS_LABEL: Record<string, string> = {
@@ -137,6 +138,10 @@ export default function Player() {
   return <div className="player-shell immersive-player" ref={shellRef} data-testid="player-shell" data-decision-open={decisionOpen ? "true" : "false"} onPointerMove={() => setControlActivity(Date.now())} onPointerDown={() => setControlActivity(Date.now())} onKeyDown={() => setControlActivity(Date.now())}>
     <header className="player-head"><b className="grow">{view.scenario.title}</b><span className="muted">第 {view.arc.seq} 篇章</span><button className="small" onClick={() => setState({page: "home", sessionId: null, theaterMode: false})}>退出</button></header>
     <div className="immersion-layer" data-layer="immersion">
+      <button className="player-back" title="返回故事库" aria-label="返回故事库"
+        onClick={() => setState({ page: "home", sessionId: null, theaterMode: false })}>
+        <Icon name="back" size={15} /> 返回
+      </button>
       <div className="player-stage">
         {source && <video key={`${source}:${loadAttempt}`} ref={videoRef} src={source} autoPlay playsInline
           onLoadStart={() => { setMedia("loading"); setBuffering(false); if (!replay) void command("pause"); }}
@@ -149,9 +154,7 @@ export default function Player() {
           onError={() => { setMedia("failed"); if (!replay) void command("pause"); }}
           onEnded={finished} />}
         {buffering && media === "playing" && <div className="buffering-badge" role="status">缓冲中…</div>}
-        {showOpeningCrawl && <OpeningCrawl info={view.opening!}
-          onSkip={() => setCrawlDismissed(true)}
-          onBack={() => setState({page: "home", theaterMode: false})} />}
+        {showOpeningCrawl && <OpeningCrawl info={view.opening!} onSkip={() => { /* 跳过即收起覆盖层，露出下面的 media-status */ setCrawlDismissed(true); }} />}
         {!showOpeningCrawl && (generating || failed || (source && !hasFrame.current && media !== "playing") || (!source && !p.scene_text)) && <div className={`media-status ${failed || media === "failed" ? "failed" : ""}`} role="status"
           data-media-state={failed || (source && media === "failed") ? "FAILED" : generating ? "GENERATING" : "LOADING"}>
           <div className="media-status-symbol">{failed || media === "failed" ? "↻" : "◌"}</div>
@@ -415,7 +418,7 @@ function WishDrawer({ sid, wishes, onClose }: {
  * OPENING_PREPARING 阶段无视频可播时铺满 Stage：慢速上滚的多行叙事文本，
  * 全部由 scenario snapshot 组装（零生成、零等待），视频 READY 后由外层
  * showOpeningCrawl 条件自动让位，CSS opacity transition 自然淡出接管。 */
-function OpeningCrawl({ info, onSkip, onBack }: { info: OpeningInfo; onSkip: () => void; onBack: () => void }) {
+function OpeningCrawl({ info, onSkip }: { info: OpeningInfo; onSkip: () => void }) {
   const lines: { key: string; text: string; kind: "location" | "premise" | "identity" | "hook" }[] = [];
   if (info.location_line) lines.push({ key: "loc", text: info.location_line, kind: "location" });
   info.premise_lines.forEach((t, i) => lines.push({ key: `p${i}`, text: t, kind: "premise" }));
@@ -424,7 +427,7 @@ function OpeningCrawl({ info, onSkip, onBack }: { info: OpeningInfo; onSkip: () 
   if (!lines.length) lines.push({ key: "empty", text: "故事即将开始。", kind: "premise" });
   return (
     <div className="opening-crawl" data-testid="opening-crawl"
-      style={{ ["--opening-accent" as any]: info.accent || "#e2d5a7" }}>
+      style={{ ["--opening-accent" as any]: info.accent || "var(--crawl-accent)" }}>
       <div className="opening-crawl-fade-top" aria-hidden />
       <div className="opening-crawl-track">
         {lines.map((l) => (
@@ -433,10 +436,7 @@ function OpeningCrawl({ info, onSkip, onBack }: { info: OpeningInfo; onSkip: () 
         <p className="opening-line opening-status">正在准备第一幕画面…</p>
       </div>
       <div className="opening-crawl-fade-bottom" aria-hidden />
-      <div className="opening-actions">
-        <button onClick={onSkip} aria-label="跳过前情提要">跳过前情 ›</button>
-        <button onClick={onBack}>返回故事库</button>
-      </div>
+      <button className="opening-skip" onClick={onSkip} aria-label="跳过前情提要">跳过前情 ›</button>
     </div>
   );
 }

@@ -4,8 +4,18 @@ import { api } from "../api";
 import { setState, toast, useUi } from "../store";
 import StoryUnderstanding, { DRAMA_GROUPS, FIELD_LABELS, readable, typedText } from "../components/StoryUnderstanding";
 import CharacterProfile from "../components/CharacterProfile";
+import PageBanner from "../components/PageBanner";
 import CharacterStudio, { CharacterStudioTabs, type StudioTab } from "../components/CharacterStudio";
 import type { GlobalCharacter, PublishCheck, ScenarioCharacter, ScenarioDraft } from "../types";
+
+/** 创作工作区各 tab 的顶部横幅配图。 */
+const TAB_BANNERS: Record<string, { image: string; kicker: string; title: string; sub: string }> = {
+  overview: { image: "/img/images/banner-creator.png", kicker: "创作 · 概览", title: "从一个想法开始", sub: "用一句话描述故事，让 AI 帮你搭好可编辑的草案。" },
+  world: { image: "/img/images/banner-world.png", kicker: "创作 · 世界", title: "世界规则与背景", sub: "定义故事发生的地点、规则和不可违背的约束。" },
+  characters: { image: "/img/images/banner-charlib.png", kicker: "创作 · 角色", title: "故事里的人物", sub: "从角色库继承，或在本故事里覆盖造型与声音。" },
+  theme: { image: "/img/images/banner-world.png", kicker: "创作 · 视觉", title: "故事视觉设定", sub: "调整强调色、字体与字幕，实时预览氛围。" },
+  publish: { image: "/img/images/banner-creator.png", kicker: "创作 · 发布", title: "发布你的故事", sub: "检查通过后形成不可变版本，随时试玩。" },
+};
 
 const MECHANIC_LABELS: Record<string, string> = {
   relationship: "关系变化", "clue-system": "线索调查", inventory: "道具系统", qte: "限时互动",
@@ -36,8 +46,8 @@ export default function Creator() {
   const [globals, setGlobals] = useState<GlobalCharacter[]>([]);
   const [versions, setVersions] = useState<{ version_id: string; version: string; created_at: number }[]>([]);
 
-  // A tab change must not let Publish inspect a draft while its save is pending.
-  // Preserve a rejected final save so publication fails closed until a later save succeeds.
+  // 切换 tab 时不能让发布页检查到尚未落库的草稿：先等 save 队列排空再读。
+  // 最后一次保存失败时保留服务端实际内容，让发布失败关闭而非带病通过。
   const readSavedDraft = useCallback(async (id: string) => {
     for (;;) {
       const pending = saveQueue.current;
@@ -78,9 +88,11 @@ export default function Creator() {
     }
   };
   const patch = (p: Partial<ScenarioDraft>) => save({ ...draft, ...p, updated_at: Date.now() });
+  const banner = TAB_BANNERS[ui.creatorTab];
 
   return (
     <>
+      {banner && <PageBanner image={banner.image} kicker={banner.kicker} title={banner.title} sub={banner.sub} />}
       {ui.creatorTab === "overview" && (
         <>
           <div className="card">
@@ -146,7 +158,9 @@ export default function Creator() {
       )}
 
       {ui.creatorTab === "characters" && (
-        <CharactersTab draft={draft} globals={globals} onSave={save} onLibraryRefresh={() => api.listCharacters().then(r => setGlobals(r.items))} beforePromote={() => saveQueue.current}
+        <CharactersTab draft={draft} globals={globals} onSave={save}
+          onLibraryRefresh={() => api.listCharacters().then(r => setGlobals(r.items))}
+          beforePromote={() => saveQueue.current}
           selectedId={ui.characterId} onSelect={(id) => setState({ characterId: id })} />
       )}
 
@@ -213,15 +227,10 @@ export default function Creator() {
           {/* 预览 */}
           <h4>预览</h4>
           <div className="display-preview">
-            <div className="preview-scene" style={{
-              background: draft.theme.background === "gradient"
-                ? `linear-gradient(160deg, ${draft.theme.accent}55, #0f151b)`
-                : draft.theme.background === "texture"
-                  ? `repeating-linear-gradient(45deg, #1d2833, #1d2833 8px, #18222b 8px, #18222b 16px)`
-                  : "#151c24",
-            }}>
+            <div className={`preview-scene pv-bg-${draft.theme.background}`}
+              style={{ "--pv-accent": draft.theme.accent } as React.CSSProperties}>
               <div className="preview-caption" style={{
-                bottom: 12, color: draft.theme.subtitles === "off" ? "transparent" : "#f0f2f4",
+                bottom: 12, color: draft.theme.subtitles === "off" ? "transparent" : "var(--preview-ink)",
                 fontSize: draft.theme.subtitles === "large" ? 19 : 15,
                 fontFamily: draft.theme.font === "serif" ? "Songti SC, SimSun, serif"
                   : draft.theme.font === "rounded" ? "Yuanti SC, YouYuan, sans-serif" : "inherit",
@@ -235,11 +244,12 @@ export default function Creator() {
 
       {ui.creatorTab === "publish" && (
         <PublishTab draft={draft} versions={versions} readSavedDraft={readSavedDraft}
-          onDraft={setDraft} publishLock={publishLock} publishing={publishing} onPublishingChange={setPublishing}
+          onDraft={setDraft} publishLock={publishLock} publishing={publishing}
+          onPublishingChange={setPublishing}
           onPublished={async () => {
-          const v = await api.scenarioVersions(draft.id);
-          setVersions(v.items);
-        }} />
+            const v = await api.scenarioVersions(draft.id);
+            setVersions(v.items);
+          }} />
       )}
 
       {ui.creatorTab === "changes" && (

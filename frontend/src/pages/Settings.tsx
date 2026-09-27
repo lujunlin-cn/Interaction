@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { api, type MediaLanguage } from "../api";
 import { setDisplay, setState, toast, useUi } from "../store";
+import PageBanner from "../components/PageBanner";
 
 export default function Settings() {
   const ui = useUi();
@@ -55,6 +56,12 @@ export default function Settings() {
   const d = ui.display;
   return (
     <>
+      <PageBanner
+        image="/img/images/banner-settings.png"
+        kicker="设置"
+        title="让体验贴合你的习惯"
+        sub="调整外观、字号与媒体生成选项，界面会实时预览变化。"
+      />
       <div className="card">
         <h3>模式</h3>
         <p className="muted">

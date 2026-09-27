@@ -51,11 +51,12 @@ function loadDisplay(): DisplayPrefs {
       const saved = JSON.parse(raw);
       const uiSize = saved.uiSize === "125" || saved.uiSize === "large" ? "large"
         : saved.uiSize === "150" || saved.uiSize === "xlarge" ? "xlarge" : "standard";
-      return { appearance: "system", density: "comfortable", fontSize: "medium",
-        subtitleSize: "standard", subtitlePos: "bottomInside", ...saved, uiSize };
+      // 图二改版：整站统一深色电影感，appearance 强制 dark（忽略历史 light/system 存储）
+      return { ...saved, appearance: "dark", density: "comfortable", fontSize: "medium",
+        subtitleSize: "standard", subtitlePos: "bottomInside", uiSize };
     }
   } catch { /* ignore */ }
-  return { appearance: "system", density: "comfortable", uiSize: "standard", fontSize: "medium",
+  return { appearance: "dark", density: "comfortable", uiSize: "standard", fontSize: "medium",
     subtitleSize: "standard", subtitlePos: "bottomInside" };
 }
 
