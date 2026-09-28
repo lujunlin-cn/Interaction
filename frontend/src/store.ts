@@ -56,8 +56,9 @@ function loadDisplay(): DisplayPrefs {
         ? saved.subtitleSize : "standard";
       const subtitlePos = ["bottomInside", "bottomOutside", "bottom", "top"].includes(saved.subtitlePos)
         ? saved.subtitlePos : "bottomInside";
-      // 图二改版：整站统一深色电影感，appearance 强制 dark（忽略历史 light/system 存储）
-      return { ...saved, appearance: "dark", density: "comfortable", fontSize,
+      const appearance = ["system", "light", "dark"].includes(saved.appearance) ? saved.appearance : "dark";
+      const density = ["comfortable", "compact", "roomy"].includes(saved.density) ? saved.density : "comfortable";
+      return { ...saved, appearance, density, fontSize,
         subtitleSize, subtitlePos, uiSize };
     }
   } catch { /* ignore */ }

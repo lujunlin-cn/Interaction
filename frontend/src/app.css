@@ -166,6 +166,65 @@
   --player-line: #2a3542;
   --player-input: #11161d;
 }
+/* 浅色主题：与深色主题共用同一套组件，只替换颜色 token。 */
+body[data-appearance="light"] {
+  --accent: #2563eb;
+  --accent-2: #1d4ed8;
+  --bg: #f4f6f8;
+  --panel: #ffffff;
+  --panel-2: #eef2f6;
+  --line: #d5dce5;
+  --ink: #17212b;
+  --muted: #5d6b7b;
+  --warn: #a16207;
+  --danger: #b42318;
+  --ok: #13795b;
+  --cine-ink: #17212b;
+  --cine-ink-dim: #334155;
+  --cine-muted: #526275;
+  --cine-line: #b8c5d4;
+  --cine-line-soft: #d5dce5;
+  --cine-tag-bg: #dbeafe;
+  --cine-tag-ink: #1d4ed8;
+  --cine-hover: #e7edf5;
+  --cine-kicker: #1d4ed8;
+  --on-accent: #ffffff;
+  --sidebar-bg: #ffffff;
+  --sidebar-ink: #273444;
+  --sidebar-item-ink: #334155;
+  --sidebar-muted: #64748b;
+  --sidebar-hover: #eef2f6;
+  --sidebar-line: #d5dce5;
+  --code-bg: #eef2f6;
+  --code-ink: #17212b;
+  --thumb-bg: #e2e8f0;
+  --warn-bg: #fef3c7;
+  --danger-bg: #fee4e2;
+  --ok-bg: #dcfce7;
+  --info-bg: #e0f2fe;
+  --notice-warn-bg: #fef3c7;
+  --pill-neutral-bg: #e2e8f0;
+  --player-bg: #eef2f6;
+  --player-panel: #ffffff;
+  --player-surface: #f8fafc;
+  --player-ink: #17212b;
+  --player-muted: #5d6b7b;
+  --player-line: #cbd5e1;
+  --player-input: #ffffff;
+  --progress-bg: #cbd5e1;
+  --ack-bg: #e0f2fe;
+  --ack-ink: #17212b;
+  --replay-bg: rgba(255,255,255,0.9);
+  --modal-mask: rgba(15,23,42,0.32);
+  --glass-bg: rgba(255,255,255,0.9);
+  --glass-bg-soft: rgba(255,255,255,0.78);
+  --glass-bg-faint: rgba(255,255,255,0.62);
+  --shadow-card: 0 10px 32px rgba(15,23,42,0.12);
+  --shadow-md: 0 6px 24px rgba(15,23,42,0.14);
+  --shadow-lg: 0 8px 24px rgba(15,23,42,0.18);
+  --title-shadow: 0 2px 20px rgba(15,23,42,0.16);
+  --text-shadow-sm: 0 1px 4px rgba(15,23,42,0.2);
+}
 /* G13：外观主题已统一为图二深色电影感——light/system/dark 三档都落到同一套深色 token，
    保证整站风格一致（原浅色企业版已由 :root 深色变量取代，不再做浅↔深切换覆盖）。 */
 /* G13：界面密度 */
