@@ -731,13 +731,13 @@ body[data-subtitle-pos="bottomOutside"] .immersive-player:fullscreen .player-sta
   text-shadow: 0 0 24px var(--scene-text-shadow);
 }
 .opening-line.opening-location {
-  font-size: var(--font-lg); letter-spacing: 0.32em; font-weight: 600;
+  font-size: max(var(--font-xl), 30px); letter-spacing: 0.32em; font-weight: 600;
   margin-bottom: 2.4em;
 }
-.opening-line.opening-premise { font-size: var(--font-md); }
-.opening-line.opening-identity { font-size: var(--font-md); font-weight: 600; }
+.opening-line.opening-premise { font-size: max(var(--font-lg), 24px); }
+.opening-line.opening-identity { font-size: max(var(--font-lg), 24px); font-weight: 600; }
 .opening-line.opening-hook {
-  font-size: var(--font-md); font-style: italic; opacity: 0.92;
+  font-size: max(var(--font-lg), 24px); font-style: italic; opacity: 0.92;
   margin-top: 2.2em;
 }
 .opening-line.opening-status {
