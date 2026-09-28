@@ -664,6 +664,16 @@ body[data-subtitle-pos="bottomOutside"] .immersive-player:fullscreen .player-sta
 .appframe.theater-mode .player-controls .player-progress { margin-top: 0; }
 .appframe.theater-mode .scene-caption { bottom: 42px; }
 .appframe.theater-mode .player-more > div { bottom: calc(100% + 8px); top: auto; }
+/* 沉浸模式中字幕始终叠在视频内，避免 bottomOutside 面板在视频底部
+   形成一条明暗分界线；普通播放器仍保留设置页的外置字幕选项。 */
+body[data-subtitle-pos="bottomOutside"] .appframe.theater-mode .player-stage {
+  overflow: hidden; margin-bottom: 0;
+}
+body[data-subtitle-pos="bottomOutside"] .appframe.theater-mode .scene-caption {
+  position: absolute; left: 0; right: 0; bottom: 0; top: auto;
+  padding: 40px 24px 16px; background: linear-gradient(transparent, var(--caption-grad));
+  color: var(--on-accent); border: 0; border-radius: 0; text-shadow: 0 2px 5px var(--scene-text-shadow);
+}
 .player-time { color: var(--player-muted); font-size: var(--font-xs); white-space: nowrap; }
 
 /* ---- 剧场模式/全屏：决策未开放时自动隐藏交互层（zip 合并） ---- */
