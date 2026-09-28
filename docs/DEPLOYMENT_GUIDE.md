@@ -1,26 +1,19 @@
-# Interaction 部署说明
+# 部署说明
 
-本文面向第一次部署项目的开发者。示例不会包含任何真实 API Key；请在自己的密钥管理系统、CI Secret 或服务器上的 `backend/.env` 注入凭据。
+本文从一台干净的 Linux 主机开始，部署一个可访问的 Interaction 实例。应用、API 和生成媒体使用同一个 9000 端口；PostgreSQL 只绑定本机 5433。
 
-## 部署模式选择
+## 1. 运行环境
 
-| 模式 | 适合场景 | 外部请求 | 需要 GPU |
-| --- | --- | --- | --- |
-| `mock` | 本地开发、评审 UI、自动化回归 | 无 | 否 |
-| `hybrid` | 文本真实、媒体失败可回退的演示 | 按已配置 Provider | 推荐 |
-| `live` | 完整真实模型和媒体验收 | 会产生真实费用 | 运行 Nemotron 时需要 |
+离线模式需要：
 
-第一次部署建议从 `mock` 开始，确认页面、数据库和状态机工作后，再单独打开文本、图片、决策和视频。不要为了验证页面而直接打开所有付费 Provider。
-
-## 1. 环境要求
-
-- Linux（推荐 NVIDIA DGX Spark 或带 NVIDIA GPU 的主机）
-- Docker 与 Docker Compose Plugin
+- Linux
 - Python 3.11+
-- Node.js 20+、npm
-- 运行真实本地模型时，需要可用的 NVIDIA 驱动、CUDA 运行时和足够的统一内存；只做离线演示可以使用 `PROVIDER_MODE=mock`，不需要 GPU 或外部 API。
+- Node.js 20+ 和 npm
+- Docker 与 Docker Compose Plugin
 
-## 2. 获取代码并启动数据库
+真实本地模型还需要 NVIDIA 驱动、CUDA 和足够的 GPU/统一内存。没有 GPU 也可以用 `mock` 或仅使用云端 Provider。
+
+## 2. 安装代码和数据库
 
 ```bash
 git clone https://github.com/lujunlin-cn/Interaction.git
@@ -28,16 +21,19 @@ cd Interaction
 docker compose -f deploy/docker-compose.yml up -d
 ```
 
-Compose 只启动 PostgreSQL，绑定到本机 `127.0.0.1:5433`，不会把数据库端口直接暴露到公网。
+数据库连接默认是：
 
-## 3. 配置服务端环境
+```text
+postgresql+asyncpg://drama:drama@127.0.0.1:5433/interaction_drama
+```
+
+## 3. 创建服务端配置
 
 ```bash
 cp backend/.env.example backend/.env
-${EDITOR:-vi} backend/.env
 ```
 
-最小离线配置如下：
+先用这组配置启动离线模式：
 
 ```dotenv
 DATABASE_URL=postgresql+asyncpg://drama:drama@127.0.0.1:5433/interaction_drama
@@ -46,64 +42,58 @@ RUNTIME_PROFILE=AGENT_LOCAL_PROFILE
 FAL_PAID_GENERATION_ENABLED=false
 ```
 
-需要真实模型时，将 `PROVIDER_MODE` 改为 `live` 或 `hybrid`，并按下面的 Provider 教程填入自己的凭据。`.env` 已被 Git 忽略，禁止把它复制进提交、截图、日志或 Issue。
+配置文件只在服务器上保存。外部服务的 Key 通过环境变量或 Secret Manager 注入，浏览器不需要、也不应该持有这些 Key。
 
-## 4. 外部 API 接入教程
+## 4. 接入外部服务
 
-所有外部 API 都由后端调用，浏览器只访问 Interaction 的 `/api`。部署者可以使用环境变量、Docker Secret、Kubernetes Secret 或云平台 Secret Manager；不要把 Key 写进 React、Vite 的 `VITE_*` 变量，也不要把 Key 放在 URL 查询参数中。
+所有 Provider 都由后端调用。把下面的占位值替换成你自己的服务地址和 Key。
 
-### StepFun（文本模型）
-
-在 StepFun 控制台创建服务端 Key，把值注入：
+### StepFun：文本生成
 
 ```dotenv
-STEP_API_KEY=<your-stepfun-key>
+STEP_API_KEY=<stepfun-key>
 STEP_BASE_URL=https://api.stepfun.com/step_plan/v1
 STEP37_MODEL=step-3.7-flash
 STEP5_MODEL=step-5-preview
 ```
 
-### Jev（决策评估）
-
-在 Jev/TypeSafe 服务创建 Key：
+### Jev：推荐决策
 
 ```dotenv
-JEV_API_KEY=<your-jev-key>
+JEV_API_KEY=<jev-key>
 JEV_BASE_URL=https://api.typesafe.ai
 JEV_MODEL=jev-latest
 ```
 
-### fal.ai（视频）
+### fal.ai：视频
 
-在 fal.ai 创建服务端 Key。Interaction 使用的模型固定为 `minimax/h3-max/reference-to-video`：
+视频接口固定使用 `minimax/h3-max/reference-to-video`：
 
 ```dotenv
-FAL_KEY=<your-fal-key>
+FAL_KEY=<fal-key>
 FAL_KEY_SECONDARY=<optional-second-key>
 FAL_H3_MODEL=minimax/h3-max/reference-to-video
 FAL_PAID_GENERATION_ENABLED=false
 ```
 
-确认余额、参考图可被服务端访问并完成小额验证后，才把付费开关改为 `true`。Jev 推荐预生成视频默认关闭；只有用户真正选择或明确发起测试时才提交视频任务。
+确认文本、图片和素材地址都能正常工作后，再把 `FAL_PAID_GENERATION_ENABLED` 改成 `true`。Jev 预测预生成默认关闭，只有玩家实际选择或明确测试时才提交视频任务。
 
-### OpenAI-compatible 图片中转
+### OpenAI-compatible Image Relay：图片
 
-图片生成与编辑使用兼容 OpenAI Images API 的中转服务，不走 fal.ai 图片模型。向中转服务申请一个服务端 Key，并填写：
+角色图、标准视图和编辑使用兼容 OpenAI Images API 的中转服务，不使用 fal.ai 图片接口：
 
 ```dotenv
-IMAGE_PROVIDER_BASE_URL=https://<your-relay-host>
-IMAGE_PROVIDER_API_KEY=<your-relay-key>
+IMAGE_PROVIDER_BASE_URL=https://<relay-host>
+IMAGE_PROVIDER_API_KEY=<relay-key>
 IMAGE_PROVIDER_MODEL=gpt-image-2.5-sunburst
 IMAGE_PROVIDER_FALLBACK_MODEL=gpt-image-2.5-flare
 IMAGE_PROVIDER_FALLBACK_MODEL_2=gpt-image-2.5-sunburst
 IMAGE_PROVIDER_FALLBACK_MODEL_3=gpt-image-2
 ```
 
-中转站必须支持项目使用的 `/v1/images/generations` 和 `/v1/images/edits` 合约。先在隔离环境验证 JSON 或 multipart 图片传输，再开放角色工作室；不要把远端 Key 交给前端。
+中转服务需要提供 `/v1/images/generations` 和 `/v1/images/edits`。服务端会把生成结果归档到媒体目录，前端只接收应用自己的文件地址。
 
-### 本地 Nemotron（可选）
-
-DGX Spark 上可使用仓库脚本启动 vLLM OpenAI-compatible 服务：
+### Nemotron：本地文本模型（可选）
 
 ```bash
 export LOCAL_LLM_MODEL=nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4
@@ -117,92 +107,68 @@ LOCAL_LLM_BASE_URL=http://127.0.0.1:8001/v1
 LOCAL_LLM_MODEL=nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4
 ```
 
-启动后检查 `http://127.0.0.1:8001/v1/models`，确认模型名与配置完全一致。脚本会检查 52 个权重分片；模型未加载时，后端可以回退到 StepFun，但不会把其他模型冒充 Nemotron。
-
-## 5. 安装依赖、构建和启动
-
-```bash
-bash deploy/start.sh
-```
-
-脚本会启动 PostgreSQL、创建后端虚拟环境、安装 Python 依赖、安装前端依赖、执行 `npm run build`，最后由 Uvicorn 在 `0.0.0.0:9000` 提供前端、API 和媒体静态文件。
-
-手动启动可使用：
-
-```bash
-cd backend
-.venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port 9000
-```
-
-部署完成后访问 `http://<server-ip>:9000`，并检查：
-
-```bash
-curl http://127.0.0.1:9000/api/health
-```
-
-返回 `ok: true` 后，再从开发者设置页检查 Provider、模型和付费熔断状态。
-
-## 6. 首次部署验收清单
-
-```bash
-# 应用健康
-curl -fsS http://127.0.0.1:9000/api/health
-
-# 端口监听
-ss -ltnp | rg ':9000'
-
-# 前端构建
-test -f frontend/dist/index.html
-
-# 数据库容器
-docker compose -f deploy/docker-compose.yml ps
-```
-
-真实本地模型额外检查：
+启动后确认：
 
 ```bash
 curl -fsS http://127.0.0.1:8001/v1/models
 ```
 
-返回的模型 ID 必须与 `LOCAL_LLM_MODEL` 完全一致。`/api/health` 只证明应用进程可响应，不等于每个外部 Provider 都可用；Provider 的选择、跳过原因和熔断状态应在开发者设置页核对。
+## 5. 构建并启动应用
 
-## 7. 配置建议
-
-| 场景 | `PROVIDER_MODE` | `FAL_PAID_GENERATION_ENABLED` | `RUNTIME_PROFILE` |
-| --- | --- | --- | --- |
-| 页面开发 | `mock` | `false` | `AGENT_LOCAL_PROFILE` |
-| 文本模型演示 | `hybrid` | `false` | `AGENT_LOCAL_PROFILE` |
-| 人工视频测试 | `live` 或 `hybrid` | 按需 `true` | `AGENT_LOCAL_PROFILE` |
-| 本地视频实验 | `live` | `false` | `VIDEO_LOCAL_PROFILE` |
-
-Jev 推荐预生成视频保持关闭，可以先展示选项和文本结果；只有玩家实际选择或明确进行媒体测试时才提交 H3 任务。
-
-## 8. 生产安全注意事项
-
-- `/dev/*` 是开发者接口，公网部署必须通过反向代理、VPN 或访问控制保护。
-- `/media` 与 `/files` 使用静态文件服务，公网环境应增加签名 URL 或鉴权。
-- `session_id` 当前承担会话访问凭据角色，多用户生产环境需要接入账号和权限系统。
-- 断开 SSH 后仍需保持服务运行时，请使用 systemd、Docker restart policy 或 `setsid`；不要依赖交互式终端后台进程。
-- 更新代码前先检查活动媒体任务，避免重复提交付费请求；更新后再次检查 `/api/health`、前端构建产物和本地模型 `/v1/models`。
-
-## 9. 更新、回滚和 SSH 断连
-
-更新应用时：
-
-1. `git pull --ff-only`，确认当前 commit。
-2. 检查 `/api/dev/jobs` 是否有活动媒体任务，避免更新过程中重复提交。
-3. 只重启后端和前端；不要随意停止 Nemotron 或本地视频容器。
-4. 更新后重新执行健康、端口、前端资源和模型 `/v1/models` 检查。
-
-使用 systemd 或 Docker 的 `restart: unless-stopped` 保持 SSH 断开后的服务；临时手工启动可以使用 `setsid`：
+一键启动会创建 Python 虚拟环境、安装后端依赖、安装前端依赖、构建前端并监听 9000：
 
 ```bash
-setsid bash deploy/start.sh </dev/null >interaction-start.log 2>&1 &
+bash deploy/start.sh
 ```
 
-若新版本启动失败，回滚到上一个已知 commit 后重新构建前端，再检查数据库迁移和活动任务。不要通过删除 PostgreSQL volume 解决应用启动问题。
+手动启动：
 
-## 10. 离线回归
+```bash
+cd backend
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+cd ../frontend && npm ci && npm run build
+cd ../backend
+.venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port 9000
+```
+
+部署完成后打开 `http://<server-ip>:9000`，检查：
+
+```bash
+curl -fsS http://127.0.0.1:9000/api/health
+ss -ltnp | grep ':9000'
+```
+
+健康接口返回 `ok: true`，端口处于 LISTEN 状态，即可访问应用。
+
+## 6. 模式选择
+
+| 场景 | PROVIDER_MODE | 付费视频 | 说明 |
+| --- | --- | --- | --- |
+| 页面开发 | `mock` | `false` | 零外部请求 |
+| 文本演示 | `hybrid` | `false` | 真实文本，媒体可回退 |
+| 人工视频测试 | `live` 或 `hybrid` | 按需 `true` | 只在实际选择时生成 |
+| 本地视频实验 | `live` | `false` | 使用 `VIDEO_LOCAL_PROFILE` |
+
+## 7. 更新和后台运行
+
+更新应用：
+
+```bash
+git pull --ff-only
+cd frontend && npm ci && npm run build
+cd ..
+```
+
+重启时保留数据库和本地模型服务。生产环境用 systemd 或容器的 `restart: unless-stopped` 运行应用；临时启动可用：
+
+```bash
+setsid bash deploy/start.sh </dev/null >interaction.log 2>&1 &
+```
+
+这样 SSH 断开后进程仍会继续运行。更新后再次检查 `/api/health`、9000 端口和本地模型 `/v1/models`。
+
+## 8. 离线回归
 
 ```bash
 cd backend
@@ -213,5 +179,3 @@ cd ../frontend
 npm ci
 npm run build
 ```
-
-离线回归不会调用 StepFun、Jev、fal.ai 或图片中转，也不会产生付费媒体任务。
