@@ -652,6 +652,12 @@ body[data-subtitle-pos="bottomOutside"] .immersive-player:fullscreen .player-sta
   display: grid; grid-template-rows: minmax(0, 1fr) auto auto;
   overflow: hidden; background: var(--player-bg);
 }
+.appframe.theater-mode .player-shell[data-decision-open="false"] {
+  grid-template-rows: minmax(0, 1fr);
+}
+.appframe.theater-mode .player-shell[data-decision-open="false"] .interaction-dock > * {
+  display: none;
+}
 .appframe.theater-mode .player-head { display: none; }
 .appframe.theater-mode .immersion-layer { min-height: 0; height: 100%; position: relative; }
 .appframe.theater-mode .player-stage { height: 100%; min-height: 0; max-height: none; aspect-ratio: auto; border-radius: 0; }
@@ -702,6 +708,9 @@ body[data-subtitle-pos="bottomOutside"] .appframe.theater-mode .scene-caption {
 /* zip 版把 player-controls 固定在舞台内（覆盖在视频上方） */
 .immersive-player .player-controls { position: absolute; z-index: 8; left: 18px; right: 18px; bottom: 12px; margin: 0; }
 .immersive-player .player-controls .player-progress { margin-top: 0; }
+/* 进度条横跨视频底边会被误认为画面分割线；沉浸模式保留时间信息，
+   不再绘制一条亮色横线。 */
+.immersive-player .player-progress { display: none; }
 .player-more > div { bottom: calc(100% + 8px); max-height: min(360px, 50dvh); overflow-y: auto; display: grid; gap: 4px; padding: 6px; border: 1px solid var(--line); border-radius: 8px; }
 
 /* 点击“开始游玩”后 appframe 进入浏览器全屏；剧场模式负责内部布局。 */
