@@ -80,6 +80,14 @@ export default function Home() {
     if (starting.current) return;
     starting.current = true;
     setStartingId(sc.id);
+    // 在“开始游玩”的真实点击手势内请求浏览器全屏。播放器随后挂载到同一个
+    // appframe，避免等异步创建 Session 后再请求而被浏览器拦截。
+    const appframe = document.querySelector<HTMLElement>(".appframe");
+    if (appframe && !document.fullscreenElement && appframe.requestFullscreen) {
+      void appframe.requestFullscreen().catch(() => {
+        // 浏览器策略或测试环境不允许全屏时，应用剧场模式仍会正常工作。
+      });
+    }
     try {
       // 库页面挂起期间发布可能已变化：在用户动作边界重新解析最新版本。
       const latest = await api.scenarioVersions(sc.id);

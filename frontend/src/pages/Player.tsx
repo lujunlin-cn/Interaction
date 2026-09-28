@@ -76,14 +76,24 @@ export default function Player() {
     return () => clearTimeout(t);
   }, [controlActivity, media, view?.player.status]);
   useEffect(() => {
-    const fn = () => setFullscreen(document.fullscreenElement === shellRef.current);
+    const fn = () => {
+      const appframe = shellRef.current?.closest(".appframe");
+      setFullscreen(document.fullscreenElement === shellRef.current || document.fullscreenElement === appframe);
+    };
+    fn();
     document.addEventListener("fullscreenchange", fn); return () => document.removeEventListener("fullscreenchange", fn);
   }, []);
   useEffect(() => {
     // Theater Mode is an application layout state. It must never depend on
     // document.fullscreenElement and must not leak after leaving the Player.
     if (sid) setState({ theaterMode: true });
-    return () => setState({ theaterMode: false });
+    return () => {
+      setState({ theaterMode: false });
+      // “开始游玩”请求的是 appframe 全屏；离开故事时一并退出，避免首页
+      // 仍被锁在全屏，导致下一次开始游玩无法重新触发浏览器手势。
+      const appframe = shellRef.current?.closest(".appframe");
+      if (document.fullscreenElement === appframe) void document.exitFullscreen().catch(() => undefined);
+    };
   }, [sid]);
   useEffect(() => {
     if (sid && developer && ui.inspectorOpen) void api.devState(sid).then(setDevState).catch(error);

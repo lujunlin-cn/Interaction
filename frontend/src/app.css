@@ -608,7 +608,7 @@ body[data-appearance="dark"] .notice { background: var(--player-surface); }
 .hud-toggle { background: var(--hud-bg); color: var(--on-accent); border-color: var(--hud-line); }
 /* 剧场模式浮动返回按钮：与 hud-toggle 同风格玻璃拟态，放在其右侧 */
 .player-back {
-  position: absolute; top: 14px; left: 108px; z-index: 4;
+  position: absolute; top: 14px; left: 108px; z-index: 9;
   display: inline-flex; align-items: center; gap: 5px;
   background: var(--hud-bg); color: var(--on-accent); border-color: var(--hud-line);
   min-height: var(--control-h); padding: 7px 14px;
@@ -663,7 +663,7 @@ body[data-subtitle-pos="bottomOutside"] .immersive-player:fullscreen .player-sta
 .appframe.theater-mode .player-controls { position: absolute; z-index: 8; left: 18px; right: 18px; bottom: 12px; margin: 0; }
 .appframe.theater-mode .player-controls .player-progress { margin-top: 0; }
 .appframe.theater-mode .scene-caption { bottom: 42px; }
-.appframe.theater-mode .player-more > div { bottom: auto; top: 100%; }
+.appframe.theater-mode .player-more > div { bottom: calc(100% + 8px); top: auto; }
 .player-time { color: var(--player-muted); font-size: var(--font-xs); white-space: nowrap; }
 
 /* ---- 剧场模式/全屏：决策未开放时自动隐藏交互层（zip 合并） ---- */
@@ -693,6 +693,9 @@ body[data-subtitle-pos="bottomOutside"] .immersive-player:fullscreen .player-sta
 .immersive-player .player-controls { position: absolute; z-index: 8; left: 18px; right: 18px; bottom: 12px; margin: 0; }
 .immersive-player .player-controls .player-progress { margin-top: 0; }
 .player-more > div { bottom: calc(100% + 8px); max-height: min(360px, 50dvh); overflow-y: auto; display: grid; gap: 4px; padding: 6px; border: 1px solid var(--line); border-radius: 8px; }
+
+/* 点击“开始游玩”后 appframe 进入浏览器全屏；剧场模式负责内部布局。 */
+.appframe:fullscreen { width: 100vw; height: 100dvh; max-width: none; }
 
 /* ============ 首幕前情提要（星战式 crawl） ============
  * OPENING_PREPARING 阶段铺满 player-stage 的叙事覆盖层。
