@@ -115,6 +115,8 @@ PlotShift 不把 Minimax H3 权重下载到本机，而是调用 fal.ai 的队�
 
 Fal 的队列等待通常可能超过一分钟。关闭 `pre_generate_recommendation_media` 时，推荐出现不会提前付费生成；玩家点击后才提交 H3，等待时间由 Fal 队列和视频生成耗时决定。不要因为前端仍显示 `GENERATING` 就重复点击或重新提交同一分支；应先查看 Developer → 生产 / Usage Ledger 中的 `request_id` 和状态。
 
+> **远端延迟警告**：`minimax/h3-max/reference-to-video` 的 Fal.ai 远端 API 在实际使用中单个视频通常需要约 60 秒，队列繁忙时还会更久。这是云端排队和生成耗时，不是 PlotShift 前端卡死。远端路径适合低频人工试玩或最终验收，不适合把每个推荐都提前生成，也不适合本地开发调试。建议需要快速迭代、连续试玩或比赛现场演示时部署 Sol-H3/h3-adapter 本地路径，并切换到 `VIDEO_LOCAL_PROFILE`；这样任务在本地 NVIDIA GPU 队列执行，不受 Fal.ai 公网队列延迟影响。无论使用哪条路径，都应保持 `pre_generate_recommendation_media=false`，只在玩家实际选择或明确测试时生成视频。
+
 最低配置示例：
 
 ```dotenv

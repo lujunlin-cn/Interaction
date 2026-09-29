@@ -22,6 +22,8 @@ bash deploy/start.sh
 
 打开 <http://127.0.0.1:9000>。需要真实模型时，按[部署说明](docs/DEPLOYMENT_GUIDE.md)在服务器端填写自己的密钥；密钥不放进浏览器，也不提交到 Git。
 
+视频生成提示：Fal.ai 的 `minimax/h3-max/reference-to-video` 属于远端队列服务，单个视频实际可能等待约 60 秒；本地开发和现场演示建议部署 Sol-H3，并使用 `VIDEO_LOCAL_PROFILE`。
+
 ## 检查服务
 
 ```bash

@@ -82,6 +82,8 @@ Provider Router 集中处理 health check、timeout、retry、fallback、circuit
 
 **Minimax H3 / fal.ai** 是云端付费路径。PlotShift 向 `https://queue.fal.run/minimax/h3-max/reference-to-video` 提交每个 Shot，保存 Fal 返回的队列 URL，轮询到完成后下载 MP4。请求包含整数秒数、480P/768P/1080P 分辨率、16:9 等宽高比，以及最多 9 张图片、3 个视频、3 个音频的参考素材限制。`FAL_PAID_GENERATION_ENABLED` 只控制这条云端付费路径；它不应该阻止 Image Relay 生图，也不代表 Sol-H3 是否可用。
 
+Fal.ai 这条远端路径的主要限制是延迟：实际调用 `minimax/h3-max/reference-to-video` 时，单个视频通常约 60 秒才能完成，拥堵时可能更长。它适合低频真实生成和最终人工验收，不适合开发阶段连续点击或为推荐选项预生成视频。需要较短反馈周期时，应优先使用下面的 Sol-H3 本地部署路径。
+
 **Sol-H3** 是本地适配器路径。PlotShift 不直接执行 ComfyUI 节点，而是调用 `SOL_H3_BASE_URL` 提供的 h3-adapter：
 
 ```text
