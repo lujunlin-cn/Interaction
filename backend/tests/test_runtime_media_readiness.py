@@ -119,6 +119,15 @@ def test_three_actor_references_balanced_and_audio_not_starved(monkeypatch):
     assert len([ref for ref in refs if ref["type"] == "audio"]) == 3
 
 
+def test_voice_references_are_scoped_to_authorized_dialogue_speakers(monkeypatch):
+    engine, state, branch, route = fixture_engine(monkeypatch)
+    for name in ("alpha", "beta", "gamma"):
+        state.asset_manifest.append({"id": f"{name}-voice", "entity": name, "role": "voice",
+            "path": f"https://example.invalid/{name}.wav"})
+    refs = engine._bound_references(state, ["alpha", "beta", "gamma"], {"beta", "gamma"})
+    assert [ref["entity"] for ref in refs if ref["type"] == "audio"] == ["beta", "gamma"]
+
+
 def test_reference_mixed_cap_and_url_deduplication_match_adapter(monkeypatch):
     from app.providers.real import FalH3MaxProvider
     engine, state, branch, route = fixture_engine(monkeypatch)

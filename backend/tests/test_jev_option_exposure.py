@@ -54,6 +54,30 @@ def test_recommendation_media_setting_is_explicit():
     assert hasattr(settings, "pre_generate_recommendation_media")
 
 
+def test_slow_director_does_not_delay_jev_candidates(monkeypatch):
+    engine = RuntimeEngine(SimpleNamespace())
+    state = engine._bootstrap("v", "s", {"world": {"locations": "hall｜大厅"}})
+
+    async def slow_text(*args, **kwargs):
+        await asyncio.sleep(0.2)
+        raise AssertionError("director should have timed out")
+
+    async def decision(**kwargs):
+        labels = kwargs["questions"][0]["candidates"]
+        answer = SimpleNamespace(scores={label: float(len(labels) - i) for i, label in enumerate(labels)},
+                                 model="jev", latency_ms=1, details={})
+        return None, SimpleNamespace(selected="jev"), answer
+
+    engine.router = SimpleNamespace(call_text=slow_text, call_decision=decision)
+    monkeypatch.setattr(settings, "recommendation_candidate_timeout_seconds", 0.01)
+    started = asyncio.get_event_loop_policy().new_event_loop()
+    try:
+        candidates = started.run_until_complete(engine.candidate_actions(state))
+    finally:
+        started.close()
+    assert len(candidates) >= 2
+
+
 def test_recommendation_pipeline_can_publish_before_h3(monkeypatch):
     engine = RuntimeEngine(SimpleNamespace())
     state = engine._bootstrap("v", "s", {"world": {"locations": "hall｜大厅"}})

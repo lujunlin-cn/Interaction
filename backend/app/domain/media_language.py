@@ -40,5 +40,7 @@ class MediaLanguage(BaseModel):
                  + json.dumps(dialogue, ensure_ascii=False) + ". No additional dialogue or narration.") if dialogue else (
                      "No speech or voiceover. Use only environmental sound and nonverbal action sounds.")
         return (f"\nAudio language contract: all spoken words must be in {self.speech_name}; never switch languages. "
-                "Reference voices supply timbre/identity, not the language or words to copy. " + audio
+                "Reference voices supply timbre/identity, not the language or words to copy. "
+                "If more than one speaker is authorized, speakers take strict sequential turns: "
+                "one speaker finishes before the next begins; never overlap, duet, echo, or interleave voices. " + audio
                 + " Do not render subtitles, captions, lettering or text overlays in the video image; the player renders subtitles separately.")

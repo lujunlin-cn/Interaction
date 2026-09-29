@@ -101,6 +101,10 @@ class Settings(BaseSettings):
     director_queue_timeout_seconds: float = 10.0
     director_queue_max: int = 16
     director_local_request_timeout_seconds: float = 90.0
+    # Recommendation labels must not wait on a slow Director completion.  Jev
+    # can rank the deterministic fallback candidates while the optional
+    # Director enrichment is abandoned for this turn.
+    recommendation_candidate_timeout_seconds: float = 3.0
 
     # --- CORS（G28：收敛，不再 "*"）---
     # 逗号分隔；默认同源 + 常见本地 dev（vite 5173/4173、preview）。

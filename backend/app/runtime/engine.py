@@ -641,12 +641,17 @@ class RuntimeEngine:
         if not skill_enabled("choice-evaluation"):
             return self._generic_candidates(state)
         try:
-            _, rec, resp = await self.router.call_text(
-                "director",
-                messages=[{"role": "user", "content":
-                           f"scenario_context: {json.dumps(context, ensure_ascii=False)}"}],
-                output_contract={"purpose": "candidate_actions"},
-                branch_id=None)
+            # Candidate enrichment is optional.  A congested Director must
+            # never hold the decision UI hostage: the deterministic generic
+            # candidates below still give Jev a valid ranking input.
+            _, rec, resp = await asyncio.wait_for(
+                self.router.call_text(
+                    "director",
+                    messages=[{"role": "user", "content":
+                               f"scenario_context: {json.dumps(context, ensure_ascii=False)}"}],
+                    output_contract={"purpose": "candidate_actions"},
+                    branch_id=None),
+                timeout=max(0.1, float(settings.recommendation_candidate_timeout_seconds)))
             content = json.loads(resp.content)
             for c in (content.get("candidates") or []):
                 label = str(c.get("label", "")).strip()
@@ -659,7 +664,7 @@ class RuntimeEngine:
             await tracer.emit("director.candidates", "success",
                               input_={"context": context}, output={"count": len(candidates), "candidates": candidates},
                               provider=rec.selected or "", session_id=state.id)
-        except (ProviderBlocked, ProviderError, ValueError, KeyError) as e:
+        except (asyncio.TimeoutError, ProviderBlocked, ProviderError, ValueError, KeyError) as e:
             await tracer.emit("director.candidates", "degraded",
                               output={"reason": str(e)[:200]}, session_id=state.id)
         if not candidates:
@@ -1595,7 +1600,8 @@ class RuntimeEngine:
                               provider="runtime", session_id=session_id,
                               branch_id=branch_id)
 
-    def _bound_references(self, state: SessionState, cast: list[str] | None = None) -> list[dict]:
+    def _bound_references(self, state: SessionState, cast: list[str] | None = None,
+                          voice_entities: set[str] | None = None) -> list[dict]:
         """Select balanced, cast-scoped references within real provider limits."""
         if not skill_enabled("visual-continuity"):
             return []
@@ -1624,6 +1630,12 @@ class RuntimeEngine:
                    "entity": entity, "path": asset["path"], "version": asset.get("version", 1),
                    "type": kind, "character_snapshot_id": asset.get("character_snapshot_id")}
             if kind == "audio":
+                # Voice references are meaningful only for speakers actually
+                # authorised in this shot.  Passing every character voice to
+                # one H3 request leaves the provider without a speaker map
+                # and can produce interleaved/mixed voices.
+                if voice_entities is not None and entity not in voice_entities:
+                    continue
                 audio.append(ref)
             elif kind == "video":
                 video.append(ref)
@@ -1776,7 +1788,13 @@ class RuntimeEngine:
                 cast = mentioned + [cid for cid in cast if cid not in mentioned
                                     and not any(c.get("id") == cid and c.get("global_character_id")
                                                 for c in characters)]
-            refs = self._bound_references(state, cast)
+            dialogue_indices = shot.get("dialogue_indices", [])
+            dialogue_speakers = {
+                branch.dialogue[i].get("speaker")
+                for i in (dialogue_indices if isinstance(dialogue_indices, list) else [])
+                if isinstance(i, int) and 0 <= i < len(branch.dialogue)
+            }
+            refs = self._bound_references(state, cast, dialogue_speakers)
             covered = {ref["entity"] for ref in refs if ref["type"] == "image"}
             if settings.provider_mode == "live" and any(cid in visual_identity_cast and cid not in covered for cid in cast):
                 raise EngineError("A visible character has no image reference within the provider limit")
@@ -1805,7 +1823,6 @@ class RuntimeEngine:
                            "Keep the requested action and surroundings visible throughout the shot. "
                            "Character names and reference labels are binding instructions only: "
                            "never display them, cast lists, role descriptions, or reference annotations as visible text.")
-            dialogue_indices = shot.get("dialogue_indices", [])
             if not isinstance(dialogue_indices, list) or any(
                 type(i) is not int or not 0 <= i < len(branch.dialogue) for i in dialogue_indices
             ):

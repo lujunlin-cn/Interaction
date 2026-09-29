@@ -63,6 +63,8 @@ def test_language_and_authorized_dialogue_survive_narrative_production(monkeypat
     assert line in shot.prompt
     assert "Do not render subtitles" in shot.prompt
     assert ("Mandarin Chinese" if video == "zh-CN" else "English") in shot.prompt
+    assert "strict sequential turns" in shot.prompt
+    assert "never overlap" in shot.prompt
     assert branch.jobs == []
     from app.domain.schemas import Branch
     assert Branch.model_validate_json(branch.model_dump_json()).media_language.model_dump() == language
