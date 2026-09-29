@@ -43,7 +43,11 @@ export default function Sidebar() {
   const [editing, setEditing] = useState<ScenarioDraft | null>(null);
 
   useEffect(() => {
-    api.listScenarios().then((r) => setLibrary(r.items)).catch(() => {});
+    const reloadLibrary = () => { api.listScenarios().then((r) => setLibrary(r.items)).catch(() => {}); };
+    reloadLibrary();
+    // Home 删除/创建/复制后 Sidebar 也必须立即失效缓存，否则旧故事仍会出现在“最近项目”。
+    window.addEventListener("plotshift:library-changed", reloadLibrary);
+    return () => window.removeEventListener("plotshift:library-changed", reloadLibrary);
   }, [ui.page, ui.editId]);
   useEffect(() => {
     if (ui.editId) api.getScenario(ui.editId).then(setEditing).catch(() => setEditing(null));

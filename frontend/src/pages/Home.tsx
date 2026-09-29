@@ -229,6 +229,8 @@ export default function Home() {
                           try {
                             await api.deleteScenario(sc.id);
                             toast("已删除。");
+                            window.dispatchEvent(new Event("plotshift:library-changed"));
+                            if (ui.editId === sc.id) setState({ editId: null });
                             reload();
                           } catch (e: any) {
                             toast(`删除失败：${e.message}`);
