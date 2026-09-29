@@ -1,92 +1,72 @@
-# 项目说明
+# PlotShift 项目说明
 
-## Interaction 是什么
+## 作品定位
 
-Interaction 把故事创作、角色管理、互动游玩和媒体生成放在同一条工作流里。创作者可以从一句话开始，逐步确认世界、戏剧冲突、角色和机制；玩家进入已发布故事后，每回合都能选择系统给出的行动，也能直接说出自己的计划。
+PlotShift 是一个把“创作故事”和“游玩故事”放在同一条闭环里的 AI 互动短剧平台。传统互动视频通常只能在几个固定按钮中选择，生成式故事又常常因为模型自由发挥而失去连续性。PlotShift 同时解决这两个问题：玩家可以选择系统推荐的行动，也可以直接输入自己的计划；模型可以参与理解和写作，但世界事实、角色身份、物品、线索和分支状态由可校验的运行时保存。每一次行动都会留下可追踪的输入、判断、提案和提交结果，因此故事既有生成式的开放性，也有游戏状态的确定性。
 
-系统保存的不只是台词，还包括当前地点、世界事实、角色关系、库存、线索、角色已知信息和分支状态。下一幕只能建立在这些已确认事实之上。
+创作者从一句自然语言想法开始，逐步确认世界规则、戏剧冲突、角色和玩法机制。发布时，角色会固定为版本化 Snapshot，场景、资产和规则组成可加载的 Scenario Version。玩家进入故事后，PlotShift 以回合为单位推进：先理解行动，再规划戏剧目标，判断库存、线索、关系、愿望或限时事件是否应该触发，生成下一幕叙事和镜头计划，最后在媒体准备完成后展示给玩家。玩家选择的分支才会从 `SELECTED` 进入 `PROVISIONAL`，通过媒体和状态校验后成为 `CANONICAL`；未选择或失败的推测分支不会污染正式世界。
 
-## 谁使用它
+## 核心亮点
 
-**创作者**在 Story Creator 中创建故事，在 Character Studio 中维护角色身份和造型，完成检查后发布版本。
+### 1. 自由行动真正影响故事
 
-**玩家**在 Theater Player 中观看当前场景、做出选择、输入自由行动，并查看库存、线索和关系变化。
+推荐选项是帮助玩家开始行动的入口，不是剧情边界。玩家可以输入“我去配电室找备用电源”或提出完全不同的策略。系统保留玩家原文，并用行动语义包表达动作、目标、策略、约束、风险和信息需求，Director 再根据当前地点、压力和已知事实决定影响范围。这样可以在不牺牲世界规则的情况下保留玩家的 Agency。
 
-**开发者**在 Developer 面板查看 Provider 状态、分支生命周期和 Skill Chain，用于排查一次行动是怎样变成下一幕的。
+### 2. Canonical State 与生成文案分离
 
-## 一次行动的完整路径
+模型和 Skills 只能提交结构化 Proposal，不能直接写数据库。StateManager 校验版本、权限、前置条件和幂等键后，原子提交 World State 与 Drama State。Narrative 只能使用批准的 Scene Packet，因此不会因为一句文案凭空增加物品、泄露秘密或复活已经离场的角色。
+
+### 3. 版本化角色和可复用资产
+
+角色身份、服装、标准视图和参考素材都有版本。发布故事时生成 Character Snapshot，后续修改全局角色不会改变已发布故事或历史会话。Production 依据 Snapshot 绑定参考图，再调用视频 Provider，从源头减少同一角色在不同镜头中变成另一个人的问题。
+
+### 4. Agent Skills 可观察、可组合
+
+PlotShift 不是一个包办一切的 Prompt。Understand Free Action、Evaluate Choices、Reconcile Mechanics、Character Reference Resolver、Narrative、Production 和 Visual QA 都有自己的输入输出、失败路径和 trace。开发者可以看到某一回合触发了哪些 Skill、产生了什么提案、哪些提案被 StateManager 接受，以及每一步耗时多少。
+
+### 5. 本地与云端按职责组合
+
+高影响的 Director 规划可以在本地 NVIDIA GPU 上运行 Nemotron，低频高质量的创作和审查使用 StepFun，图片走 OpenAI-compatible Image Relay，视频走 fal.ai H3 Max。Provider Router 统一超时、重试、熔断、回退和用量记录，使模型替换不会扩散到业务代码。没有 GPU 时仍可使用 mock 或纯云端模式。
+
+## 一回合如何运行
 
 ```mermaid
 flowchart LR
-    A[玩家选择或自由输入] --> B[理解行动]
-    B --> C[导演规划]
-    C --> D[机制协同]
-    D --> E[StateManager 校验]
-    E --> F[生成叙事]
-    F --> G[规划镜头与媒体]
+    A[玩家选择或自由输入] --> B[Understand Free Action]
+    B --> C[Director 规划]
+    C --> D[Mechanic Skills 提案]
+    D --> E[StateManager 校验提交]
+    E --> F[Narrative Scene Packet]
+    F --> G[Production 与 Visual QA]
     G --> H[分支 READY]
-    H --> I[玩家看到下一幕]
-    I --> J[选中分支成为 Canonical]
+    H --> I[玩家观看并选择]
+    I --> J[SELECTED → PROVISIONAL → CANONICAL]
 ```
 
-1. 前端提交玩家原文和当前会话版本。
-2. Runtime 调用 Understand Free Action，把原文整理为行动、目标、策略和约束。
-3. Director 根据当前场景和状态提出下一幕计划。
-4. 机制 Skills 判断是否产生物品、线索、关系、愿望或限时事件 Proposal。
-5. StateManager 校验并提交唯一的正式状态；Skill 不直接写世界。
-6. Narrative 只把已批准的 Scene Packet 写成文本和字幕。
-7. Production 生成镜头计划并提交媒体任务。分支达到 READY 后才会展示给玩家。
-8. 玩家选择后，分支按 `SELECTED → PROVISIONAL → CANONICAL` 推进；失败分支不会污染正式状态。
+1. 前端提交玩家原文、会话版本和当前分支。
+2. Runtime 生成行动语义包；低影响的小动作可快速确认，高影响行动进入完整规划。
+3. Director 读取分层 Context，输出戏剧指令、短期目标和候选分支约束。
+4. 机制协同层判断 Inventory、Clue、Relationship、Wish、Timed/QTE 等能力，并返回 Proposal。
+5. StateManager 以版本和幂等键校验提案，提交唯一的 Canonical State。
+6. Narrative 只接收允许揭示的 Scene Packet，生成场景文本、字幕和玩家可见事实。
+7. Production 绑定角色 Snapshot、镜头、参考素材和 Provider，分支全部达到 READY 后才公布。
+8. 玩家选择后才推进正式分支；失败时回滚 provisional 状态或发布仍然 READY 的较小 K 集合。
 
-## 关键设计
+## 架构与优化思路
 
-### 玩家行动优先
+PlotShift 采用前端、API、Runtime、Skills、StateManager、Provider Router 和持久化层的分层架构。前端负责创作器、角色工作室、剧场播放器和开发者观察面板；FastAPI 提供 REST/WebSocket；Runtime 编排回合和分支生命周期；StateManager 保证提交边界；PostgreSQL 保存故事版本、快照、会话、轨迹和用量。
 
-推荐行动是入口，不是边界。自由输入会保留原文、解释结果和最终影响，玩家可以说“我去配电室找备用电源”，即使这句话不在推荐列表中。
+性能优化遵循“先决定是否值得生成，再生成媒体”的原则。Jev 负责快速离散判断和推荐排序，Director 只对需要完整戏剧推进的行动规划；分层 Context 只把当前场景相关事实交给对应 Skill，避免每回合重复发送完整世界日志；候选分支在锁定 K 后并行准备，视频只对玩家实际选择或明确测试的分支付费生成。Provider Router 使用连接复用、超时、有限重试和熔断，Runtime 使用队列并发上限保护本地模型。轨迹记录各阶段延迟、上下文规模、Token、媒体任务和失败原因，可用 Replay 在不重新生成视频的情况下比较新旧策略。
 
-### 状态与文案分开
-
-Director 和机制只提出结构化 Proposal，StateManager 负责校验、合并和提交。Narrative 不能凭空增加物品、知识或世界事实。
-
-### 角色版本固定
-
-发布故事时会创建 Character Snapshot。后续修改全局角色不会改变已经发布的故事和历史会话。
-
-### Provider 可替换
-
-Runtime 只依赖统一的 Provider 接口。可以使用 `mock` 离线运行，也可以分别接入文本模型、决策服务、图片中转和视频服务。
-
-## 代码地图
+## 代码入口
 
 ```text
-frontend/src/          React 页面、Creator、Character Studio、Theater Player
-backend/app/api/       REST 和 WebSocket 接口
-backend/app/runtime/   回合编排、分支生命周期、会话和语言设置
-backend/app/domain/    Scenario、Character Snapshot、StateManager、数据契约
-backend/app/providers/ Provider 实现与路由器
-backend/app/skills/    Agent Skills、Proposal、触发策略
-deploy/                PostgreSQL、应用和本地模型启动脚本
-tools/                 回放、轨迹分析和验收工具
+frontend/src/          React、TypeScript、Vite 页面和播放器
+backend/app/api/       REST 与 WebSocket
+backend/app/runtime/   回合编排、分支、会话和语言设置
+backend/app/domain/    Scenario、Snapshot、StateManager、契约
+backend/app/providers/ Provider 实现、路由、回退和熔断
+backend/app/skills/    Agent Skills、Proposal 和注册表
+deploy/                PostgreSQL、应用和 Nemotron 启动脚本
+tools/                 轨迹挖掘、Replay 和验收工具
 ```
-
-## Agent Skills
-
-Interaction 的 Agent Skills 是有输入输出边界的能力模块，而不是一个包办一切的 Prompt。当前链路中的主要能力是：
-
-- **Understand Free Action**：理解玩家自由行动，输出可追踪的行动语义包。
-- **Evaluate Choices**：生成行动、风险和信息价值不同的推荐，并交给决策服务排序。
-- **Reconcile Mechanics**：协调 Inventory、Clue、Relationship、Wish、Timed/QTE 的 Proposal。
-- **Character Reference Resolver**：从发布快照中选择角色身份和参考素材。
-- **Narrative**：把批准的 Scene Packet 写成场景文本和字幕。
-- **Production / Visual QA**：规划镜头、绑定角色参考图并检查媒体结果。
-
-每个 Skill 的调用、输入摘要、输出、耗时和 Proposal 结果都会进入轨迹，开发者可以按回合查看完整 Skill Chain。
-
-## 演示路径
-
-1. 用一句话创建一个故事，确认 AI 理解结果。
-2. 为一个角色建立身份参考图和版本。
-3. 发布故事并进入 Theater Player。
-4. 先选择一条推荐，再输入一条不在推荐中的自由行动。
-5. 在 Developer 面板查看行动理解、机制 Proposal、分支状态和媒体任务。
-6. 在 `mock` 模式下演示失败恢复；接入真实 Provider 后再开启对应能力。

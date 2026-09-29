@@ -1,6 +1,6 @@
-# 技术栈说明
+# PlotShift 技术栈说明
 
-## 总体结构
+## 总体架构
 
 ```mermaid
 flowchart TB
@@ -9,88 +9,101 @@ flowchart TB
     RT[Runtime Engine]
     SK[Agent Skills]
     SM[StateManager]
-    DB[(PostgreSQL)]
+    DB[(PostgreSQL 16)]
     PR[Provider Router]
-    LOCAL[Nemotron / vLLM]
-    CLOUD[StepFun / Jev / Image Relay / fal.ai]
+    NVIDIA[NVIDIA GPU + CUDA + vLLM]
+    STEP[StepFun 阶跃星辰]
+    CLOUD[Jev / Image Relay / fal.ai]
     UI --> API --> RT
-    RT --> SK
-    SK --> SM --> DB
+    RT --> SK --> SM --> DB
     RT --> PR
-    PR --> LOCAL
+    PR --> NVIDIA
+    PR --> STEP
     PR --> CLOUD
 ```
 
-前端负责页面和播放器，Runtime 编排一回合，Skills 做需要判断的工作，StateManager 提交正式状态，Provider Router 屏蔽不同模型和服务的请求差异。
+PlotShift 的核心原则是“Runtime 负责编排，Skill 负责判断，StateManager 负责提交，Provider Router 负责外部服务”。业务代码不直接绑定第三方 SDK；每个 Provider 都返回统一契约、来源、耗时、重试和失败信息。
 
-## 组件清单
+## 应用层
 
-| 层 | 技术 | 负责什么 |
+| 层 | 技术 | 用途 |
 | --- | --- | --- |
-| 前端 | React 18、TypeScript、Vite | Story Library、Creator、Character Studio、Theater Player、Developer 面板 |
-| API | Python、FastAPI、Uvicorn | REST、WebSocket、创作、会话和开发者接口 |
-| 数据 | SQLAlchemy 2 async、Pydantic 2、Alembic | 数据模型、契约校验、迁移 |
-| 数据库 | PostgreSQL 16 | 故事版本、角色快照、会话、分支、Provider Trace、Usage Ledger |
-| 媒体 | FFmpeg、aiofiles、multipart | Mock 视频、素材存储、媒体归档 |
-| 测试 | pytest、SQLite/aiosqlite、Playwright | 后端回归、隔离运行、浏览器流程 |
-| 部署 | Docker Compose、systemd 或容器重启策略 | 数据库、应用和模型服务的长期运行 |
+| 前端 | React 18、TypeScript、Vite 6 | Story Library、Creator、Character Studio、Theater Player、Developer 面板 |
+| API | Python 3.11、FastAPI、Uvicorn、HTTPX | REST、WebSocket、会话、创作、媒体和开发者接口 |
+| 数据契约 | Pydantic 2、SQLAlchemy 2 async、Alembic | 请求响应 Schema、状态提案、迁移和版本校验 |
+| 数据库 | PostgreSQL 16；测试使用 SQLite/aiosqlite | Scenario、角色 Snapshot、Session、Branch、Trace、Usage Ledger |
+| 媒体 | FFmpeg、aiofiles、multipart | 媒体归档、Mock 视频、上传和输出检查 |
+| 测试 | pytest、pytest-asyncio、Playwright、Vite build | 后端回归、隔离运行、浏览器流程和前端构建 |
+| 部署 | Docker Compose、systemd 或 `restart: unless-stopped` | 数据库、应用和本地模型的长期运行 |
 
-## Provider 路由
+## NVIDIA 与本地算力
 
-| 能力 | 默认 Provider | 作用 |
+本项目实际使用的 NVIDIA SDK/运行组件是 CUDA Toolkit（及兼容的 CUDA Runtime）、NVIDIA Container Toolkit、vLLM、FlashInfer 和 Marlin；NIM、TensorRT 等没有在当前部署中作为必需依赖声明。
+
+项目使用的 NVIDIA 相关组件如下：
+
+| 组件 | 用途 |
+| --- | --- |
+| NVIDIA Driver | 让宿主机识别 GPU，并提供兼容的 CUDA 驱动接口 |
+| CUDA Runtime / CUDA Toolkit | GPU 内核、显存和算子运行环境 |
+| NVIDIA Container Toolkit | 把 GPU、驱动和 CUDA 能力安全注入 Docker 容器 |
+| NVIDIA DGX Spark | 当前本地部署的统一内存 NVIDIA 计算平台 |
+| vLLM OpenAI-compatible server | 托管本地 Nemotron，并提供统一 `/v1` API |
+| FlashInfer | Nemotron Mamba 路径和高效推理内核 |
+| Marlin | MoE/NVFP4 权重的高效推理后端 |
+| FP8 KV cache、prefix caching | 降低 KV 显存占用，复用重复的系统上下文 |
+
+本地 Director 模型是 **`nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4`**。启动脚本检查完整权重索引和 52 个分片，通过 `--served-model-name` 暴露为 OpenAI-compatible 模型。Runtime 使用并发上限、队列超时和请求超时，避免 GPU 被突发的多分支请求耗尽。
+
+## StepFun 阶跃星辰模型
+
+PlotShift 使用 StepFun 的两个模型 ID：
+
+| 模型 | 角色 |
+| --- | --- |
+| **`step-3.7-flash`** | Narrative 主模型，把批准的 Scene Packet 写成场景文本、字幕和玩家可见结果 |
+| **`step-5-preview`** | Authoring、澄清、结构化创作、审查和 Director 的质量回退 |
+
+StepFun 通过 `STEP_BASE_URL` 和服务端 `STEP_API_KEY` 接入。应用只在后端调用，前端不接触 Key。
+
+## 其他 Provider
+
+| 能力 | Provider / 模型 | 说明 |
 | --- | --- | --- |
-| Director | Nemotron Lightning（本地） | 规划下一幕、整理分支目标 |
-| Narrative | Step 3.7 Flash | 把 Scene Packet 写成叙事和字幕 |
-| Authoring | Step 5 Preview | 故事理解、澄清和结构化创作 |
-| Decision | Jev | 评估和排序推荐行动 |
-| Image | OpenAI-compatible Image Relay | 角色图、标准视图、编辑图 |
-| Cloud Video | fal.ai `minimax/h3-max/reference-to-video` | 参考图到视频 |
-| Local Video | Sol-H3 adapter | 本地视频实验 |
-| Offline | Mock Providers | 无外部请求的开发和测试 |
+| 决策与排序 | Jev / TypeSafe SystemOne，`jev-latest` | 快速分类、路由、置信和 Top-K 排序；不拥有世界真相 |
+| 图片生成与编辑 | OpenAI-compatible Image Relay，主模型 `gpt-image-2.5-sunburst` | 角色图、标准视图、编辑图；图片不走 fal.ai |
+| 云端视频 | fal.ai `minimax/h3-max/reference-to-video` | 参考图到视频；仅在开关允许且发生真实测试/玩家选择时付费 |
+| 本地视频实验 | Sol-H3 adapter | `VIDEO_LOCAL_PROFILE` 下使用，和 Nemotron 通过显式 Profile 切换 |
+| 离线开发 | Mock Providers | 不发外部请求，验证状态机、失败恢复和 UI |
 
-Provider Router 根据 `PROVIDER_MODE` 和 `RUNTIME_PROFILE` 选择服务，并记录 selected、fallback 和失败原因。业务代码不直接拼接第三方请求。
+Provider Router 集中处理 health check、timeout、retry、fallback、circuit breaker、成本和 trace。`AGENT_LOCAL_PROFILE` 负责本地 Nemotron；`VIDEO_LOCAL_PROFILE` 负责本地视频实验。两种 Profile 的切换会先 drain、保存状态、卸载旧服务、健康检查新服务，再更新路由。
 
-## Agent Skills 和状态边界
+## Agent Skills
 
-Skill 位于 `backend/app/skills/`，由 Runtime 按回合触发。它们都有明确的输入、输出和失败路径：
+Skills 位于 `backend/app/skills/`，由 Runtime 根据行动和上下文触发。它们不是普通工具函数，而是具有稳定输入输出和可评估结果的能力：
 
-- **Understand Free Action**：输出行动、目标、策略和约束。
-- **Evaluate Choices**：生成并筛选行动差异、风险和信息价值不同的推荐。
-- **Reconcile Mechanics**：协调库存、线索、关系、愿望和限时机制。
-- **Character Reference Resolver**：解析发布角色快照和参考素材。
-- **Narrative**：只处理已批准的 Scene Packet。
-- **Production / Visual QA**：规划镜头，绑定参考图，检查媒体结果。
+- **Understand Free Action**：`raw_input + context → ActionSemanticPacket`。
+- **Evaluate Choices**：`scene + goals + constraints → diverse candidates`。
+- **Reconcile Mechanics**：`action + state → typed mechanic proposals`。
+- **Character Reference Resolver**：`character snapshot + shot → reference bindings`。
+- **Narrative**：`approved ScenePacket → text/caption/player output`。
+- **Production / Visual QA**：`directive + refs → shot plan/media result/continuity verdict`。
 
-Skill 只返回结构化 Proposal；StateManager 是唯一的 Canonical 提交入口。分支必须达到 READY 才能显示，选中后才会进入 Canonical。
+Skill 只能读授权 Context 和返回 Proposal；Canonical 状态只由 StateManager 写入。每次调用记录 Skill 版本、触发原因、输入摘要、输出、Proposal 接受率、耗时、Token 和 fallback 次数，支持 Developer Skill Chain 和历史 Replay。
 
-## 代码目录
+## 数据与可观测性
+
+每个回合保存玩家原文、行动语义、Jev 结果、Director 指令、Skill 提案、State Patch、Narrative、Production、媒体任务、Branch 生命周期和 Canonical State。角色通过发布版本和 Scenario Snapshot 固定；历史会话不会被全局角色编辑静默改变。Provider Trace 与 Usage Ledger 用于定位慢请求、重复请求、付费媒体和恢复路径。
+
+## 目录索引
 
 ```text
-backend/app/api/        HTTP 和 WebSocket 路由
-backend/app/runtime/    RuntimeEngine、会话、分支和语言设置
-backend/app/domain/     StateManager、Scenario、Character Snapshot、契约
-backend/app/providers/  Provider 实现、路由和熔断
-backend/app/skills/     Skill 实现和注册表
-frontend/src/            页面、播放器和开发者面板
-deploy/                 PostgreSQL、应用和 Nemotron 启动脚本
-tools/                  轨迹回放、分析和媒体检查
+frontend/src/          页面、播放器、主题和设置
+backend/app/api/       HTTP/WebSocket 路由
+backend/app/runtime/   RuntimeEngine、Session、Branch、语言设置
+backend/app/domain/    StateManager、Scenario、Snapshot、契约
+backend/app/providers/ Provider、Router、Fallback、Circuit Breaker
+backend/app/skills/    Skill 实现、策略和注册表
+deploy/                PostgreSQL、应用和 Nemotron 启动脚本
+tools/                 Trajectory Mining、Replay、并发和验收工具
 ```
-
-## 数据流和持久化
-
-一回合至少产生以下记录：玩家原文、行动语义包、导演计划、机制 Proposal、State Patch、Narrative 输出、生产计划、媒体任务、分支状态和最终 Canonical 状态。Provider Trace 保存模型、耗时、状态和重试次数；媒体文件存放在 `backend/data/` 下。
-
-角色使用版本和 Snapshot：发布时固定角色资产，后续编辑生成新版本。历史会话读取自己的 Snapshot，因此可以稳定回放。
-
-## 本地模型
-
-DGX Spark 上通过 vLLM OpenAI-compatible API 托管 `nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4`。启动脚本检查模型权重分片和 `/v1/models`。后端把它当作普通 OpenAI-compatible Provider，因此也可以替换成其他兼容服务。
-
-## 测试层次
-
-1. Provider 和数据契约测试：请求格式、Schema 和状态转换。
-2. Runtime 测试：READY、分支提交、幂等重试和媒体失败恢复。
-3. 浏览器测试：Creator、角色管理、播放器和开发者面板。
-4. Replay：使用固定历史输入比较行动保真度、选项差异、机制触发和上下文规模；生产阶段只做 plan-only。
-
-常用命令见[部署说明](DEPLOYMENT_GUIDE.md)的“离线回归”。
