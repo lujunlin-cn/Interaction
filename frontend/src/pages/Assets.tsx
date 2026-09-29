@@ -27,6 +27,10 @@ export default function Assets() {
   const [binding, setBinding] = useState("");
   const [role, setRole] = useState("identity");
   const [generation, setGeneration] = useState<any>(null);
+  const [generateOpen, setGenerateOpen] = useState(false);
+  const [generateBusy, setGenerateBusy] = useState(false);
+  const [generatePrompt, setGeneratePrompt] = useState("");
+  const [generateName, setGenerateName] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   const sid = ui.editId;
@@ -70,11 +74,26 @@ export default function Assets() {
         ))}
       </div>
       <section className="card asset-ai-generation">
-        <div className="row"><div className="grow"><h3>AI 生成图片</h3><p className="muted">用于场景、物件、背景或其他通用素材。当前云端生成受保险丝控制，已有素材和上传入口不受影响。</p></div>
-          <button className="primary" onClick={() => generation?.fal_paid_generation_enabled
-            ? toast("请在素材生成流程中确认提示词和分辨率后继续。")
-            : toast("当前云端图片生成暂时不可用，可以上传已有素材，稍后再试。")}>AI 生成图片</button></div>
-        {ui.mode === "developer" && <p className="muted">Guard：{generation?.fal_paid_generation_enabled ? "可用" : "已暂停"} · 默认 {generation?.image_resolution ?? "0.5K"}</p>}
+        <div className="row"><div className="grow"><h3>AI 生成图片</h3><p className="muted">生成场景、道具、背景或其他通用素材。生成后会保存到本故事素材库，可直接绑定人物或地点并用于剧本制作。</p></div>
+          <button className="primary" disabled={generation?.image_generation_available === false}
+            onClick={() => setGenerateOpen(true)}>AI 生成图片</button></div>
+        <p className="muted">角色主图请进入「角色库 → 角色 → 造型」；道具、地点和背景在这里生成，再通过“绑定”应用到剧本。</p>
+        {ui.mode === "developer" && <p className="muted">图片服务：{generation?.image_generation_available === false ? "未配置" : "可用"} · 默认 {generation?.image_resolution ?? "0.5K"}</p>}
+        {generateOpen && <div className="notice" role="dialog" aria-label="AI 生成图片">
+          <div className="row"><h4 className="grow">生成一张故事图片</h4><button className="small" onClick={() => setGenerateOpen(false)}>关闭</button></div>
+          <label><span>图片名称</span><input value={generateName} onChange={e => setGenerateName(e.target.value)} placeholder="例如：地下检疫入口的铁门" /></label>
+          <label><span>画面描述</span><textarea value={generatePrompt} onChange={e => setGeneratePrompt(e.target.value)} placeholder="描述地点、道具、材质、光线和时代，不要写角色秘密……" /></label>
+          <div className="row" style={{ flexWrap: "wrap" }}>
+            <label><span>用途</span><select value={role} onChange={e => setRole(e.target.value)}>{ROLE_OPTIONS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
+            <label><span>应用到</span><select aria-label="生成图片应用到" value={binding} onChange={e => setBinding(e.target.value)}><option value="">通用素材</option>{bindings.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}</select></label>
+          </div>
+          <div className="toolbar"><button className="primary" disabled={generateBusy || !generatePrompt.trim()} onClick={async () => {
+            setGenerateBusy(true);
+            try { await api.generateScenarioImage(sid, { prompt: generatePrompt.trim(), name: generateName.trim() || "AI 生成图片", binding, entity: binding, role }); toast("图片已生成并加入素材库。"); setGeneratePrompt(""); setGenerateName(""); setGenerateOpen(false); reload(); }
+            catch (e: any) { toast(`图片生成失败：${e.message}`); }
+            finally { setGenerateBusy(false); }
+          }}>{generateBusy ? "生成中…" : "确认生成"}</button><span className="muted">图片服务使用 OpenAI-compatible Image Relay，不占用 fal.ai 视频额度。</span></div>
+        </div>}
       </section>
       <div className="card">
         <div className="row">
@@ -164,7 +183,7 @@ function AssetRow({ a, sid, onChanged, bindings }: { a: Asset; sid: string; onCh
         <td>v{a.version}</td>
         <td>
           {a.type === "image" && (
-            <img src={`/files/${a.storage_path}`} alt={a.name}
+            <img src={a.storage_path.startsWith("/") || a.storage_path.startsWith("http") || a.storage_path.startsWith("data:") ? (a.storage_path.startsWith("/files/") ? a.storage_path : `/files/${a.storage_path}`) : `/files/${a.storage_path}`} alt={a.name}
               style={{ maxWidth: 120, maxHeight: 68, borderRadius: 4 }} />
           )}
           {a.type === "voice" && <audio controls src={`/files/${a.storage_path}`} style={{ height: 28 }} />}

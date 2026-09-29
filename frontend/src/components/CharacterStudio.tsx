@@ -33,7 +33,7 @@ export default function CharacterStudio({ scope, tab, libraryCharacter, characte
   const [diff, setDiff] = useState<any>(null);
   const [usages, setUsages] = useState<Array<{ id: string; title: string; version: number | null; published: boolean }>>([]);
   const [selectedOutfit, setSelectedOutfit] = useState("");
-  const [paidEnabled, setPaidEnabled] = useState(false);
+  const [imageGenerationEnabled, setImageGenerationEnabled] = useState(false);
   const developer = useUi().mode === "developer";
   const cid = libraryCharacter?.id;
   const isScenario = scope === "scenario";
@@ -61,7 +61,7 @@ export default function CharacterStudio({ scope, tab, libraryCharacter, characte
   }, [cid, libraryCharacter?.version, scenarioId, isScenario, revision]);
 
   useEffect(() => {
-    api.devGenerationSettings().then(v => setPaidEnabled(Boolean(v.fal_paid_generation_enabled))).catch(() => {});
+    api.devGenerationSettings().then(v => setImageGenerationEnabled(Boolean(v.image_generation_available))).catch(() => {});
   }, []);
   useEffect(() => { setDiff(null); setSelectedOutfit(""); }, [cid, character?.id, character?.global_character_version]);
   useEffect(() => {
@@ -164,7 +164,7 @@ export default function CharacterStudio({ scope, tab, libraryCharacter, characte
           if (!isScenario) await run(async () => { const added = await api.createCharacterOutfit(cid!, name, description); setSelectedOutfit(added.id); });
           else { const added = { id: `local_outfit_${crypto.randomUUID()}`, name, description, is_default: false, reference_slots: {}, reference_assets: [] }; saveScenario({ local_outfits: [...character?.local_outfits || [], added], outfit_id: added.id, overlay_sources: sources("outfit", "OVERRIDE") }); }
         }} />
-        {outfit && <OutfitEditor key={outfit.id} outfit={outfit} scope={scope} pool={pool} disabled={busy || pinnedUnavailable} paidEnabled={paidEnabled} onSave={updateOutfit} onUpload={f => upload(f, "outfit")} />}
+        {outfit && <OutfitEditor key={outfit.id} outfit={outfit} scope={scope} pool={pool} disabled={busy || pinnedUnavailable} paidEnabled={imageGenerationEnabled} onSave={updateOutfit} onUpload={f => upload(f, "outfit")} />}
       </section>}
     </>}
     {tab === "motion" && <section className="focus-section"><h3>姿势与动作</h3>

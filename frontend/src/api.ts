@@ -126,6 +126,8 @@ export const api = {
     if (meta.entity) fd.append("entity", meta.entity);
     return req<Asset>(`/api/scenarios/${sid}/assets`, { method: "POST", body: fd });
   },
+  generateScenarioImage: (sid: string, data: { prompt: string; name?: string; binding?: string; entity?: string; role?: string }) =>
+    req<Asset>(`/api/scenarios/${sid}/ai-generate-image`, { method: "POST", body: JSON.stringify(data) }),
   replaceAsset: (sid: string, aid: string, file: File) => {
     const fd = new FormData();
     fd.append("file", file);

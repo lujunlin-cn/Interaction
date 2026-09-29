@@ -470,6 +470,71 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
         await engine.refresh_assets(sid)
         return asset.model_dump(mode="json")
 
+    @api.post("/scenarios/{sid}/ai-generate-image")
+    async def generate_scenario_image(sid: str, data: dict):
+        """生成通用故事图片（场景/道具/背景），保存为可绑定的 Scenario Asset。"""
+        scenario = await scenarios.get(sid)
+        if scenario is None:
+            raise HTTPException(404, "scenario not found")
+        prompt = str(data.get("prompt", "")).strip()
+        if not prompt:
+            raise HTTPException(422, "请先填写图片描述")
+        provider = router.registry.get("nano_banana_2")
+        if provider is None:
+            raise HTTPException(503, "图片生成服务未配置")
+        try:
+            result = await provider.generate({
+                "prompt": prompt,
+                "num_images": 1,
+                "resolution": settings.image_generation_resolution,
+                "aspect_ratio": settings.generation_aspect_ratio,
+            })
+            image = next((x for x in result.get("images", []) if x.get("url")), None)
+            if not image:
+                raise RuntimeError("image provider returned no image")
+            source = image["url"]
+            asset_id = uid("asset")
+            folder = settings.data_path / "assets" / sid
+            folder.mkdir(parents=True, exist_ok=True)
+            storage_path = ""
+            mime = image.get("content_type", "image/png")
+            if source.startswith("data:image/"):
+                import base64
+                header, encoded = source.split(",", 1)
+                ext = header.split("/", 1)[1].split(";", 1)[0].replace("svg+xml", "svg")
+                raw = base64.b64decode(encoded)
+                path = folder / f"{asset_id}.{ext}"
+                path.write_bytes(raw)
+                storage_path = str(path.relative_to(settings.data_path))
+                mime = f"image/{ext}"
+            elif source.startswith(("http://", "https://")):
+                from ..providers.reference_images import archive_image
+                archived = await archive_image(source)
+                storage_path = archived["url"].removeprefix("/files/")
+            else:
+                raise RuntimeError("image provider returned unsupported image URL")
+            asset = Asset(id=asset_id, scenario_id=sid, type=AssetType.IMAGE,
+                          name=str(data.get("name") or "AI 生成图片"), mime=mime,
+                          storage_path=storage_path, binding=str(data.get("binding") or ""),
+                          entity=str(data.get("entity") or data.get("binding") or ""),
+                          role=str(data.get("role") or "style"), source="ai_generation")
+            async with SessionLocal() as db:
+                async with db.begin():
+                    db.add(AssetRow(id=asset_id, scenario_id=sid,
+                                    data=asset.model_dump(mode="json"), created_at=now_ms()))
+            await engine.refresh_assets(sid)
+            await tracer.emit("scenario.image_generate", "success",
+                              input_={"scenario_id": sid, "prompt_length": len(prompt)},
+                              output={"asset_id": asset_id, "provider": result.get("provider", "")})
+            return asset.model_dump(mode="json")
+        except HTTPException:
+            raise
+        except Exception as exc:
+            await tracer.emit("scenario.image_generate", "failed",
+                              input_={"scenario_id": sid, "prompt_length": len(prompt)},
+                              output={"error": type(exc).__name__})
+            raise HTTPException(502, "图片生成失败，请检查图片中转配置后重试。") from None
+
     # ---------------- v0.6 Character Asset System ----------------
     @api.post("/characters/{cid}/understanding")
     async def global_character_understanding(cid: str):
@@ -854,7 +919,13 @@ def build_api(engine: RuntimeEngine, router: ProviderRouter) -> APIRouter:
 
     @api.get("/dev/generation-settings")
     async def dev_generation_settings():
+        # 图片走 OpenAI-compatible Relay（或 mock），与 fal.ai 视频付费开关无关。
+        image_available = router.mode == "mock" or bool(
+            settings.image_provider_base_url and settings.image_provider_api_key
+        )
         return {"fal_paid_generation_enabled": settings.fal_paid_generation_enabled,
+                "image_generation_available": image_available,
+                "image_provider_configured": bool(settings.image_provider_base_url and settings.image_provider_api_key),
                 "image_resolution": settings.image_generation_resolution,
                 "video_resolution": settings.video_generation_resolution,
                 "aspect_ratio": settings.generation_aspect_ratio,

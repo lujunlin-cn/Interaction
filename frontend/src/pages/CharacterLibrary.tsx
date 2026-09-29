@@ -185,7 +185,7 @@ function CharacterDetail({ ch, onBack, onSaved, initialUnderstanding }: {
   const [snapshots, setSnapshots] = useState<any[]>([]);
   const [resolver, setResolver] = useState<any>(null);
   const [tab, setTab] = useState<(typeof STUDIO_TABS)[number][0]>("overview");
-  const [paidEnabled, setPaidEnabled] = useState(false);
+  const [imageGenerationEnabled, setImageGenerationEnabled] = useState(false);
   const [editSourceId, setEditSourceId] = useState("");
   const developer = useUi().mode === "developer";
   useEffect(() => {
@@ -198,7 +198,7 @@ function CharacterDetail({ ch, onBack, onSaved, initialUnderstanding }: {
     ? api.listCharacterSnapshots(scenarioVersionId).then((r) => setSnapshots(r.items)).catch(() => {})
     : undefined;
   useEffect(() => { if (scenarioVersionId) void loadSnapshots(); }, [scenarioVersionId]);
-  useEffect(() => { api.devGenerationSettings().then((v) => setPaidEnabled(Boolean(v.fal_paid_generation_enabled))).catch(() => {}); }, []);
+  useEffect(() => { api.devGenerationSettings().then((v) => setImageGenerationEnabled(Boolean(v.image_generation_available))).catch(() => {}); }, []);
 
   const run = async (label: string, action: () => Promise<unknown>) => {
     if (submitting.current) return;
@@ -247,9 +247,9 @@ function CharacterDetail({ ch, onBack, onSaved, initialUnderstanding }: {
               placeholder="例如：深色雨衣、短发、疲惫但警觉" /></label>
           <div className="row" style={{ alignItems: "end" }}>
             <button className="primary" disabled={!!busy}
-              onClick={() => paidEnabled
+              onClick={() => imageGenerationEnabled
                 ? run("已生成 2 张候选图", () => api.aiGenerateCharacter(ch.id, prompt, 2))
-                : toast("当前云端形象生成暂时不可用。你仍可以上传已有素材或编辑角色文字信息。")}>
+                : toast("图片中转服务暂时不可用。你仍可以上传已有素材或编辑角色文字信息。")}>
               {busy === "已生成 2 张候选图" ? "生成中…" : "AI 生成 2 张候选图"}
             </button>
             <button disabled={!!busy || !studioAssets.find((a) => a.status === "CANONICAL" && a.role === "front")}
@@ -274,14 +274,14 @@ function CharacterDetail({ ch, onBack, onSaved, initialUnderstanding }: {
           {studioAssets.map((a) => <option value={a.id} key={a.id}>{ROLE_LABELS[a.role] || (developer ? a.role : "参考图")} · {developer ? `${a.status} · ${a.id}` : (a.status === "CANONICAL" ? "主形象" : "候选图")}</option>)}
         </select></label>
         <div className="toolbar quick-edit-actions" aria-label="快捷编辑">
-          {([['换装','换成黄色雨衣，保持身份不变'], ['换背景','更换为故事场景背景'], ['换表情','调整为克制、警觉的表情'], ['换姿势','调整为站立观察姿势'], ['换视角','改为三分之四视角']] as const).map(([label, instruction]) => <button key={label} className="small" onClick={() => { setEditInstruction(instruction); if (!paidEnabled) toast("当前云端形象生成暂时不可用。快捷编辑已保留为待执行意图。"); }}>{label}</button>)}
+          {([['换装','换成黄色雨衣，保持身份不变'], ['换背景','更换为故事场景背景'], ['换表情','调整为克制、警觉的表情'], ['换姿势','调整为站立观察姿势'], ['换视角','改为三分之四视角']] as const).map(([label, instruction]) => <button key={label} className="small" onClick={() => { setEditInstruction(instruction); if (!imageGenerationEnabled) toast("图片中转服务暂时不可用。快捷编辑已保留为待执行意图。"); }}>{label}</button>)}
         </div>
         {confirmViews && <div className="notice">
-              <b>{paidEnabled ? "生成标准参考图？将基于主图生成其他视角，请确认后继续。" : "当前云端形象生成暂时不可用。"}</b>
+              <b>{imageGenerationEnabled ? "生成标准参考图？将基于主图生成其他视角，请确认后继续。" : "图片中转服务暂时不可用。"}</b>
           <div className="row">
-            <button className="primary" disabled={!!busy} onClick={() => paidEnabled
+            <button className="primary" disabled={!!busy} onClick={() => imageGenerationEnabled
               ? run("标准视图已生成", async () => { await api.standardCharacterViews(ch.id, confirmViews); setConfirmViews(null); })
-              : toast("当前云端形象生成暂时不可用，请稍后重试或上传已有标准参考图。")}>确认生成</button>
+              : toast("图片中转服务暂时不可用，请稍后重试或上传已有标准参考图。")}>确认生成</button>
             <button disabled={!!busy} onClick={() => setConfirmViews(null)}>取消</button>
           </div>
         </div>}
@@ -291,12 +291,12 @@ function CharacterDetail({ ch, onBack, onSaved, initialUnderstanding }: {
               placeholder="例如：保持身份不变，换成黄色雨衣，背景改为楼梯间" /></label>
           <div className="row" style={{ alignItems: "end" }}>
             <button disabled={!!busy || !editInstruction || !editSourceId}
-              onClick={() => paidEnabled
+              onClick={() => imageGenerationEnabled
                 ? run(developer ? "编辑 Candidate 已生成" : "新的编辑形象已生成", () => api.editCharacterImage(ch.id, editSourceId, editInstruction))
-                : toast("当前云端形象生成暂时不可用。原始形象保持不变。")}>{developer ? "生成编辑 Candidate" : "生成编辑形象"}</button>
+                : toast("图片中转服务暂时不可用。原始形象保持不变。")}>{developer ? "生成编辑 Candidate" : "生成编辑形象"}</button>
           </div>
         </div>
-        {!paidEnabled && <div className="notice warn">当前云端形象生成暂时不可用。可上传已有图片、编辑文字资料，或稍后重试。</div>}
+        {!imageGenerationEnabled && <div className="notice warn">图片中转服务暂时不可用。可上传已有图片、编辑文字资料，或稍后重试。</div>}
       </section></>}
       <CharacterStudio scope="library" tab={tab} libraryCharacter={ch} onLibraryChange={onSaved} />
       {developer && (tab === "usage" || tab === "versions") && <details className="card"><summary>Developer · Reference Override</summary>
