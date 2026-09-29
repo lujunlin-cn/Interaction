@@ -26,7 +26,7 @@ PlotShift 不是一个包办一切的 Prompt。Understand Free Action、Evaluate
 
 ### 5. 本地与云端按职责组合
 
-高影响的 Director 规划可以在本地 NVIDIA GPU 上运行 Nemotron，低频高质量的创作和审查使用 StepFun，图片走 OpenAI-compatible Image Relay，视频走 fal.ai H3 Max。Provider Router 统一超时、重试、熔断、回退和用量记录，使模型替换不会扩散到业务代码。没有 GPU 时仍可使用 mock 或纯云端模式。
+高影响的 Director 规划可以在本地 NVIDIA GPU 上运行 Nemotron，低频高质量的创作和审查使用 StepFun，图片走 OpenAI-compatible Image Relay，视频既可以走 fal.ai 的 `minimax/h3-max/reference-to-video`，也可以切换到本地 Sol-H3/h3-adapter。两条视频路径共享同一个任务、分支和 SceneArtifact 契约：Fal 负责云端队列和付费生成，Sol-H3 负责本机 ComfyUI-H3/Sol 工作流。Provider Router 统一超时、重试、熔断、回退和用量记录，使模型替换不会扩散到业务代码。没有 GPU 时仍可使用 mock 或纯云端模式。
 
 ## 一回合如何运行
 

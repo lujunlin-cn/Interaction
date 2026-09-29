@@ -103,6 +103,89 @@ FAL_PAID_GENERATION_ENABLED=false
 PUBLIC_BASE_URL=https://<your-public-host>:9000
 ```
 
+#### Minimax H3 的实际调用链
+
+PlotShift 不把 Minimax H3 权重下载到本机，而是调用 fal.ai 的队列 API。一次真实视频请求经过以下步骤：
+
+1. Runtime 为每个 Shot 生成 `prompt`、整数 `duration`、`resolution`、`aspect_ratio` 和参考素材列表。
+2. Provider Router 选择 `h3_max`，适配为 `minimax/h3-max/reference-to-video` 的请求格式。
+3. 角色图片先通过 `PUBLIC_BASE_URL/files/...` 做公网可达性检查，再提交 Fal；不可达时在付费提交前阻止请求。
+4. Fal 返回 `request_id/status_url/response_url`。服务端轮询队列状态，完成后下载 MP4 到 `backend/data/media/clips/<request_id>/clip_1.mp4`。
+5. 只有所有必要 Shot 都 READY，Runtime 才装配 SceneArtifact 并把分支交给玩家。
+
+Fal 的队列等待通常可能超过一分钟。关闭 `pre_generate_recommendation_media` 时，推荐出现不会提前付费生成；玩家点击后才提交 H3，等待时间由 Fal 队列和视频生成耗时决定。不要因为前端仍显示 `GENERATING` 就重复点击或重新提交同一分支；应先查看 Developer → 生产 / Usage Ledger 中的 `request_id` 和状态。
+
+最低配置示例：
+
+```dotenv
+PROVIDER_MODE=live
+RUNTIME_PROFILE=AGENT_LOCAL_PROFILE
+FAL_H3_MODEL=minimax/h3-max/reference-to-video
+FAL_PAID_GENERATION_ENABLED=true
+VIDEO_GENERATION_RESOLUTION=480P
+GENERATION_ASPECT_RATIO=16:9
+PUBLIC_BASE_URL=http://<public-ip>:9000
+```
+
+`FAL_KEY` 只放在服务器 `.env`。`FAL_KEY_SECONDARY` 可作为配额或账单锁定时的备用 Key；不要把两个 Key 写入前端或文档。付费测试前先用 `mock`/`hybrid` 验证状态机、参考图和字幕，避免用 H3 做页面调试。
+
+### Sol-H3 本地视频部署
+
+Sol-H3 是本地视频实验路径，使用 `VIDEO_LOCAL_PROFILE`。仓库提供的是 PlotShift 的 Provider Adapter 和 Profile 生命周期管理，不包含 Sol-H3/ComfyUI-H3 权重本身；部署者需要先在 NVIDIA GPU 主机上准备兼容的 h3-adapter 服务。适配器必须提供下面的 HTTP 合约：
+
+| 方法 | 路径 | 请求/响应 |
+| --- | --- | --- |
+| `POST` | `/v1/videos/generations` | JSON：`prompt`、`duration`、`resolution`、`aspect_ratio`、可选 `reference_images`/`reference_videos`/`reference_audios`；返回 `{"request_id":"...","status":"pending"}` |
+| `GET` | `/v1/videos/{request_id}` | 返回 `pending`、`running`、`done`、`failed`、`expired` 或 `cancelled`；完成时提供 `video.url` |
+| `GET` | `/v1/videos/{request_id}/content` | 需要鉴权时返回 MP4 字节 |
+| `POST` | `/v1/videos/{request_id}/cancel` | 取消排队或执行中的任务 |
+
+适配器可以由 ComfyUI-H3/Sol 工作流包装而来。ComfyUI 节点负责加载 H3 权重和执行采样，h3-adapter 负责把 REST 请求转换为工作流任务、维护队列并提供可下载结果。模型权重、节点版本、CUDA/显存要求由你选择的 Sol-H3 发布版本决定，不能用 PlotShift 的代码替代；部署前应按该版本的说明完成 NVIDIA Driver、CUDA、NVIDIA Container Toolkit 和权重下载。
+
+#### 连接 PlotShift
+
+在 `backend/.env` 配置适配器地址：
+
+```dotenv
+PROVIDER_MODE=live
+RUNTIME_PROFILE=VIDEO_LOCAL_PROFILE
+SOL_H3_BASE_URL=http://127.0.0.1:8790
+SOL_H3_API_KEY=<optional-adapter-token>
+VIDEO_LOCAL_CONTAINER=comfyui-nvidia
+```
+
+若适配器在另一台机器，把 `SOL_H3_BASE_URL` 换成内网可达地址；参考素材仍需能被适配器读取。适配器返回的 `video.url` 必须能被 PlotShift 服务端下载，或返回同机可访问的 HTTP 地址。若参考图来自 PlotShift，配置可被适配器访问的 `PUBLIC_BASE_URL`，不要使用只在浏览器本机有效的 `localhost`。
+
+#### 启动、健康检查和切换
+
+先单独启动 ComfyUI/worker 和 h3-adapter，再启动 PlotShift：
+
+```bash
+curl -fsS http://127.0.0.1:8790/v1/videos?limit=1
+curl -fsS http://127.0.0.1:9000/api/health
+curl -fsS http://127.0.0.1:9000/api/dev/profile
+```
+
+如果适配器由 Docker 管理，可在 `.env` 写入实际的生命周期命令；命令由部署者根据自己的容器名和启动参数填写：
+
+```dotenv
+VIDEO_LOCAL_STOP_COMMAND=docker stop comfyui-nvidia
+VIDEO_LOCAL_START_COMMAND=docker start comfyui-nvidia
+VIDEO_LOCAL_PROCESS_PATTERN=h3-adapter
+```
+
+从 `AGENT_LOCAL_PROFILE` 切换到 `VIDEO_LOCAL_PROFILE` 时，Router 会先停止接收新本地任务、持久化会话、执行 stop/start、调用适配器健康检查，成功后才切换路由。切换完成后验证：
+
+```bash
+curl -fsS http://127.0.0.1:9000/api/dev/providers
+```
+
+响应中的 `profile` 应为 `VIDEO_LOCAL_PROFILE`，`health.sol_h3_local.status` 应为 `healthy`。此 Profile 下 Nemotron 不作为本地 Director 使用，Director 会按路由回退到 StepFun；切回 `AGENT_LOCAL_PROFILE` 后才恢复本地 Nemotron。不要假设两套大模型一定能同时驻留，显存不足时必须使用显式 Profile 切换。
+
+#### 本地视频最小验证
+
+使用 Developer → 生产中的独立本地任务，或调用本地任务接口进行一次短片测试。先设置 480P、5 秒和一张小参考图，确认返回 `request_id`、状态从 `pending/running` 到 `done`，并能下载 MP4；再提升时长和参考素材数量。独立任务不修改玩家 Canonical State，也不会调用 fal.ai。测试失败时查看 `sol_h3_local` 的 adapter 日志和 `/api/dev/jobs`，不要切回 Fal 重复提交同一请求。
+
 ### OpenAI-compatible Image Relay
 
 角色图、标准视图和编辑图走 OpenAI-compatible Image Relay，不走 fal.ai 生图：
